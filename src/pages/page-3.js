@@ -1,39 +1,20 @@
 import React from "react"
-import { Link } from "gatsby"
-
 import SEO from "../components/seo"
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
-import { AnimatePresence, motion } from 'framer-motion'
 import Page from '../components/Page'
+import PageTransition from '../components/PageTransition'
 
-const variants = {
-    entering: {
-        x: '0%'
-    },
-    exiting: {
-        x: '100%'
-    },
-    entered: {
-        x: '0%'
-    }
-}
-
-const ThirdPage = ({ transitionStatus, entry, exit }) => {
-
-    // console.log('p2', props)
-    // console.log(' p2 status: ', props.transitionStatus)
-    // console.log(' p2 entry: ', props.entry)
-    // console.log(' p2 exit: ', props.exit)
+const ThirdPage = props => {
     return (
-        <motion.div initial={{ x: '100%' }} transition={{ type: "tween", duration: 1, ease: 'easeOut' }} animate={transitionStatus} variants={variants}>
+        <PageTransition {...props}>
             <Page>
                 <h1>BLAH TEST BLAH TEST</h1>
                 <p>Welcome to page 3</p>
-                <TransitionLink to='/page-2' state={{comingFrom: 'right'}}>Back</TransitionLink>
-                <TransitionLink to='/page-4' state={{comingFrom: 'bottom'}}>Up</TransitionLink>
+                <TransitionLink to='/page-2' from='right'>Back</TransitionLink>
+                <TransitionLink to='/page-4' from='bottom'>Up</TransitionLink>
             </Page>
-        </motion.div >
+        </PageTransition>
     )
 }
 

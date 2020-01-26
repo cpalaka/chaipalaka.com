@@ -8,7 +8,7 @@ const TransitionLink = props =>
         exit={{ length: config.transitionSpeed }}
         entry={{ 
             length: config.transitionSpeed,
-            state: props.state
+            state: { from: props.from }
         }}
     >
         {props.children}

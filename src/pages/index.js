@@ -1,11 +1,10 @@
 import React from "react"
-import { Link } from "gatsby"
 import Image from "../components/image"
 import SEO from "../components/seo"
 import styled from 'styled-components'
-import { AnimatePresence, motion } from 'framer-motion'
 import TransitionLink from '../components/TransitionLink'
 import Page from '../components/Page'
+import PageTransition from '../components/PageTransition'
 
 const Title = styled.h1`
     font-size: 46px;
@@ -13,26 +12,10 @@ const Title = styled.h1`
     padding-bottom: 40px;
 `;
 
-const variants = {
-    entering: {
-        x: '0%'
-    },
-    exiting: {
-        x: '-100%'
-    },
-    entered: {
-        x: '0%'
-    }
-}
 
-const IndexPage = ({ transitionStatus, entry, exit }) => {
-    // console.log('p1',props)
-    // console.log(' p1 status: ', props.transitionStatus)
-    // console.log(' p1 entry: ', props.entry)
-    // console.log(' p1 exit: ', props.exit)
-    
+const IndexPage = props => {
     return (
-        <motion.div initial={{x: '-100%'}} transition={{ type: "tween", duration: 1, ease: 'easeOut' }} animate={transitionStatus} variants={variants}>
+        <PageTransition {...props}>
                 <Page>
                     <Title>Testing styled</Title>
                     <p>
@@ -42,9 +25,9 @@ const IndexPage = ({ transitionStatus, entry, exit }) => {
                 
                 Aliquam etiam erat velit scelerisque. Viverra accumsan in nisl nisi scelerisque eu ultrices vitae auctor. Etiam sit amet nisl purus. Aliquam faucibus purus in massa tempor nec feugiat nisl pretium. Viverra vitae congue eu consequat. Nulla pharetra diam sit amet. Vel quam elementum pulvinar etiam non quam. Nec nam aliquam sem et tortor consequat id. Sed tempus urna et pharetra. Hendrerit gravida rutrum quisque non. Nunc faucibus a pellentesque sit amet porttitor. Sed vulputate odio ut enim blandit volutpat maecenas volutpat blandit. Aliquet bibendum enim facilisis gravida neque convallis a cras. Arcu non sodales neque sodales ut. Consectetur purus ut faucibus pulvinar elementum integer enim neque.
                     </p>
-                    <TransitionLink to='/page-2' state={{comingFrom: 'left'}}>Page 2</TransitionLink>
+                    <TransitionLink to='/page-2' from='left'>Page 2</TransitionLink>
                 </Page>
-        </motion.div>
+        </PageTransition>
     )
 }
 
