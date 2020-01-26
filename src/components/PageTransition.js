@@ -2,30 +2,6 @@ import React from "react"
 import { motion } from "framer-motion"
 import config from "../../config"
 
-const variantsX = {
-    entering: {
-        x: "0%",
-    },
-    exiting: value => ({
-        x: "100%",
-    }),
-    entered: {
-        x: "0%",
-    },
-}
-
-const variantsY = {
-    entering: {
-        y: "0%",
-    },
-    exiting: value => ({
-        y: "-100%",
-    }),
-    entered: {
-        y: "0%",
-    },
-}
-
 const variants = dir => ({
     entering: {
         [dir]: "0%",
