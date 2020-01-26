@@ -7,7 +7,7 @@
 
 import React from "react"
 import { useStaticQuery, graphql } from "gatsby"
-import styled from 'styled-components'
+import styled from "styled-components"
 
 import Header from "./header"
 
@@ -22,7 +22,7 @@ const SiteBackground = ({ children }) => {
         // put sample canvas / webgl bg here
         <SimpleLayout>
             {/* <ChildrenWrapper> */}
-                {children}
+            {children}
             {/* </ChildrenWrapper> */}
         </SimpleLayout>
     )

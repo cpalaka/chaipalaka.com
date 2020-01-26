@@ -32,7 +32,7 @@ module.exports = {
             options: {
                 bucketName: "chaisblogsite",
                 protocol: "https",
-                hostname: "www.chaipalaka.com"
+                hostname: "www.chaipalaka.com",
             },
         },
         `gatsby-plugin-mdx`,
@@ -45,9 +45,9 @@ module.exports = {
         {
             resolve: `gatsby-plugin-transition-link`,
             options: {
-                layout: require.resolve('./src/components/SiteBackground.js')
-            }
-        }
+                layout: require.resolve("./src/components/SiteBackground.js"),
+            },
+        },
         // this (optional) plugin enables Progressive Web App + Offline functionality
         // To learn more, visit: https://gatsby.dev/offline
         // `gatsby-plugin-offline`,

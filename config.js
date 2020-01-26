@@ -1,5 +1,5 @@
 const config = {
-    transitionSpeed: 1
+    transitionSpeed: 1,
 }
 
 module.exports = config

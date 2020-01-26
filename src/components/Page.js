@@ -1,5 +1,5 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from "react"
+import styled from "styled-components"
 
 const PageSize = styled.div`
     width: 50vw;
@@ -14,11 +14,10 @@ const PageStyle = styled.div`
     background-color: white;
 `
 
-const Page = ({children}) =>
+const Page = ({ children }) => (
     <PageSize>
-        <PageStyle>
-            {children}
-        </PageStyle>
+        <PageStyle>{children}</PageStyle>
     </PageSize>
+)
 
 export default Page
