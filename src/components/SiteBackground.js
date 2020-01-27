@@ -12,7 +12,7 @@ import styled from "styled-components"
 import Header from "./header"
 
 const SimpleLayout = styled.div`
-    background-color: azure;
+    background-color: ${({theme}) => theme.colors.background};
     height: 100vh;
     width: 100vw;
 `

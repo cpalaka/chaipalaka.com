@@ -1,10 +1,12 @@
-import React from "react"
+import React, { useCallback } from "react"
 import Image from "../components/image"
 import SEO from "../components/seo"
 import styled from "styled-components"
 import TransitionLink from "../components/TransitionLink"
 import Page from "../components/Page"
 import PageTransition from "../components/PageTransition"
+
+import { useGlobalDispatch, useGlobalState } from '../state'
 
 const Title = styled.h1`
     font-size: 46px;
@@ -13,10 +15,19 @@ const Title = styled.h1`
 `
 
 const IndexPage = props => {
+    const dispatch = useGlobalDispatch()
+    const state = useGlobalState()
+
+    const toggleTheme = useCallback(() => {
+        const theme = state.theme === 'light' ? 'dark' : 'light'
+        dispatch({ type: 'setTheme', theme })
+    }, [dispatch, state.theme])
+
     return (
         <PageTransition {...props}>
             <Page>
                 <Title>Testing styled</Title>
+                <Title onClick={toggleTheme}>CHANGE THEME!</Title>
                 <p>
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                     do eiusmod tempor incididunt ut labore et dolore magna
