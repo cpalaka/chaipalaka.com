@@ -6,15 +6,10 @@
 
 // You can delete this file if you're not using it
 import React from "react"
-import { ThemeProvider } from "styled-components"
-import theme from "./src/theme"
-import GlobalStyles from "./src/theme/globalStyles"
+import './src/components/RootWrapper'
+import RootWrapper from "./src/components/RootWrapper"
 
-export const wrapRootElement = ({ element }) => (
-    <ThemeProvider theme={theme}>
-        <>
-            {element}
-            <GlobalStyles />
-        </>
-    </ThemeProvider>
-)
+export const wrapRootElement = ({ element }) => 
+    <RootWrapper>
+        {element}
+    </RootWrapper>

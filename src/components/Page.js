@@ -9,14 +9,27 @@ const PageSize = styled.div`
 const PageStyle = styled.div`
     border: 2px solid black;
     height: 90%;
-    transform: translate(50%, 5%);
-    overflow: scroll;
+    transform: translate(25vw, 5vh);
+    overflow: hidden;
     background-color: white;
+`
+
+//hide scroll bars
+const PageStyleChild = styled.div`
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    padding-right: 17px;
+    box-sizing: content-box;
 `
 
 const Page = ({ children }) => (
     <PageSize>
-        <PageStyle>{children}</PageStyle>
+        <PageStyle>
+            <PageStyleChild>
+            {children}
+            </PageStyleChild>
+        </PageStyle>
     </PageSize>
 )
 
