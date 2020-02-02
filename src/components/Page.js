@@ -4,12 +4,18 @@ import styled from "styled-components"
 const PageSize = styled.div`
     width: 50vw;
     height: 100vh;
+    @media (max-width: 600px) {
+        width: 90vw;
+    }
 `
 
 const PageStyle = styled.div`
     border: 2px solid black;
     height: 90%;
     transform: translate(25vw, 5vh);
+    @media (max-width: 600px) {
+        transform: translate(5vw, 5vh);
+    }
     overflow: hidden;
     background-color: white;
 `
@@ -26,9 +32,7 @@ const PageStyleChild = styled.div`
 const Page = ({ children }) => (
     <PageSize>
         <PageStyle>
-            <PageStyleChild>
-            {children}
-            </PageStyleChild>
+            <PageStyleChild>{children}</PageStyleChild>
         </PageStyle>
     </PageSize>
 )
