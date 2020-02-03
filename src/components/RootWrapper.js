@@ -4,7 +4,7 @@ import theme from "../theme"
 import GlobalStyles from "../theme/globalStyles"
 import { globalDispatchContext, globalStateContext, globalStateReducer, initialState } from '../state'
 
-const RootWrapper = ({ children }) => {
+const RootWrapper = ({ children, ...props }) => {
     const [state, dispatch] = useReducer(globalStateReducer, initialState)
     const currentTheme = theme[state.theme]
 

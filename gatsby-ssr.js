@@ -9,7 +9,7 @@ import React from "react"
 import './src/components/RootWrapper'
 import RootWrapper from "./src/components/RootWrapper"
 
-export const wrapRootElement = ({ element }) => 
-    <RootWrapper>
+export const wrapPageElement = ({ element, ...props }) => 
+    <RootWrapper pageProps={props.props}>
         {element}
     </RootWrapper>

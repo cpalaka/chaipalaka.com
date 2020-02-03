@@ -2,14 +2,14 @@ import React from "react"
 import styled from "styled-components"
 
 const PageSize = styled.div`
-    width: 50vw;
+    width: 60vw;
     height: 100vh;
 `
 
 const PageStyle = styled.div`
-    border: 2px solid black;
-    height: 90%;
-    transform: translate(25vw, 5vh);
+    // border: 2px solid black;
+    height: 100%;
+    transform: translateX(20vw);
     overflow: hidden;
     background-color: white;
 `
