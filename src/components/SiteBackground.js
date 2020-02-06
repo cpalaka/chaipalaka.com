@@ -8,9 +8,9 @@
 import React, { useRef, useState } from "react"
 import { useStaticQuery, graphql } from "gatsby"
 import styled from "styled-components"
-import Nav from './Nav'
+import Nav from "./Nav"
 import Header from "./header"
-import { Canvas, useFrame } from 'react-three-fiber'
+import { Canvas, useFrame } from "react-three-fiber"
 
 function Box(props) {
     // This reference will give us direct access to the mesh
@@ -27,12 +27,16 @@ function Box(props) {
         <mesh
             {...props}
             ref={mesh}
-            scale={active ? [4, 4, 4] : [3, 3, 3]}
+            scale={active ? [2, 2, 2] : [1, 1, 1]}
             onClick={e => setActive(!active)}
             onPointerOver={e => setHover(true)}
-            onPointerOut={e => setHover(false)}>
+            onPointerOut={e => setHover(false)}
+        >
             <boxBufferGeometry attach="geometry" args={[1, 1, 1]} />
-            <meshStandardMaterial attach="material" color={hovered ? 'hotpink' : 'orange'} />
+            <meshStandardMaterial
+                attach="material"
+                color={hovered ? "hotpink" : "orange"}
+            />
         </mesh>
     )
 }
@@ -45,23 +49,41 @@ const SimpleLayout = styled.div`
     top: 0px;
 `
 
+const Flexbox = styled.div`
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+`
+
+const ChildrenContainer = styled.div`
+    width: 200%;
+    display: flex;
+    flex-direction: column;
+`
+
 const SiteBackground = ({ children, ...props }) => {
-    console.log('layout', props)
-    return (<>
-        <Canvas>
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
-            <Box position={[-20, 0, 0]} />
-            <Box position={[20, 0, 0]} />
-        </Canvas>
-        <SimpleLayout>
-            <Nav currentPath={props.path}>
-                {/* <ChildrenWrapper> */}
+    console.log("layout", props)
+    return (
+        <Flexbox>
+            <Canvas>
+                <ambientLight />
+                <pointLight position={[10, 10, 10]} />
+                <Box position={[0, -2, 0]} />
+                <Box position={[0, 2, 0]} />
+            </Canvas>
+
+            <ChildrenContainer>
+                <Nav />
                 {children}
-                {/* </ChildrenWrapper> */}
-            </Nav>
-        </SimpleLayout>
-        </>
+            </ChildrenContainer>
+
+            <Canvas>
+                <ambientLight />
+                <pointLight position={[10, 10, 10]} />
+                <Box position={[0, -2, 0]} />
+                <Box position={[0, 2, 0]} />
+            </Canvas>
+        </Flexbox>
     )
 }
 
