@@ -27,7 +27,7 @@ function Box(props) {
         <mesh
             {...props}
             ref={mesh}
-            scale={active ? [2, 2, 2] : [1, 1, 1]}
+            scale={active ? [5, 5, 5] : [3, 3, 3]}
             onClick={e => setActive(!active)}
             onPointerOver={e => setHover(true)}
             onPointerOut={e => setHover(false)}
@@ -41,49 +41,57 @@ function Box(props) {
     )
 }
 
-const SimpleLayout = styled.div`
-    // background-color: ${({ theme }) => theme.colors.background};
-    height: 100vh;
-    width: 100vw;
-    position: absolute;
-    top: 0px;
-`
-
 const Flexbox = styled.div`
     display: flex;
-    width: 100vw;
+    flex-direction: column;
     height: 100vh;
 `
 
-const ChildrenContainer = styled.div`
-    width: 200%;
-    display: flex;
-    flex-direction: column;
+const ContentContainer = styled.div`
+    position: absolute;
+
+    width: 60vw;
+    left: 20vw;
+    top: 0;
+
+    @media (max-width: 600px) {
+        left: 0vw;
+        width: 100vw;
+    }
+`
+
+const Page = styled.div`
+    height: 90vh;
+`
+
+const Logo = styled.div`
+    height: 5vh;
+    width: 15vw;
+    background-color: blue;
+`
+
+const SiteNav = styled.div`
+    height: 5vh;
+    background-color: red;
 `
 
 const SiteBackground = ({ children, ...props }) => {
-    console.log("layout", props)
     return (
-        <Flexbox>
+        <>
             <Canvas>
                 <ambientLight />
                 <pointLight position={[10, 10, 10]} />
-                <Box position={[0, -2, 0]} />
-                <Box position={[0, 2, 0]} />
+                <Box position={[-10, 0, 0]} />
+                <Box position={[10, 0, 0]} />
             </Canvas>
-
-            <ChildrenContainer>
-                <Nav />
-                {children}
-            </ChildrenContainer>
-
-            <Canvas>
-                <ambientLight />
-                <pointLight position={[10, 10, 10]} />
-                <Box position={[0, -2, 0]} />
-                <Box position={[0, 2, 0]} />
-            </Canvas>
-        </Flexbox>
+            <ContentContainer>
+                <Flexbox>
+                    <Logo />
+                    <Page>{children}</Page>
+                    <SiteNav />
+                </Flexbox>
+            </ContentContainer>
+        </>
     )
 }
 
