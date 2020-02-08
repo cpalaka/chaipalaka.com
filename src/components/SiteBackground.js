@@ -11,6 +11,10 @@ import styled from "styled-components"
 import Nav from "./Nav"
 import Header from "./header"
 import { Canvas, useFrame } from "react-three-fiber"
+import { SplineCurve } from "three"
+import * as THREE from "three"
+
+import MeshLine from "./MeshLine"
 
 function Box(props) {
     // This reference will give us direct access to the mesh
@@ -27,17 +31,40 @@ function Box(props) {
         <mesh
             {...props}
             ref={mesh}
-            scale={active ? [5, 5, 5] : [3, 3, 3]}
+            scale={active ? [5, 5, 5] : [1, 1, 1]}
             onClick={e => setActive(!active)}
             onPointerOver={e => setHover(true)}
             onPointerOut={e => setHover(false)}
         >
             <boxBufferGeometry attach="geometry" args={[1, 1, 1]} />
+
             <meshStandardMaterial
                 attach="material"
                 color={hovered ? "hotpink" : "orange"}
             />
         </mesh>
+    )
+}
+
+const Curve = props => {
+    const line = useRef()
+    const curve = new THREE.CatmullRomCurve3(
+        [
+            new THREE.Vector3(-10, 0, 0),
+            new THREE.Vector3(-5, 5, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(5, -5, 0),
+            new THREE.Vector3(10, 0, 0),
+        ],
+        true
+    ).getPoints(5)
+
+    const vertices = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(10, 10, 0)]
+    return (
+        <line {...props} ref={line}>
+            <geometry attach="geometry" vertices={curve} />
+            <lineBasicMaterial attach="material" color="black" />
+        </line>
     )
 }
 
@@ -75,23 +102,31 @@ const SiteNav = styled.div`
     background-color: red;
 `
 
+const Site = styled.div`
+    height: 100vh;
+    width: 100vw;
+`
+
 const SiteBackground = ({ children, ...props }) => {
     return (
-        <>
-            <Canvas>
+        <Site>
+            {/* <Canvas camera={{ position: [0, 0, 10], fov: 100 }}>
                 <ambientLight />
                 <pointLight position={[10, 10, 10]} />
-                <Box position={[-10, 0, 0]} />
-                <Box position={[10, 0, 0]} />
-            </Canvas>
+                <Box position={[0, 0, 0]} />
+                <Box position={[1, 0, 0]} />
+            </Canvas> */}
+            <MeshLine />
             <ContentContainer>
                 <Flexbox>
-                    <Logo >Chai Palaka</Logo>
+                    <Logo>Chai Palaka</Logo>
                     <Page>{children}</Page>
-                    <SiteNav><Link to='page-2'>Page 2</Link></SiteNav>
+                    <SiteNav>
+                        <Link to="page-2">Page 2</Link>
+                    </SiteNav>
                 </Flexbox>
             </ContentContainer>
-        </>
+        </Site>
     )
 }
 

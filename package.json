@@ -30,6 +30,7 @@
     "react-typography": "^0.16.19",
     "styled-components": "^5.0.0",
     "three": "^0.113.2",
+    "threejs-meshline": "^2.0.9",
     "typography": "^0.16.19",
     "typography-theme-Wikipedia": "^0.15.10"
   },
