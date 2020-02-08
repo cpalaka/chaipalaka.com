@@ -14,6 +14,12 @@ const Title = styled.h1`
     padding-bottom: 40px;
 `
 
+const Title2 = styled.p`
+    font-size: 46px;
+    color: palevioletred;
+    padding-bottom: 40px;
+`
+
 const IndexPage = props => {
     const dispatch = useGlobalDispatch()
     const state = useGlobalState()
@@ -27,7 +33,7 @@ const IndexPage = props => {
         <PageTransition {...props}>
             <Page>
                 <Title>Testing styled</Title>
-                <Title onClick={toggleTheme}>CHANGE THEME!</Title>
+                <Title2 onClick={toggleTheme}>CHANGE THEME!</Title2>
                 <p>
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                     do eiusmod tempor incididunt ut labore et dolore magna

@@ -6,7 +6,7 @@
  */
 
 import React, { useRef, useState } from "react"
-import { useStaticQuery, graphql } from "gatsby"
+import { useStaticQuery, graphql, Link } from "gatsby"
 import styled from "styled-components"
 import Nav from "./Nav"
 import Header from "./header"
@@ -50,8 +50,8 @@ const Flexbox = styled.div`
 const ContentContainer = styled.div`
     position: absolute;
 
-    width: 60vw;
-    left: 20vw;
+    width: 50vw;
+    left: 25vw;
     top: 0;
 
     @media (max-width: 600px) {
@@ -67,7 +67,7 @@ const Page = styled.div`
 const Logo = styled.div`
     height: 5vh;
     width: 15vw;
-    background-color: blue;
+    // background-color: blue;
 `
 
 const SiteNav = styled.div`
@@ -86,9 +86,9 @@ const SiteBackground = ({ children, ...props }) => {
             </Canvas>
             <ContentContainer>
                 <Flexbox>
-                    <Logo />
+                    <Logo >Chai Palaka</Logo>
                     <Page>{children}</Page>
-                    <SiteNav />
+                    <SiteNav><Link to='page-2'>Page 2</Link></SiteNav>
                 </Flexbox>
             </ContentContainer>
         </>
