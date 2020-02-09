@@ -1,26 +1,28 @@
-/* https://github.com/react-spring/react-three-fiber/blob/master/examples/src/demos/MeshLine.js */
-import React, { useMemo, useRef } from "react"
-import * as THREE from "three"
-import * as meshline from "threejs-meshline"
-import { extend, Canvas, useFrame, useThree } from "react-three-fiber"
+/* modified from :https://github.com/react-spring/react-three-fiber/blob/master/examples/src/demos/MeshLine.js */
+import React, { useMemo, useRef, useContext } from 'react'
+import * as THREE from 'three'
+import * as meshline from 'threejs-meshline'
+import { extend, Canvas, useFrame, useThree } from 'react-three-fiber'
+import { ThemeContext } from 'styled-components'
 
 extend(meshline)
 
 function Fatline({ curve, width, color, speed }) {
     const material = useRef()
-    useFrame(() => (material.current.uniforms.dashOffset.value -= speed))
+    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.5))
     return (
         <mesh>
-            <meshLine attach="geometry" vertices={curve} />
+            <meshLine attach='geometry' vertices={curve} />
             <meshLineMaterial
-                attach="material"
+                attach='material'
                 ref={material}
                 transparent
                 depthTest={false}
                 lineWidth={width}
                 color={color}
-                dashArray={0.4}
-                dashRatio={0.9}
+                dashArray={0.2}
+                dashRatio={0.6}
+                opacity={0.7}
             />
         </mesh>
     )
@@ -71,12 +73,14 @@ function Rig({ mouse }) {
     return null
 }
 
-export default function App() {
+export default React.memo(function App() {
     const mouse = useRef([0, 0])
+    const theme = useContext(ThemeContext)
+    console.log(theme)
     return (
         <Canvas
-            style={{ background: "#ffc9e7" }}
-            camera={{ position: [0, 0, 50], fov: 100 }}
+            style={{ background: theme.colors.background }}
+            camera={{ position: [0, 0, 100], fov: 20 }}
             onMouseMove={e =>
                 (mouse.current = [
                     e.clientX - window.innerWidth / 2,
@@ -86,16 +90,9 @@ export default function App() {
         >
             <Lines
                 count={5}
-                colors={[
-                    "#A2CCB6",
-                    "#FCEEB5",
-                    "#EE786E",
-                    "#e0feff",
-                    "lightpink",
-                    "lightblue",
-                ]}
+                colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
             />
             <Rig mouse={mouse} />
         </Canvas>
     )
-}
+})

@@ -2,12 +2,12 @@ export default {
     //add theme constants here
     light: {
         colors: {
-            background: 'azure'
-        }
+            background: 'white',
+        },
     },
     dark: {
         colors: {
-            background: 'black'
-        }
-    }
+            background: 'black',
+        },
+    },
 }

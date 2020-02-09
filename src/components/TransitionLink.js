@@ -1,6 +1,6 @@
-import React from "react"
-import TL from "gatsby-plugin-transition-link"
-import config from "../../config"
+import React from 'react'
+import TL from 'gatsby-plugin-transition-link'
+import config from '../../config'
 
 const TransitionLink = props => (
     <TL

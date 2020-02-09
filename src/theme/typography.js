@@ -1,4 +1,4 @@
-import Typography from "typography"
+import Typography from 'typography'
 import wikipediaTheme from 'typography-theme-Wikipedia'
 
 const typography = new Typography(wikipediaTheme)

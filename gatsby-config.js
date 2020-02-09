@@ -30,9 +30,9 @@ module.exports = {
         {
             resolve: `gatsby-plugin-s3`,
             options: {
-                bucketName: "chaisblogsite",
-                protocol: "https",
-                hostname: "www.chaipalaka.com",
+                bucketName: 'chaisblogsite',
+                protocol: 'https',
+                hostname: 'www.chaipalaka.com',
             },
         },
         `gatsby-plugin-mdx`,
@@ -45,7 +45,7 @@ module.exports = {
         {
             resolve: `gatsby-plugin-transition-link`,
             options: {
-                layout: require.resolve("./src/components/SiteBackground.js"),
+                layout: require.resolve('./src/components/SiteBackground.js'),
             },
         },
         {

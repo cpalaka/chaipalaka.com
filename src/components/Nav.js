@@ -1,5 +1,5 @@
-import React, { useCallback } from "react"
-import styled from "styled-components"
+import React, { useCallback } from 'react'
+import styled from 'styled-components'
 
 const NavTab = styled.div`
     padding: auto;
@@ -13,7 +13,6 @@ const NavBar = styled.nav`
     // width: 100%;
     justify-content: space-between;
 `
-
 
 const Nav = props => {
     // console.log('nav props', props)
