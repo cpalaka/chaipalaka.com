@@ -1,10 +1,3 @@
-/**
- * Layout component that queries for data
- * with Gatsby's useStaticQuery component
- *
- * See: https://www.gatsbyjs.org/docs/use-static-query/
- */
-
 import React, { useRef, useState } from 'react'
 import { useStaticQuery, graphql, Link } from 'gatsby'
 import styled from 'styled-components'
@@ -13,7 +6,7 @@ import Header from './header'
 import { Canvas, useFrame } from 'react-three-fiber'
 import { SplineCurve } from 'three'
 import * as THREE from 'three'
-
+import ThreeButton from './ThreeButton'
 import MeshLine from './MeshLine'
 
 const Flexbox = styled.div`
@@ -28,7 +21,7 @@ const ContentContainer = styled.div`
     width: 50vw;
     left: 25vw;
     top: 0;
-    backdrop-filter: opacity(10%);
+    backdrop-filter: blur(7px);
 
     @media (max-width: 600px) {
         left: 2.5vw;
@@ -61,7 +54,10 @@ const SiteBackground = ({ children, ...props }) => {
             <MeshLine />
             <ContentContainer>
                 <Flexbox>
-                    <Logo>Chai Palaka</Logo>
+                    {/* <Logo>Chai Palaka</Logo> */}
+                    <Logo>
+                        <ThreeButton />
+                    </Logo>
                     <Page>{children}</Page>
                     <SiteNav>
                         <Link to='page-2'>Page 2</Link>
