@@ -32,7 +32,9 @@
     "three": "^0.113.2",
     "threejs-meshline": "^2.0.9",
     "typography": "^0.16.19",
-    "typography-theme-Wikipedia": "^0.15.10"
+    "typography-theme-Wikipedia": "^0.15.10",
+    "typography-theme-st-annes": "^0.16.19",
+    "typography-theme-twin-peaks": "^0.16.19"
   },
   "devDependencies": {
     "prettier": "^1.19.1"

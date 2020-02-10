@@ -20,6 +20,10 @@ const Title2 = styled.p`
     padding-bottom: 40px;
 `
 
+const Content = styled.p`
+    text-align: justify;
+`
+
 const IndexPage = props => {
     const dispatch = useGlobalDispatch()
     const state = useGlobalState()
@@ -32,85 +36,9 @@ const IndexPage = props => {
     return (
         <PageTransition {...props}>
             <Page>
-                <Title>Testing styled</Title>
-                <Title2 onClick={toggleTheme}>CHANGE THEME!</Title2>
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                    incididunt ut labore et dolore magna aliqua. Mauris augue neque gravida in
-                    fermentum et. Mauris a diam maecenas sed enim. Purus viverra accumsan in nisl
-                    nisi scelerisque eu. Ut eu sem integer vitae justo eget. Quis auctor elit sed
-                    vulputate mi sit amet mauris commodo. Suspendisse potenti nullam ac tortor vitae
-                    purus. Senectus et netus et malesuada fames ac turpis egestas. Rhoncus mattis
-                    rhoncus urna neque viverra justo. Malesuada bibendum arcu vitae elementum
-                    curabitur. Ultrices eros in cursus turpis massa tincidunt. Id donec ultrices
-                    tincidunt arcu non. Dolor purus non enim praesent elementum. Eu lobortis
-                    elementum nibh tellus molestie nunc non. Vulputate enim nulla aliquet porttitor
-                    lacus luctus accumsan tortor posuere. Cras adipiscing enim eu turpis egestas
-                    pretium. Massa tincidunt dui ut ornare lectus sit amet. Sociis natoque penatibus
-                    et magnis dis. Vel fringilla est ullamcorper eget nulla. Sed id semper risus in
-                    hendrerit. Nulla aliquet enim tortor at auctor urna nunc. Cursus risus at
-                    ultrices mi tempus. Feugiat in fermentum posuere urna nec. Ante in nibh mauris
-                    cursus mattis molestie a iaculis. Risus commodo viverra maecenas accumsan lacus.
-                    Aliquam etiam erat velit scelerisque. Viverra accumsan in nisl nisi scelerisque
-                    eu ultrices vitae auctor. Etiam sit amet nisl purus. Aliquam faucibus purus in
-                    massa tempor nec feugiat nisl pretium. Viverra vitae congue eu consequat. Nulla
-                    pharetra diam sit amet. Vel quam elementum pulvinar etiam non quam. Nec nam
-                    aliquam sem et tortor consequat id. Sed tempus urna et pharetra. Hendrerit
-                    gravida rutrum quisque non. Nunc faucibus a pellentesque sit amet porttitor. Sed
-                    vulputate odio ut enim blandit volutpat maecenas volutpat blandit. Aliquet
-                    bibendum enim facilisis gravida neque convallis a cras. Arcu non sodales neque
-                    sodales ut. Consectetur purus ut faucibus pulvinar elementum integer enim neque.
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                    incididunt ut labore et dolore magna aliqua. Mauris augue neque gravida in
-                    fermentum et. Mauris a diam maecenas sed enim. Purus viverra accumsan in nisl
-                    nisi scelerisque eu. Ut eu sem integer vitae justo eget. Quis auctor elit sed
-                    vulputate mi sit amet mauris commodo. Suspendisse potenti nullam ac tortor vitae
-                    purus. Senectus et netus et malesuada fames ac turpis egestas. Rhoncus mattis
-                    rhoncus urna neque viverra justo. Malesuada bibendum arcu vitae elementum
-                    curabitur. Ultrices eros in cursus turpis massa tincidunt. Id donec ultrices
-                    tincidunt arcu non. Dolor purus non enim praesent elementum. Eu lobortis
-                    elementum nibh tellus molestie nunc non. Vulputate enim nulla aliquet porttitor
-                    lacus luctus accumsan tortor posuere. Cras adipiscing enim eu turpis egestas
-                    pretium. Massa tincidunt dui ut ornare lectus sit amet. Sociis natoque penatibus
-                    et magnis dis. Vel fringilla est ullamcorper eget nulla. Sed id semper risus in
-                    hendrerit. Nulla aliquet enim tortor at auctor urna nunc. Cursus risus at
-                    ultrices mi tempus. Feugiat in fermentum posuere urna nec. Ante in nibh mauris
-                    cursus mattis molestie a iaculis. Risus commodo viverra maecenas accumsan lacus.
-                    Aliquam etiam erat velit scelerisque. Viverra accumsan in nisl nisi scelerisque
-                    eu ultrices vitae auctor. Etiam sit amet nisl purus. Aliquam faucibus purus in
-                    massa tempor nec feugiat nisl pretium. Viverra vitae congue eu consequat. Nulla
-                    pharetra diam sit amet. Vel quam elementum pulvinar etiam non quam. Nec nam
-                    aliquam sem et tortor consequat id. Sed tempus urna et pharetra. Hendrerit
-                    gravida rutrum quisque non. Nunc faucibus a pellentesque sit amet porttitor. Sed
-                    vulputate odio ut enim blandit volutpat maecenas volutpat blandit. Aliquet
-                    bibendum enim facilisis gravida neque convallis a cras. Arcu non sodales neque
-                    sodales ut. Consectetur purus ut faucibus pulvinar elementum integer enim neque.
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                    incididunt ut labore et dolore magna aliqua. Mauris augue neque gravida in
-                    fermentum et. Mauris a diam maecenas sed enim. Purus viverra accumsan in nisl
-                    nisi scelerisque eu. Ut eu sem integer vitae justo eget. Quis auctor elit sed
-                    vulputate mi sit amet mauris commodo. Suspendisse potenti nullam ac tortor vitae
-                    purus. Senectus et netus et malesuada fames ac turpis egestas. Rhoncus mattis
-                    rhoncus urna neque viverra justo. Malesuada bibendum arcu vitae elementum
-                    curabitur. Ultrices eros in cursus turpis massa tincidunt. Id donec ultrices
-                    tincidunt arcu non. Dolor purus non enim praesent elementum. Eu lobortis
-                    elementum nibh tellus molestie nunc non. Vulputate enim nulla aliquet porttitor
-                    lacus luctus accumsan tortor posuere. Cras adipiscing enim eu turpis egestas
-                    pretium. Massa tincidunt dui ut ornare lectus sit amet. Sociis natoque penatibus
-                    et magnis dis. Vel fringilla est ullamcorper eget nulla. Sed id semper risus in
-                    hendrerit. Nulla aliquet enim tortor at auctor urna nunc. Cursus risus at
-                    ultrices mi tempus. Feugiat in fermentum posuere urna nec. Ante in nibh mauris
-                    cursus mattis molestie a iaculis. Risus commodo viverra maecenas accumsan lacus.
-                    Aliquam etiam erat velit scelerisque. Viverra accumsan in nisl nisi scelerisque
-                    eu ultrices vitae auctor. Etiam sit amet nisl purus. Aliquam faucibus purus in
-                    massa tempor nec feugiat nisl pretium. Viverra vitae congue eu consequat. Nulla
-                    pharetra diam sit amet. Vel quam elementum pulvinar etiam non quam. Nec nam
-                    aliquam sem et tortor consequat id. Sed tempus urna et pharetra. Hendrerit
-                    gravida rutrum quisque non. Nunc faucibus a pellentesque sit amet porttitor. Sed
-                    vulputate odio ut enim blandit volutpat maecenas volutpat blandit. Aliquet
-                    bibendum enim facilisis gravida neque convallis a cras. Arcu non sodales neque
-                    sodales ut. Consectetur purus ut faucibus pulvinar elementum integer enim neque.
-                </p>
+                <h3> Hey, im chai palaka and this is my website!</h3>
+                <p>This might have some more pertinent info about me - make me look relatively employable to any hungry recruiters.</p>
+                <p>Probably a picture here as well.</p>
                 <TransitionLink to='/page-2' from='left'>
                     Page 2
                 </TransitionLink>
