@@ -24,6 +24,12 @@ const ContentContainer = styled.div`
     top: 0;
     backdrop-filter: blur(7px);
 
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    // align-
+    justify-content: space-between;
+
     @media (max-width: 600px) {
         left: 2.5vw;
         width: 95vw;
@@ -31,7 +37,7 @@ const ContentContainer = styled.div`
 `
 
 const Page = styled.div`
-    height: 90vh;
+    // height: 90vh;
 `
 
 const colorAnim = keyframes`
@@ -44,21 +50,10 @@ const colorAnim = keyframes`
     100% {
         background-color: rgba(50, 115, 220, 0.3);
     }
-    // 40% {
-    //     background-color: rgba(50, 115, 220, 0.3);
-    // }
-    // 60% {
-    //     background-color: rgba(50, 115, 220, 0.3);
-    // }
-    // 80% {
-    //     background-color: rgba(50, 115, 220, 0.3);
-    // }
-    // 100% {
-    //     background-color: rgba(50, 115, 220, 0.3);
-    // }
 `
 
 const Logo = styled.span`
+    // height: 5vh;
     cursor: pointer;
     display: inline-flex;
     align-self: ${props => (props.right ? 'flex-end' : 'flex-start')};
@@ -91,29 +86,67 @@ const Hero = styled.div`
     background-color: blue;
 `
 
+const FlexboxH = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+`
+
+const FlexboxH2 = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    // align-items: center;
+    width: 50%;
+    // margin-right: 10%;
+`
+
+const NavBar = props => {
+    return (
+        <FlexboxH2>
+            <TransitionLink to='/career' from='left'>
+                <div>career</div>
+            </TransitionLink>
+            <TransitionLink to='/projects' from='left'>
+                <div>projects</div>
+            </TransitionLink>
+            <TransitionLink to='/log' from='left'>
+                <div>log</div>
+            </TransitionLink>
+        </FlexboxH2>
+    )
+}
+
+const Sections = ['career', 'projects', 'log']
+
 const SiteBackground = ({ children, ...props }) => {
+    console.log(props)
     return (
         <Site>
             <MeshLine />
             <ContentContainer>
-                <Flexbox>
-                    <Hero />
-                    <Logo>
-                        <LogoText>
-                            <TransitionLink to='/' from='right'>
-                                chaipalaka
-                            </TransitionLink>
-                        </LogoText>
-                    </Logo>
-                    <Page>{children}</Page>
+                {/* <Flexbox> */}
+                
+
+                <Logo>
+                    <TransitionLink to='/' from='right'>
+                        <h1>chaipalaka</h1>
+                    </TransitionLink>
+                </Logo>
+
+                <Page>{children}</Page>
+                
+                <FlexboxH>
+                    <NavBar sections={Sections} />
+
                     <Logo right>
-                        <LogoText>
-                            <TransitionLink to='/blog' from='left'>
-                                blog >
-                            </TransitionLink>
-                        </LogoText>
+                        <TransitionLink to='/blog' from='left'>
+                            <h1>blog ></h1>
+                        </TransitionLink>
                     </Logo>
-                </Flexbox>
+                </FlexboxH>
+                <Hero />
+                {/* </Flexbox> */}
             </ContentContainer>
         </Site>
     )
