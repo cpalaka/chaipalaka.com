@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react'
-import Image from '../components/image'
 import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
 import Page from '../components/Page'
-import PageTransition from '../components/PageTransition'
+import PageTransition from '../components/Page'
 
 import { useGlobalDispatch, useGlobalState } from '../state'
 
@@ -34,8 +33,8 @@ const IndexPage = props => {
     }, [dispatch, state.theme])
 
     return (
-        <PageTransition {...props}>
-            <Page>
+        
+            <Page {...props}>
                 <h3> Hey, im chai palaka and this is my website!</h3>
                 <p>This might have some more pertinent info about me - make me look relatively employable to any hungry recruiters.</p>
                 <p>Probably a picture here as well.</p>
@@ -46,7 +45,7 @@ const IndexPage = props => {
                     Page 4
                 </TransitionLink>
             </Page>
-        </PageTransition>
+        
     )
 }
 

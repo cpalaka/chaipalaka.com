@@ -2,13 +2,12 @@ import React, { useRef, useState } from 'react'
 import { useStaticQuery, graphql, Link } from 'gatsby'
 import styled, { keyframes } from 'styled-components'
 import Nav from './Nav'
-import Header from './header'
 import { Canvas, useFrame } from 'react-three-fiber'
 import { SplineCurve } from 'three'
 import * as THREE from 'three'
-import ThreeButton from './ThreeButton'
 import MeshLine from './MeshLine'
 import TransitionLink from './TransitionLink'
+import Page from './Page'
 
 const Flexbox = styled.div`
     display: flex;
@@ -34,10 +33,6 @@ const ContentContainer = styled.div`
         left: 2.5vw;
         width: 95vw;
     }
-`
-
-const Page = styled.div`
-    // height: 90vh;
 `
 
 const colorAnim = keyframes`
@@ -81,7 +76,7 @@ const Site = styled.div`
     width: 100vw;
 `
 
-const Hero = styled.div`
+const Highlight = styled.div`
     height: 0.5vh;
     background-color: blue;
 `
@@ -101,23 +96,27 @@ const FlexboxH2 = styled.div`
     // margin-right: 10%;
 `
 
+const SectionText = styled.div`
+    color: ${props => props.match ? 'blue' : 'initial'}
+`
+
 const NavBar = props => {
+    console.log(props)
     return (
         <FlexboxH2>
-            <TransitionLink to='/career' from='left'>
-                <div>career</div>
+            <TransitionLink to='/career' from='bottom'>
+                <SectionText match={props.path === '/career/'}>career</SectionText>
             </TransitionLink>
-            <TransitionLink to='/projects' from='left'>
-                <div>projects</div>
+            <TransitionLink to='/projects' from='bottom'>
+                <SectionText match={props.path === '/projects/'}>projects</SectionText>
             </TransitionLink>
-            <TransitionLink to='/log' from='left'>
-                <div>log</div>
+            <TransitionLink to='/log' from='bottom'>
+                <SectionText match={props.path === '/log/'}>log</SectionText>
             </TransitionLink>
         </FlexboxH2>
     )
 }
 
-const Sections = ['career', 'projects', 'log']
 
 const SiteBackground = ({ children, ...props }) => {
     console.log(props)
@@ -134,10 +133,10 @@ const SiteBackground = ({ children, ...props }) => {
                     </TransitionLink>
                 </Logo>
 
-                <Page>{children}</Page>
+                {children}
                 
                 <FlexboxH>
-                    <NavBar sections={Sections} />
+                    <NavBar {...props} />
 
                     <Logo right>
                         <TransitionLink to='/blog' from='left'>
@@ -145,7 +144,7 @@ const SiteBackground = ({ children, ...props }) => {
                         </TransitionLink>
                     </Logo>
                 </FlexboxH>
-                <Hero />
+                <Highlight />
                 {/* </Flexbox> */}
             </ContentContainer>
         </Site>

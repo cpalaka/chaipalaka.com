@@ -3,11 +3,11 @@ import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
 import Page from '../components/Page'
-import PageTransition from '../components/PageTransition'
+
 
 const SecondPage = props => {
     return (
-        <PageTransition {...props}>
+        // <PageTransition {...props}>
             <Page>
                 <h1>Hi from the second page</h1>
                 <p>Welcome to page 2</p>
@@ -18,7 +18,7 @@ const SecondPage = props => {
                     FOrward
                 </TransitionLink>
             </Page>
-        </PageTransition>
+        // </PageTransition>
     )
 }
 

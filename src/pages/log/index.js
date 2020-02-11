@@ -3,16 +3,8 @@ import React from 'react'
 // import styled from 'styled-components'
 import TransitionLink from '../../components/TransitionLink'
 import Page from '../../components/Page'
-import PageTransition from '../../components/PageTransition'
+import PageTransition from '../../components/Page'
 
-const LogPage = props => {
-    return (
-        <PageTransition {...props}>
-            <Page>
-                <h1>Log</h1>
-            </Page>
-        </PageTransition>
-    )
-}
+const LogPage = props => <Page {...props}><h1>Log</h1></Page>
 
 export default LogPage

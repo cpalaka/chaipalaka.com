@@ -3,12 +3,11 @@ import React from 'react'
 // import styled from 'styled-components'
 import TransitionLink from '../../components/TransitionLink'
 import Page from '../../components/Page'
-import PageTransition from '../../components/PageTransition'
 
 const BlogPage = props => {
     return (
-        <PageTransition {...props}>
-            <Page>
+
+            <Page {...props}>
                 <h1>Hi from the second page</h1>
                 <p>Welcome to page 2</p>
                 <TransitionLink to='/' from='right'>
@@ -18,7 +17,8 @@ const BlogPage = props => {
                     FOrward
                 </TransitionLink>
             </Page>
-        </PageTransition>
+
+        
     )
 }
 
