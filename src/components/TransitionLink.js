@@ -10,6 +10,7 @@ const TransitionLink = props => (
             length: config.transitionSpeed,
             state: { from: props.from },
         }}
+        className={props.className}
     >
         {props.children}
     </TL>

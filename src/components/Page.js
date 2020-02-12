@@ -10,7 +10,7 @@ const PageParent = styled.div`
 //hide scroll bars
 const PageChild = styled.div`
     width: 100%;
-    height: 90vh;
+    height: 88vh;
 
     overflow-y: scroll;
     padding-right: 18px;
