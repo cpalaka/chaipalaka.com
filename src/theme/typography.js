@@ -8,9 +8,13 @@ stAnnesTheme.overrideThemeStyles = ({ rhythm }, options) => ({
         marginTop: rhythm(0),
         marginBottom: rhythm(0),
     },
-    'a': {
-        color: 'initial'
-    }
+    // h1: {
+    //     fontFamily: 'Lacquer',
+    // },
+    a: {
+        color: 'initial',
+    },
+
 })
 
 const typography = new Typography(stAnnesTheme)

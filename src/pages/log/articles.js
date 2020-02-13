@@ -3,6 +3,6 @@ import React from 'react'
 // import styled from 'styled-components'
 import Page from '../../components/Page'
 
-const LogPage = props => <Page {...props}><h1>Log</h1></Page>
+const ArticlesLogPage = props => <Page {...props}><h1>Articles</h1></Page>
 
-export default LogPage
+export default ArticlesLogPage

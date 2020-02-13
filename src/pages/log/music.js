@@ -3,6 +3,6 @@ import React from 'react'
 // import styled from 'styled-components'
 import Page from '../../components/Page'
 
-const LogPage = props => <Page {...props}><h1>Log</h1></Page>
+const MusicLogPage = props => <Page {...props}><h1>Career</h1></Page>
 
-export default LogPage
+export default MusicLogPage
