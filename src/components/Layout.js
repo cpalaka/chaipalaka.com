@@ -18,7 +18,7 @@ const ContentContainer = styled.div`
 
     border-left: 1px solid rgba(50, 115, 220, 0.3);
     border-right: 1px solid rgba(50, 115, 220, 0.3);
-    border-bottom: 10px solid blue;
+    border-bottom: 10px solid ${({theme}) => theme.colors.primaryAccent};
 
     justify-content: space-between;
 

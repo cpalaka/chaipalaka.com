@@ -39,7 +39,7 @@ const StyledTL = styled(TransitionLink)`
 
     :hover {
         text-decoration: underline;
-        color: blue;
+        color: ${({theme}) => theme.colors.primaryAccent};
     }
 `
 
