@@ -4,6 +4,13 @@ import MeshLine from './MeshLine'
 import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 
+/*TODO:
+* 1. color 'blog' button
+* 2. add webkit specific backdrop filter css 
+* 3. fix three js blurriness
+*/
+
+
 const ContentContainer = styled.div`
     position: absolute;
 

@@ -38,12 +38,6 @@ const IndexPage = props => {
                 <h3> Hey, im chai palaka and this is my website!</h3>
                 <p>This might have some more pertinent info about me - make me look relatively employable to any hungry recruiters.</p>
                 <p>Probably a picture here as well.</p>
-                <TransitionLink to='/page-2' from='left'>
-                    Page 2
-                </TransitionLink>
-                <TransitionLink to='/page-4' from='bottom'>
-                    Page 4
-                </TransitionLink>
             </Page>
         
     )
