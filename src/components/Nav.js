@@ -6,18 +6,18 @@ const NavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 75%;
+    width: 85%;
 `
 
 const MainNavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    min-width: ${props => (props.smol ? '30%' : '50%')};
+    min-width: ${props => (props.smol ? '40%' : '60%')};
     transition: min-width 1s;
 
-    @media (max-width: 600px) {
-        min-width: ${props => (props.smol ? '50%' : '70%')};
+    @media (max-width: 1024px) {
+        min-width: ${props => (props.smol ? '57%' : '80%')};
     }
 `
 
@@ -25,33 +25,38 @@ const SubNavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-content: center;
 `
 
 const StyledTL = styled(TransitionLink)`
+    color: ${props => (props.match ? 'blue' : 'initial')};
+    font-size: ${props =>
+        props.sub ? props.theme.font.subNavButtonSize : props.theme.font.navButtonSize};
+    padding: 0;
+    @media (max-width: 1024px) {
+        padding: ${props => props.sub ? '0 5px' : '0'};
+    }
+
     :hover {
         text-decoration: underline;
+        color: blue;
     }
 `
 
-const SectionText = styled.div`
-    color: ${props => (props.match ? 'blue' : 'initial')};
-`
-
 const MainNav = ({ path }) => {
-    // console.log(props)
-    const onLog = path.includes('log'),
+    const onLog = path.includes('/log'),
         onCareer = path === '/career/',
         onProjects = path === '/projects/'
     return (
         <MainNavContainer smol={onLog}>
-            <StyledTL to='/career' from='bottom'>
-                <SectionText match={onCareer}>career</SectionText>
+            <StyledTL to='/career' from='bottom' match={onCareer}>
+                career
             </StyledTL>
-            <StyledTL to='/projects' from='bottom'>
-                <SectionText match={onProjects}>projects</SectionText>
+            <StyledTL to='/projects' from='bottom' match={onProjects}>
+                projects
             </StyledTL>
-            <StyledTL to='/log' from='bottom'>
-                <SectionText match={onLog}>{`log${onLog ? ':' : ''}`}</SectionText>
+            <StyledTL to='/log' from='bottom' match={onLog}>
+                {`log${onLog ? '⟩' : ''}`}
             </StyledTL>
         </MainNavContainer>
     )
@@ -64,22 +69,22 @@ const SubNav = ({ path }) => {
         onLogProductivity = path === '/log/productivity/'
 
     return (
-        <div style={{ overflowX: 'scroll', width: '100%' }}>
+        <div style={{ overflowX: 'scroll', width: '100%', position: 'relative', bottom: '-5px', height: '100%' }}>
             <SubNavContainer>
-                <StyledTL to='/log/books' from='top'>
-                    <SectionText match={onLogBooks}>books</SectionText>
+                <StyledTL to='/log/books' from='top' match={onLogBooks} sub>
+                    books
                 </StyledTL>
 
-                <StyledTL to='/log/music' from='top'>
-                    <SectionText match={onLogMusic}>music</SectionText>
+                <StyledTL to='/log/music' from='top' match={onLogMusic} sub>
+                    music
                 </StyledTL>
 
-                <StyledTL to='/log/articles' from='top'>
-                    <SectionText match={onLogArticles}>articles</SectionText>
+                <StyledTL to='/log/articles' from='top' match={onLogArticles} sub>
+                    articles
                 </StyledTL>
 
-                <StyledTL to='/log/productivity' from='top'>
-                    <SectionText match={onLogProductivity}>productivity</SectionText>
+                <StyledTL to='/log/productivity' from='top' match={onLogProductivity} sub>
+                    productivity
                 </StyledTL>
             </SubNavContainer>
         </div>
@@ -87,8 +92,8 @@ const SubNav = ({ path }) => {
 }
 
 const Nav = ({ path, ...props }) => {
-    // console.log('nav props', props)
-    const onLog = path.includes('log')
+    const onLog = path.includes('/log')
+    // console.log('onLog', onLog)
     return (
         <NavContainer>
             <MainNav path={path} />

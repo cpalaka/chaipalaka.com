@@ -22,7 +22,7 @@ const ContentContainer = styled.div`
 
     justify-content: space-between;
 
-    @media (max-width: 600px) {
+    @media (max-width: 1024px) {
         left: 2.5vw;
         width: 95vw;
     }
@@ -43,6 +43,9 @@ const BlogNavButton = styled(TransitionLink)`
     position: absolute;
     right: 0;
     bottom: 0;
+    font-size: ${({theme}) => theme.font.navButtonSize};
+
+    min-width: 50px;
     :hover {
         text-decoration: underline;
     }
@@ -63,7 +66,7 @@ const Layout = ({ children, ...props }) => {
                 <Nav {...props} />
                 
                 <BlogNavButton to='/blog' from='left'>
-                    <p style={{ fontSize: '26px', marginBottom: 0, minWidth: '80px' }}>blog</p>
+                    blog
                 </BlogNavButton>
             </ContentContainer>
         </Site>
