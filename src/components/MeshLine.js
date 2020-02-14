@@ -76,7 +76,7 @@ function Rig({ mouse }) {
 export default React.memo(function App() {
     const mouse = useRef([0, 0])
     const theme = useContext(ThemeContext)
-    console.log(window.devicePixelRatio)
+
     return (
         <Canvas
             style={{ background: theme.colors.background }}
@@ -87,8 +87,7 @@ export default React.memo(function App() {
                     e.clientY - window.innerHeight / 2,
                 ])
             }
-            gl2={true}
-            // pixelRatio={window.devicePixelRatio}
+            pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
                 count={15}

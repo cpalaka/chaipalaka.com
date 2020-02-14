@@ -10,14 +10,14 @@ export default {
     light: {
         colors: {
             background: 'white',
-            primaryAccent: 'blue'
+            primaryAccent: 'palevioletred'
         },
         ...common
     },
     dark: {
         colors: {
             background: 'black',
-            primaryAccent: 'blue'
+            primaryAccent: 'palevioletred'
         },
         ...common
     },
