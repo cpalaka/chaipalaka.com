@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useContext } from 'react'
 import * as THREE from 'three'
 import * as meshline from 'threejs-meshline'
 import { extend, Canvas, useFrame, useThree } from 'react-three-fiber'
-import { ThemeContext } from 'styled-components'
+import styled, { ThemeContext } from 'styled-components'
 
 extend(meshline)
 
@@ -76,7 +76,7 @@ function Rig({ mouse }) {
 export default React.memo(function App() {
     const mouse = useRef([0, 0])
     const theme = useContext(ThemeContext)
-
+    console.log(window.devicePixelRatio)
     return (
         <Canvas
             style={{ background: theme.colors.background }}
@@ -87,6 +87,8 @@ export default React.memo(function App() {
                     e.clientY - window.innerHeight / 2,
                 ])
             }
+            gl2={true}
+            // pixelRatio={window.devicePixelRatio}
         >
             <Lines
                 count={15}

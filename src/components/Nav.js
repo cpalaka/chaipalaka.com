@@ -29,7 +29,7 @@ const SubNavContainer = styled.div`
 `
 
 const StyledTL = styled(TransitionLink)`
-    color: ${props => (props.match ? 'blue' : 'initial')};
+    color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
     font-size: ${props =>
         props.sub ? props.theme.font.subNavButtonSize : props.theme.font.navButtonSize};
     padding: 0;

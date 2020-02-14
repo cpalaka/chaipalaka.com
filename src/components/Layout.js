@@ -5,9 +5,11 @@ import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 
 /*TODO:
-* 1. color 'blog' button
-* 2. add webkit specific backdrop filter css 
+* 
+* 2. 
 * 3. fix three js blurriness
+* 4. windows scrollbars
+* 5. ios safari bottom bar
 */
 
 
@@ -15,13 +17,16 @@ const ContentContainer = styled.div`
     position: absolute;
 
     width: 50vw;
+    height: 100vh;
+
     left: 25vw;
     top: 0;
+
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 
     display: flex;
     flex-direction: column;
-    height: 100vh;
 
     border-left: 1px solid rgba(50, 115, 220, 0.3);
     border-right: 1px solid rgba(50, 115, 220, 0.3);
@@ -38,6 +43,7 @@ const ContentContainer = styled.div`
 const Site = styled.div`
     height: 100vh;
     width: 100vw;
+    // overflow: hidden;
 `
 
 const SiteTitle = styled(TransitionLink)`
@@ -53,14 +59,15 @@ const BlogNavButton = styled(TransitionLink)`
     font-size: ${({theme}) => theme.font.navButtonSize};
 
     min-width: 50px;
+    color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
     :hover {
+        color: ${({theme}) => theme.colors.primaryAccent};
         text-decoration: underline;
     }
 `
 
 const Layout = ({ children, ...props }) => {
-    console.log(props)
-
+    const onBlog = props.path === '/blog/'
     return (
         <Site>
             <MeshLine />
@@ -72,7 +79,7 @@ const Layout = ({ children, ...props }) => {
                 {children}
                 <Nav {...props} />
                 
-                <BlogNavButton to='/blog' from='left'>
+                <BlogNavButton to='/blog' from='left' match={onBlog}>
                     blog
                 </BlogNavButton>
             </ContentContainer>
