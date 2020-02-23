@@ -20,9 +20,9 @@ function Fatline({ curve, width, color, speed }) {
                 depthTest={false}
                 lineWidth={width}
                 color={color}
-                dashArray={0.1}
+                dashArray={0.5}
                 dashRatio={0.8}
-                opacity={0.7}
+                // opacity={0.7}
             />
         </mesh>
     )
@@ -33,8 +33,10 @@ function Lines({ count, colors }) {
         () =>
             new Array(count).fill().map(() => {
                 const pos = new THREE.Vector3(
-                    10 - Math.random() * 20,
-                    10 - Math.random() * 20,
+                    // 10 - Math.random() * 20,
+                    20 - Math.random() * 40,
+                    // 10 - Math.random() * 20,
+                    25,
                     10 - Math.random() * 20
                 )
                 const points = new Array(30)
@@ -90,8 +92,9 @@ export default React.memo(function App() {
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={15}
-                colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
+                count={20}
+                // colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
+                colors={['palevioletred']}
             />
             <Rig mouse={mouse} />
         </Canvas>

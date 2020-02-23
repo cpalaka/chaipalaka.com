@@ -6,33 +6,21 @@ import Nav from './Nav'
 
 /*TODO:
  *
- * 2. fix subnav scroll bar
+ * 2. redo navbar (much later)
+ * 3. fix direct route navigation
  * 3. chrome top bar
- * 
+ *
  * 5. ios safari bottom bar
  */
 
 const ContentContainer = styled.div`
     position: absolute;
-
-    width: 50vw;
-    left: 25vw;
-
-    height: ${props => (props.isWindows ? '99vh' : '100vh')};
-
     top: 0;
 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    width: 60vw;
+    left: 20vw;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
-    border-left: 1px solid rgba(50, 115, 220, 0.3);
-    border-right: 1px solid rgba(50, 115, 220, 0.3);
-    border-bottom: 10px solid ${({ theme }) => theme.colors.primaryAccent};
-    box-sizing: border-box;
+    height: 100%;
 
     @media (max-width: 1024px) {
         left: 2.5vw;
@@ -41,14 +29,25 @@ const ContentContainer = styled.div`
 `
 
 const Site = styled.div`
-    height: ${props => (props.isWindows ? '99vh' : '100vh')};
-    width: ${props => (props.isWindows ? '99vw' : '100vw')};
+    // height: 100%;
+    // width: auto;
 
-    overflow: hidden;
+    // overflow: scroll;
+`
+
+const ThreeContainer = styled.div`
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+`
+
+const PageParent = styled.div`
+    position: absolute;
+    top: 50px;
 `
 
 const SiteTitle = styled(TransitionLink)`
-// height: 5vh;
     :hover {
         text-decoration: underline;
         color: ${({ theme }) => theme.colors.primaryAccent};
@@ -56,25 +55,18 @@ const SiteTitle = styled(TransitionLink)`
 `
 
 const Layout = ({ children, ...props }) => {
-    //remove scroll bars on windows by (horizonatal atleast) by lowering site height
-    const [isWindows, setIsWindows] = useState(false)
-    useEffect(() => {
-        if (typeof window !== `undefined`) {
-            setIsWindows(window.navigator.appVersion.indexOf('Win') != -1)
-        }
-    })
-
     return (
-        <Site isWindows={isWindows}>
-            <MeshLine />
-            <ContentContainer isWindows={isWindows}>
-                <SiteTitle to='/' from='right'>
-                    <h1>chaipalaka</h1>
-                </SiteTitle>
-
-                {children}
-
+        <Site>
+            <ThreeContainer>
+                <MeshLine />
+            </ThreeContainer>
+            <ContentContainer>
                 <Nav {...props} />
+                {/* <SiteTitle to='/' from='right'>
+                    <h1>chaipalaka</h1>
+                </SiteTitle> */}
+
+                <PageParent>{children}</PageParent>
             </ContentContainer>
         </Site>
     )

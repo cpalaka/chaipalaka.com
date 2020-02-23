@@ -9,12 +9,16 @@ const PageParent = styled.div`
 
 //hide scroll bars
 const PageChild = styled.div`
-    width: 100%;
-    height: 89vh;
+    // width: 50vw;
+    // height: 100%;
 
-    overflow-y: scroll;
-    padding-right: 18px;
-    box-sizing: content-box;
+    // overflow-y: scroll;
+    // padding-right: 18px;
+    // box-sizing: content-box;
+
+    // @media (max-width: 1024px) {
+    //     width: 95vw;
+    // }
 `
 
 const variants = dir => ({
@@ -48,9 +52,9 @@ const Page = ({ children, transitionStatus, entry }) => {
             animate={transitionStatus}
             variants={variants(direction)}
         >
-            <PageParent>
+            {/* <PageParent> */}
                 <PageChild>{children}</PageChild>
-            </PageParent>
+            {/* </PageParent> */}
         </motion.div>
     )
 }

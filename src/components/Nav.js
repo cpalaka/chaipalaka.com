@@ -30,9 +30,10 @@ const MainNavContainer = styled.div`
     }
 `
 
-const MainNav = ({ path }) => {
-    const onLog = path.includes('/log'),
-        onCareer = path === '/career/',
+const MainNav = ({ path, onLog }) => {
+    console.log('main nav path', path)
+    console.log('onLog', onLog)
+    const onCareer = path === '/career/',
         onProjects = path === '/projects/'
     return (
         <MainNavContainer smol={onLog}>
@@ -53,7 +54,7 @@ const SubNavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-content: center;
+    // align-items: center;
 `
 
 //below styled components are solely to remove bottom scroll bar
@@ -63,11 +64,13 @@ const SubNavContainerGrandparent = styled.div`
 
 const SubNavContainerParent = styled.div`
     width: 25vw;
+    height: 100%;
+
     position: relative;
     bottom: -5px;
+
     overflow-x: scroll;
     padding-bottom: 18px;
-    height: 100%;
     box-sizing: content-box;
 
     @media (max-width: 1024px) {
@@ -76,6 +79,7 @@ const SubNavContainerParent = styled.div`
 `
 
 const SubNav = ({ path }) => {
+    console.log('subnav path', path)
     const onLogBooks = path === '/log/books/',
         onLogMusic = path === '/log/music/',
         onLogArticles = path === '/log/articles/',
@@ -110,6 +114,15 @@ const NavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    padding-bottom: ${props => (props.onLog ? '0' : '13px')};
+    width: 100%;
+    height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: white;
+    z-index: 100;
+    border-bottom: 10px solid ${({ theme }) => theme.colors.primaryAccent};
 `
 
 const BlogNavButton = styled(TransitionLink)`
@@ -126,16 +139,14 @@ const BlogNavButton = styled(TransitionLink)`
 
 const Nav = ({ path, ...props }) => {
     const onLog = path.includes('/log')
-    const onBlog = props.path === '/blog/'
+    const onBlog = path.includes('/blog')
     // console.log('onLog', onLog)
+    console.log('nav path', path)
+    console.log('onLog', onLog)
     return (
-        <NavContainer>
-            <MainNav path={path} />
-            {onLog ? (
-                <div style={{ overflow: 'hidden' }}>
-                    <SubNav path={path} />
-                </div>
-            ) : null}
+        <NavContainer onLog={onLog}>
+            <MainNav path={path} onLog={onLog} />
+            {onLog ? <SubNav path={path} /> : <div></div>}
             <BlogNavButton to='/blog' from='left' match={onBlog}>
                 blog
             </BlogNavButton>
