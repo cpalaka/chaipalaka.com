@@ -31,11 +31,10 @@ const ContentContainer = styled.div`
 const Site = styled.div`
     // height: 100%;
     // width: auto;
-
     // overflow: scroll;
 `
 
-const ThreeContainer = styled.div`
+const CanvasContainer = styled.div`
     position: absolute;
     top: 0;
     width: 100%;
@@ -47,25 +46,14 @@ const PageParent = styled.div`
     top: 50px;
 `
 
-const SiteTitle = styled(TransitionLink)`
-    :hover {
-        text-decoration: underline;
-        color: ${({ theme }) => theme.colors.primaryAccent};
-    }
-`
-
 const Layout = ({ children, ...props }) => {
     return (
         <Site>
-            <ThreeContainer>
+            <CanvasContainer>
                 <MeshLine />
-            </ThreeContainer>
+            </CanvasContainer>
             <ContentContainer>
                 <Nav {...props} />
-                {/* <SiteTitle to='/' from='right'>
-                    <h1>chaipalaka</h1>
-                </SiteTitle> */}
-
                 <PageParent>{children}</PageParent>
             </ContentContainer>
         </Site>

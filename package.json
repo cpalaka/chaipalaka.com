@@ -29,6 +29,7 @@
     "react-three-fiber": "^4.0.16",
     "react-typography": "^0.16.19",
     "styled-components": "^5.0.1",
+    "styled-icons": "^9.5.0",
     "three": "^0.113.2",
     "threejs-meshline": "^2.0.9",
     "typography": "^0.16.19",

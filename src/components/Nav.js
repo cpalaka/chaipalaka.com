@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import TransitionLink from './TransitionLink'
+import { DownArrow } from 'styled-icons/boxicons-solid/DownArrow'
 
 const StyledTL = styled(TransitionLink)`
     color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
     font-size: ${props =>
         props.sub ? props.theme.font.subNavButtonSize : props.theme.font.navButtonSize};
     padding: 0;
+    margin: 0 5px;
     @media (max-width: 1024px) {
         padding: ${props => (props.sub ? '0 5px' : '0')};
     }
@@ -21,22 +23,17 @@ const MainNavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-
-    min-width: ${props => (props.smol ? '40%' : '60%')};
-    transition: min-width 1s;
-
-    @media (max-width: 1024px) {
-        min-width: ${props => (props.smol ? '47%' : '80%')};
-    }
 `
 
-const MainNav = ({ path, onLog }) => {
+const MainNav = ({ path }) => {
     console.log('main nav path', path)
     console.log('onLog', onLog)
     const onCareer = path === '/career/',
-        onProjects = path === '/projects/'
+        onProjects = path === '/projects/',
+        onLog = path.includes('/log')
+
     return (
-        <MainNavContainer smol={onLog}>
+        <MainNavContainer>
             <StyledTL to='/career' from='bottom' match={onCareer}>
                 career
             </StyledTL>
@@ -54,7 +51,6 @@ const SubNavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    // align-items: center;
 `
 
 //below styled components are solely to remove bottom scroll bar
@@ -63,7 +59,7 @@ const SubNavContainerGrandparent = styled.div`
 `
 
 const SubNavContainerParent = styled.div`
-    width: 25vw;
+    width: 100%;
     height: 100%;
 
     position: relative;
@@ -73,13 +69,14 @@ const SubNavContainerParent = styled.div`
     padding-bottom: 18px;
     box-sizing: content-box;
 
-    @media (max-width: 1024px) {
-        width: 35vw;
-    }
+    // @media (max-width: 1024px) {
+    //     width: 35vw;
+    // }
 `
 
-const SubNav = ({ path }) => {
+const SubNav = ({ path, onLog }) => {
     console.log('subnav path', path)
+    console.log(onLog)
     const onLogBooks = path === '/log/books/',
         onLogMusic = path === '/log/music/',
         onLogArticles = path === '/log/articles/',
@@ -114,9 +111,35 @@ const NavContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding-bottom: ${props => (props.onLog ? '0' : '13px')};
+    position: absolute;
+    top: 0;
+    right: 10px;
+    width: auto;
+`
+
+const BlogNavButton = styled(TransitionLink)`
+    font-size: ${({ theme }) => theme.font.navButtonSize};
+    margin-left: 5px;
+
+    color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
+    :hover {
+        color: ${({ theme }) => theme.colors.primaryAccent};
+        text-decoration: underline;
+    }
+`
+const SiteTitle = styled(TransitionLink)`
+    :hover {
+        text-decoration: underline;
+        color: ${({ theme }) => theme.colors.primaryAccent};
+    }
+`
+
+const NavContainer1 = styled.div`
     width: 100%;
-    height: 50px;
+    // height: 50px;
+    height: ${props => props.showMenu ? '100px' : '50px'};
+    transition: height 1s;
+
     position: fixed;
     top: 0;
     left: 0;
@@ -125,28 +148,39 @@ const NavContainer = styled.div`
     border-bottom: 10px solid ${({ theme }) => theme.colors.primaryAccent};
 `
 
-const BlogNavButton = styled(TransitionLink)`
-    font-size: ${({ theme }) => theme.font.navButtonSize};
-    margin-left: 2%;
-
-    min-width: 50px;
-    color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
-    :hover {
-        color: ${({ theme }) => theme.colors.primaryAccent};
-        text-decoration: underline;
-    }
+const CustomArrow = styled(DownArrow)`
+    position: relative;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
 `
 
 const Nav = ({ path, ...props }) => {
+    // const onLog = path.includes('/log')
+    // const onBlog = path.includes('/blog')
+    // // console.log('onLog', onLog)
+    // console.log('nav path', path)
+    // console.log('onLog', onLog)
+    const [ menu, setMenu ] = useState(false)
+    const isMobile = window.innerWidth < 1024
+    return (
+        <NavContainer1 showMenu={menu}>
+            <SiteTitle to='/' from='right'>
+                <h1>chaipalaka</h1>
+            </SiteTitle>
+            <CustomArrow onClick={() => setMenu(true)} />
+            { isMobile ? <CustomArrow /> : <NavMenu path={path}/>}
+        </NavContainer1>
+    )
+}
+
+const NavMenu = ({path}) => {
     const onLog = path.includes('/log')
     const onBlog = path.includes('/blog')
-    // console.log('onLog', onLog)
-    console.log('nav path', path)
-    console.log('onLog', onLog)
     return (
-        <NavContainer onLog={onLog}>
-            <MainNav path={path} onLog={onLog} />
-            {onLog ? <SubNav path={path} /> : <div></div>}
+        <NavContainer>
+            <MainNav path={path} />
+            {onLog ? <SubNav path={path} onLog={onLog} /> : <div></div>}
             <BlogNavButton to='/blog' from='left' match={onBlog}>
                 blog
             </BlogNavButton>
