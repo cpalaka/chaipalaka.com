@@ -3,12 +3,14 @@ import styled from 'styled-components'
 import TransitionLink from './TransitionLink'
 import { DownArrow } from 'styled-icons/boxicons-solid/DownArrow'
 
-const StyledTL = styled(TransitionLink)`
+const NavButton = styled(TransitionLink)`
     color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
-    font-size: ${props =>
-        props.sub ? props.theme.font.subNavButtonSize : props.theme.font.navButtonSize};
+
     padding: 0;
     margin: 0 5px;
+
+    font-size: ${props =>
+        props.sub ? props.theme.font.subNavButtonSize : props.theme.font.navButtonSize};
     @media (max-width: 1024px) {
         padding: ${props => (props.sub ? '0 5px' : '0')};
     }
@@ -16,6 +18,13 @@ const StyledTL = styled(TransitionLink)`
     :hover {
         text-decoration: underline;
         color: ${({ theme }) => theme.colors.primaryAccent};
+    }
+`
+
+const SubNavButton = styled(NavButton)`
+    font-size: ${props => props.theme.font.subNavButtonSize};
+    @media (max-width: 1024px) {
+        padding: ${props => '0 5px'};
     }
 `
 
@@ -34,15 +43,15 @@ const MainNav = ({ path }) => {
 
     return (
         <MainNavContainer>
-            <StyledTL to='/career' from='bottom' match={onCareer}>
+            <NavButton to='/career' from='bottom' match={onCareer}>
                 career
-            </StyledTL>
-            <StyledTL to='/projects' from='bottom' match={onProjects}>
+            </NavButton>
+            <NavButton to='/projects' from='bottom' match={onProjects}>
                 projects
-            </StyledTL>
-            <StyledTL to='/log' from='bottom' match={onLog}>
+            </NavButton>
+            <NavButton to='/log' from='bottom' match={onLog}>
                 {`log${onLog ? '⟩' : ''}`}
-            </StyledTL>
+            </NavButton>
         </MainNavContainer>
     )
 }
@@ -86,21 +95,21 @@ const SubNav = ({ path, onLog }) => {
         <SubNavContainerGrandparent>
             <SubNavContainerParent>
                 <SubNavContainer>
-                    <StyledTL to='/log/books' from='top' match={onLogBooks} sub>
+                    <SubNavButton to='/log/books' from='top' match={onLogBooks}>
                         books
-                    </StyledTL>
+                    </SubNavButton>
 
-                    <StyledTL to='/log/music' from='top' match={onLogMusic} sub>
+                    <SubNavButton to='/log/music' from='top' match={onLogMusic}>
                         music
-                    </StyledTL>
+                    </SubNavButton>
 
-                    <StyledTL to='/log/articles' from='top' match={onLogArticles} sub>
+                    <SubNavButton to='/log/articles' from='top' match={onLogArticles}>
                         articles
-                    </StyledTL>
+                    </SubNavButton>
 
-                    <StyledTL to='/log/productivity' from='top' match={onLogProductivity} sub>
+                    <SubNavButton to='/log/productivity' from='top' match={onLogProductivity}>
                         productivity
-                    </StyledTL>
+                    </SubNavButton>
                 </SubNavContainer>
             </SubNavContainerParent>
         </SubNavContainerGrandparent>
@@ -137,7 +146,7 @@ const SiteTitle = styled(TransitionLink)`
 const NavContainer1 = styled.div`
     width: 100%;
     // height: 50px;
-    height: ${props => props.showMenu ? '100px' : '50px'};
+    height: ${props => (props.showMenu ? '100px' : '50px')};
     transition: height 1s;
 
     position: fixed;
@@ -161,20 +170,20 @@ const Nav = ({ path, ...props }) => {
     // // console.log('onLog', onLog)
     // console.log('nav path', path)
     // console.log('onLog', onLog)
-    const [ menu, setMenu ] = useState(false)
+    const [menu, setMenu] = useState(false)
     const isMobile = window.innerWidth < 1024
     return (
         <NavContainer1 showMenu={menu}>
             <SiteTitle to='/' from='right'>
                 <h1>chaipalaka</h1>
             </SiteTitle>
-            <CustomArrow onClick={() => setMenu(true)} />
-            { isMobile ? <CustomArrow /> : <NavMenu path={path}/>}
+            <CustomArrow onClick={() => setMenu(v => !v)} />
+            {isMobile ? <CustomArrow /> : <NavMenu path={path} />}
         </NavContainer1>
     )
 }
 
-const NavMenu = ({path}) => {
+const NavMenu = ({ path }) => {
     const onLog = path.includes('/log')
     const onBlog = path.includes('/blog')
     return (
