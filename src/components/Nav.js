@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import TransitionLink from './TransitionLink'
-import { DownArrow } from 'styled-icons/boxicons-solid/DownArrow'
-// import { NavigateNext } from 'styled-icons'
 import { NavigateNext } from 'styled-icons/material/NavigateNext'
-// import * as materialSharp from 'styled-icons/material-sharp'
+import { Plus } from 'styled-icons/boxicons-regular/Plus'
+import { Minus } from 'styled-icons/boxicons-regular/Minus'
 
 const Flexbox = styled.div`
     display: flex;
@@ -21,71 +20,48 @@ const NavLink = styled(TransitionLink)`
 `
 
 const MainNavLink = styled(NavLink)`
+    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     font-size: ${props => props.theme.font.navButtonSize};
     margin: 0 5px;
 `
 
-const BlogNavLink = styled(MainNavLink)`
-    // ?
-`
-
 const SubNavLink = styled(NavLink)`
+    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     font-size: ${props => props.theme.font.subNavButtonSize};
     margin: 0 2px;
 `
 
 const SubNavContainer = styled(Flexbox)`
     justify-content: space-around;
-`
-
-//below styled components are solely to remove bottom scroll bar
-const SubNavContainerGrandparent = styled.div`
-    overflow: hidden;
-    
-`
-
-const SubNavContainerParent = styled.div`
-    width: 100%;
-    height: 100%;
-
+    align-items: center;
     position: relative;
-    bottom: -5px;
-
-    overflow-x: scroll;
-    padding-bottom: 18px;
-    box-sizing: content-box;
+    bottom: -1px;
 `
 
-const SubNav = ({ path, show }) => {
-    console.log('subnav path', path)
-    // console.log(onLog)
+const SubNav = ({ path, show, ...props }) => {
     const onLogBooks = path === '/log/books/',
         onLogMusic = path === '/log/music/',
         onLogArticles = path === '/log/articles/',
         onLogProductivity = path === '/log/productivity/'
 
     return (
-        <SubNavContainerGrandparent show={show}>
-            <SubNavContainerParent>
-                <SubNavContainer>
-                    <SubNavLink to='/log/books' from='top' match={onLogBooks}>
-                        books
-                    </SubNavLink>
+        <SubNavContainer>
+            <SubNavLink to='/log/books' from='top' match={onLogBooks} {...props}>
+                books
+            </SubNavLink>
 
-                    <SubNavLink to='/log/music' from='top' match={onLogMusic}>
-                        music
-                    </SubNavLink>
+            <SubNavLink to='/log/music' from='top' match={onLogMusic} {...props}>
+                music
+            </SubNavLink>
 
-                    <SubNavLink to='/log/articles' from='top' match={onLogArticles}>
-                        articles
-                    </SubNavLink>
+            <SubNavLink to='/log/articles' from='top' match={onLogArticles} {...props}>
+                articles
+            </SubNavLink>
 
-                    <SubNavLink to='/log/productivity' from='top' match={onLogProductivity}>
-                        productivity
-                    </SubNavLink>
-                </SubNavContainer>
-            </SubNavContainerParent>
-        </SubNavContainerGrandparent>
+            <SubNavLink to='/log/productivity' from='top' match={onLogProductivity} {...props}>
+                productivity
+            </SubNavLink>
+        </SubNavContainer>
     )
 }
 
@@ -95,60 +71,76 @@ const MainNavContainer = styled(Flexbox)`
 
 const NavMenuContainer = styled(Flexbox)`
     justify-content: space-between;
+    align-items: center;
     position: absolute;
-    top: 0;
-    right: 10px;
-    width: auto;
+    bottom: 5px;
 
-    // TODO: figure out how to animate the subnav
-    // flex-grow: ${props => props.show ? '1' : '0.00001'};
-    // transition: all 1s;
+    left: ${props => (props.show ? 'calc(100vw - 545px)' : 'calc(100vw - 295px)')};
+    opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
+    transition: left 1s, opacity 0.8s;
+
+    width: auto;
+    z-index: 49;
+`
+
+const BlogNavLink = styled(MainNavLink)`
+    background-color: white;
+    position: absolute;
+    right: 0px;
+    bottom: 5px;
+    z-index: 50;
+    height: 34px;
+    margin: 0;
+    padding-right: 22px;
+    opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
+    transition: opacity 0.8s;
 `
 
 const Arrow = styled(NavigateNext)`
-    color: black;
+    color: ${props => (props.open ? props.theme.colors.primaryAccent : 'black')};
     width: 30px;
     height: 30px;
     margin-top: 3px;
     cursor: pointer;
 `
 
-const NavMenu = ({ path }) => {
-    const [submenuOpen, setSubmenuOpen] = useState(false)
+const NavMenu = ({ path, ...props }) => {
     const onLog = path.includes('/log'),
         onBlog = path.includes('/blog'),
         onCareer = path === '/career/',
         onProjects = path === '/projects/'
-    console.log(submenuOpen)
+    const [submenuOpen, setSubmenuOpen] = useState(onLog)
 
-    const openSubNav = onLog || submenuOpen
     return (
-        <NavMenuContainer show={openSubNav}>
-            <MainNavContainer>
-                <MainNavLink to='/career' from='bottom' match={onCareer}>
-                    career
-                </MainNavLink>
-                <MainNavLink to='/projects' from='bottom' match={onProjects}>
-                    projects
-                </MainNavLink>
-                <MainNavLink to='/log' from='bottom' match={onLog}>
-                    log
-                </MainNavLink>
-                <Arrow onClick={() => setSubmenuOpen(v => !v)} />
-            </MainNavContainer>
+        <>
+            <NavMenuContainer show={submenuOpen} {...props}>
+                <MainNavContainer>
+                    <MainNavLink to='/career' from='bottom' match={onCareer} {...props}>
+                        career
+                    </MainNavLink>
+                    <MainNavLink to='/projects' from='bottom' match={onProjects} {...props}>
+                        projects
+                    </MainNavLink>
+                    <div onClick={() => setSubmenuOpen(true)}>
+                        <MainNavLink to='/log' from='bottom' match={onLog} {...props}>
+                            log
+                        </MainNavLink>
+                    </div>
+                    <Arrow onClick={() => setSubmenuOpen(v => !v)} open={submenuOpen} />
+                </MainNavContainer>
 
-            {openSubNav ? <SubNav path={path} show={openSubNav} /> : <div></div>}
-
-            <MainNavLink to='/blog' from='left' match={onBlog}>
+                {submenuOpen ? <SubNav path={path} show={submenuOpen} {...props} /> : <div></div>}
+            </NavMenuContainer>
+            <BlogNavLink to='/blog' from='left' match={onBlog} {...props}>
                 blog
-            </MainNavLink>
-        </NavMenuContainer>
+            </BlogNavLink>
+        </>
     )
 }
 
 const NavContainer = styled.nav(({ theme, showMenu }) => ({
     width: '100%',
-    height: showMenu ? `${theme.dim.nav}px` : `${2 * theme.dim.nav}px`,
+    height: showMenu ? `${1.75 * theme.dim.nav}px` : `${theme.dim.nav}px`,
     transition: 'height 1s',
 
     position: 'fixed',
@@ -156,30 +148,63 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
     left: '0',
     backgroundColor: 'white',
     zIndex: '100',
-    borderBottom: `10px solid ${theme.colors.primaryAccent}`,
+    borderBottom: `7px solid ${theme.colors.primaryAccent}`,
 }))
 
+const SiteTitle = styled(NavLink)`
+    background-color: white;
+    z-index: 60;
+    position: relative;
+    bottom: -5px;
+`
 
+const PlusIcon = styled(Plus)`
+    color: black;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    right: 0;
+    top: 5px;
+    z-index: 60;
+`
+
+const MinusIcon = styled(Minus)`
+    color: black;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    right: 0;
+    top: 5px;
+    z-index: 60;
+`
 
 const Nav = ({ path, ...props }) => {
-    // dynamic screen width detection here?
-    const [ width, setWidth ] = useState(window.innerWidth)
-
+    // detect screen width
+    const [showMenu, setShowMenu] = useState(false)
+    const [width, setWidth] = useState(null)
     useEffect(() => {
+        setWidth(window.innerWidth)
         window.addEventListener('resize', e => setWidth(e.target.innerWidth))
         return () => {
             window.removeEventListener('resize', e => setWidth(e.target.innerWidth))
         }
     }, [])
 
-    const showMenu = width > 1024
+    const isDesktop = width > 1024
 
     return (
         <NavContainer showMenu={showMenu}>
-            <NavLink to='/' from='right'>
+            <SiteTitle to='/' from='right'>
                 <h1>chaipalaka</h1>
-            </NavLink>
-            {showMenu ? <NavMenu path={path} /> : null}
+            </SiteTitle>
+            {!isDesktop ? (
+                showMenu ? (
+                    <MinusIcon onClick={() => setShowMenu(false)} />
+                ) : (
+                    <PlusIcon onClick={() => setShowMenu(true)} />
+                )
+            ) : null}
+            <NavMenu path={path} showMenu={showMenu} mobile={!isDesktop} />
         </NavContainer>
     )
 }
