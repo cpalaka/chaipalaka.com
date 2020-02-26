@@ -6,7 +6,7 @@ import Nav from './Nav'
 
 /*TODO:
 * 
-* 3. open main nav below navbar via icon on mobile
+* 
  */
 
 const ContentContainer = styled.div`
@@ -31,7 +31,7 @@ const Site = styled.div`
 `
 
 const CanvasContainer = styled.div`
-    position: absolute;
+    position: fixed;
     top: 0;
     width: 100%;
     height: 100%;

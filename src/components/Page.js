@@ -3,22 +3,8 @@ import { motion } from 'framer-motion'
 import styled from 'styled-components'
 import config from '../../config'
 
-const PageParent = styled.div`
-    overflow: hidden;
-`
-
-//hide scroll bars
 const PageChild = styled.div`
-    // width: 50vw;
-    // height: 100%;
-
-    // overflow-y: scroll;
-    // padding-right: 18px;
-    // box-sizing: content-box;
-
-    // @media (max-width: 1024px) {
-    //     width: 95vw;
-    // }
+    background: rgba(255, 255, 255, 0.7);
 `
 
 const variants = dir => ({
@@ -34,12 +20,13 @@ const variants = dir => ({
 })
 
 const Page = ({ children, transitionStatus, entry }) => {
-    const from = entry.state.from 
+    const from = entry.state.from
 
     const startPos = from === 'left' || from === 'top' ? '100%' : '-100%'
     const exitPos = from === 'left' || from === 'top' ? '-100%' : '100%'
 
     const direction = from === 'left' || from === 'right' ? 'x' : 'y'
+    // const direction = 'y'
     return (
         <motion.div
             custom={exitPos}
@@ -52,9 +39,7 @@ const Page = ({ children, transitionStatus, entry }) => {
             animate={transitionStatus}
             variants={variants(direction)}
         >
-            {/* <PageParent> */}
-                <PageChild>{children}</PageChild>
-            {/* </PageParent> */}
+            <PageChild>{children}</PageChild>
         </motion.div>
     )
 }

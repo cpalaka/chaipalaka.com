@@ -13,7 +13,7 @@ export default {
     light: {
         colors: {
             background: 'white',
-            primaryAccent: 'palevioletred'
+            primaryAccent: '#9AECDB'
         },
         ...common
     },

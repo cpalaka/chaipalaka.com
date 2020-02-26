@@ -91,7 +91,7 @@ const BlogNavLink = styled(MainNavLink)`
     z-index: 50;
     height: 34px;
     margin: 0;
-    padding-right: 22px;
+    padding-right: 15px;
     opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
     transition: opacity 0.8s;
 `
@@ -155,6 +155,7 @@ const SiteTitle = styled(NavLink)`
     background-color: white;
     z-index: 60;
     position: relative;
+    left: 13px;
     bottom: -5px;
 `
 
@@ -163,7 +164,7 @@ const PlusIcon = styled(Plus)`
     width: 30px;
     height: 30px;
     position: absolute;
-    right: 0;
+    right: 10px;
     top: 5px;
     z-index: 60;
 `
@@ -173,7 +174,7 @@ const MinusIcon = styled(Minus)`
     width: 30px;
     height: 30px;
     position: absolute;
-    right: 0;
+    right: 10px;
     top: 5px;
     z-index: 60;
 `
