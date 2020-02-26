@@ -2,6 +2,9 @@ const common = {
     font: {
         navButtonSize: '22px',
         subNavButtonSize: '18px'
+    },
+    dim: {
+        nav: '50'
     }
 }
 

@@ -5,12 +5,8 @@ import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 
 /*TODO:
- *
- * 2. redo navbar (much later)
- * 3. fix direct route navigation
- * 3. chrome top bar
- *
- * 5. ios safari bottom bar
+* 
+* 3. open main nav below navbar via icon on mobile
  */
 
 const ContentContainer = styled.div`
