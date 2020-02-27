@@ -22,11 +22,14 @@ const variants = dir => ({
 const Page = ({ children, transitionStatus, entry }) => {
     const from = entry.state.from
 
-    const startPos = from === 'left' || from === 'top' ? '100%' : '-100%'
-    const exitPos = from === 'left' || from === 'top' ? '-100%' : '100%'
+    // const startPos = from === 'left' || from === 'top' ? '100%' : '-100%'
+    // const exitPos = from === 'left' || from === 'top' ? '-100%' : '100%'
 
-    const direction = from === 'left' || from === 'right' ? 'x' : 'y'
-    // const direction = 'y'
+    const startPos = '-100%'
+    const exitPos = '-100%'
+
+    // const direction = from === 'left' || from === 'right' ? 'x' : 'y'
+    const direction = 'y'
     return (
         <motion.div
             custom={exitPos}

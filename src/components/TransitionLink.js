@@ -9,6 +9,7 @@ const TransitionLink = props => (
         entry={{
             length: config.transitionSpeed,
             state: { from: props.from },
+            delay: config.transitionSpeed
         }}
         className={props.className}
     >
