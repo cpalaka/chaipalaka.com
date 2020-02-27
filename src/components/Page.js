@@ -12,6 +12,7 @@ const PageChild = styled.div`
     }
 
     padding: 15px;
+    margin-bottom: 25px;
 `
 
 const variants = dir => ({

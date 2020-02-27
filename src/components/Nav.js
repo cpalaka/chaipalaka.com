@@ -144,7 +144,7 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
     transition: 'height 1s',
 
     position: 'fixed',
-    top: '0',
+    bottom: '0',
     left: '0',
     backgroundColor: 'white',
     zIndex: '100',

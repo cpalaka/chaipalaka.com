@@ -39,7 +39,7 @@ const CanvasContainer = styled.div`
 
 const PageParent = styled.div`
     position: absolute;
-    top: 50px;
+    top: 10px;
 `
 
 const Layout = ({ children, ...props }) => {
