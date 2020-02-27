@@ -46,19 +46,19 @@ const SubNav = ({ path, show, ...props }) => {
 
     return (
         <SubNavContainer>
-            <SubNavLink to='/log/books' from='top' match={onLogBooks} {...props}>
+            <SubNavLink to='/log/books' match={onLogBooks} {...props}>
                 books
             </SubNavLink>
 
-            <SubNavLink to='/log/music' from='top' match={onLogMusic} {...props}>
+            <SubNavLink to='/log/music' match={onLogMusic} {...props}>
                 music
             </SubNavLink>
 
-            <SubNavLink to='/log/articles' from='top' match={onLogArticles} {...props}>
+            <SubNavLink to='/log/articles' match={onLogArticles} {...props}>
                 articles
             </SubNavLink>
 
-            <SubNavLink to='/log/productivity' from='top' match={onLogProductivity} {...props}>
+            <SubNavLink to='/log/productivity' match={onLogProductivity} {...props}>
                 productivity
             </SubNavLink>
         </SubNavContainer>
@@ -115,14 +115,14 @@ const NavMenu = ({ path, ...props }) => {
         <>
             <NavMenuContainer show={submenuOpen} {...props}>
                 <MainNavContainer>
-                    <MainNavLink to='/career' from='bottom' match={onCareer} {...props}>
+                    <MainNavLink to='/career' match={onCareer} {...props}>
                         career
                     </MainNavLink>
-                    <MainNavLink to='/projects' from='bottom' match={onProjects} {...props}>
+                    <MainNavLink to='/projects' match={onProjects} {...props}>
                         projects
                     </MainNavLink>
                     <div onClick={() => setSubmenuOpen(true)}>
-                        <MainNavLink to='/log' from='bottom' match={onLog} {...props}>
+                        <MainNavLink to='/log' match={onLog} {...props}>
                             log
                         </MainNavLink>
                     </div>
@@ -131,7 +131,7 @@ const NavMenu = ({ path, ...props }) => {
 
                 {submenuOpen ? <SubNav path={path} show={submenuOpen} {...props} /> : <div></div>}
             </NavMenuContainer>
-            <BlogNavLink to='/blog' from='left' match={onBlog} {...props}>
+            <BlogNavLink to='/blog' match={onBlog} {...props}>
                 blog
             </BlogNavLink>
         </>
@@ -148,7 +148,7 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
     left: '0',
     backgroundColor: 'white',
     zIndex: '100',
-    borderBottom: `7px solid ${theme.colors.primaryAccent}`,
+    borderTop: `7px solid ${theme.colors.primaryAccent}`,
 }))
 
 const SiteTitle = styled(NavLink)`
@@ -195,7 +195,7 @@ const Nav = ({ path, ...props }) => {
 
     return (
         <NavContainer showMenu={showMenu}>
-            <SiteTitle to='/' from='right'>
+            <SiteTitle to='/'>
                 <h1>chaipalaka</h1>
             </SiteTitle>
             {!isDesktop ? (
