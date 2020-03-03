@@ -16,7 +16,7 @@ const ContentContainer = styled.div`
     width: 60vw;
     left: 20vw;
 
-    height: 100%;
+    height: auto;
 
     @media (max-width: 1024px) {
         left: 2.5vw;
@@ -37,7 +37,7 @@ const CanvasContainer = styled.div`
     height: 100%;
 `
 
-const PageParent = styled.div`
+const PageParent = styled.main`
     position: absolute;
     top: 10px;
 `

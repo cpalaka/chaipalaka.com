@@ -148,7 +148,7 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
     left: '0',
     backgroundColor: 'white',
     zIndex: '100',
-    borderTop: `7px solid ${theme.colors.primaryAccent}`,
+    borderBottom: `7px solid ${theme.colors.primaryAccent}`,
 }))
 
 const SiteTitle = styled(NavLink)`
