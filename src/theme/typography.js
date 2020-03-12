@@ -12,7 +12,8 @@ stAnnesTheme.overrideThemeStyles = ({ rhythm }, options) => ({
     //     fontFamily: 'Lacquer',
     // },
     a: {
-        color: 'initial',
+        // color: 'initial',
+        color: '#040f0f'
     },
 
 })

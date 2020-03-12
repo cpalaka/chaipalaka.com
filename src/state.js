@@ -7,7 +7,7 @@ export const useGlobalState = () => useContext(globalStateContext)
 export const useGlobalDispatch = () => useContext(globalDispatchContext)
 
 export const initialState = {
-    theme: 'light',
+    theme: 'dark',
 }
 
 export const globalStateReducer = (state, action) => {

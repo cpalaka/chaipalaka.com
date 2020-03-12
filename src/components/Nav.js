@@ -12,21 +12,22 @@ const Flexbox = styled.div`
 
 const NavLink = styled(TransitionLink)`
     color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
+    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     display: inline-block;
     :hover {
         text-decoration: underline;
-        color: ${({ theme }) => theme.colors.primaryAccent};
+        color: ${({ theme }) => theme.colors.secondary};
     }
 `
 
 const MainNavLink = styled(NavLink)`
-    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
+
     font-size: ${props => props.theme.font.navButtonSize};
     margin: 0 5px;
 `
 
 const SubNavLink = styled(NavLink)`
-    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
+    // pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     font-size: ${props => props.theme.font.subNavButtonSize};
     margin: 0 2px;
 `

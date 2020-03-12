@@ -13,15 +13,19 @@ export default {
     light: {
         colors: {
             background: 'white',
-            primaryAccent: '#9AECDB'
+            primaryAccent: '#2f6690',
+            secondary: '#f7d4bc',
+            text: '#040f0f'
         },
         ...common
     },
     dark: {
         colors: {
             background: 'black',
-            primaryAccent: 'palevioletred'
+            primaryAccent: 'palevioletred',
+            secondary:'#412234'
         },
         ...common
     },
 }
+

@@ -3,12 +3,22 @@ import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
 import Page from '../components/Page'
-import PageTransition from '../components/Page'
+
+import AnimatedButton from '../components/AnimatedButton'
 import { motion } from 'framer-motion'
 import { useGlobalDispatch, useGlobalState } from '../state'
 
+import { useStaticQuery, graphql } from 'gatsby'
+import Img from 'gatsby-image'
+
 const HomePage = styled.div`
     padding: 10px;
+`
+
+const Picture = styled.div`
+    height: auto;
+    width: 50%;
+    margin: auto;
 `
 
 const MainHeading = styled.p`
@@ -31,7 +41,6 @@ const RevealMore = styled.div`
 
     text-decoration: underline;
     :hover {
-        
         color: ${({ theme }) => theme.colors.primaryAccent};
     }
 `
@@ -39,9 +48,11 @@ const RevealMore = styled.div`
 const Bolded = styled.span`
     // font-weight: bold;
     font-style: italic;
+    color: ${props => props.theme.colors.secondary};
 `
 
 const FullName = styled.span`
+    
     :hover {
         ::after {
             content: 'tanya';
@@ -51,7 +62,7 @@ const FullName = styled.span`
 
 const container = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.5} },
+    show: { opacity: 1, transition: { staggerChildren: 0.5 } },
 }
 
 const item = {
@@ -95,9 +106,24 @@ const IndexPage = props => {
     }, [dispatch, state.theme])
     //
 
+    const data = useStaticQuery(graphql`
+        query MyQuery {
+            file(relativePath: { eq: "gradpic.jpg" }) {
+                childImageSharp {
+                    # Specify the image processing specifications right in the query.
+                    fluid {
+                        ...GatsbyImageSharpFluid
+                    }
+                }
+            }
+        }
+    `)
+    console.log(data)
     return (
         <Page {...props}>
             <HomePage>
+                {/* <Picture><Img fluid={data.file.childImageSharp.fluid} alt='Me in the desert!' /></Picture> */}
+
                 <motion.div variants={container} initial='hidden' animate='show'>
                     {text.slice(0, step + 1).map((el, i) => (
                         <motion.div variants={item} key={i}>
@@ -105,8 +131,8 @@ const IndexPage = props => {
                         </motion.div>
                     ))}
                 </motion.div>
-
-                <RevealMore onClick={() => setStep(s => s+1)}>{text[step][1]}</RevealMore>
+                {/* <AnimatedButton buttonText="hey there" /> */}
+                <RevealMore onClick={() => setStep(s => s + 1)}>{text[step][1]}</RevealMore>
             </HomePage>
         </Page>
     )
