@@ -11,6 +11,12 @@ import { useGlobalDispatch, useGlobalState } from '../state'
 import { useStaticQuery, graphql } from 'gatsby'
 import Img from 'gatsby-image'
 
+import { Facebook as FacebookLogo } from '@styled-icons/boxicons-logos/Facebook'
+import { Twitter as TwitterLogo } from '@styled-icons/boxicons-logos/Twitter'
+import { Github as GithubLogo } from '@styled-icons/boxicons-logos/Github'
+import { Linkedin as LinkedinLogo } from '@styled-icons/boxicons-logos/Linkedin'
+import { MailSend as MailIcon } from '@styled-icons/boxicons-regular/MailSend'
+
 const HomePage = styled.div`
     padding: 10px;
 `
@@ -22,8 +28,9 @@ const Picture = styled.div`
 `
 
 const MainHeading = styled.p`
-    text-align: left;
+    text-align: center;
     font-size: 24px;
+    margin-bottom: 5px;
 `
 
 const RevealText = styled.p`
@@ -46,18 +53,38 @@ const RevealMore = styled.div`
 `
 
 const Bolded = styled.span`
-    // font-weight: bold;
+    font-weight: bold;
     font-style: italic;
     color: ${props => props.theme.colors.secondary};
 `
 
 const FullName = styled.span`
-    
     :hover {
         ::after {
             content: 'tanya';
         }
     }
+`
+const IconStyles = props => ({
+    color: props.theme.colors.text,
+    width: '30px',
+    height: '30px',
+    ':hover': {
+        color: props.theme.colors.primaryAccent,
+        cursor: 'pointer',
+        'box-shadow': '2px 2px',
+    },
+})
+
+const FacebookIcon = styled(FacebookLogo)(props => IconStyles(props))
+const TwitterIcon = styled(TwitterLogo)(props => IconStyles(props))
+const GithubIcon = styled(GithubLogo)(props => IconStyles(props))
+const LinkedinIcon = styled(LinkedinLogo)(props => IconStyles(props))
+const EmailIcon = styled(MailIcon)(props => IconStyles(props))
+
+const IconSet = styled.div`
+    display: flex;
+    justify-content: center;
 `
 
 const container = {
@@ -94,6 +121,7 @@ const text = [
     [<RevealText>I'm a software developer currently living in Tempe, Arizona</RevealText>, 'HMMM?'],
 ]
 
+// facebook, twitter, github, linkedin, email
 const IndexPage = props => {
     const dispatch = useGlobalDispatch()
     const state = useGlobalState()
@@ -118,21 +146,48 @@ const IndexPage = props => {
             }
         }
     `)
-    console.log(data)
+
     return (
         <Page {...props}>
             <HomePage>
                 {/* <Picture><Img fluid={data.file.childImageSharp.fluid} alt='Me in the desert!' /></Picture> */}
 
-                <motion.div variants={container} initial='hidden' animate='show'>
+                {/* <div> New stuff: </div> */}
+
+                {/* <motion.div variants={container} initial='hidden' animate='show'>
                     {text.slice(0, step + 1).map((el, i) => (
                         <motion.div variants={item} key={i}>
                             {el[0]}
                         </motion.div>
                     ))}
                 </motion.div>
-                {/* <AnimatedButton buttonText="hey there" /> */}
-                <RevealMore onClick={() => setStep(s => s + 1)}>{text[step][1]}</RevealMore>
+
+                <RevealMore onClick={() => setStep(s => s + 1)}>{text[step][1]}</RevealMore> */}
+                <MainHeading>
+                    Hullo. You have reached{' '}
+                    <Bolded>
+                        <FullName>Chai</FullName> Palaka
+                    </Bolded>
+                    's personal website.
+                </MainHeading>
+
+                <IconSet>
+                    <a href='https://www.facebook.com/chaitanya.palaka'>
+                        <FacebookIcon href='www.google.com' />
+                    </a>
+                    <a href='https://twitter.com/sincosan'>
+                        <TwitterIcon />
+                    </a>
+                    <a href='https://github.com/cpalaka'>
+                        <GithubIcon />
+                    </a>
+                    <a href='https://www.linkedin.com/in/cpalaka/'>
+                        <LinkedinIcon />
+                    </a>
+                    <a href='mailto:cpalaka@gmail.com'>
+                        <EmailIcon />
+                    </a>
+                </IconSet>
             </HomePage>
         </Page>
     )

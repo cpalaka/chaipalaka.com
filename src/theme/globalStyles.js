@@ -4,6 +4,6 @@ export default createGlobalStyle`
     html, body {
         margin: 0;
         padding: 0;
-        color: #040f0f;
+        color: ${props => props.theme.colors.text}
     }
 `

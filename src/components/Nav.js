@@ -11,7 +11,7 @@ const Flexbox = styled.div`
 `
 
 const NavLink = styled(TransitionLink)`
-    color: ${props => (props.match ? props.theme.colors.primaryAccent : 'initial')};
+    color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
     pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     display: inline-block;
     :hover {
@@ -21,13 +21,11 @@ const NavLink = styled(TransitionLink)`
 `
 
 const MainNavLink = styled(NavLink)`
-
     font-size: ${props => props.theme.font.navButtonSize};
     margin: 0 5px;
 `
 
 const SubNavLink = styled(NavLink)`
-    // pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     font-size: ${props => props.theme.font.subNavButtonSize};
     margin: 0 2px;
 `
@@ -98,7 +96,7 @@ const BlogNavLink = styled(MainNavLink)`
 `
 
 const Arrow = styled(NavigateNext)`
-    color: ${props => (props.open ? props.theme.colors.primaryAccent : 'black')};
+    color: ${props => (props.open ? props.theme.colors.primaryAccent : props.theme.colors.text)};
     width: 30px;
     height: 30px;
     margin-top: 3px;
@@ -160,8 +158,12 @@ const SiteTitle = styled(NavLink)`
     bottom: -5px;
 `
 
+const H1Title = styled.h1`
+    color: ${props => props.theme.colors.text};
+`
+
 const PlusIcon = styled(Plus)`
-    color: black;
+    color: ${props => props.theme.colors.text};
     width: 30px;
     height: 30px;
     position: absolute;
@@ -171,7 +173,7 @@ const PlusIcon = styled(Plus)`
 `
 
 const MinusIcon = styled(Minus)`
-    color: black;
+    color: ${props => props.theme.colors.text};
     width: 30px;
     height: 30px;
     position: absolute;
@@ -197,7 +199,7 @@ const Nav = ({ path, ...props }) => {
     return (
         <NavContainer showMenu={showMenu}>
             <SiteTitle to='/'>
-                <h1>chaipalaka</h1>
+                <H1Title>chaipalaka</H1Title>
             </SiteTitle>
             {!isDesktop ? (
                 showMenu ? (
