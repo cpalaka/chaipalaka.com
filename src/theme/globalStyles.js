@@ -6,4 +6,7 @@ export default createGlobalStyle`
         padding: 0;
         color: ${props => props.theme.colors.text}
     }
+    img {
+        margin: 0;
+    }
 `
