@@ -8,11 +8,9 @@ import TransitionLink from './TransitionLink'
 const NowPlayingContainer = styled.div`
     display: inline-flex;
     flex-direction: row;
-    width: 40%;
+    width: auto;
+    height: auto;
 
-    @media (max-width: 1024px) {
-        width: 80%;
-    }
     box-shadow: inset 0px 60px;
     color: ${props => props.theme.colors.secondary};
     position: relative;
@@ -32,12 +30,10 @@ const ArtistName = styled.h4`
 
 const SongName = styled.p`
     color: ${props => props.theme.colors.text};
-    height: 22px;
+    font-size: 13px;
 `
 const TrackInfo = styled.div`
-    margin-top: 10px;
-    margin-left: 10px;
-    overflow: auto;
+    margin: 10px 10px;
 `
 
 const HorizontalFlex = styled.div`
@@ -78,8 +74,6 @@ const Play = styled.p`
 const NowPlayingTitle = styled.div`
     text-align: center;
     font-size: 20px;
-    // transform: translateX(-20%) rotateZ(-7deg);
-    // transform: perspective(17px);
     z-index: 100;
     font-variant: small-caps;
     font-weight: bolder;
@@ -90,7 +84,7 @@ const NowPlayingDisplay = props => {
     const [songInfo, setSongInfo] = useState({ artist: null, songName: null, albumArt: null })
     useEffect(() => {
         superagent
-            .get('http://ws.audioscrobbler.com/2.0/')
+            .get('https://ws.audioscrobbler.com/2.0/')
             .query({ method: 'user.getrecenttracks' })
             .query({ limit: '1' })
             .query({ format: 'json' })
@@ -102,7 +96,6 @@ const NowPlayingDisplay = props => {
                 let songName = data.name
                 let albumArt = data.image[3]['#text']
                 setSongInfo({ artist: artist, songName: songName, albumArt: albumArt })
-                // console.log(res)
             })
     }, [])
 
