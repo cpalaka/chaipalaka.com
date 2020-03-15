@@ -81,6 +81,10 @@ const Picture = styled.div`
     }
 `
 
+const WhatsNew = styled.h3`
+    text-align: center;
+`
+
 const IconStyles = props => ({
     color: props.theme.colors.text,
     width: '30px',

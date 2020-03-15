@@ -8,7 +8,7 @@ import TransitionLink from './TransitionLink'
 const NowPlayingContainer = styled.div`
     display: inline-flex;
     flex-direction: row;
-    width: 50%;
+    width: 40%;
 
     @media (max-width: 1024px) {
         width: 80%;
@@ -18,6 +18,7 @@ const NowPlayingContainer = styled.div`
     position: relative;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1;
 `
 
 const AlbumArt = styled.img`
@@ -74,6 +75,17 @@ const Play = styled.p`
     }
 `
 
+const NowPlayingTitle = styled.div`
+    text-align: center;
+    font-size: 20px;
+    // transform: translateX(-20%) rotateZ(-7deg);
+    // transform: perspective(17px);
+    z-index: 100;
+    font-variant: small-caps;
+    font-weight: bolder;
+
+`
+
 const NowPlayingDisplay = props => {
     const [songInfo, setSongInfo] = useState({ artist: null, songName: null, albumArt: null })
     useEffect(() => {
@@ -95,27 +107,37 @@ const NowPlayingDisplay = props => {
     }, [])
 
     const playSong = () => {
-        // superagent
-        // .get('https://www.googleapis.com/youtube/v3/search')
-        // .query({ part: 'snippet' })
-        // .query({ maxResults: '1'})
-        // .query({ })
+        superagent
+            .get('https://www.googleapis.com/youtube/v3/search')
+            .query({ part: 'snippet' })
+            .query({ maxResults: '1' })
+            .query({ key: config.googleAPIkey })
+            .query({ q: `${songInfo.artist} ${songInfo.songName}` })
+            .then(res => {
+                const URL = 'https://www.youtube.com/watch?v=' + res.body.items[0].id.videoId
+                if (window) {
+                    window.open(URL, '_blank')
+                }
+            })
     }
 
     return songInfo.artist ? (
-        <NowPlayingContainer>
-            <AlbumArt src={songInfo.albumArt} />
-            <VerticalFlex>
-                <TrackInfo>
-                    <ArtistName>{songInfo.artist}</ArtistName>
-                    <SongName>{songInfo.songName}</SongName>
-                </TrackInfo>
-                <HorizontalFlex>
-                    <Play onClick={playSong}>Play</Play>
-                    <More to='/log/music'>More</More>
-                </HorizontalFlex>
-            </VerticalFlex>
-        </NowPlayingContainer>
+        <div>
+            <NowPlayingTitle>listening to:</NowPlayingTitle>
+            <NowPlayingContainer>
+                <AlbumArt src={songInfo.albumArt} />
+                <VerticalFlex>
+                    <TrackInfo>
+                        <ArtistName>{songInfo.artist}</ArtistName>
+                        <SongName>{songInfo.songName}</SongName>
+                    </TrackInfo>
+                    <HorizontalFlex>
+                        <Play onClick={playSong}>Play</Play>
+                        <More to='/log/music'>More</More>
+                    </HorizontalFlex>
+                </VerticalFlex>
+            </NowPlayingContainer>
+        </div>
     ) : (
         <Spinner name='line-scale' />
     )
