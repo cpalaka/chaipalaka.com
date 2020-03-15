@@ -21,34 +21,19 @@ const HomePage = styled.div`
     padding: 10px;
 `
 
-const Picture = styled.div`
-    height: auto;
-    width: 50%;
-    margin: auto;
-`
-
 const MainHeading = styled.p`
     text-align: center;
     font-size: 24px;
     margin-bottom: 5px;
 `
 
-const RevealText = styled.p`
-    text-align: left;
-    font-size: 18px;
-    margin-bottom: 2px;
-`
-
 const RevealMore = styled.div`
     cursor: pointer;
-    position: absolute;
-
-    right: 15px;
-    bottom: 10px;
-
+    text-align: center;
     text-decoration: underline;
+    padding-bottom: 15px;
     :hover {
-        color: ${({ theme }) => theme.colors.primaryAccent};
+        color: ${({ theme }) => theme.colors.secondary};
     }
 `
 
@@ -65,12 +50,41 @@ const FullName = styled.span`
         }
     }
 `
+
+const InfoBox = styled.div`
+    display: flex;
+    flex-direction: row;
+    padding: 15px 0px;
+
+    @media (max-width: 1024px) {
+        flex-direction: column;
+    }
+`
+
+const InfoText = styled.p`
+    margin-right: 30px;
+    padding-bottom: 15px;
+    width: 100%;
+    text-align: justify;
+    @media (max-width: 1024px) {
+        margin: 0px;
+    }
+`
+
+const Picture = styled.div`
+    width: 30vw;
+    margin: auto;
+    @media (max-width: 1024px) {
+        width: 75vw;
+    }
+`
+
 const IconStyles = props => ({
     color: props.theme.colors.text,
     width: '30px',
     height: '30px',
     ':hover': {
-        color: props.theme.colors.primaryAccent,
+        color: props.theme.colors.secondary,
         cursor: 'pointer',
         'box-shadow': '2px 2px',
     },
@@ -85,48 +99,28 @@ const EmailIcon = styled(MailIcon)(props => IconStyles(props))
 const IconSet = styled.div`
     display: flex;
     justify-content: center;
+    margin-bottom: 8px;
 `
 
-const container = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.5 } },
-}
-
 const item = {
-    hidden: { opacity: 0, y: -20 },
+    hidden: { opacity: 0, y: -50, display: 'none' },
     show: {
         opacity: 1,
         y: 0,
+        display: 'block',
         transition: {
             type: 'tween',
-            duration: 0.5,
+            duration: 1,
             ease: 'easeOut',
         },
     },
 }
 
-const text = [
-    [
-        <MainHeading>
-            Hullo. You have reached{' '}
-            <Bolded>
-                <FullName>Chai</FullName> Palaka
-            </Bolded>
-            's personal website.
-        </MainHeading>,
-        'Who?',
-    ],
-    [<RevealText>I'm a Software Developer currently living in Tempe, Arizona</RevealText>, 'Eh?'],
-    [<RevealText>I'm a software developer currently living in Tempe, Arizona</RevealText>, 'oh?'],
-    [<RevealText>I'm a software developer currently living in Tempe, Arizona</RevealText>, 'HMMM?'],
-]
-
-// facebook, twitter, github, linkedin, email
 const IndexPage = props => {
     const dispatch = useGlobalDispatch()
     const state = useGlobalState()
 
-    const [step, setStep] = useState(0)
+    const [showAboutSec, setShowAboutSec] = useState(false)
 
     const toggleTheme = useCallback(() => {
         const theme = state.theme === 'light' ? 'dark' : 'light'
@@ -136,7 +130,7 @@ const IndexPage = props => {
 
     const data = useStaticQuery(graphql`
         query MyQuery {
-            file(relativePath: { eq: "gradpic.jpg" }) {
+            file(relativePath: { eq: "moose.jpg" }) {
                 childImageSharp {
                     # Specify the image processing specifications right in the query.
                     fluid {
@@ -150,19 +144,6 @@ const IndexPage = props => {
     return (
         <Page {...props}>
             <HomePage>
-                {/* <Picture><Img fluid={data.file.childImageSharp.fluid} alt='Me in the desert!' /></Picture> */}
-
-                {/* <div> New stuff: </div> */}
-
-                {/* <motion.div variants={container} initial='hidden' animate='show'>
-                    {text.slice(0, step + 1).map((el, i) => (
-                        <motion.div variants={item} key={i}>
-                            {el[0]}
-                        </motion.div>
-                    ))}
-                </motion.div>
-
-                <RevealMore onClick={() => setStep(s => s + 1)}>{text[step][1]}</RevealMore> */}
                 <MainHeading>
                     Hullo. You have reached{' '}
                     <Bolded>
@@ -188,6 +169,61 @@ const IndexPage = props => {
                         <EmailIcon />
                     </a>
                 </IconSet>
+
+                <RevealMore onClick={() => setShowAboutSec(v => !v)}>
+                    {showAboutSec ? 'less' : 'about me'}
+                </RevealMore>
+
+                <motion.div
+                    variants={item}
+                    animate={showAboutSec ? 'show' : 'hidden'}
+                    initial='hidden'
+                >
+                    <InfoBox>
+                        <InfoText>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                            tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+                            veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+                            commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+                            velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+                            occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                            mollit anim id est laborum.
+                        </InfoText>
+                        <Picture>
+                            <Img fluid={data.file.childImageSharp.fluid} alt='Me in the desert!' />
+                        </Picture>
+                    </InfoBox>
+                </motion.div>
+
+                <hr />
+
+                <InfoText>
+                    Testing 123
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                    culpa qui officia deserunt mollit anim id est laborum.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                    culpa qui officia deserunt mollit anim id est laborum.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                    culpa qui officia deserunt mollit anim id est laborum.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                    culpa qui officia deserunt mollit anim id est laborum.
+                </InfoText>
             </HomePage>
         </Page>
     )

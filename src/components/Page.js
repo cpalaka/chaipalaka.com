@@ -12,7 +12,8 @@ const PageChild = styled.div`
     }
 
     padding: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 60px;
+    // border-radius: 3px;
 `
 
 const variants = dir => ({

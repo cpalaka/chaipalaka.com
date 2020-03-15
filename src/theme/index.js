@@ -18,8 +18,7 @@ export default {
             ...common.commonColors,
             background: 'white',
             primaryAccent: '#2f6690',
-            secondary: '#f7d4bc',
-            
+            secondary: '#ea638c',
         },
         ...common,
     },
@@ -27,9 +26,8 @@ export default {
         colors: {
             ...common.commonColors,
             background: 'black',
-            primaryAccent: 'palevioletred',
-            secondary: '#412234',
-
+            primaryAccent: '#2f6690',
+            secondary: '#ea638c',
         },
         ...common,
     },
