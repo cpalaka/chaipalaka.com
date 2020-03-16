@@ -4,6 +4,7 @@ import superagent from 'superagent'
 import config from '../../config'
 import Spinner from 'react-spinkit'
 import TransitionLink from './TransitionLink'
+import { Play } from '@styled-icons/boxicons-regular/Play'
 
 const NowPlayingContainer = styled.div`
     display: inline-flex;
@@ -17,11 +18,6 @@ const NowPlayingContainer = styled.div`
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
-`
-
-const AlbumArt = styled.img`
-    width: 100px;
-    height: 100px;
 `
 
 const ArtistName = styled.h4`
@@ -41,6 +37,7 @@ const HorizontalFlex = styled.div`
     flex-direction: row;
     justify-content: space-between;
     margin: 0px 10px;
+    align-items: center;
 `
 
 const VerticalFlex = styled.div`
@@ -60,25 +57,26 @@ const More = styled(TransitionLink)`
     }
 `
 
-const Play = styled.p`
-    cursor: pointer;
-    text-align: center;
-    margin-right: 5px;
-    text-decoration: underline;
-    color: ${({ theme }) => theme.colors.secondary};
-    :hover {
-        color: ${({ theme }) => theme.colors.primaryAccent};
-    }
-`
-
 const NowPlayingTitle = styled.div`
     text-align: center;
     font-size: 20px;
     z-index: 100;
     font-variant: small-caps;
     font-weight: bolder;
-
 `
+
+const IconStyles = props => ({
+    color: props.theme.colors.text,
+    width: '30px',
+    height: '30px',
+    ':hover': {
+        color: props.theme.colors.secondary,
+        cursor: 'pointer',
+        'box-shadow': '2px 2px',
+    },
+})
+
+const PlayIcon = styled(Play)(props => IconStyles(props))
 
 const NowPlayingDisplay = props => {
     const [songInfo, setSongInfo] = useState({ artist: null, songName: null, albumArt: null })
@@ -118,14 +116,14 @@ const NowPlayingDisplay = props => {
         <div>
             <NowPlayingTitle>listening to:</NowPlayingTitle>
             <NowPlayingContainer>
-                <AlbumArt src={songInfo.albumArt} />
+                <img src={songInfo.albumArt} alt={`Album art for ${songInfo.artist} - ${songInfo.songName}`} width='100px' height='100px' />
                 <VerticalFlex>
                     <TrackInfo>
                         <ArtistName>{songInfo.artist}</ArtistName>
                         <SongName>{songInfo.songName}</SongName>
                     </TrackInfo>
                     <HorizontalFlex>
-                        <Play onClick={playSong}>Play</Play>
+                        <PlayIcon onClick={playSong}>Play</PlayIcon>
                         <More to='/log/music'>More</More>
                     </HorizontalFlex>
                 </VerticalFlex>

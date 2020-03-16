@@ -73,8 +73,10 @@ const NavMenuContainer = styled(Flexbox)`
     align-items: center;
     position: absolute;
     bottom: 5px;
-
-    left: ${props => (props.show ? 'calc(100vw - 545px)' : 'calc(100vw - 295px)')};
+    left: ${props =>
+        props.show
+            ? `calc(100vw - ${props.isWindows ? '490px' : '470px'})`
+            : `calc(100vw - ${props.isWindows ? '230px' : '210px'})`};
     opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
     transition: left 1s, opacity 0.8s;
 
@@ -106,17 +108,22 @@ const Arrow = styled(NavigateNext)`
 const NavMenu = ({ path, ...props }) => {
     const onLog = path.includes('/log'),
         onBlog = path.includes('/blog'),
-        onCareer = path === '/career/',
         onProjects = path === '/projects/'
     const [submenuOpen, setSubmenuOpen] = useState(onLog)
+    const [isWindows, setIsWindows] = useState(false)
 
+    useEffect(() => {
+        setSubmenuOpen(onLog)
+    }, path)
+
+    useEffect(() => {
+        setIsWindows(window.navigator.userAgent.includes('Windows'))
+    }, [])
+    console.log(isWindows)
     return (
         <>
-            <NavMenuContainer show={submenuOpen} {...props}>
+            <NavMenuContainer show={submenuOpen} isWindows={isWindows} {...props}>
                 <MainNavContainer>
-                    <MainNavLink to='/career' match={onCareer} {...props}>
-                        career
-                    </MainNavLink>
                     <MainNavLink to='/projects' match={onProjects} {...props}>
                         projects
                     </MainNavLink>
