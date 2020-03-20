@@ -9,6 +9,7 @@ import { Play } from '@styled-icons/boxicons-regular/Play'
 const NowPlayingContainer = styled.div`
     display: inline-flex;
     flex-direction: row;
+    min-width: 200px;
     width: auto;
     height: auto;
 

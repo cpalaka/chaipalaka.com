@@ -119,7 +119,7 @@ const NavMenu = ({ path, ...props }) => {
     useEffect(() => {
         setIsWindows(window.navigator.userAgent.includes('Windows'))
     }, [])
-    console.log(isWindows)
+
     return (
         <>
             <NavMenuContainer show={submenuOpen} isWindows={isWindows} {...props}>
