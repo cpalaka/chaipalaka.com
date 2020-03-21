@@ -2,8 +2,8 @@ import React, { useCallback, useState, useEffect } from 'react'
 import styled from 'styled-components'
 import superagent from 'superagent'
 import config from '../../config'
-import Spinner from 'react-spinkit'
 import TransitionLink from './TransitionLink'
+import Loader from './Loader'
 import { Play } from '@styled-icons/boxicons-regular/Play'
 
 const NowPlayingContainer = styled.div`
@@ -117,7 +117,12 @@ const NowPlayingDisplay = props => {
         <div>
             <NowPlayingTitle>listening to:</NowPlayingTitle>
             <NowPlayingContainer>
-                <img src={songInfo.albumArt} alt={`Album art for ${songInfo.artist} - ${songInfo.songName}`} width='100px' height='100px' />
+                <img
+                    src={songInfo.albumArt}
+                    alt={`Album art for ${songInfo.artist} - ${songInfo.songName}`}
+                    width='100px'
+                    height='100px'
+                />
                 <VerticalFlex>
                     <TrackInfo>
                         <ArtistName>{songInfo.artist}</ArtistName>
@@ -131,7 +136,7 @@ const NowPlayingDisplay = props => {
             </NowPlayingContainer>
         </div>
     ) : (
-        <Spinner name='line-scale' />
+        <Loader />
     )
 }
 

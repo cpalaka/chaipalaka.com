@@ -4,14 +4,14 @@ import Page from '../../components/Page'
 import superagent from 'superagent'
 import { ChevronDown } from '@styled-icons/boxicons-solid/ChevronDown'
 import { Lastfm } from '@styled-icons/entypo-social/Lastfm'
-import Spinner from 'react-spinkit'
+import Loader from '../../components/Loader'
 import config from '../../../config'
 
 const MusicLogPage = props => {
-    const [weeklySongs, setWeeklySongs] = useState(null)
-    const [monthlyAlbums, setMonthlyAlbums] = useState(null)
-    const [monthlyArtists, setMonthlyArtists] = useState(null)
-    const [allTimeArtists, setAllTimeArtists] = useState(null)
+    const [weeklySongs, setWeeklySongs] = useState({ isLoading: false })
+    const [monthlyAlbums, setMonthlyAlbums] = useState({ isLoading: false })
+    const [monthlyArtists, setMonthlyArtists] = useState({ isLoading: false })
+    const [allTimeArtists, setAllTimeArtists] = useState({ isLoading: false })
 
     const commonRequest = superagent
         .get('https://ws.audioscrobbler.com/2.0/')
@@ -20,7 +20,8 @@ const MusicLogPage = props => {
         .query({ user: config.lastfmUserName })
         .query({ api_key: config.lastfmAPIkey })
 
-    const fetchWeeklySongs = () =>
+    const fetchWeeklySongs = () => {
+        setWeeklySongs({ isLoading: true })
         commonRequest
             .query({ method: 'user.gettoptracks' })
             .query({ period: '7day' })
@@ -33,10 +34,12 @@ const MusicLogPage = props => {
                     playCount: el.playcount,
                     type: 'track',
                 }))
-                setWeeklySongs(tracks)
+                setWeeklySongs(p => ({ data: tracks, isLoading: false }))
             })
+    }
 
-    const fetchMonthlyAlbums = () =>
+    const fetchMonthlyAlbums = () => {
+        setMonthlyAlbums({ isLoading: true })
         commonRequest
             .query({ method: 'user.gettopalbums' })
             .query({ period: '1month' })
@@ -49,10 +52,12 @@ const MusicLogPage = props => {
                     playCount: el.playcount,
                     type: 'album',
                 }))
-                setMonthlyAlbums(albums)
+                setMonthlyAlbums(p => ({ data: albums, isLoading: false }))
             })
+    }
 
-    const fetchMonthlyArtists = () =>
+    const fetchMonthlyArtists = () => {
+        setMonthlyArtists({ isLoading: true })
         commonRequest
             .query({ method: 'user.gettopartists' })
             .query({ period: '1month' })
@@ -64,10 +69,12 @@ const MusicLogPage = props => {
                     playCount: el.playcount,
                     type: 'artist',
                 }))
-                setMonthlyArtists(artists)
+                setMonthlyArtists(p => ({ data: artists, isLoading: false }))
             })
+    }
 
-    const fetchAllTimeArtists = () =>
+    const fetchAllTimeArtists = () => {
+        setAllTimeArtists({ isLoading: true })
         commonRequest
             .query({ method: 'user.gettopartists' })
             .query({ period: 'overall' })
@@ -79,8 +86,9 @@ const MusicLogPage = props => {
                     playCount: el.playcount,
                     type: 'artist',
                 }))
-                setAllTimeArtists(artists)
+                setAllTimeArtists(p => ({ data: artists, isLoading: false }))
             })
+    }
 
     return (
         <Page {...props}>
@@ -139,26 +147,27 @@ const DownArrowIcon = styled(ChevronDown)(props => IconStyles(props))
 
 const MusicSection = ({ sectionTitle, fetch, data }) => {
     const [showContent, setShowContent] = useState(false)
+    const isLoading = data.isLoading
+    const content = data.data
     const openSection = () => {
         setShowContent(v => !v)
-        if (!data) {
+        if (!content) {
             fetch()
         }
     }
-
+    console.log(isLoading)
     return (
         <>
             <SectionHead onClick={openSection}>
                 <p>{sectionTitle}</p>
                 <DownArrowIcon />
             </SectionHead>
-
             <SectionContent show={showContent}>
                 {showContent ? (
-                    data ? (
-                        data.map((el, i) => <SectionRow key={el + i} {...el} />)
+                    isLoading ? (
+                        <Loader />
                     ) : (
-                        <Spinner name='circle' />
+                        content.map((el, i) => <SectionRow key={el + i} {...el} />)
                     )
                 ) : null}
             </SectionContent>
@@ -182,5 +191,6 @@ const SectionRow = ({ type, albumArt, artist, playCount, ...props }) => {
         </HorizontalFlex>
     )
 }
+
 
 export default MusicLogPage
