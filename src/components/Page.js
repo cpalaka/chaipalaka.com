@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import config from '../../config'
 
 const PageChild = styled.div`
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.9);
     width: 60vw;
 
     @media (max-width: 1024px) {
