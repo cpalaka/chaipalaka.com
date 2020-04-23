@@ -1,11 +1,11 @@
 .loader {
-    margin: 0 0 2em;
-    height: 100px;
-    width: 20%;
+    /* margin: 0 0 2em; */
+    height: auto;
+    width: auto;
     text-align: center;
-    padding: 1em;
-    margin: 0 auto 1em;
-    display: inline-block;
+    /* padding: 1em; */
+    /* margin: 0 auto 1em; */
+    /* display: inline-block; */
     vertical-align: top;
 }
 
