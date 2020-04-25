@@ -122,6 +122,15 @@ const item = {
     },
 }
 
+const Box = styled.div`
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    width: 100px;
+    height: 100px;
+`
+
 const IndexPage = props => {
     const dispatch = useGlobalDispatch()
     const state = useGlobalState()
@@ -149,6 +158,7 @@ const IndexPage = props => {
 
     return (
         <Page {...props}>
+            {/* <Box /> */}
             <HomePage>
                 <MainHeading>
                     Hullo. You have reached{' '}
@@ -203,32 +213,6 @@ const IndexPage = props => {
 
                 <hr />
                 <NowPlayingDisplay />
-                {/* <InfoText>
-                    Testing 123 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-                    dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-                    sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor
-                    sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                    labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-                    nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa
-                    qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet,
-                    consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-                    reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
-                    deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur
-                    adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-                    ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                    voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-                    occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim
-                    id est laborum.
-                </InfoText> */}
             </HomePage>
         </Page>
     )

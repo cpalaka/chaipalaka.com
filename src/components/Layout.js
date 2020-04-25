@@ -4,31 +4,15 @@ import MeshLine from './MeshLine'
 import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 
-/*TODO:
-* 
-* 
- */
-
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
 
-    width: 60vw;
-    left: 20vw;
-
-    height: auto;
-
-    @media (max-width: 1024px) {
-        left: 2.5vw;
-        width: 95vw;
-    }
+    width: 100%;
+    height: 100%;
 `
 
-const Site = styled.div`
-    // height: 100%;
-    // width: auto;
-    // overflow: scroll;
-`
+const Site = styled.div``
 
 const CanvasContainer = styled.div`
     position: fixed;
@@ -39,7 +23,9 @@ const CanvasContainer = styled.div`
 
 const PageParent = styled.main`
     position: absolute;
-    top: 10px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
 `
 
 const Layout = ({ children, ...props }) => {

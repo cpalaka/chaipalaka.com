@@ -5,15 +5,18 @@ import config from '../../config'
 
 const PageChild = styled.div`
     background: rgba(255, 255, 255, 0.9);
+
     width: 60vw;
 
     @media (max-width: 1024px) {
         width: 95vw;
+        margin-left: 2.5vw;
     }
 
     padding: 15px;
+    margin-left: 20vw;
     margin-bottom: 60px;
-    // border-radius: 3px;
+    margin-top: 10px;
 `
 
 const variants = dir => ({
