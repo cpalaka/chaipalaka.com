@@ -35,6 +35,14 @@ module.exports = {
                 hostname: 'www.chaipalaka.com',
             },
         },
+        //source mdx files
+        {
+            resolve: `gatsby-source-filesystem`,
+            options: {
+                name: `mdx`,
+                path: `${__dirname}/src/pages`,
+            },
+        },
         `gatsby-plugin-mdx`,
         {
             resolve: `gatsby-plugin-styled-components`,
