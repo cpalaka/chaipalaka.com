@@ -8,16 +8,35 @@ import AnimatedButton from '../components/AnimatedButton'
 import { motion } from 'framer-motion'
 import { useGlobalDispatch, useGlobalState } from '../state'
 
-import { useStaticQuery, graphql } from 'gatsby'
+import { graphql } from 'gatsby'
+import { MDXProvider } from '@mdx-js/react'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
 
-const BlogPostTemplate = props => {
-    console.log(props)
+const shortcodes = { TransitionLink }
+
+const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
+    console.log(mdx)
     return (
         <Page {...props}>
-            <MDXRenderer>{props.pageContext.body}</MDXRenderer>
+            <MDXProvider components={shortcodes}>
+                <MDXRenderer>{mdx.body}</MDXRenderer>
+            </MDXProvider>
         </Page>
     )
 }
+
+export const pageQuery = graphql`
+    query BlogPostQuery($id: String) {
+        mdx(id: { eq: $id }) {
+            id
+            body
+            frontmatter {
+                title
+                date
+                tags
+            }
+        }
+    }
+`
 
 export default BlogPostTemplate

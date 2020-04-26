@@ -1,5 +1,5 @@
 const path = require('path')
-
+const { createFilePath } = require('gatsby-source-filesystem')
 
 exports.onCreateWebpackConfig = ({ stage, actions, plugins }) => {
     actions.setWebpackConfig({
@@ -9,6 +9,18 @@ exports.onCreateWebpackConfig = ({ stage, actions, plugins }) => {
             }),
         ],
     })
+}
+
+exports.onCreateNode = ({ node, actions, getNode }) => {
+    const { createNodeField } = actions
+    if (node.internal.type === 'Mdx') {
+        const value = createFilePath({ node, getNode })
+        createNodeField({
+            name: 'slug',
+            node,
+            value: `/blog${value}`,
+        })
+    }
 }
 
 exports.createPages = ({ graphql, actions }) => {
@@ -22,13 +34,9 @@ exports.createPages = ({ graphql, actions }) => {
                     edges {
                         node {
                             id
-                            frontmatter {
-                                title
-                                date
+                            fields {
                                 slug
-                                tags
                             }
-                            body
                         }
                     }
                 }
@@ -44,13 +52,10 @@ exports.createPages = ({ graphql, actions }) => {
             // console.log(edge)
             createPage({
                 // Path for this page — required
-                path: `/blog${edge.node.frontmatter.slug}`,
+                path: `${edge.node.fields.slug}`,
                 component: blogPostTemplate,
                 context: {
-                    title: edge.node.frontmatter.title,
-                    date: edge.node.frontmatter.date,
-                    tags: edge.node.frontmatter.tags,
-                    body: edge.node.body
+                    id: edge.node.id
                 },
             })
         })
