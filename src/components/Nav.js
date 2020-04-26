@@ -69,6 +69,7 @@ const MainNavContainer = styled(Flexbox)`
 `
 
 const NavMenuContainer = styled(Flexbox)`
+    background: rgba(255, 255, 255, 0.9);
     justify-content: space-between;
     align-items: center;
     position: absolute;
@@ -152,17 +153,21 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
     position: 'fixed',
     bottom: '0',
     left: '0',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.0)',
     zIndex: '100',
     borderBottom: `7px solid ${theme.colors.primaryAccent}`,
 }))
 
 const SiteTitle = styled(NavLink)`
-    background-color: white;
+    // background-color: white;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px;
     z-index: 60;
     position: relative;
     left: 13px;
-    bottom: -5px;
+    // bottom: -5px;
+    bottom: 2px;
 `
 
 const H1Title = styled.h1`
@@ -170,22 +175,25 @@ const H1Title = styled.h1`
 `
 
 const PlusIcon = styled(Plus)`
+    background: rgba(255, 255, 255, 0.9);
+
     color: ${props => props.theme.colors.text};
-    width: 30px;
-    height: 30px;
+    width: 45px;
+    height: 45px;
     position: absolute;
     right: 10px;
-    top: 5px;
+    top: -2px;
     z-index: 60;
 `
 
 const MinusIcon = styled(Minus)`
+    background: rgba(255, 255, 255, 0.9);
     color: ${props => props.theme.colors.text};
-    width: 30px;
-    height: 30px;
+    width: 45px;
+    height: 45px;
     position: absolute;
     right: 10px;
-    top: 5px;
+    top: -2px;
     z-index: 60;
 `
 

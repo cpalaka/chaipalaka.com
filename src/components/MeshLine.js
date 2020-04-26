@@ -82,7 +82,7 @@ export default React.memo(function App() {
     return (
         <Canvas
             style={{ background: theme.colors.background }}
-            camera={{ position: [0, 0, 100], fov: 20 }}
+            camera={{ position: [0, 0, 100], fov: 30 }}
             onMouseMove={e =>
                 (mouse.current = [
                     e.clientX - window.innerWidth / 2,
@@ -92,9 +92,9 @@ export default React.memo(function App() {
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={20}
-                // colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
-                colors={[theme.colors.primaryAccent]}
+                count={50}
+                colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
+                // colors={[theme.colors.primaryAccent]}
             />
             <Rig mouse={mouse} />
         </Canvas>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import Page from '../../components/Page'
+import Page, { PageSection } from '../../components/Page'
 import superagent from 'superagent'
 import { ChevronDown } from '@styled-icons/boxicons-solid/ChevronDown'
 import { Lastfm } from '@styled-icons/entypo-social/Lastfm'
@@ -92,29 +92,37 @@ const MusicLogPage = props => {
 
     return (
         <Page {...props}>
-            <h3>/log/music</h3>
-            <MusicSection
-                sectionTitle='Songs Stuck In My Head'
-                fetch={fetchWeeklySongs}
-                data={weeklySongs}
-            />
-            <MusicSection
-                sectionTitle='Albums of the Month'
-                fetch={fetchMonthlyAlbums}
-                data={monthlyAlbums}
-            />
-            <MusicSection
-                sectionTitle='Artists you might want to check out'
-                fetch={fetchMonthlyArtists}
-                data={monthlyArtists}
-            />
-            <MusicSection
-                sectionTitle='Favorite of All Time'
-                fetch={fetchAllTimeArtists}
-                data={allTimeArtists}
-            />
-            <p>Powered by Last.fm</p>
-            <LastfmIcon />
+            <PageSection>
+                <h3>/log/music</h3>
+                <MusicSection
+                    sectionTitle='Songs Stuck In My Head'
+                    fetch={fetchWeeklySongs}
+                    data={weeklySongs}
+                />
+            </PageSection>
+            <PageSection>
+                <MusicSection
+                    sectionTitle='Albums of the Month'
+                    fetch={fetchMonthlyAlbums}
+                    data={monthlyAlbums}
+                />
+            </PageSection>
+            <PageSection>
+                <MusicSection
+                    sectionTitle='Artists you might want to check out'
+                    fetch={fetchMonthlyArtists}
+                    data={monthlyArtists}
+                />
+            </PageSection>
+            <PageSection>
+                <MusicSection
+                    sectionTitle='Favorite of All Time'
+                    fetch={fetchAllTimeArtists}
+                    data={allTimeArtists}
+                />
+                <p>Powered by Last.fm</p>
+                <LastfmIcon />
+            </PageSection>
         </Page>
     )
 }
@@ -155,7 +163,7 @@ const MusicSection = ({ sectionTitle, fetch, data }) => {
             fetch()
         }
     }
-    console.log(isLoading)
+
     return (
         <>
             <SectionHead onClick={openSection}>
@@ -191,6 +199,5 @@ const SectionRow = ({ type, albumArt, artist, playCount, ...props }) => {
         </HorizontalFlex>
     )
 }
-
 
 export default MusicLogPage

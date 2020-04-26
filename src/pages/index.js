@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react'
 import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
-import Page from '../components/Page'
+import Page, { PageSection } from '../components/Page'
 
 import AnimatedButton from '../components/AnimatedButton'
 import { motion } from 'framer-motion'
@@ -158,8 +158,7 @@ const IndexPage = props => {
 
     return (
         <Page {...props}>
-            {/* <Box /> */}
-            <HomePage>
+            <PageSection>
                 <MainHeading>
                     Hullo. You have reached{' '}
                     <Bolded>
@@ -210,10 +209,10 @@ const IndexPage = props => {
                         </Picture>
                     </InfoBox>
                 </motion.div>
-
-                <hr />
+            </PageSection>
+            <PageSection width={40}>
                 <NowPlayingDisplay />
-            </HomePage>
+            </PageSection>
         </Page>
     )
 }

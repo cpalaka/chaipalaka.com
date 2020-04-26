@@ -1,8 +1,14 @@
 import React from 'react'
 // import SEO from '../components/seo'
 // import styled from 'styled-components'
-import Page from '../../components/Page'
+import Page, { PageSection } from '../../components/Page'
 
-const ArticlesLogPage = props => <Page {...props}><h1>Articles</h1></Page>
+const ArticlesLogPage = props => (
+    <Page {...props}>
+        <PageSection>
+            <h1>Articles</h1>
+        </PageSection>
+    </Page>
+)
 
 export default ArticlesLogPage
