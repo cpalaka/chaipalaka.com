@@ -16,7 +16,7 @@ export default {
     light: {
         colors: {
             ...common.commonColors,
-            background: 'white',
+            // background: 'white',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
         },
@@ -25,6 +25,7 @@ export default {
     dark: {
         colors: {
             ...common.commonColors,
+            // text: 'white',
             background: 'black',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',

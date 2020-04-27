@@ -33,10 +33,10 @@ function Lines({ count, colors }) {
         () =>
             new Array(count).fill().map(() => {
                 const pos = new THREE.Vector3(
-                    // 10 - Math.random() * 20,
-                    20 - Math.random() * 40,
-                    // 10 - Math.random() * 20,
-                    25,
+                    10 - Math.random() * 20,
+                    // 20 - Math.random() * 40,
+                    10 - Math.random() * 20,
+                    // 25,
                     10 - Math.random() * 20
                 )
                 const points = new Array(30)
@@ -92,7 +92,7 @@ export default React.memo(function App() {
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={50}
+                count={20}
                 colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
                 // colors={[theme.colors.primaryAccent]}
             />

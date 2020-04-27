@@ -13,8 +13,8 @@ export const PageSection = styled.div`
 `
 
 const PageChild = styled.div`
-    width: 60vw;
-    margin-left: 20vw;
+    width: 50vw;
+    margin-left: 25vw;
 
     @media (max-width: 1024px) {
         width: 95vw;
