@@ -23,8 +23,39 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
     }
 }
 
-exports.createPages = ({ graphql, actions }) => {
-    const { createPage } = actions
+exports.createSchemaCustomization = ({ actions }) => {
+    const { createTypes } = actions
+    const typeDefs = `
+        type AllTags implements Node {
+            tags: [String]!
+        }
+    `
+    createTypes(typeDefs)
+}
+
+exports.createResolvers = ({ createResolvers }) => {
+    const resolvers = {
+        Query: {
+            type: 'AllTags',
+            allTags: {
+                resolve(source, args, context, info) {
+                    let posts = context.nodeModel.getAllNodes({ type: 'Mdx' })
+                    let tags = posts
+                        .map(el => el.frontmatter.tags.split(','))
+                        .reduce((acc, el) => acc.concat(el), [])
+                        .filter((el, i, self) => self.indexOf(el) === i)
+                        .sort()
+
+                    return { tags: tags }
+                },
+            },
+        },
+    }
+    createResolvers(resolvers)
+}
+
+exports.createPages = ({ graphql, actions, createNodeId, createContentDigest }) => {
+    const { createPage, createNode } = actions
     const blogPostTemplate = path.resolve(`src/components/BlogPostTemplate.js`)
 
     return graphql(
@@ -36,6 +67,9 @@ exports.createPages = ({ graphql, actions }) => {
                             id
                             fields {
                                 slug
+                            }
+                            frontmatter {
+                                tags
                             }
                         }
                     }
@@ -49,13 +83,11 @@ exports.createPages = ({ graphql, actions }) => {
 
         // Create blog post pages.
         result.data.allMdx.edges.forEach(edge => {
-            // console.log(edge)
             createPage({
-                // Path for this page — required
                 path: `${edge.node.fields.slug}`,
                 component: blogPostTemplate,
                 context: {
-                    id: edge.node.id
+                    id: edge.node.id,
                 },
             })
         })

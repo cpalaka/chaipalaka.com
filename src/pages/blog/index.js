@@ -41,14 +41,12 @@ function reducer(state, action) {
     }
 }
 
-const BlogPage = ({ data: { allMdx }, ...props }) => {
-    const tags = allMdx.nodes
-        .map(el => el.frontmatter.tags.split(','))
-        .reduce((acc, el) => acc.concat(el), [])
-        .filter((el, i, self) => self.indexOf(el) === i)
-        .sort()
+const BlogPage = ({ data: { allMdx, allTags }, ...props }) => {
+    const rawPostContent = allMdx.nodes
 
-    const allPosts = allMdx.nodes.map(el => ({
+    const tags = allTags.tags
+
+    const allPosts = rawPostContent.map(el => ({
         title: el.frontmatter.title,
         date: el.frontmatter.date,
         tags: el.frontmatter.tags,
@@ -63,22 +61,22 @@ const BlogPage = ({ data: { allMdx }, ...props }) => {
 
     const [state, dispatch] = useReducer(reducer, initialState)
 
-    console.log(state)
+    console.log(tags)
     return (
         <Page {...props}>
             <PageSection>
                 <TagContainer>
                     {tags.map(tag => (
-                        <Tag onClick={() => dispatch({ type: 'selectTag', data: tag })}>{tag}</Tag>
+                        <Tag key={tag} onClick={() => dispatch({ type: 'selectTag', data: tag })}>{tag}</Tag>
                     ))}
                 </TagContainer>
 
-                {allMdx.nodes.map(el => (
-                    <>
+                {rawPostContent.map((el, i) => (
+                    <div key={i}>
                         <div>{el.frontmatter.title}</div>
                         <div>{el.frontmatter.date}</div>
                         <div>{el.frontmatter.tags}</div>
-                    </>
+                    </div>
                 ))}
                 <h1>Hi from the second page</h1>
                 <p>Welcome to page 2</p>
@@ -98,6 +96,9 @@ export const allPostsQuery = graphql`
                     tags
                 }
             }
+        }
+        allTags {
+            tags
         }
     }
 `
