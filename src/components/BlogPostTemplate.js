@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react'
 import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
-import Page from '../components/Page'
+import Page, { PageSection } from '../components/Page'
 
 import AnimatedButton from '../components/AnimatedButton'
 import { motion } from 'framer-motion'
@@ -18,9 +18,11 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
     console.log(mdx)
     return (
         <Page {...props}>
-            <MDXProvider components={shortcodes}>
-                <MDXRenderer>{mdx.body}</MDXRenderer>
-            </MDXProvider>
+            <PageSection>
+                <MDXProvider components={shortcodes}>
+                    <MDXRenderer>{mdx.body}</MDXRenderer>
+                </MDXProvider>
+            </PageSection>
         </Page>
     )
 }
@@ -32,8 +34,12 @@ export const pageQuery = graphql`
             body
             frontmatter {
                 title
-                date
+                date(formatString: "MMMM D, Y")
                 tags
+            }
+            excerpt
+            wordCount {
+                words
             }
         }
     }
