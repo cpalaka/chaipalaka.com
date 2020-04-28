@@ -7,9 +7,9 @@ export const PageSection = styled.div`
     background: rgba(255, 255, 255, 0.9);
     // background: rgba(119, 122, 128, 0.98);
     margin: 15px auto;
-    padding: 10px;
+    padding: ${({ padding }) => (padding ? padding : '10px')};
     border: 3px solid #040f0f;
-    width: ${props => props.width ? props.width + 'vw' : 'initial'};
+    width: ${({ width }) => (width ? width + 'vw' : 'initial')};
 `
 
 const PageChild = styled.div`
@@ -20,7 +20,6 @@ const PageChild = styled.div`
         width: 95vw;
         margin-left: 2.5vw;
     }
-
 
     margin-bottom: 60px;
     margin-top: 10px;
