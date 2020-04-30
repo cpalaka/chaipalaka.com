@@ -81,6 +81,8 @@ const PlayIcon = styled(Play)(props => IconStyles(props))
 
 const NowPlayingDisplay = props => {
     const [songInfo, setSongInfo] = useState({ artist: null, songName: null, albumArt: null })
+    const [videoId, setVideoId] = useState(null)
+
     useEffect(() => {
         superagent
             .get('https://ws.audioscrobbler.com/2.0/')
@@ -106,6 +108,8 @@ const NowPlayingDisplay = props => {
             .query({ key: config.googleAPIkey })
             .query({ q: `${songInfo.artist} ${songInfo.songName}` })
             .then(res => {
+                // console.log(res.body.items[0].id.videoId)
+                // setVideoId(res.body.items[0].id.videoId)
                 const URL = 'https://www.youtube.com/watch?v=' + res.body.items[0].id.videoId
                 if (window) {
                     window.open(URL, '_blank')
@@ -134,6 +138,13 @@ const NowPlayingDisplay = props => {
                     </HorizontalFlex>
                 </VerticalFlex>
             </NowPlayingContainer>
+            {/* {videoId ? (
+                <iframe
+                    width='420'
+                    height='315'
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                ></iframe>
+            ) : null} */}
         </div>
     ) : (
         <Loader />

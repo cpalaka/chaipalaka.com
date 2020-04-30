@@ -92,7 +92,7 @@ const MusicLogPage = props => {
 
     return (
         <Page {...props}>
-            <PageSection>
+            <PageSection top>
                 <h3>/log/music</h3>
                 <MusicSection
                     sectionTitle='Songs Stuck In My Head'

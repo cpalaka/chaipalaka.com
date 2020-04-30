@@ -160,14 +160,21 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
 }))
 
 const SiteTitle = styled(NavLink)`
-    // background-color: white;
-    background: rgba(255, 255, 255, 0.9);
+    background-color: white;
+    border-right: 3px solid #040f0f;
+    border-bottom: 3px solid #040f0f;
+    // background: rgba(255, 255, 255, 0.9);
     padding: 5px;
     z-index: 60;
-    position: relative;
-    left: 13px;
-    // bottom: -5px;
-    bottom: 2px;
+
+    // position: relative;
+    // left: 13px;
+    // bottom: 2px;
+
+    position: fixed;
+    top: ${({scrollY, isDesktop}) => scrollY > 30 && !isDesktop ? '-55px': '0px'};
+    left: ${({scrollY, isDesktop}) => !isDesktop? '2.5vw' : '25vw'};
+    transition: top 0.6s;
 `
 
 const H1Title = styled.h1`
@@ -197,10 +204,12 @@ const MinusIcon = styled(Minus)`
     z-index: 60;
 `
 
-const Nav = ({ path, ...props }) => {
+const Nav = ({ path,...props }) => {
     // detect screen width
     const [showMenu, setShowMenu] = useState(false)
+
     const [width, setWidth] = useState(null)
+
     useEffect(() => {
         setWidth(window.innerWidth)
         window.addEventListener('resize', e => setWidth(e.target.innerWidth))
@@ -209,11 +218,20 @@ const Nav = ({ path, ...props }) => {
         }
     }, [])
 
+    const [scrollPos, setScrollPos] = useState(0)
+    useEffect(() => {
+        setScrollPos(window.scrollY)
+        window.addEventListener('scroll', e => setScrollPos(window.scrollY))
+        return () => {
+            window.removeEventListener('scroll', e => setScrollPos(window.scrollY))
+        }
+    }, [])
+
     const isDesktop = width > 1024
 
     return (
         <NavContainer showMenu={showMenu}>
-            <SiteTitle to='/'>
+            <SiteTitle to='/' scrollY={scrollPos} isDesktop={isDesktop}>
                 <H1Title>chaipalaka</H1Title>
             </SiteTitle>
             {!isDesktop ? (

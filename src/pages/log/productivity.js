@@ -5,7 +5,7 @@ import Page, { PageSection } from '../../components/Page'
 
 const ProductivityLogPage = props => (
     <Page {...props}>
-        <PageSection>
+        <PageSection top>
             <h1>Productivity</h1>
         </PageSection>
     </Page>

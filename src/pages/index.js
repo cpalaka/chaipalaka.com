@@ -158,7 +158,7 @@ const IndexPage = props => {
 
     return (
         <Page {...props}>
-            <PageSection>
+            <PageSection top>
                 <MainHeading>
                     Hullo. You have reached{' '}
                     <Bolded>

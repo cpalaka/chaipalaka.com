@@ -15,10 +15,10 @@ import { MDXRenderer } from 'gatsby-plugin-mdx'
 const shortcodes = { TransitionLink }
 
 const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
-    console.log(mdx)
+    // console.log(mdx)
     return (
         <Page {...props}>
-            <PageSection>
+            <PageSection top>
                 <MDXProvider components={shortcodes}>
                     <MDXRenderer>{mdx.body}</MDXRenderer>
                 </MDXProvider>
