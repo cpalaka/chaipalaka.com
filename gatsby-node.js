@@ -14,7 +14,7 @@ exports.onCreateWebpackConfig = ({ stage, actions, plugins }) => {
 exports.onCreateNode = ({ node, actions, getNode }) => {
     const { createNodeField } = actions
     if (node.internal.type === 'Mdx') {
-        const value = createFilePath({ node, getNode })
+        const value = createFilePath({ node, getNode, trailingSlash: false })
         createNodeField({
             name: 'slug',
             node,
@@ -70,6 +70,7 @@ exports.createPages = ({ graphql, actions, createNodeId, createContentDigest }) 
                             }
                             frontmatter {
                                 tags
+                                infopic
                             }
                         }
                     }
@@ -88,6 +89,7 @@ exports.createPages = ({ graphql, actions, createNodeId, createContentDigest }) 
                 component: blogPostTemplate,
                 context: {
                     id: edge.node.id,
+                    infopic: edge.node.frontmatter.infopic
                 },
             })
         })
