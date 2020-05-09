@@ -174,7 +174,7 @@ const SiteTitle = styled(NavLink)`
     position: fixed;
     top: ${({scrollY, isDesktop}) => scrollY > 30 && !isDesktop ? '-55px': '0px'};
     left: ${({scrollY, isDesktop}) => !isDesktop? '2.5vw' : '25vw'};
-    transition: top 0.6s;
+    transition: top 0.6s, left 1s;
 `
 
 const H1Title = styled.h1`

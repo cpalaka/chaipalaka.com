@@ -9,6 +9,20 @@ const common = {
     commonColors: {
         text: '#040f0f',
     },
+    blogColors: {
+        dev: {
+            primary: 'rgba(0,0,0,0)',
+            secondary: '#f9f9f9'
+        },
+        misc: {
+            primary: 'rgba(0,0,0,0)',
+            secondary: 'rgba(217, 229, 255,0.6)'
+        },
+        reviews: {
+            primary: 'rgba(0,0,0,0)',
+            secondary: 'rgba(255, 191, 206,0.6)'
+        },
+    }
 }
 
 export default {
