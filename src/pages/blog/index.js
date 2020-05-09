@@ -99,6 +99,13 @@ const BlogPage = ({ data: { allMdx, allTags, allFile }, ...props }) => {
                     </BlogList>
                 )}
             </PageSection>
+            {/* <PageSection>
+                <BlogList>
+                    {state.selectedPosts.map((el, i) => (
+                        <BlogListItem key={i} postdata={el} />
+                    ))}
+                </BlogList>
+            </PageSection> */}
         </Page>
     )
 }
@@ -131,7 +138,7 @@ export const allPostsQuery = graphql`
                 node {
                     id
                     childImageSharp {
-                        fluid(maxWidth: 150, maxHeight: 150) {
+                        fluid(maxHeight: 150, maxWidth: 150) {
                             ...GatsbyImageSharpFluid
                         }
                     }

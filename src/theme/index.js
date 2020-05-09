@@ -13,15 +13,15 @@ const common = {
     blogColors: {
         dev: {
             primary: 'rgba(0,0,0,0)',
-            secondary: '#f9f9f9'
+            secondary: 'rgba(6, 98, 60,0.6)'
         },
         misc: {
             primary: 'rgba(0,0,0,0)',
-            secondary: 'rgba(217, 229, 255,0.6)'
+            secondary: 'rgba(7, 121, 228,0.6)'
         },
         reviews: {
             primary: 'rgba(0,0,0,0)',
-            secondary: 'rgba(255, 191, 206,0.6)'
+            secondary: 'rgba(255, 81, 0,0.6)'
         },
     }
 }

@@ -3,59 +3,50 @@ import styled from 'styled-components'
 
 const Tag = styled.div`
     width: 100%;
-    height: 50px;
-    color: ${props => (props.selected ? props.theme.colors.primaryAccent : 'initial')};
-    border: ${props =>
-        props.selected ? '1px solid ' + props.theme.colors.primaryAccent : 'initial'};
-    border-radius: 11px;
+    height: 30px;
+
+    color: ${props => (props.selected ? props.theme.colors.secondary : 'initial')};
+    
+    box-shadow: ${props => (props.selected ? `0px 2px ${props.theme.colors.secondary}` : 'none')};
+    font-weight: ${props => (props.selected ? `bold` : 'normal')};
+
     display: inline-block;
-    padding: 3px;
+    padding: 0px 5px;
+    cursor: pointer;
+
     :hover {
         color: ${props => props.theme.colors.secondary};
-        // text-decoration: underline;
-        cursor: pointer;
-        // background-color: white;
-        // border: ${props => '1px solid ' + props.theme.colors.secondary};
-
-        :active {
-            color: ${props => props.theme.colors.primaryAccent};
-        }
+        box-shadow: ${({ theme }) => `0px 4px ${theme.colors.secondary}`}
     }
-    box-sizing: border-box;
+    transition: box-shadow 0.4s, color 0.5s;
+    margin: 0px 2px;
 `
 
 const TagContainer = styled.div`
-    // width: 100%;
-    height: 50px;
-    padding-bottom: 17px;
+    // height: auto;
+    padding-bottom: 10px;
     overflow: auto hidden;
 
     display: flex;
     justify-content: space-between;
-    // flex-wrap: wrap;
-    box-sizing: border-box;
 `
 
 const TagLabel = styled.p`
-    // border: 1px solid black;
-    // height: 30px;
-    // width: 50px;
-    // position: relative;
-    // top: 0px;
     transform: rotate(-90deg);
 `
 
 const OptionsContainer = styled.div`
     display: flex;
+    height: 50px;
     justify-content: flex-start;
     opacity: ${({ showOptions }) => (showOptions ? '1' : '0')};
     pointer-events: ${({ showOptions }) => (showOptions ? 'initial' : 'none')};
     transition: opacity 1s;
+    margin: 0px 5px;
 `
 
 const FilterSectionContainer = styled.div`
-    // height: auto;
-    height: ${({ showOptions }) => (showOptions ? '80px' : '30px')};
+    height: ${({ showOptions }) => (showOptions ? '90px' : '30px')};
     transition: height 1s;
 `
 
