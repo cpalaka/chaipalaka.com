@@ -13,7 +13,7 @@ export const PageSection = styled.div`
     padding-left: ${({ padding }) => (padding ? padding : '10px')};
     padding-right: ${({ padding }) => (padding ? padding : '10px')};
 
-    border: 3px solid #040f0f;
+    border: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
 `
 

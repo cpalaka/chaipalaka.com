@@ -8,6 +8,7 @@ const common = {
     },
     commonColors: {
         text: '#040f0f',
+        borderBlack: '#040f0f'
     },
     blogColors: {
         dev: {

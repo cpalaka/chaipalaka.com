@@ -161,8 +161,8 @@ const NavContainer = styled.nav(({ theme, showMenu }) => ({
 
 const SiteTitle = styled(NavLink)`
     background-color: white;
-    border-right: 3px solid #040f0f;
-    border-bottom: 3px solid #040f0f;
+    border-right: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-bottom: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};;
     // background: rgba(255, 255, 255, 0.9);
     padding: 5px;
     z-index: 60;
