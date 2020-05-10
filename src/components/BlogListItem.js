@@ -150,7 +150,7 @@ const BlogListItem = ({ postdata }) => {
                         <BlogTitle>{title}</BlogTitle>
                         <WordCount>{`${wordCount} words`}</WordCount>
                         <Tags>
-                            {tags.map(el => <Tag>{el}</Tag>)}
+                            {tags.map((el,i) => <Tag key={i}>{el}</Tag>)}
                         </Tags>
                     </VerticalFlex>
                     <BlogImage rot={imageRotation}>
