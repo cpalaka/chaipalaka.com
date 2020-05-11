@@ -13,7 +13,11 @@ export const PageSection = styled.div`
     padding-left: ${({ padding }) => (padding ? padding : '10px')};
     padding-right: ${({ padding }) => (padding ? padding : '10px')};
 
-    border: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-top: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-bottom: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-left: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-right: ${({theme}) => `3px solid white`};
+
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
 `
 
