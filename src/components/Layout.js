@@ -33,21 +33,24 @@ const RightBorder = styled.div`
     background: transparent;
     position: fixed;
     bottom: 40px;
-    right: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
-    border-right: ${({ theme }) => `3px dashed ${theme.commonColors.borderBlack}`};
+    right: ${({ isDesktop, isWindows }) =>
+        !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
+    border-right: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
+    transition: right 1s;
 `
 
 const RightArea = styled.div`
     height: 100vh;
-    width: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    width: ${({ isDesktop, isWindows }) => (!isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw')};
 
-    background: ${({ stripeRotation, color1, color2, width }) =>
-        `repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *
-            2}px)`};
+    background: ${({ stripeRotation, color1, color2, width }) =>`repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *2}px)`};
+        
+    // background: rgba(255, 255, 255, 0.9);
 
     position: fixed;
     bottom: 0;
     right: 0;
+    transition: width 1s;
 `
 
 const Layout = ({ children, ...props }) => {
@@ -62,6 +65,12 @@ const Layout = ({ children, ...props }) => {
         }
     }, [])
 
+    const [isWindows, setIsWindows] = useState(false)
+
+    useEffect(() => {
+        setIsWindows(window.navigator.userAgent.includes('Windows'))
+    }, [])
+
     const isDesktop = width > 1024
 
     return (
@@ -70,15 +79,16 @@ const Layout = ({ children, ...props }) => {
                 <MeshLine />
             </CanvasContainer>
             <ContentContainer>
-                <RightBorder isDesktop={isDesktop} />
+                <RightBorder isDesktop={isDesktop} isWindows={isWindows} />
                 <RightArea
                     isDesktop={isDesktop}
+                    isWindows={isWindows}
                     stripeRotation={45}
                     color1='rgba(255,255,255,0)'
                     color2='rgba(242, 242, 242,0.4)'
-                    width='50'
+                    width='30'
                 />
-                <Nav {...props} isDesktop={isDesktop} />
+                <Nav {...props} isDesktop={isDesktop} isWindows={isWindows} />
                 <PageParent>{children}</PageParent>
             </ContentContainer>
         </Site>

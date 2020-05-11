@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import TransitionLink from './TransitionLink'
 import { Settings } from '@styled-icons/material/Settings'
+import { useGlobalDispatch, useGlobalState } from '../state'
 
 const Flexbox = styled.div`
     display: flex;
@@ -31,13 +32,14 @@ const NavMenuContainer = styled(Flexbox)`
     justify-content: space-between;
     z-index: 60;
 
-    border-left: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    border-top: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    background-color: white;
+    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    background-color: ${({ theme }) => `${theme.colors.background}`};
 
     position: fixed;
     bottom: 0px;
-    right: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    right: ${({ isDesktop, isWindows }) =>
+        !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
     transition: top 0.6s, left 1s;
 `
 
@@ -67,25 +69,26 @@ const FakeNavLink = styled.div`
 const LogNavContainer = styled.div`
     display: flex;
     flex-direction: column;
-    background-color: white;
+    background-color: ${({ theme }) => `${theme.colors.background}`};;
     position: fixed;
 
     bottom: 0px;
-    right: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    right: ${({ isDesktop, isWindows }) =>
+        !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
     bottom: ${({ open }) => (open ? '50px' : '-102px')};
 
     z-index: 59;
 
     transition: bottom 1s;
-    border-top: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    // border-right: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    border-left: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    border-bottom: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};;
+    border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};;
 `
 
 const SettingsNavContainer = styled(LogNavContainer)``
 
-const NavMenu = ({ path, isDesktop, ...props }) => {
+const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
     const onLog = path.includes('/log'),
         onBlog = path.includes('/blog'),
         onProjects = path === '/projects/'
@@ -94,32 +97,28 @@ const NavMenu = ({ path, isDesktop, ...props }) => {
         onLogArticles = path === '/log/articles/',
         onLogProductivity = path === '/log/productivity/'
 
-    // const [isWindows, setIsWindows] = useState(false)
-
-    // useEffect(() => {
-    //     setIsWindows(window.navigator.userAgent.includes('Windows'))
-    // }, [])
     const [logNavOpen, setLogNavOpen] = useState(false)
     const [settingsNavOpen, setSettingsNavOpen] = useState(false)
 
+    const dispatch = useGlobalDispatch()
+    const state = useGlobalState()
+
+    const toggleTheme = useCallback(() => {
+        const theme = state.theme === 'light' ? 'dark' : 'light'
+        dispatch({ type: 'setTheme', theme })
+    }, [dispatch, state.theme])
+
     return (
         <>
-            <SettingsNavContainer open={settingsNavOpen} isDesktop={isDesktop}>
-                <SubNavLink to='/log/books' match={onLogBooks}>
-                    testbooks
-                </SubNavLink>
-                <SubNavLink to='/log/music' match={onLogMusic}>
-                    testmusic
-                </SubNavLink>
-                <SubNavLink to='/log/articles' match={onLogArticles}>
-                    testarticles
-                </SubNavLink>
-                <SubNavLink to='/log/productivity' match={onLogProductivity}>
-                    testproductivity
-                </SubNavLink>
+            <SettingsNavContainer
+                open={settingsNavOpen}
+                isDesktop={isDesktop}
+                isWindows={isWindows}
+            >
+                <FakeNavLink onClick={toggleTheme}>Change Theme</FakeNavLink>
             </SettingsNavContainer>
 
-            <LogNavContainer open={logNavOpen} isDesktop={isDesktop}>
+            <LogNavContainer open={logNavOpen} isDesktop={isDesktop} isWindows={isWindows}>
                 <SubNavLink to='/log/books' match={onLogBooks}>
                     books
                 </SubNavLink>
@@ -134,7 +133,7 @@ const NavMenu = ({ path, isDesktop, ...props }) => {
                 </SubNavLink>
             </LogNavContainer>
 
-            <NavMenuContainer isDesktop={isDesktop}>
+            <NavMenuContainer isDesktop={isDesktop} isWindows={isWindows}>
                 <FakeNavLink
                     onClick={() => {
                         setLogNavOpen(false)
@@ -164,10 +163,17 @@ const NavMenu = ({ path, isDesktop, ...props }) => {
     )
 }
 
-const SiteTitle = styled(NavLink)`
-    background-color: white;
-    border-right: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
-    border-bottom: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+const SiteTitle = styled(TransitionLink)`
+    // color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
+    display: inline-block;
+    :hover {
+        text-decoration: underline;
+        color: ${({ theme }) => theme.colors.secondary};
+    }
+    background-color: ${({ theme }) => `${theme.colors.background}`};
+    color: ${({ theme }) => `${theme.colors.navText}`} important!;
+    border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     // background: rgba(255, 255, 255, 0.9);
     padding: 5px;
     z-index: 60;
@@ -182,7 +188,7 @@ const H1Title = styled.h1`
     color: ${props => props.theme.colors.text};
 `
 
-const Nav = ({ path, isDesktop, ...props }) => {
+const Nav = ({ path, isDesktop, isWindows, ...props }) => {
     //detect scroll position
     const [scrollPos, setScrollPos] = useState(0)
     useEffect(() => {
@@ -198,7 +204,7 @@ const Nav = ({ path, isDesktop, ...props }) => {
             <SiteTitle to='/' scrollY={scrollPos} isDesktop={isDesktop}>
                 <H1Title>chaipalaka</H1Title>
             </SiteTitle>
-            <NavMenu path={path} isDesktop={isDesktop} />
+            <NavMenu path={path} isDesktop={isDesktop} isWindows={isWindows} />
         </>
     )
 }

@@ -15,10 +15,10 @@ stowLakeTheme.overrideThemeStyles = ({ rhythm }, options) => ({
     // h1: {
     //     fontFamily: 'Lacquer',
     // },
-    a: {
-        // color: 'initial',
-        color: '#040f0f'
-    },
+    // a: {
+    //     // color: 'initial',
+    //     color: '#040f0f'
+    // },
 
 })
 

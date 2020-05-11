@@ -131,7 +131,7 @@ const BlogListItem = ({ postdata }) => {
     const { date, excerpt, infopic, slug, tags, title, wordCount } = postdata
     const imageRotation = getRandomRotation(5)
     const type = slug.split('/')[2]
-
+    // console.log(themeContext)
     return (
         <TransitionLink to={slug}>
             <BlogItemDiv

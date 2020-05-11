@@ -9,7 +9,7 @@ extend(meshline)
 
 function Fatline({ curve, width, color, speed }) {
     const material = useRef()
-    useFrame(() => (material.current.uniforms.dashOffset.value += speed))
+    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.5))
     return (
         <mesh>
             <meshLine attach='geometry' vertices={curve} />
@@ -34,10 +34,10 @@ function Lines({ count, colors }) {
             new Array(count).fill().map(() => {
                 const pos = new THREE.Vector3(
                     10 - Math.random() * 20,
-                    // 20 - Math.random() * 40,
-                    10 - Math.random() * 20,
-                    // 25,
-                    10 - Math.random() * 20
+                    20 - Math.random() * 40,
+                    // 10 - Math.random() * 20,
+                    25,
+                    // 10 - Math.random() * 20
                 )
                 const points = new Array(30)
                     .fill()
@@ -82,7 +82,7 @@ export default React.memo(function App() {
     return (
         <Canvas
             style={{ background: theme.colors.background }}
-            camera={{ position: [0, 0, 100], fov: 30 }}
+            camera={{ position: [0, 0, 100], fov: 10 }}
             onMouseMove={e =>
                 (mouse.current = [
                     e.clientX - window.innerWidth / 2,
@@ -92,7 +92,7 @@ export default React.memo(function App() {
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={20}
+                count={30}
                 colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
                 // colors={[theme.colors.primaryAccent]}
             />

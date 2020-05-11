@@ -8,22 +8,22 @@ const common = {
     },
     commonColors: {
         text: '#040f0f',
-        borderBlack: '#040f0f'
+        borderBlack: '#040f0f',
     },
     blogColors: {
         dev: {
             primary: 'rgba(0,0,0,0)',
-            secondary: 'rgba(6, 98, 60,0.6)'
+            secondary: 'rgba(6, 98, 60,0.6)',
         },
         misc: {
             primary: 'rgba(0,0,0,0)',
-            secondary: 'rgba(7, 121, 228,0.6)'
+            secondary: 'rgba(7, 121, 228,0.6)',
         },
         reviews: {
             primary: 'rgba(0,0,0,0)',
-            secondary: 'rgba(255, 81, 0,0.6)'
+            secondary: 'rgba(255, 81, 0,0.6)',
         },
-    }
+    },
 }
 
 export default {
@@ -31,20 +31,28 @@ export default {
     light: {
         colors: {
             ...common.commonColors,
-            // background: 'white',
+            background: 'white',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
+            navText: '#040f0f',
+            text: '#040f0f'
         },
         ...common,
     },
     dark: {
         colors: {
             ...common.commonColors,
-            // text: 'white',
-            background: 'black',
+            text: 'white',
+            background: '#4d3e3e',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
+            navText: 'white',
+            borderBlack: 'grey'
         },
         ...common,
     },
 }
+
+//dark background candidates:
+//brown: #4d3e3e
+//dark blue: #222831
