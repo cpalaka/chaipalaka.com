@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import TransitionLink from './TransitionLink'
-import { NavigateNext } from 'styled-icons/material/NavigateNext'
-import { Plus } from 'styled-icons/boxicons-regular/Plus'
-import { Minus } from 'styled-icons/boxicons-regular/Minus'
+import { Settings } from '@styled-icons/material/Settings'
 
 const Flexbox = styled.div`
     display: flex;
@@ -12,7 +10,6 @@ const Flexbox = styled.div`
 
 const NavLink = styled(TransitionLink)`
     color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
-    pointer-events: ${props => (props.mobile && !props.showMenu ? 'none' : 'initial')};
     display: inline-block;
     :hover {
         text-decoration: underline;
@@ -30,150 +27,154 @@ const SubNavLink = styled(NavLink)`
     margin: 0 2px;
 `
 
-const SubNavContainer = styled(Flexbox)`
-    justify-content: space-around;
-    align-items: center;
-    position: relative;
-    bottom: -1px;
-`
-
-const SubNav = ({ path, show, ...props }) => {
-    const onLogBooks = path === '/log/books/',
-        onLogMusic = path === '/log/music/',
-        onLogArticles = path === '/log/articles/',
-        onLogProductivity = path === '/log/productivity/'
-
-    return (
-        <SubNavContainer>
-            <SubNavLink to='/log/books' match={onLogBooks} {...props}>
-                books
-            </SubNavLink>
-
-            <SubNavLink to='/log/music' match={onLogMusic} {...props}>
-                music
-            </SubNavLink>
-
-            <SubNavLink to='/log/articles' match={onLogArticles} {...props}>
-                articles
-            </SubNavLink>
-
-            <SubNavLink to='/log/productivity' match={onLogProductivity} {...props}>
-                productivity
-            </SubNavLink>
-        </SubNavContainer>
-    )
-}
-
-const MainNavContainer = styled(Flexbox)`
-    justify-content: space-around;
-`
-
 const NavMenuContainer = styled(Flexbox)`
-    background: rgba(255, 255, 255, 0.9);
     justify-content: space-between;
-    align-items: center;
-    position: absolute;
-    bottom: 5px;
-    left: ${props =>
-        props.show
-            ? `calc(100vw - ${props.isWindows ? '490px' : '470px'})`
-            : `calc(100vw - ${props.isWindows ? '230px' : '210px'})`};
-    opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
-    transition: left 1s, opacity 0.8s;
+    z-index: 60;
 
-    width: auto;
-    z-index: 49;
-`
-
-const BlogNavLink = styled(MainNavLink)`
+    border-left: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-top: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
     background-color: white;
-    position: absolute;
-    right: 0px;
-    bottom: 5px;
-    z-index: 50;
-    height: 34px;
-    margin: 0;
-    padding-right: 15px;
-    opacity: ${props => (props.mobile ? (props.showMenu ? '1' : '0') : '1')};
-    transition: opacity 0.8s;
+
+    position: fixed;
+    bottom: 0px;
+    right: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    transition: top 0.6s, left 1s;
 `
 
-const Arrow = styled(NavigateNext)`
+const SettingsIcon = styled(Settings)`
     color: ${props => (props.open ? props.theme.colors.primaryAccent : props.theme.colors.text)};
     width: 30px;
     height: 30px;
     margin-top: 3px;
     cursor: pointer;
+    position: relative;
+    top: -4px;
+    z-index: 10;
 `
 
-const NavMenu = ({ path, ...props }) => {
+const FakeNavLink = styled.div`
+    color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
+    cursor: pointer;
+    display: inline-block;
+    font-size: 22px;
+    margin: 0 5px;
+    :hover {
+        text-decoration: underline;
+        color: ${({ theme }) => theme.colors.secondary};
+    }
+`
+
+const LogNavContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    position: fixed;
+
+    bottom: 0px;
+    right: ${({ isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    bottom: ${({ open }) => (open ? '50px' : '-102px')};
+
+    z-index: 59;
+
+    transition: bottom 1s;
+    border-top: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+    // border-right: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-left: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-bottom: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};;
+`
+
+const SettingsNavContainer = styled(LogNavContainer)``
+
+const NavMenu = ({ path, isDesktop, ...props }) => {
     const onLog = path.includes('/log'),
         onBlog = path.includes('/blog'),
         onProjects = path === '/projects/'
-    const [submenuOpen, setSubmenuOpen] = useState(onLog)
-    const [isWindows, setIsWindows] = useState(false)
+    const onLogBooks = path === '/log/books/',
+        onLogMusic = path === '/log/music/',
+        onLogArticles = path === '/log/articles/',
+        onLogProductivity = path === '/log/productivity/'
 
-    useEffect(() => {
-        setSubmenuOpen(onLog)
-    }, path)
+    // const [isWindows, setIsWindows] = useState(false)
 
-    useEffect(() => {
-        setIsWindows(window.navigator.userAgent.includes('Windows'))
-    }, [])
+    // useEffect(() => {
+    //     setIsWindows(window.navigator.userAgent.includes('Windows'))
+    // }, [])
+    const [logNavOpen, setLogNavOpen] = useState(false)
+    const [settingsNavOpen, setSettingsNavOpen] = useState(false)
 
     return (
         <>
-            <NavMenuContainer show={submenuOpen} isWindows={isWindows} {...props}>
-                <MainNavContainer>
-                    <MainNavLink to='/projects' match={onProjects} {...props}>
-                        projects
-                    </MainNavLink>
-                    <div onClick={() => setSubmenuOpen(true)}>
-                        <MainNavLink to='/log' match={onLog} {...props}>
-                            log
-                        </MainNavLink>
-                    </div>
-                    <Arrow onClick={() => setSubmenuOpen(v => !v)} open={submenuOpen} />
-                </MainNavContainer>
+            <SettingsNavContainer open={settingsNavOpen} isDesktop={isDesktop}>
+                <SubNavLink to='/log/books' match={onLogBooks}>
+                    testbooks
+                </SubNavLink>
+                <SubNavLink to='/log/music' match={onLogMusic}>
+                    testmusic
+                </SubNavLink>
+                <SubNavLink to='/log/articles' match={onLogArticles}>
+                    testarticles
+                </SubNavLink>
+                <SubNavLink to='/log/productivity' match={onLogProductivity}>
+                    testproductivity
+                </SubNavLink>
+            </SettingsNavContainer>
 
-                {submenuOpen ? <SubNav path={path} show={submenuOpen} {...props} /> : <div></div>}
+            <LogNavContainer open={logNavOpen} isDesktop={isDesktop}>
+                <SubNavLink to='/log/books' match={onLogBooks}>
+                    books
+                </SubNavLink>
+                <SubNavLink to='/log/music' match={onLogMusic}>
+                    music
+                </SubNavLink>
+                <SubNavLink to='/log/articles' match={onLogArticles}>
+                    articles
+                </SubNavLink>
+                <SubNavLink to='/log/productivity' match={onLogProductivity}>
+                    productivity
+                </SubNavLink>
+            </LogNavContainer>
+
+            <NavMenuContainer isDesktop={isDesktop}>
+                <FakeNavLink
+                    onClick={() => {
+                        setLogNavOpen(false)
+                        setSettingsNavOpen(v => !v)
+                    }}
+                    match={settingsNavOpen}
+                >
+                    <SettingsIcon open={settingsNavOpen} />
+                </FakeNavLink>
+                <MainNavLink to='/projects' match={onProjects}>
+                    projects
+                </MainNavLink>
+                <FakeNavLink
+                    onClick={() => {
+                        setSettingsNavOpen(false)
+                        setLogNavOpen(v => !v)
+                    }}
+                    match={logNavOpen}
+                >
+                    log
+                </FakeNavLink>
+                <MainNavLink to='/blog' match={onBlog}>
+                    blog
+                </MainNavLink>
             </NavMenuContainer>
-            <BlogNavLink to='/blog' match={onBlog} {...props}>
-                blog
-            </BlogNavLink>
         </>
     )
 }
 
-const NavContainer = styled.nav(({ theme, showMenu }) => ({
-    width: '100%',
-    height: showMenu ? `${1.75 * theme.dim.nav}px` : `${theme.dim.nav}px`,
-    transition: 'height 1s',
-
-    position: 'fixed',
-    bottom: '0',
-    left: '0',
-    // backgroundColor: 'white',
-    backgroundColor: 'rgba(255, 255, 255, 0.0)',
-    zIndex: '100',
-    borderBottom: `7px solid ${theme.colors.primaryAccent}`,
-}))
-
 const SiteTitle = styled(NavLink)`
     background-color: white;
-    border-right: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};
-    border-bottom: ${({theme}) => `3px solid ${theme.commonColors.borderBlack}`};;
+    border-right: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
+    border-bottom: ${({ theme }) => `3px solid ${theme.commonColors.borderBlack}`};
     // background: rgba(255, 255, 255, 0.9);
     padding: 5px;
     z-index: 60;
 
-    // position: relative;
-    // left: 13px;
-    // bottom: 2px;
-
     position: fixed;
-    top: ${({scrollY, isDesktop}) => scrollY > 30 && !isDesktop ? '-55px': '0px'};
-    left: ${({scrollY, isDesktop}) => !isDesktop? '2.5vw' : '25vw'};
+    top: ${({ scrollY, isDesktop }) => (scrollY > 30 && !isDesktop ? '-55px' : '0px')};
+    left: ${({ scrollY, isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
     transition: top 0.6s, left 1s;
 `
 
@@ -181,43 +182,8 @@ const H1Title = styled.h1`
     color: ${props => props.theme.colors.text};
 `
 
-const PlusIcon = styled(Plus)`
-    background: rgba(255, 255, 255, 0.9);
-
-    color: ${props => props.theme.colors.text};
-    width: 45px;
-    height: 45px;
-    position: absolute;
-    right: 10px;
-    top: -2px;
-    z-index: 60;
-`
-
-const MinusIcon = styled(Minus)`
-    background: rgba(255, 255, 255, 0.9);
-    color: ${props => props.theme.colors.text};
-    width: 45px;
-    height: 45px;
-    position: absolute;
-    right: 10px;
-    top: -2px;
-    z-index: 60;
-`
-
-const Nav = ({ path,...props }) => {
-    // detect screen width
-    const [showMenu, setShowMenu] = useState(false)
-
-    const [width, setWidth] = useState(null)
-
-    useEffect(() => {
-        setWidth(window.innerWidth)
-        window.addEventListener('resize', e => setWidth(e.target.innerWidth))
-        return () => {
-            window.removeEventListener('resize', e => setWidth(e.target.innerWidth))
-        }
-    }, [])
-
+const Nav = ({ path, isDesktop, ...props }) => {
+    //detect scroll position
     const [scrollPos, setScrollPos] = useState(0)
     useEffect(() => {
         setScrollPos(window.scrollY)
@@ -227,22 +193,13 @@ const Nav = ({ path,...props }) => {
         }
     }, [])
 
-    const isDesktop = width > 1024
-
     return (
-        <NavContainer showMenu={showMenu}>
+        <>
             <SiteTitle to='/' scrollY={scrollPos} isDesktop={isDesktop}>
                 <H1Title>chaipalaka</H1Title>
             </SiteTitle>
-            {!isDesktop ? (
-                showMenu ? (
-                    <MinusIcon onClick={() => setShowMenu(false)} />
-                ) : (
-                    <PlusIcon onClick={() => setShowMenu(true)} />
-                )
-            ) : null}
-            <NavMenu path={path} showMenu={showMenu} mobile={!isDesktop} />
-        </NavContainer>
+            <NavMenu path={path} isDesktop={isDesktop} />
+        </>
     )
 }
 
