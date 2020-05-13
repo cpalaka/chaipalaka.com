@@ -33,23 +33,16 @@ const PageParent = styled.main`
     // height: 100%;
 `
 
-const RightBorder = styled.div`
-    height: 100vh;
-    background: transparent;
-    position: fixed;
-    bottom: 40px;
-    right: ${({ isDesktop, isWindows }) =>
-        !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
-    // border-left: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
-    transition: right 1s;
-`
-
 const OpenSectionContainer = styled.div`
     position: fixed;
     top: 0px;
     right: 0px;
     z-index: 100;
-    background: white;
+
+    // background: white;
+    background-color: ${({ theme }) => `${theme.colors.background}`};
+    // color: ${({ theme }) => `${theme.colors.navText}`} important!;
+
     width: 52px;
     height: 52px;
     border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
@@ -59,6 +52,7 @@ const OpenSectionIcon = styled(UnfoldMore)`
     transform: rotate(90deg) translate(10%, -10%);
     width: 40px;
     height: 40px;
+    color: ${({ theme }) => `${theme.colors.navText}`};
     margin: auto;
 `
 

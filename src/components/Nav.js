@@ -172,7 +172,7 @@ const SiteTitle = styled(TransitionLink)`
         color: ${({ theme }) => theme.colors.secondary};
     }
     background-color: ${({ theme }) => `${theme.colors.background}`};
-    color: ${({ theme }) => `${theme.colors.navText}`} important!;
+    color: ${({ theme }) => `${theme.colors.navText}`};
 
     // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
