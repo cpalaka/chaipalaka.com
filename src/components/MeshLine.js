@@ -9,7 +9,7 @@ extend(meshline)
 
 function Fatline({ curve, width, color, speed }) {
     const material = useRef()
-    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.5))
+    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.2))
     return (
         <mesh>
             <meshLine attach='geometry' vertices={curve} />
