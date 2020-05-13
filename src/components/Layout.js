@@ -5,14 +5,14 @@ import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
 import { useGlobalDispatch, useGlobalState } from '../state'
-
+import InfoSection from './InfoSection'
 
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
     left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
     // left: 0px;
-    width: 100%;
+    width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};;
     height: 100%;
     transition: left 1s;
 `
@@ -82,7 +82,7 @@ const Layout = ({ children, ...props }) => {
 
     const toggleInfoSection = useCallback(() => {
         const isInfoSectionOpen = state.isInfoSectionOpen
-        dispatch(({ type: 'setInfoSection', data: !isInfoSectionOpen }))
+        dispatch({ type: 'setInfoSection', data: !isInfoSectionOpen })
     }, [dispatch, state.isInfoSectionOpen])
 
     return (
@@ -96,44 +96,16 @@ const Layout = ({ children, ...props }) => {
                         <OpenSectionIcon onClick={toggleInfoSection} />
                     </OpenSectionContainer>
                 ) : null}
-                <InfoSection openSection={infoSectionOpen} isDesktop={isDesktop} isWindows={isWindows} />
+                <InfoSection
+                    openSection={infoSectionOpen}
+                    isDesktop={isDesktop}
+                    isWindows={isWindows}
+                    state={state}
+                />
                 <Nav {...props} isDesktop={isDesktop} isWindows={isWindows} />
                 <PageParent>{children}</PageParent>
             </ContentContainer>
         </Site>
-    )
-}
-
-const RightArea = styled.div`
-    height: 100vh;
-    width: ${({ isDesktop, isWindows }) =>
-        !isDesktop ? 'calc(83vw + 3px)' : isWindows ? 'calc(25vw - 17px)' : 'calc(25vw + 3px)'};
-
-    background: ${({ stripeRotation, color1, color2, width }) =>
-        `repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *
-            2}px)`};
-
-    border-left: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
-    position: fixed;
-    bottom: 0;
-    left: ${({ isDesktop, isWindows, open }) =>
-        isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 3px)' : 'calc(97.5vw - 3px)'};
-    transition: width 1s, left 1s;
-`
-
-const InfoSection = ({ isDesktop, isWindows, openSection }) => {
-    return (
-        <>
-            <RightArea
-                isDesktop={isDesktop}
-                isWindows={isWindows}
-                open={openSection}
-                stripeRotation={45}
-                color1='rgba(255,255,255,1)'
-                color2='rgba(242, 242, 242,0.7)'
-                width='30'
-            />
-        </>
     )
 }
 

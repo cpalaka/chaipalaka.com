@@ -5,6 +5,7 @@ import config from '../../config'
 import TransitionLink from './TransitionLink'
 import Loader from './Loader'
 import { Play } from '@styled-icons/boxicons-regular/Play'
+import { useGlobalDispatch, useGlobalState } from '../state'
 
 const NowPlayingContainer = styled.div`
     display: inline-flex;
@@ -81,7 +82,16 @@ const PlayIcon = styled(Play)(props => IconStyles(props))
 
 const NowPlayingDisplay = props => {
     const [songInfo, setSongInfo] = useState({ artist: null, songName: null, albumArt: null })
-    const [videoId, setVideoId] = useState(null)
+
+    const dispatch = useGlobalDispatch()
+    const openInfoSection = useCallback(() => {
+        // const isInfoSectionOpen = state.isInfoSectionOpen
+        dispatch({ type: 'setInfoSection', data: true })
+    }, [dispatch])
+
+    const openVideo = useCallback((id) => {
+        dispatch({ type: 'setNowPlayingVideo', videoId: id })
+    }, [dispatch])
 
     useEffect(() => {
         superagent
@@ -109,11 +119,13 @@ const NowPlayingDisplay = props => {
             .query({ q: `${songInfo.artist} ${songInfo.songName}` })
             .then(res => {
                 // console.log(res.body.items[0].id.videoId)
+                if(window.innerWidth < 1024) openInfoSection()
+                openVideo(res.body.items[0].id.videoId)
                 // setVideoId(res.body.items[0].id.videoId)
-                const URL = 'https://www.youtube.com/watch?v=' + res.body.items[0].id.videoId
-                if (window) {
-                    window.open(URL, '_blank')
-                }
+                // const URL = 'https://www.youtube.com/watch?v=' + res.body.items[0].id.videoId
+                // if (window) {
+                //     window.open(URL, '_blank')
+                // }
             })
     }
 
@@ -138,13 +150,6 @@ const NowPlayingDisplay = props => {
                     </HorizontalFlex>
                 </VerticalFlex>
             </NowPlayingContainer>
-            {/* {videoId ? (
-                <iframe
-                    width='420'
-                    height='315'
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                ></iframe>
-            ) : null} */}
         </div>
     ) : (
         <Loader />

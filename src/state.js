@@ -9,6 +9,7 @@ export const useGlobalDispatch = () => useContext(globalDispatchContext)
 export const initialState = {
     theme: 'light',
     isInfoSectionOpen: false,
+    nowPlayingVideo: null
 }
 
 export const globalStateReducer = (state, action) => {
@@ -26,6 +27,11 @@ export const globalStateReducer = (state, action) => {
             return {
                 ...state,
                 isInfoSectionOpen: action.data,
+            }
+        case 'setNowPlayingVideo':
+            return {
+                ...state,
+                nowPlayingVideo: action.videoId
             }
         default:
             return state

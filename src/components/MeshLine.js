@@ -21,7 +21,7 @@ function Fatline({ curve, width, color, speed }) {
                 lineWidth={width}
                 color={color}
                 dashArray={0.5}
-                dashRatio={0.8}
+                dashRatio={0.6}
                 // opacity={0.7}
             />
         </mesh>
@@ -92,7 +92,7 @@ export default React.memo(function App() {
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={30}
+                count={35}
                 colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
                 // colors={[theme.colors.primaryAccent]}
             />
