@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import MeshLine from './MeshLine'
 import TransitionLink from './TransitionLink'
 import Nav from './Nav'
 import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
+import { useGlobalDispatch, useGlobalState } from '../state'
+
 
 const ContentContainer = styled.div`
     position: absolute;
@@ -79,21 +81,28 @@ const Layout = ({ children, ...props }) => {
     }, [])
 
     const isDesktop = width > 1024
+    const dispatch = useGlobalDispatch()
+    const state = useGlobalState()
 
-    const [open, setOpen] = useState(false)
+    const infoSectionOpen = state.isInfoSectionOpen
+
+    const toggleInfoSection = useCallback(() => {
+        const isInfoSectionOpen = state.isInfoSectionOpen
+        dispatch(({ type: 'setInfoSection', data: !isInfoSectionOpen }))
+    }, [dispatch, state.isInfoSectionOpen])
 
     return (
         <Site>
             <CanvasContainer>
                 <MeshLine />
             </CanvasContainer>
-            <ContentContainer isDesktop={isDesktop} openSideArea={open}>
+            <ContentContainer isDesktop={isDesktop} openSideArea={infoSectionOpen}>
                 {!isDesktop ? (
                     <OpenSectionContainer>
-                        <OpenSectionIcon onClick={() => setOpen(v => !v)} />
+                        <OpenSectionIcon onClick={toggleInfoSection} />
                     </OpenSectionContainer>
                 ) : null}
-                <InfoSection openSection={open} isDesktop={isDesktop} isWindows={isWindows} />
+                <InfoSection openSection={infoSectionOpen} isDesktop={isDesktop} isWindows={isWindows} />
                 <Nav {...props} isDesktop={isDesktop} isWindows={isWindows} />
                 <PageParent>{children}</PageParent>
             </ContentContainer>

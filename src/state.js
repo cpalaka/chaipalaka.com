@@ -8,6 +8,7 @@ export const useGlobalDispatch = () => useContext(globalDispatchContext)
 
 export const initialState = {
     theme: 'light',
+    isInfoSectionOpen: false,
 }
 
 export const globalStateReducer = (state, action) => {
@@ -21,7 +22,11 @@ export const globalStateReducer = (state, action) => {
             }
 
             return state
-
+        case 'setInfoSection':
+            return {
+                ...state,
+                isInfoSectionOpen: action.data,
+            }
         default:
             return state
     }
