@@ -210,7 +210,7 @@ const IndexPage = props => {
                     </InfoBox>
                 </motion.div>
             </PageSection>
-            <PageSection width={40}>
+            <PageSection >
                 <NowPlayingDisplay />
             </PageSection>
         </Page>

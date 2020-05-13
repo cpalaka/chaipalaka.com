@@ -3,13 +3,16 @@ import styled, { keyframes } from 'styled-components'
 import MeshLine from './MeshLine'
 import TransitionLink from './TransitionLink'
 import Nav from './Nav'
+import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
 
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
-
+    left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
+    // left: 0px;
     width: 100%;
     height: 100%;
+    transition: left 1s;
 `
 
 const Site = styled.div``
@@ -24,7 +27,7 @@ const CanvasContainer = styled.div`
 const PageParent = styled.main`
     position: absolute;
     top: 0px;
-    // width: 100%;
+    width: 100%;
     // height: 100%;
 `
 
@@ -35,22 +38,26 @@ const RightBorder = styled.div`
     bottom: 40px;
     right: ${({ isDesktop, isWindows }) =>
         !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
-    border-right: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
+    // border-left: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
     transition: right 1s;
 `
 
-const RightArea = styled.div`
-    height: 100vh;
-    width: ${({ isDesktop, isWindows }) => (!isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw')};
-
-    background: ${({ stripeRotation, color1, color2, width }) =>`repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *2}px)`};
-        
-    // background: rgba(255, 255, 255, 0.9);
-
+const OpenSectionContainer = styled.div`
     position: fixed;
-    bottom: 0;
-    right: 0;
-    transition: width 1s;
+    top: 0px;
+    right: 0px;
+    z-index: 100;
+    background: white;
+    width: 52px;
+    height: 52px;
+    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+`
+const OpenSectionIcon = styled(UnfoldMore)`
+    transform: rotate(90deg) translate(10%, -10%);
+    width: 40px;
+    height: 40px;
+    margin: auto;
 `
 
 const Layout = ({ children, ...props }) => {
@@ -73,25 +80,57 @@ const Layout = ({ children, ...props }) => {
 
     const isDesktop = width > 1024
 
+    const [open, setOpen] = useState(false)
+
     return (
         <Site>
             <CanvasContainer>
                 <MeshLine />
             </CanvasContainer>
-            <ContentContainer>
-                <RightBorder isDesktop={isDesktop} isWindows={isWindows} />
-                <RightArea
-                    isDesktop={isDesktop}
-                    isWindows={isWindows}
-                    stripeRotation={45}
-                    color1='rgba(255,255,255,0)'
-                    color2='rgba(242, 242, 242,0.4)'
-                    width='30'
-                />
+            <ContentContainer isDesktop={isDesktop} openSideArea={open}>
+                {!isDesktop ? (
+                    <OpenSectionContainer>
+                        <OpenSectionIcon onClick={() => setOpen(v => !v)} />
+                    </OpenSectionContainer>
+                ) : null}
+                <InfoSection openSection={open} isDesktop={isDesktop} isWindows={isWindows} />
                 <Nav {...props} isDesktop={isDesktop} isWindows={isWindows} />
                 <PageParent>{children}</PageParent>
             </ContentContainer>
         </Site>
+    )
+}
+
+const RightArea = styled.div`
+    height: 100vh;
+    width: ${({ isDesktop, isWindows }) =>
+        !isDesktop ? 'calc(83vw + 3px)' : isWindows ? 'calc(25vw - 17px)' : 'calc(25vw + 3px)'};
+
+    background: ${({ stripeRotation, color1, color2, width }) =>
+        `repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *
+            2}px)`};
+
+    border-left: ${({ theme }) => `3px dashed ${theme.colors.borderBlack}`};
+    position: fixed;
+    bottom: 0;
+    left: ${({ isDesktop, isWindows, open }) =>
+        isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 3px)' : 'calc(97.5vw - 3px)'};
+    transition: width 1s, left 1s;
+`
+
+const InfoSection = ({ isDesktop, isWindows, openSection }) => {
+    return (
+        <>
+            <RightArea
+                isDesktop={isDesktop}
+                isWindows={isWindows}
+                open={openSection}
+                stripeRotation={45}
+                color1='rgba(255,255,255,1)'
+                color2='rgba(242, 242, 242,0.7)'
+                width='30'
+            />
+        </>
     )
 }
 
