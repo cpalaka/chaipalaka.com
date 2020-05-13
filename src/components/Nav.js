@@ -164,7 +164,8 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
 }
 
 const SiteTitle = styled(TransitionLink)`
-    // color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
+    // color: ${props =>
+        props.match ? props.theme.colors.primaryAccent : props.theme.colors.text};
     display: inline-block;
     :hover {
         text-decoration: underline;
@@ -172,15 +173,17 @@ const SiteTitle = styled(TransitionLink)`
     }
     background-color: ${({ theme }) => `${theme.colors.background}`};
     color: ${({ theme }) => `${theme.colors.navText}`} important!;
+
+    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    // background: rgba(255, 255, 255, 0.9);
+
     padding: 5px;
     z-index: 60;
 
     position: fixed;
-    top: ${({ scrollY, isDesktop }) => (scrollY > 30 && !isDesktop ? '-55px' : '0px')};
-    left: ${({ scrollY, isDesktop }) => (!isDesktop ? '2.5vw' : '25vw')};
+    top: ${({ show, isDesktop }) => (!show && !isDesktop ? '-55px' : '0px')};
+    left: ${({ isDesktop }) => (!isDesktop ? '0vw' : '25vw')};
     transition: top 0.6s, left 1s;
 `
 
@@ -190,18 +193,23 @@ const H1Title = styled.h1`
 
 const Nav = ({ path, isDesktop, isWindows, ...props }) => {
     //detect scroll position
-    const [scrollPos, setScrollPos] = useState(0)
+    const [scrollPos, setScrollPos] = useState({val: 0, show: true})
+
     useEffect(() => {
-        setScrollPos(window.scrollY)
-        window.addEventListener('scroll', e => setScrollPos(window.scrollY))
+        setScrollPos({val: window.scrollY, show: true})
+        window.addEventListener('scroll', e => {
+            setScrollPos(old => ({ val: window.scrollY, show: window.scrollY < old.val }))
+        })
         return () => {
-            window.removeEventListener('scroll', e => setScrollPos(window.scrollY))
+            window.removeEventListener('scroll', e => {
+                setScrollPos(old => ({ val: window.scrollY, show: window.scrollY < old.val }))
+            })
         }
     }, [])
 
     return (
         <>
-            <SiteTitle to='/' scrollY={scrollPos} isDesktop={isDesktop}>
+            <SiteTitle to='/' show={scrollPos.show} isDesktop={isDesktop}>
                 <H1Title>chaipalaka</H1Title>
             </SiteTitle>
             <NavMenu path={path} isDesktop={isDesktop} isWindows={isWindows} />
