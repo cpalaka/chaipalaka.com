@@ -9,7 +9,9 @@ export const useGlobalDispatch = () => useContext(globalDispatchContext)
 export const initialState = {
     theme: 'light',
     isInfoSectionOpen: false,
-    nowPlayingVideo: null
+    nowPlayingVideo: null,
+    postAnchors: null,
+    onPost: null
 }
 
 export const globalStateReducer = (state, action) => {
@@ -31,7 +33,22 @@ export const globalStateReducer = (state, action) => {
         case 'setNowPlayingVideo':
             return {
                 ...state,
-                nowPlayingVideo: action.videoId
+                nowPlayingVideo: action.videoId,
+            }
+        case 'setPostAnchors':
+            return {
+                ...state,
+                postAnchors: action.anchors,
+            }
+        case 'removePostAnchors':
+            return {
+                ...state,
+                postAnchors: null,
+            }
+        case 'setOnPost':
+            return {
+                ...state,
+                onPost: action.post
             }
         default:
             return state

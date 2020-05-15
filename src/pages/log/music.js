@@ -94,6 +94,7 @@ const MusicLogPage = props => {
         <Page {...props}>
             <PageSection top>
                 <h3>/log/music</h3>
+                <a onClick={() => window.scrollTo(0, 500)}>go bottom</a>
                 <MusicSection
                     sectionTitle='Songs Stuck In My Head'
                     fetch={fetchWeeklySongs}
@@ -114,7 +115,7 @@ const MusicLogPage = props => {
                     data={monthlyArtists}
                 />
             </PageSection>
-            <PageSection>
+            <PageSection id='test'>
                 <MusicSection
                     sectionTitle='Favorite of All Time'
                     fetch={fetchAllTimeArtists}

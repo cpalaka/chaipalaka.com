@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect, useRef } from 'react'
 import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
@@ -12,10 +12,54 @@ import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/react'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
 
-const shortcodes = { TransitionLink }
+const PostSection = styled.p`
+    font-size: 15px;
+    font-weight: bold;
+`
+
+const Anchor = props => <PostSection className='anchor'>{props.children}</PostSection>
+const shortcodes = { TransitionLink, Anchor }
 
 const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
-    // console.log(mdx)
+    const pathSlug = props.path
+    const dispatch = useGlobalDispatch()
+
+    const setCurrentPostAnchors = useCallback(
+        anchors => {
+            dispatch({ type: 'setPostAnchors', anchors: anchors })
+        },
+        [dispatch]
+    )
+
+    const setCurrentPost = useCallback(
+        (slug) => {
+            dispatch({ type: 'setOnPost', post: slug })
+        },
+        [dispatch]
+    )
+
+    const removeCurrentPostAnchors = useCallback(
+        () => {
+            dispatch({ type: 'removePostAnchors' })
+        },
+        [dispatch]
+    )
+
+
+    useEffect(() => {
+        const elements = document.getElementsByClassName('anchor')
+        const postAnchors = Array.from(elements).map(el => ({
+            sectionTitle: el.innerText,
+            scrollOffset: el.offsetTop,
+        }))
+        setCurrentPostAnchors(postAnchors)
+        setCurrentPost(pathSlug)
+        return () => { 
+            removeCurrentPostAnchors()
+            setCurrentPost(null)
+        }
+    }, [])
+
     return (
         <Page {...props}>
             <PageSection top>
