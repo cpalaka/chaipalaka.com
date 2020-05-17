@@ -5,6 +5,7 @@ import { graphql } from 'gatsby'
 import Loader from '../../components/Loader'
 import BlogFilter from '../../components/BlogFilter'
 import BlogListItem from '../../components/BlogListItem'
+import SEO from '../../components/seo'
 
 const Space = styled.div`
     height: 17px;
@@ -79,6 +80,7 @@ const BlogPage = ({ data: { allMdx, allTags, allFile }, ...props }) => {
     return (
         <Page {...props}>
             <Space />
+            <SEO title='Blog' />
             <PageSection padding='0px'>
                 <BlogFilter
                     allTags={tags}

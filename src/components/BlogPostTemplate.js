@@ -1,5 +1,4 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react'
-import SEO from '../components/seo'
 import styled from 'styled-components'
 import TransitionLink from '../components/TransitionLink'
 import Page, { PageSection } from '../components/Page'
@@ -11,6 +10,8 @@ import { useGlobalDispatch, useGlobalState } from '../state'
 import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/react'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
+
+import SEO from './seo'
 
 const PostSection = styled.p`
     font-size: 15px;
@@ -62,6 +63,7 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
 
     return (
         <Page {...props}>
+            <SEO title={mdx.frontmatter.title} image={mdx.frontmatter.infopic} />
             <PageSection top>
                 <MDXProvider components={shortcodes}>
                     <MDXRenderer>{mdx.body}</MDXRenderer>
@@ -80,6 +82,7 @@ export const pageQuery = graphql`
                 title
                 date(formatString: "MMMM D, Y")
                 tags
+                infopic
             }
             excerpt
             wordCount {

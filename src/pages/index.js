@@ -158,6 +158,7 @@ const IndexPage = props => {
 
     return (
         <Page {...props}>
+            <SEO />
             <PageSection top>
                 <MainHeading>
                     Hullo. You have reached{' '}

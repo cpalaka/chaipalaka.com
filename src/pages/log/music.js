@@ -6,6 +6,7 @@ import { ChevronDown } from '@styled-icons/boxicons-solid/ChevronDown'
 import { Lastfm } from '@styled-icons/entypo-social/Lastfm'
 import Loader from '../../components/Loader'
 import config from '../../../config'
+import SEO from '../../components/seo'
 
 const MusicLogPage = props => {
     const [weeklySongs, setWeeklySongs] = useState({ isLoading: false })
@@ -92,6 +93,7 @@ const MusicLogPage = props => {
 
     return (
         <Page {...props}>
+            <SEO title='log/music' />
             <PageSection top>
                 <h3>/log/music</h3>
                 <a onClick={() => window.scrollTo(0, 500)}>go bottom</a>

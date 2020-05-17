@@ -1,8 +1,12 @@
 module.exports = {
     siteMetadata: {
-        title: `Chai Palaka`,
+        title: `chaipalaka`,
+        titleTemplate: ` %s · chaipalaka`, 
         description: "Chai Palaka's personal website - made with Gatsby!",
         author: `Chai Palaka`,
+        image: '/images/gradpic.jpg',
+        url: 'https://www.chaipalaka.com',
+        twitterUsername: 'sincosan'
     },
     plugins: [
         `gatsby-plugin-react-helmet`,

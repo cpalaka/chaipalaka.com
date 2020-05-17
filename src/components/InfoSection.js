@@ -79,7 +79,7 @@ const DisqusComments = ({ slug }) => {
 }
 
 const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
-    console.log(state)
+    // console.log(state)
     return (
         <RightArea
             isDesktop={isDesktop}
