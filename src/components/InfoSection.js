@@ -9,14 +9,14 @@ const RightArea = styled.div`
     width: ${({ isDesktop, isWindows }) =>
         !isDesktop ? 'calc(83vw + 3px)' : isWindows ? 'calc(25vw - 17px)' : 'calc(25vw + 3px)'};
 
-    background: rgba(255, 255, 255, 0.9);
+    // background: rgba(255, 255, 255, 0.9);
 
     border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     position: fixed;
     bottom: 0;
-    left: ${({ isDesktop, isWindows, open }) =>
-        isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 2px)' : 'calc(97.5vw - 2px)'};
-    transition: width 1s, left 1s;
+    // left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 3px)' : 'calc(97.5vw - 3px)'};
+    left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(75vw)' : open ? 'calc(17.5vw)' : 'calc(97.5vw)'};
+    transition: ${({ isDesktop }) => !isDesktop ? `width 1s, left 1s` : 'initial'};
 
     padding: 62px 10px 10px 10px;
 `

@@ -29,8 +29,8 @@ const CanvasContainer = styled.div`
 const PageParent = styled.main`
     position: absolute;
     top: 0px;
-    width: 100%;
-    // height: 100%;
+    // width: 100%;
+    height: 100vh;
 `
 
 const OpenSectionContainer = styled.div`

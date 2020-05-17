@@ -32,6 +32,8 @@ const PageChild = styled.div`
 
     margin-bottom: 60px;
     margin-top: 10px;
+    // height: 100%;
+    // background: ${({theme}) => `${theme.colors.primaryAccent}`};
 `
 
 const variants = dir => ({
