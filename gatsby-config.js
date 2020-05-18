@@ -5,7 +5,7 @@ module.exports = {
         description: "Chai Palaka's personal website - made with Gatsby!",
         author: `Chai Palaka`,
         image: '/images/gradpic.jpg',
-        url: 'https://www.chaipalaka.com',
+        siteUrl: 'https://www.chaipalaka.com',
         twitterUsername: 'sincosan'
     },
     plugins: [
@@ -76,5 +76,6 @@ module.exports = {
                 trackingId: 'UA-103141426-2',
             },
         },
+        `gatsby-plugin-sitemap`,
     ],
 }

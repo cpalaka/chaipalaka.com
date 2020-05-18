@@ -11,7 +11,7 @@ const RightArea = styled.div`
 
     // background: rgba(255, 255, 255, 0.9);
 
-    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     position: fixed;
     bottom: 0;
     // left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 3px)' : 'calc(97.5vw - 3px)'};

@@ -32,8 +32,8 @@ const NavMenuContainer = styled(Flexbox)`
     justify-content: space-between;
     z-index: 60;
 
-    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     background-color: ${({ theme }) => `${theme.colors.background}`};
 
     position: fixed;
@@ -172,11 +172,12 @@ const SiteTitle = styled(TransitionLink)`
         color: ${({ theme }) => theme.colors.secondary};
     }
     background-color: ${({ theme }) => `${theme.colors.background}`};
+
+
     color: ${({ theme }) => `${theme.colors.navText}`};
 
-    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
 
     padding: 5px;
     z-index: 60;
@@ -193,10 +194,10 @@ const H1Title = styled.h1`
 
 const Nav = ({ path, isDesktop, isWindows, ...props }) => {
     //detect scroll position
-    const [scrollPos, setScrollPos] = useState({val: 0, show: true})
+    const [scrollPos, setScrollPos] = useState({ val: 0, show: true })
 
     useEffect(() => {
-        setScrollPos({val: window.scrollY, show: true})
+        setScrollPos({ val: window.scrollY, show: true })
         window.addEventListener('scroll', e => {
             setScrollPos(old => ({ val: window.scrollY, show: window.scrollY < old.val }))
         })

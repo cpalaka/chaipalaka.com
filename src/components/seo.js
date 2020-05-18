@@ -24,7 +24,7 @@ function SEO({ description, lang, meta, image, title, article }) {
                         defaultImage: image
                         author
                         twitterUsername
-                        siteUrl: url
+                        siteUrl
                     }
                 }
             }

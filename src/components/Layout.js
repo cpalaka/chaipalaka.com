@@ -6,13 +6,15 @@ import Nav from './Nav'
 import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
 import { useGlobalDispatch, useGlobalState } from '../state'
 import InfoSection from './InfoSection'
+import Helmet from 'react-helmet'
+import favicon from '../../images/favicon.ico'
 
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
     left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
     // left: 0px;
-    width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};;
+    width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};
     height: 100%;
     transition: left 1s;
 `
@@ -30,13 +32,14 @@ const PageParent = styled.main`
     position: absolute;
     top: 0px;
     // width: 100%;
-    height: 100vh;
+    height: 100%;
+    // background: white;
 `
 
 const OpenSectionContainer = styled.div`
     position: fixed;
     top: 0px;
-    right: 0px;
+    right: 10px;
     z-index: 100;
 
     // background: white;
@@ -45,8 +48,9 @@ const OpenSectionContainer = styled.div`
 
     width: 52px;
     height: 52px;
-    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+
+    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    // border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
 `
 const OpenSectionIcon = styled(UnfoldMore)`
     transform: rotate(90deg) translate(10%, -10%);
@@ -87,6 +91,9 @@ const Layout = ({ children, ...props }) => {
 
     return (
         <Site>
+            <Helmet>
+                <link rel='icon' href={favicon} />
+            </Helmet>
             <CanvasContainer>
                 <MeshLine />
             </CanvasContainer>
