@@ -37,10 +37,13 @@ const NavMenuContainer = styled(Flexbox)`
     background-color: ${({ theme }) => `${theme.colors.background}`};
 
     position: fixed;
-    bottom: 0px;
+    bottom: -1px;
     right: ${({ isDesktop, isWindows }) =>
-        !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
+        !isDesktop ? '0vw' : isWindows ? 'calc(21vw - 17px)' : '21vw'};
     transition: top 0.6s, left 1s;
+
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
+    transform: rotate(-1deg);
 `
 
 const SettingsIcon = styled(Settings)`
@@ -80,10 +83,8 @@ const LogNavContainer = styled.div`
     z-index: 59;
 
     transition: bottom 1s;
-    border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    // border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};;
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
+    transform: rotate(1deg);
 `
 
 const SettingsNavContainer = styled(LogNavContainer)``
@@ -183,9 +184,12 @@ const SiteTitle = styled(TransitionLink)`
     z-index: 60;
 
     position: fixed;
-    top: ${({ show, isDesktop }) => (!show && !isDesktop ? '-55px' : '0px')};
-    left: ${({ isDesktop }) => (!isDesktop ? '0vw' : '25vw')};
+    top: ${({ show, isDesktop }) => (!show && !isDesktop ? '-60px' : '0px')};
+    left: ${({ isDesktop }) => (!isDesktop ? '0vw' : '21vw')};
     transition: top 0.6s, left 1s;
+
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
+    transform: rotate(-1deg);
 `
 
 const H1Title = styled.h1`

@@ -4,8 +4,9 @@ import styled from 'styled-components'
 import config from '../../config'
 
 export const PageSection = styled.div`
-    background: rgba(255, 255, 255, 0.9);
-    // background: rgba(119, 122, 128, 0.98);
+    // background: rgba(255, 255, 255, 0.9);
+    background: #fcfcfc;
+
     margin: 15px auto;
 
     padding-top: ${({ padding, top }) => (padding ? padding : (top ? '30px' :'10px'))};
@@ -13,12 +14,8 @@ export const PageSection = styled.div`
     padding-left: ${({ padding }) => (padding ? padding : '10px')};
     padding-right: ${({ padding }) => (padding ? padding : '10px')};
 
-    // border-top: ${({theme}) => `3px solid ${theme.colors.borderBlack}`};
-    // border-bottom: ${({theme}) => `3px solid ${theme.colors.borderBlack}`};
-    // border-left: ${({theme}) => `3px solid ${theme.colors.borderBlack}`};
-    // border-right: ${({theme}) => `3px solid ${theme.colors.background}`};
-
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
+    box-shadow: inset 0px 0px 10px -10px #040f0f;
 `
 
 const PageChild = styled.div`
@@ -32,8 +29,6 @@ const PageChild = styled.div`
 
     margin-bottom: 60px;
     margin-top: 10px;
-    // height: 100%;
-    // background: ${({theme}) => `${theme.colors.primaryAccent}`};
 `
 
 const variants = dir => ({

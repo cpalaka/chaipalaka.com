@@ -35,7 +35,8 @@ export default {
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
             navText: '#040f0f',
-            text: '#040f0f'
+            text: '#040f0f',
+            blur: '#040f0f'
         },
         ...common,
     },
@@ -47,7 +48,8 @@ export default {
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
             navText: 'white',
-            borderBlack: 'grey'
+            borderBlack: 'grey',
+            blur: '#040f0f'
         },
         ...common,
     },

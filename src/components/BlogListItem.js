@@ -136,11 +136,11 @@ const BlogListItem = ({ postdata }) => {
         <TransitionLink to={slug}>
             <BlogItemDiv
                 // wide, mainly vertical stripes
-                // stripeRotation={getRandomRotation(5)}
-                // width={Math.random()* (80 - 20) + 20}
+                stripeRotation={getRandomRotation(5)}
+                width={Math.random()* (80 - 20) + 20}
                 //thin, hatched stripes
-                stripeRotation={getRandomRotation(360)}
-                width={5 * Math.random()}
+                // stripeRotation={getRandomRotation(360)}
+                // width={5 * Math.random()}
                 color1={themeContext.blogColors[type].primary}
                 color2={themeContext.blogColors[type].secondary}
             >

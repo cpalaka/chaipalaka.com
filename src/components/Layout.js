@@ -38,19 +38,19 @@ const PageParent = styled.main`
 
 const OpenSectionContainer = styled.div`
     position: fixed;
-    top: 0px;
-    right: 10px;
+    top: ${({shouldShow}) => shouldShow ? `0px` : '-60px'};
+    right: 0px;
     z-index: 100;
 
-    // background: white;
     background-color: ${({ theme }) => `${theme.colors.background}`};
-    // color: ${({ theme }) => `${theme.colors.navText}`} important!;
 
     width: 52px;
     height: 52px;
 
-    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    // border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
+    transform: rotate(1deg);
+
+    transition: top 1s;
 `
 const OpenSectionIcon = styled(UnfoldMore)`
     transform: rotate(90deg) translate(10%, -10%);
@@ -58,6 +58,17 @@ const OpenSectionIcon = styled(UnfoldMore)`
     height: 40px;
     color: ${({ theme }) => `${theme.colors.navText}`};
     margin: auto;
+`
+
+const GlassExterior = styled.div`
+    position: fixed;
+    top: 0px;
+    left: ${({ isDesktop, openSideArea }) => (isDesktop ? '23vw' : (openSideArea ? '-79vw' : '1vw'))};
+    height: 100vh;
+    width: ${({ isDesktop }) => (isDesktop ? '54vw' : '98vw')};
+    background: rgba(255, 255, 255, 0.7);
+    transition: ${({ isDesktop }) => isDesktop ? 'initial' : `left 1s`};
+    box-shadow: 0px 0px 10px -5px #040f0f;
 `
 
 const Layout = ({ children, ...props }) => {
@@ -89,6 +100,8 @@ const Layout = ({ children, ...props }) => {
         dispatch({ type: 'setInfoSection', data: !isInfoSectionOpen })
     }, [dispatch, state.isInfoSectionOpen])
 
+    const shouldShow = state.nowPlayingVideo || state.onPost
+
     return (
         <Site>
             <Helmet>
@@ -97,9 +110,10 @@ const Layout = ({ children, ...props }) => {
             <CanvasContainer>
                 <MeshLine />
             </CanvasContainer>
+            <GlassExterior isDesktop={isDesktop} openSideArea={infoSectionOpen} />
             <ContentContainer isDesktop={isDesktop} openSideArea={infoSectionOpen}>
                 {!isDesktop ? (
-                    <OpenSectionContainer>
+                    <OpenSectionContainer shouldShow={shouldShow}>
                         <OpenSectionIcon onClick={toggleInfoSection} />
                     </OpenSectionContainer>
                 ) : null}

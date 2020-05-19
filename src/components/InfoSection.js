@@ -9,16 +9,16 @@ const RightArea = styled.div`
     width: ${({ isDesktop, isWindows }) =>
         !isDesktop ? 'calc(83vw + 3px)' : isWindows ? 'calc(25vw - 17px)' : 'calc(25vw + 3px)'};
 
-    // background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.7);
 
-    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     position: fixed;
-    bottom: 0;
-    // left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(75vw - 3px)' : open ? 'calc(17.5vw - 3px)' : 'calc(97.5vw - 3px)'};
-    left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(75vw)' : open ? 'calc(17.5vw)' : 'calc(97.5vw)'};
-    transition: ${({ isDesktop }) => !isDesktop ? `width 1s, left 1s` : 'initial'};
+    bottom: ${({shouldShow}) => shouldShow ? '0' : '100vh'};
+    left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(78vw)' : open ? 'calc(21vw)' : 'calc(102.5vw)'};
+
+    transition: ${({ isDesktop }) => !isDesktop ? `width 1s, left 1s` : 'bottom 2s'};
 
     padding: 62px 10px 10px 10px;
+    box-shadow: 0px 0px 10px -5px #040f0f;
 `
 
 const NowPlayingVideoContainer = styled.iframe``
@@ -80,6 +80,7 @@ const DisqusComments = ({ slug }) => {
 
 const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
     // console.log(state)
+    const shouldShow = state.nowPlayingVideo || state.onPost
     return (
         <RightArea
             isDesktop={isDesktop}
@@ -89,6 +90,7 @@ const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
             color1='rgba(255,255,255,1)'
             color2='rgba(242, 242, 242,0.7)'
             width='60'
+            shouldShow={shouldShow}
         >
             {state.nowPlayingVideo ? <NowPlayingVideo src={state.nowPlayingVideo} /> : null}
             {state.postAnchors ? <PostOutline list={state.postAnchors} /> : null}

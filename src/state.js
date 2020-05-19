@@ -31,8 +31,10 @@ export const globalStateReducer = (state, action) => {
                 isInfoSectionOpen: action.data,
             }
         case 'setNowPlayingVideo':
+            const toBeClosed = action.videoId === null
             return {
                 ...state,
+                isInfoSectionOpen: toBeClosed ? state.onPost : state.isInfoSectionOpen,
                 nowPlayingVideo: action.videoId,
             }
         case 'setPostAnchors':
