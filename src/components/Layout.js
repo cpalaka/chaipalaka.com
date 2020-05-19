@@ -6,15 +6,16 @@ import Nav from './Nav'
 import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
 import { useGlobalDispatch, useGlobalState } from '../state'
 import InfoSection from './InfoSection'
-import Helmet from 'react-helmet'
-import favicon from '../../images/favicon.ico'
+// import Helmet from 'react-helmet'
+// import favicon from '../../images/favicon.ico'
 
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
     left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
     // left: 0px;
-    width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};
+    // width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};
+    width: 100%;
     height: 100%;
     transition: left 1s;
 `
@@ -104,9 +105,6 @@ const Layout = ({ children, ...props }) => {
 
     return (
         <Site>
-            <Helmet>
-                <link rel='icon' href={favicon} />
-            </Helmet>
             <CanvasContainer>
                 <MeshLine />
             </CanvasContainer>

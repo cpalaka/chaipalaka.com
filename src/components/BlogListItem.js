@@ -38,6 +38,7 @@ const BlogItemDiv = styled.div`
         box-shadow: ${({ color2 }) => `7px 7px ${color2}`};
         transform: translate(-4px, -4px);
     }
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
     transition: box-shadow 0.5s, transform 1s;
 `
 

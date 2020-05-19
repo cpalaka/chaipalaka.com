@@ -34,10 +34,10 @@ function Lines({ count, colors }) {
             new Array(count).fill().map(() => {
                 const pos = new THREE.Vector3(
                     10 - Math.random() * 20,
-                    20 - Math.random() * 40,
-                    // 10 - Math.random() * 20,
-                    25,
-                    // 10 - Math.random() * 20
+                    // 20 - Math.random() * 40,
+                    10 - Math.random() * 20,
+                    // 25,
+                    10 - Math.random() * 20
                 )
                 const points = new Array(30)
                     .fill()
@@ -82,7 +82,7 @@ export default React.memo(function App() {
     return (
         <Canvas
             style={{ background: theme.colors.background }}
-            camera={{ position: [0, 0, 100], fov: 10 }}
+            camera={{ position: [0, 0, 50], fov: 3 }}
             onMouseMove={e =>
                 (mouse.current = [
                     e.clientX - window.innerWidth / 2,

@@ -165,8 +165,6 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
 }
 
 const SiteTitle = styled(TransitionLink)`
-    // color: ${props =>
-        props.match ? props.theme.colors.primaryAccent : props.theme.colors.text};
     display: inline-block;
     :hover {
         text-decoration: underline;
@@ -174,11 +172,8 @@ const SiteTitle = styled(TransitionLink)`
     }
     background-color: ${({ theme }) => `${theme.colors.background}`};
 
-
+    
     color: ${({ theme }) => `${theme.colors.navText}`};
-
-    // border-right: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    // border-bottom: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
 
     padding: 5px;
     z-index: 60;
@@ -194,6 +189,7 @@ const SiteTitle = styled(TransitionLink)`
 
 const H1Title = styled.h1`
     color: ${props => props.theme.colors.text};
+    font-size: 42px;
 `
 
 const Nav = ({ path, isDesktop, isWindows, ...props }) => {

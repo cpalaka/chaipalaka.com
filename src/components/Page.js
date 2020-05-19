@@ -5,7 +5,7 @@ import config from '../../config'
 
 export const PageSection = styled.div`
     // background: rgba(255, 255, 255, 0.9);
-    background: #fcfcfc;
+    background: white;
 
     margin: 15px auto;
 
@@ -15,7 +15,7 @@ export const PageSection = styled.div`
     padding-right: ${({ padding }) => (padding ? padding : '10px')};
 
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
-    box-shadow: inset 0px 0px 10px -10px #040f0f;
+    box-shadow: inset 0px 0px 15px -10px #040f0f;
 `
 
 const PageChild = styled.div`
