@@ -89,7 +89,7 @@ const SettingsNavContainer = styled(LogNavContainer)``
 
 const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
     const onLog = path.includes('/log'),
-        onBlog = path.includes('/blog'),
+        onWords = path.includes('/words'),
         onProjects = path === '/projects/'
     const onLogBooks = path === '/log/books/',
         onLogMusic = path === '/log/music/',
@@ -154,8 +154,8 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
                 >
                     log
                 </FakeNavLink>
-                <MainNavLink to='/blog' match={onBlog}>
-                    blog
+                <MainNavLink to='/words' match={onWords}>
+                    words
                 </MainNavLink>
             </NavMenuContainer>
         </>

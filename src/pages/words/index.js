@@ -80,7 +80,7 @@ const BlogPage = ({ data: { allMdx, allTags, allFile }, ...props }) => {
     return (
         <Page {...props}>
             <Space />
-            <SEO title='Blog' />
+            <SEO title='Words' />
             <PageSection padding='0px'>
                 <BlogFilter
                     allTags={tags}
@@ -135,7 +135,7 @@ export const allPostsQuery = graphql`
         allTags {
             tags
         }
-        allFile(filter: { relativeDirectory: { eq: "blog/intro" } }) {
+        allFile(filter: { relativeDirectory: { eq: "words/intro" } }) {
             edges {
                 node {
                     id
