@@ -7,18 +7,18 @@ export const useGlobalState = () => useContext(globalStateContext)
 export const useGlobalDispatch = () => useContext(globalDispatchContext)
 
 export const initialState = {
-    theme: localStorage.getItem('theme') || 'light',
+    theme: 'light',
     isInfoSectionOpen: false,
     nowPlayingVideo: null,
     postAnchors: null,
-    onPost: null
+    onPost: null,
 }
 
 export const globalStateReducer = (state, action) => {
     switch (action.type) {
         case 'setTheme':
             if (action.theme !== state.theme) {
-                localStorage.setItem("theme", action.theme)
+                localStorage.setItem('theme', action.theme)
                 return {
                     ...state,
                     theme: action.theme,
@@ -51,7 +51,7 @@ export const globalStateReducer = (state, action) => {
         case 'setOnPost':
             return {
                 ...state,
-                onPost: action.post
+                onPost: action.post,
             }
         default:
             return state

@@ -4,18 +4,19 @@ import styled from 'styled-components'
 import config from '../../config'
 
 export const PageSection = styled.div`
-    background: rgba(255, 255, 255, 0.8);
+    background: ${({ theme }) => `${theme.colors.pageSectionBackground}`};
+    color: ${({ theme }) => `${theme.colors.pageSectionText}`};
     // background: white;
 
     margin: 15px auto;
 
-    padding-top: ${({ padding, top }) => (padding ? padding : (top ? '30px' :'10px'))};
+    padding-top: ${({ padding, top }) => (padding ? padding : top ? '30px' : '10px')};
     padding-bottom: ${({ padding }) => (padding ? padding : '10px')};
     padding-left: ${({ padding }) => (padding ? padding : '10px')};
     padding-right: ${({ padding }) => (padding ? padding : '10px')};
 
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
-    box-shadow: inset 0px 0px 15px -10px #040f0f;
+    box-shadow: ${({ theme }) => `inset 0px 0px 15px -10px ${theme.colors.pageSectionShadow}`};
     border-radius: 12px;
 `
 

@@ -9,7 +9,7 @@ const RightArea = styled.div`
     width: ${({ isDesktop, isWindows }) =>
         !isDesktop ? 'calc(83vw + 3px)' : isWindows ? 'calc(25vw - 17px)' : 'calc(25vw + 3px)'};
 
-    background: rgba(255, 255, 255, 0.7);
+    background: ${({ theme }) => `${theme.colors.pageBackground}`};;
 
     position: fixed;
     bottom: ${({shouldShow}) => shouldShow ? '0' : '103vh'};

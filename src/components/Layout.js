@@ -6,15 +6,11 @@ import Nav from './Nav'
 import { UnfoldMore } from '@styled-icons/material/UnfoldMore'
 import { useGlobalDispatch, useGlobalState } from '../state'
 import InfoSection from './InfoSection'
-// import Helmet from 'react-helmet'
-// import favicon from '../../images/favicon.ico'
 
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
     left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
-    // left: 0px;
-    // width: ${({ isDesktop }) => (isDesktop ? '75vw' : '100%')};
     width: 100%;
     height: 100%;
     transition: left 1s;
@@ -32,9 +28,7 @@ const CanvasContainer = styled.div`
 const PageParent = styled.main`
     position: absolute;
     top: 0px;
-    // width: 100%;
     height: 100%;
-    // background: white;
 `
 
 const OpenSectionContainer = styled.div`
@@ -43,7 +37,7 @@ const OpenSectionContainer = styled.div`
     right: 0px;
     z-index: 100;
 
-    background-color: ${({ theme }) => `${theme.colors.background}`};
+    background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
 
     width: 52px;
     height: 52px;
@@ -67,7 +61,7 @@ const GlassExterior = styled.div`
     left: ${({ isDesktop, openSideArea }) => (isDesktop ? '23vw' : (openSideArea ? '-79vw' : '1vw'))};
     height: 100vh;
     width: ${({ isDesktop }) => (isDesktop ? '54vw' : '98vw')};
-    background: rgba(255, 255, 255, 0.7);
+    background: ${({ theme }) => `${theme.colors.pageBackground}`};
     transition: ${({ isDesktop }) => isDesktop ? 'initial' : `left 1s`};
     box-shadow: 0px 0px 10px -5px #040f0f;
 `

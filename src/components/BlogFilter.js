@@ -5,7 +5,7 @@ const Tag = styled.div`
     width: 100%;
     height: 30px;
 
-    color: ${props => (props.selected ? props.theme.colors.secondary : 'initial')};
+    color: ${props => (props.selected ? props.theme.colors.secondary : props.theme.colors.pageSectionText)};
     
     box-shadow: ${props => (props.selected ? `0px 2px ${props.theme.colors.secondary}` : 'none')};
     font-weight: ${props => (props.selected ? `bold` : 'normal')};
@@ -61,8 +61,10 @@ const FilterPostsButton = styled.div`
     height: 30px;
     text-align: center;
     font-weight: ${({ showOptions }) => (showOptions ? 'bold' : 'normal')};
+    border-radius: 12px;
     :hover {
         background-color: ${props => props.theme.colors.secondary};
+        
         cursor: pointer;
     }
 `

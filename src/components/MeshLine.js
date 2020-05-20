@@ -93,7 +93,6 @@ export default React.memo(function App() {
         >
             <Lines
                 count={35}
-                // colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
                 colors={theme.colors.meshLineColors}
             />
             <Rig mouse={mouse} />

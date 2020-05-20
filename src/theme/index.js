@@ -31,7 +31,11 @@ export default {
     light: {
         colors: {
             ...common.commonColors,
-            background: 'white',
+            navItemBackground: 'white',
+            pageBackground: 'rgba(255, 255, 255, 0.5)',
+            pageSectionBackground: 'rgba(255, 255, 255, 0.8)',
+            pageSectionText: '#040f0f',
+            pageSectionShadow: '#040f0f',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
             navText: '#040f0f',
@@ -39,7 +43,7 @@ export default {
             blur: '#040f0f',
             meshLineColors: ['#5F4BB6', '#86A5D9', '#26F0F1', '#C4EBC8'],
             // meshLineColors: ['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']
-            meshLineBackground: '#202A25'
+            meshLineBackground: '#202A25',
         },
         ...common,
     },
@@ -47,14 +51,18 @@ export default {
         colors: {
             ...common.commonColors,
             text: 'white',
-            background: '#4d3e3e',
+            navItemBackground: '#000300',
+            pageBackground: 'rgba(0, 3, 0, 0.5)',
+            pageSectionBackground: 'rgba(0, 3, 0, 0.8)',
+            pageSectionText: 'white',
+            pageSectionShadow: '#040f0f',
             primaryAccent: '#2f6690',
             secondary: '#ea638c',
             navText: 'white',
             borderBlack: 'grey',
             blur: '#040f0f',
-             meshLineColors: ['#FF01FB', '#02A9EA', '#FAFF00', '#FFFEFF'],
-             meshLineBackground: '#000300'
+            meshLineColors: ['#FF01FB', '#02A9EA', '#FAFF00', '#FFFEFF'],
+            meshLineBackground: '#000300',
         },
         ...common,
     },

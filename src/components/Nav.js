@@ -32,7 +32,7 @@ const NavMenuContainer = styled(Flexbox)`
     justify-content: space-between;
     z-index: 60;
 
-    background-color: ${({ theme }) => `${theme.colors.background}`};
+    background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
 
     position: fixed;
     bottom: -4px;
@@ -70,7 +70,7 @@ const FakeNavLink = styled.div`
 const LogNavContainer = styled.div`
     display: flex;
     flex-direction: column;
-    background-color: ${({ theme }) => `${theme.colors.background}`};
+    background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
     position: fixed;
 
 
@@ -168,7 +168,7 @@ const SiteTitle = styled(TransitionLink)`
         text-decoration: underline;
         color: ${({ theme }) => theme.colors.secondary};
     }
-    background-color: ${({ theme }) => `${theme.colors.background}`};
+    background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
 
     
     color: ${({ theme }) => `${theme.colors.navText}`};
