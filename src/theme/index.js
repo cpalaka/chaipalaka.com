@@ -1,7 +1,7 @@
 const common = {
     font: {
-        navButtonSize: '22px',
-        subNavButtonSize: '18px',
+        navButtonSize: '26px',
+        subNavButtonSize: '21px',
     },
     dim: {
         nav: '50',
@@ -36,7 +36,10 @@ export default {
             secondary: '#ea638c',
             navText: '#040f0f',
             text: '#040f0f',
-            blur: '#040f0f'
+            blur: '#040f0f',
+            meshLineColors: ['#5F4BB6', '#86A5D9', '#26F0F1', '#C4EBC8'],
+            // meshLineColors: ['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']
+            meshLineBackground: '#202A25'
         },
         ...common,
     },
@@ -49,7 +52,9 @@ export default {
             secondary: '#ea638c',
             navText: 'white',
             borderBlack: 'grey',
-            blur: '#040f0f'
+            blur: '#040f0f',
+             meshLineColors: ['#FF01FB', '#02A9EA', '#FAFF00', '#FFFEFF'],
+             meshLineBackground: '#000300'
         },
         ...common,
     },

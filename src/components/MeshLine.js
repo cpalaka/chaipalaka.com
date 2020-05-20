@@ -9,7 +9,7 @@ extend(meshline)
 
 function Fatline({ curve, width, color, speed }) {
     const material = useRef()
-    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.2))
+    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.09))
     return (
         <mesh>
             <meshLine attach='geometry' vertices={curve} />
@@ -81,7 +81,7 @@ export default React.memo(function App() {
 
     return (
         <Canvas
-            style={{ background: theme.colors.background }}
+            style={{ background: theme.colors.meshLineBackground }}
             camera={{ position: [0, 0, 50], fov: 3 }}
             onMouseMove={e =>
                 (mouse.current = [
@@ -93,8 +93,8 @@ export default React.memo(function App() {
         >
             <Lines
                 count={35}
-                colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
-                // colors={[theme.colors.primaryAccent]}
+                // colors={['#A2CCB6', '#FCEEB5', '#EE786E', '#e0feff', 'lightpink', 'lightblue']}
+                colors={theme.colors.meshLineColors}
             />
             <Rig mouse={mouse} />
         </Canvas>

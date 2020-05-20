@@ -32,18 +32,16 @@ const NavMenuContainer = styled(Flexbox)`
     justify-content: space-between;
     z-index: 60;
 
-    // border-left: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
-    // border-top: ${({ theme }) => `3px solid ${theme.colors.borderBlack}`};
     background-color: ${({ theme }) => `${theme.colors.background}`};
 
     position: fixed;
-    bottom: -1px;
+    bottom: -4px;
     right: ${({ isDesktop, isWindows }) =>
         !isDesktop ? '0vw' : isWindows ? 'calc(21vw - 17px)' : '21vw'};
     transition: top 0.6s, left 1s;
 
     box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
-    transform: rotate(-1deg);
+    transform: rotate(-2deg);
 `
 
 const SettingsIcon = styled(Settings)`
@@ -61,7 +59,7 @@ const FakeNavLink = styled.div`
     color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
     cursor: pointer;
     display: inline-block;
-    font-size: 22px;
+    font-size: ${props => props.theme.font.navButtonSize};;
     margin: 0 5px;
     :hover {
         text-decoration: underline;
@@ -72,13 +70,13 @@ const FakeNavLink = styled.div`
 const LogNavContainer = styled.div`
     display: flex;
     flex-direction: column;
-    background-color: ${({ theme }) => `${theme.colors.background}`};;
+    background-color: ${({ theme }) => `${theme.colors.background}`};
     position: fixed;
 
-    bottom: 0px;
+
     right: ${({ isDesktop, isWindows }) =>
         !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
-    bottom: ${({ open }) => (open ? '50px' : '-102px')};
+    bottom: ${({ open }) => (open ? '50px' : '-110px')};
 
     z-index: 59;
 
@@ -179,12 +177,13 @@ const SiteTitle = styled(TransitionLink)`
     z-index: 60;
 
     position: fixed;
-    top: ${({ show, isDesktop }) => (!show && !isDesktop ? '-60px' : '0px')};
+    top: ${({ show, isDesktop }) => (!show && !isDesktop ? '-60px' : '-10px')};
     left: ${({ isDesktop }) => (!isDesktop ? '0vw' : '21vw')};
     transition: top 0.6s, left 1s;
 
     box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
-    transform: rotate(-1deg);
+    transform: rotate(-2deg);
+    // border-radius: 20px;
 `
 
 const H1Title = styled.h1`

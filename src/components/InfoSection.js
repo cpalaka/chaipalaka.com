@@ -12,7 +12,7 @@ const RightArea = styled.div`
     background: rgba(255, 255, 255, 0.7);
 
     position: fixed;
-    bottom: ${({shouldShow}) => shouldShow ? '0' : '100vh'};
+    bottom: ${({shouldShow}) => shouldShow ? '0' : '103vh'};
     left: ${({ isDesktop, isWindows, open }) => isDesktop ? 'calc(78vw)' : open ? 'calc(21vw)' : 'calc(102.5vw)'};
 
     transition: ${({ isDesktop }) => !isDesktop ? `width 1s, left 1s` : 'bottom 2s'};

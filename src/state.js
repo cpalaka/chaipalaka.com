@@ -7,7 +7,7 @@ export const useGlobalState = () => useContext(globalStateContext)
 export const useGlobalDispatch = () => useContext(globalDispatchContext)
 
 export const initialState = {
-    theme: 'light',
+    theme: localStorage.getItem('theme') || 'light',
     isInfoSectionOpen: false,
     nowPlayingVideo: null,
     postAnchors: null,
@@ -18,6 +18,7 @@ export const globalStateReducer = (state, action) => {
     switch (action.type) {
         case 'setTheme':
             if (action.theme !== state.theme) {
+                localStorage.setItem("theme", action.theme)
                 return {
                     ...state,
                     theme: action.theme,

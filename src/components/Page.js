@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import config from '../../config'
 
 export const PageSection = styled.div`
-    // background: rgba(255, 255, 255, 0.9);
-    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    // background: white;
 
     margin: 15px auto;
 
@@ -16,6 +16,7 @@ export const PageSection = styled.div`
 
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
     box-shadow: inset 0px 0px 15px -10px #040f0f;
+    border-radius: 12px;
 `
 
 const PageChild = styled.div`
@@ -49,8 +50,8 @@ const Page = ({ children, transitionStatus, entry }) => {
     // const startPos = from === 'left' || from === 'top' ? '100%' : '-100%'
     // const exitPos = from === 'left' || from === 'top' ? '-100%' : '100%'
 
-    const startPos = '-100%'
-    const exitPos = '-100%'
+    const startPos = '-110%'
+    const exitPos = '-110%'
 
     // const direction = from === 'left' || from === 'right' ? 'x' : 'y'
     const direction = 'y'
