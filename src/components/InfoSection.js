@@ -112,12 +112,12 @@ const OutlineDiv = styled(InfoSubSection)`
 const PostHeading = styled.p`
     line-height: 2;
     text-align: center;
-    font-weight: ${({on}) => on ? 'bold' : 'initial'};
-    color: ${({on, theme}) => on ? `${theme.colors.secondary}` : '${theme.colors.text}'};
+    font-weight: ${({ on }) => (on ? 'bold' : 'initial')};
+    color: ${({ on, theme }) => (on ? `${theme.colors.secondary}` : '${theme.colors.text}')};
     cursor: pointer;
     :hover {
         font-weight: bold;
-        color: ${({on, theme}) =>`${theme.colors.primaryAccent}`};
+        color: ${({ on, theme }) => `${theme.colors.primaryAccent}`};
     }
 `
 
@@ -130,32 +130,38 @@ const PostOutline = ({ list }) => {
     const [scrollOver, setScrollOver] = useState(0)
 
     useEffect(() => {
-        setScrollPos(window.scrollY)
-        window.addEventListener('scroll', e => {
-            setScrollPos(old => window.scrollY)
-        })
-        return () => {
-            window.removeEventListener('scroll', e => {
-                setScrollPos(old =>  window.scrollY)
-            })
-        }
-    }, [])
-
-    useEffect(() => {
-        for(let i = 0; i < list.length; ++i) {
-            if(scrollPos < list[i].scrollOffset && (scrollPos > (list[i-1] ? list[i-1].scrollOffset + window.innerHeight*0.83: 0))) {
-                setScrollOver(i)
-                break
+        for (let i = 0; i < list.length; ++i) {
+            if (
+                scrollPos < list[i].scrollOffset &&
+                scrollPos > (list[i - 1] ? list[i - 1].scrollOffset + window.innerHeight * 0.83 : 0)
+            ) {
+                if (i !== scrollOver) {
+                    setScrollOver(i)
+                }
             }
         }
     }, [scrollPos])
 
-    // console.log(scrollOver)
-    // console.log(scrollPos)
+    useEffect(() => {
+        setScrollPos(window.scrollY)
+        window.addEventListener('scroll', e => {
+            setScrollPos(window.scrollY)
+        })
+        return () => {
+            window.removeEventListener('scroll', e => {
+                setScrollPos(window.scrollY)
+            })
+        }
+    }, [])
+
     return (
         <OutlineDiv>
             {list.map((el, i) => (
-                <PostHeading on={i===scrollOver ? 1 : 0} key={i} onClick={() => scrollTo(el.scrollOffset)}>
+                <PostHeading
+                    on={i === scrollOver ? 1 : 0}
+                    key={i}
+                    onClick={() => scrollTo(el.scrollOffset)}
+                >
                     {el.sectionTitle}
                 </PostHeading>
             ))}
