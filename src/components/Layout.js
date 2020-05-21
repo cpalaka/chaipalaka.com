@@ -10,7 +10,7 @@ import InfoSection from './InfoSection'
 const ContentContainer = styled.div`
     position: absolute;
     top: 0;
-    left: ${({ openSideArea }) => (openSideArea ? '-80vw' : '0px')};
+    left: ${({ openSideArea, isDesktop }) => isDesktop ? '0px' : (openSideArea ? '-80vw' : '0px')};
     width: 100%;
     height: 100%;
     transition: left 1s;
@@ -48,10 +48,13 @@ const OpenSectionContainer = styled.div`
     transition: top 1s;
 `
 const OpenSectionIcon = styled(UnfoldMore)`
-    transform: rotate(90deg) translate(10%, -10%);
+    transform: rotate(90deg) translate(11%, -15%);
     width: 40px;
     height: 40px;
     color: ${({ theme }) => `${theme.colors.navText}`};
+    :active {
+        color: ${({ theme }) => `${theme.colors.secondary}`};
+    }
     margin: auto;
 `
 
