@@ -17,15 +17,11 @@ export const initialState = {
 export const globalStateReducer = (state, action) => {
     switch (action.type) {
         case 'setTheme':
-            if (action.theme !== state.theme) {
-                localStorage.setItem('theme', action.theme)
-                return {
-                    ...state,
-                    theme: action.theme,
-                }
+            localStorage.setItem('theme', action.theme)
+            return {
+                ...state,
+                theme: action.theme,
             }
-
-            return state
         case 'setInfoSection':
             return {
                 ...state,
