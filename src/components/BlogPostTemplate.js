@@ -10,8 +10,9 @@ import { useGlobalDispatch, useGlobalState } from '../state'
 import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/react'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
-
+import { DiscussionEmbed } from 'disqus-react'
 import SEO from './seo'
+import config from '../../config'
 
 const PostSection = styled.p`
     font-size: 15px;
@@ -33,19 +34,15 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
     )
 
     const setCurrentPost = useCallback(
-        (slug) => {
+        slug => {
             dispatch({ type: 'setOnPost', post: slug })
         },
         [dispatch]
     )
 
-    const removeCurrentPostAnchors = useCallback(
-        () => {
-            dispatch({ type: 'removePostAnchors' })
-        },
-        [dispatch]
-    )
-
+    const removeCurrentPostAnchors = useCallback(() => {
+        dispatch({ type: 'removePostAnchors' })
+    }, [dispatch])
 
     useEffect(() => {
         const elements = document.getElementsByClassName('anchor')
@@ -55,7 +52,7 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
         }))
         setCurrentPostAnchors(postAnchors)
         setCurrentPost(pathSlug)
-        return () => { 
+        return () => {
             removeCurrentPostAnchors()
             setCurrentPost(null)
         }
@@ -69,7 +66,30 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
                     <MDXRenderer>{mdx.body}</MDXRenderer>
                 </MDXProvider>
             </PageSection>
+            <PageSection>
+                <DisqusComments slug={pathSlug} />
+            </PageSection>
         </Page>
+    )
+}
+
+
+const DisqusContainer = styled.div`
+    height: 100%;
+    width: 100%;
+`
+
+
+const DisqusComments = ({ slug }) => {
+    const disqusConfig = {
+        shortname: config.disqusShortName,
+        config: { identifier: slug },
+    }
+
+    return (
+        <DisqusContainer>
+            <DiscussionEmbed {...disqusConfig} />
+        </DisqusContainer>
     )
 }
 
