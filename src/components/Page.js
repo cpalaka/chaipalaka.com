@@ -18,6 +18,7 @@ export const PageSection = styled.div`
     width: ${({ width }) => (width ? width + 'vw' : 'initial')};
     box-shadow: ${({ theme }) => `inset 0px 0px 15px -10px ${theme.colors.pageSectionShadow}`};
     border-radius: 12px;
+    text-align: justify;
 `
 
 const PageChild = styled.div`
