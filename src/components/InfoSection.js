@@ -148,9 +148,9 @@ const PostOutline = ({ list }) => {
     }
 
     useEffect(() => {
-        window.setInterval(eventHandler, 300)
+        window.setInterval(eventHandler, 100)
         return () => {
-            window.clearInterval(eventHandler, 300)
+            window.clearInterval(eventHandler, 100)
         }
     }, [])
 
