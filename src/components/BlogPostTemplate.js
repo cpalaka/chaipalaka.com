@@ -54,7 +54,7 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
         setCurrentPostAnchors(postAnchors)
         setCurrentPost(pathSlug)
         return () => {
-            removeCurrentPostAnchors()
+            window.setTimeout(() => removeCurrentPostAnchors(), 1000)
             setCurrentPost(null)
         }
     }, [])

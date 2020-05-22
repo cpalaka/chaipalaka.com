@@ -88,20 +88,24 @@ const NowPlayingVideo = ({ src }) => {
     }, [dispatch])
 
     const [subsectionOpen, setSubsectionOpen] = useState(true)
-    return (
-        <NowPlayingSubsection open={subsectionOpen}>
-            <IconBar>
-                <MinimizeButton onClick={() => setSubsectionOpen(v => !v)} />
-                <CloseButton onClick={closeVideo} />
-            </IconBar>
+    if (src) {
+        return (
+            <NowPlayingSubsection open={subsectionOpen}>
+                <IconBar>
+                    <MinimizeButton onClick={() => setSubsectionOpen(v => !v)} />
+                    <CloseButton onClick={closeVideo} />
+                </IconBar>
 
-            <NowPlayingIFrame
-                open={subsectionOpen}
-                src={`https://www.youtube.com/embed/${src}`}
-                width='90%'
-            />
-        </NowPlayingSubsection>
-    )
+                <NowPlayingIFrame
+                    open={subsectionOpen}
+                    src={`https://www.youtube.com/embed/${src}`}
+                    width='90%'
+                />
+            </NowPlayingSubsection>
+        )
+    } else {
+        return null
+    }
 }
 
 const OutlineDiv = styled(InfoSubSection)`
@@ -128,20 +132,26 @@ const PostOutline = ({ list }) => {
 
     const [scrollOver, setScrollOver] = useState(0)
 
-    let postOffsets = list.map(el => el.scrollOffset)
+    let postOffsets = list ? list.map(el => el.scrollOffset) : []
     postOffsets[0] = 0
 
     // console.log('rerender')
     const eventHandler = () => {
         // console.log(list)
         for (let i = 1; i < postOffsets.length; ++i) {
-            if (window.scrollY < postOffsets[i] && window.scrollY > postOffsets[i - 1]-window.innerHeight*0.5) {
+            if (
+                window.scrollY < postOffsets[i] &&
+                window.scrollY > postOffsets[i - 1] - window.innerHeight * 0.5
+            ) {
                 setScrollOver(i - 1)
             }
-            if(window.scrollY > postOffsets[i]-window.innerHeight*0.5&& i === postOffsets.length - 1) {
-                setScrollOver(i )
+            if (
+                window.scrollY > postOffsets[i] - window.innerHeight * 0.5 &&
+                i === postOffsets.length - 1
+            ) {
+                setScrollOver(i)
             }
-            if(i===1 && window.scrollY < postOffsets[i+1]+window.innerHeight*0.5) {
+            if (i === 1 && window.scrollY < postOffsets[i + 1] + window.innerHeight * 0.5) {
                 setScrollOver(0)
             }
         }
@@ -154,19 +164,23 @@ const PostOutline = ({ list }) => {
         }
     }, [])
 
-    return (
-        <OutlineDiv>
-            {list.map((el, i) => (
-                <PostHeading
-                    on={i === scrollOver ? 1 : 0}
-                    key={i}
-                    onClick={() => scrollTo(el.scrollOffset)}
-                >
-                    {el.sectionTitle}
-                </PostHeading>
-            ))}
-        </OutlineDiv>
-    )
+    if (list) {
+        return (
+            <OutlineDiv>
+                {list.map((el, i) => (
+                    <PostHeading
+                        on={i === scrollOver ? 1 : 0}
+                        key={i}
+                        onClick={() => scrollTo(el.scrollOffset)}
+                    >
+                        {el.sectionTitle}
+                    </PostHeading>
+                ))}
+            </OutlineDiv>
+        )
+    } else {
+        return null
+    }
 }
 
 const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
@@ -183,8 +197,10 @@ const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
             width='60'
             shouldShow={shouldShow}
         >
-            {state.nowPlayingVideo ? <NowPlayingVideo src={state.nowPlayingVideo} /> : null}
-            {state.postAnchors ? <PostOutline list={state.postAnchors} /> : null}
+            <NowPlayingVideo src={state.nowPlayingVideo} />
+            {/* {state.nowPlayingVideo ? <NowPlayingVideo src={state.nowPlayingVideo} /> : null} */}
+            {/* {state.postAnchors ? <PostOutline list={state.postAnchors} /> : null} */}
+            <PostOutline list={state.postAnchors} />
         </InfoSectionDiv>
     )
 }

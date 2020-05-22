@@ -10,7 +10,6 @@ const Flexbox = styled.div`
 `
 
 const NavLink = styled(TransitionLink)`
-    color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
     display: inline-block;
     :hover {
         text-decoration: underline;
@@ -19,11 +18,13 @@ const NavLink = styled(TransitionLink)`
 `
 
 const MainNavLink = styled(NavLink)`
+    color: ${({doesMatch, theme}) => (doesMatch ? theme.colors.primaryAccent : theme.colors.text)};
     font-size: ${props => props.theme.font.navButtonSize};
     margin: 0 5px;
 `
 
 const SubNavLink = styled(NavLink)`
+    color: ${({doesMatch, theme}) => (doesMatch ? theme.colors.primaryAccent : theme.colors.text)};
     font-size: ${props => props.theme.font.subNavButtonSize};
     margin: 0 2px;
 `
@@ -56,10 +57,10 @@ const SettingsIcon = styled(Settings)`
 `
 
 const FakeNavLink = styled.div`
-    color: ${props => (props.match ? props.theme.colors.primaryAccent : props.theme.colors.text)};
+    color: ${({doesMatch, theme}) => (doesMatch ? theme.colors.primaryAccent : theme.colors.text)};
     cursor: pointer;
     display: inline-block;
-    font-size: ${props => props.theme.font.navButtonSize};;
+    font-size: ${props => props.theme.font.navButtonSize};
     margin: 0 5px;
     :hover {
         text-decoration: underline;
@@ -72,7 +73,6 @@ const LogNavContainer = styled.div`
     flex-direction: column;
     background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
     position: fixed;
-
 
     right: ${({ isDesktop, isWindows }) =>
         !isDesktop ? '2.5vw' : isWindows ? 'calc(25vw - 17px)' : '25vw'};
@@ -88,14 +88,28 @@ const LogNavContainer = styled.div`
 const SettingsNavContainer = styled(LogNavContainer)``
 
 const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
-    const onLog = path.includes('/log'),
-        onWords = path.includes('/words'),
-        onProjects = path === '/projects/'
-    const onLogBooks = path === '/log/books/',
-        onLogMusic = path === '/log/music/',
-        onLogArticles = path === '/log/articles/',
-        onLogProductivity = path === '/log/productivity/'
+    const [pathMatches, setPathMatches] = useState({
+        onLog: path.includes('/log'),
+        onWords: path.includes('/words'),
+        onProjects: path === '/projects/',
+        onLogBooks: path === '/log/books/',
+        onLogMusic: path === '/log/music/',
+        onLogArticles: path === '/log/articles/',
+        onLogProductivity: path === '/log/productivity/',
+    })
 
+    useEffect(() => {
+        setPathMatches({
+            onLog: path.includes('/log'),
+            onWords: path.includes('/words'),
+            onProjects: path === '/projects/',
+            onLogBooks: path === '/log/books/',
+            onLogMusic: path === '/log/music/',
+            onLogArticles: path === '/log/articles/',
+            onLogProductivity: path === '/log/productivity/',
+        })
+    }, [path])
+    // console.log(pathMatches)
     const [logNavOpen, setLogNavOpen] = useState(false)
     const [settingsNavOpen, setSettingsNavOpen] = useState(false)
 
@@ -118,16 +132,16 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
             </SettingsNavContainer>
 
             <LogNavContainer open={logNavOpen} isDesktop={isDesktop} isWindows={isWindows}>
-                <SubNavLink to='/log/books' match={onLogBooks}>
+                <SubNavLink to='/log/books' doesMatch={pathMatches.onLogBooks}>
                     books
                 </SubNavLink>
-                <SubNavLink to='/log/music' match={onLogMusic}>
+                <SubNavLink to='/log/music' doesMatch={pathMatches.onLogMusic}>
                     music
                 </SubNavLink>
-                <SubNavLink to='/log/articles' match={onLogArticles}>
+                <SubNavLink to='/log/articles' doesMatch={pathMatches.onLogArticles}>
                     articles
                 </SubNavLink>
-                <SubNavLink to='/log/productivity' match={onLogProductivity}>
+                <SubNavLink to='/log/productivity' doesMatch={pathMatches.onLogProductivity}>
                     productivity
                 </SubNavLink>
             </LogNavContainer>
@@ -138,11 +152,11 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
                         setLogNavOpen(false)
                         setSettingsNavOpen(v => !v)
                     }}
-                    match={settingsNavOpen}
+                    doesMatch={settingsNavOpen}
                 >
                     <SettingsIcon open={settingsNavOpen} />
                 </FakeNavLink>
-                <MainNavLink to='/projects' match={onProjects}>
+                <MainNavLink to='/projects' doesMatch={pathMatches.onProjects}>
                     projects
                 </MainNavLink>
                 <FakeNavLink
@@ -150,11 +164,11 @@ const NavMenu = ({ path, isDesktop, isWindows, ...props }) => {
                         setSettingsNavOpen(false)
                         setLogNavOpen(v => !v)
                     }}
-                    match={logNavOpen}
+                    doesMatch={logNavOpen || pathMatches.onLog}
                 >
                     log
                 </FakeNavLink>
-                <MainNavLink to='/words' match={onWords}>
+                <MainNavLink to='/words' doesMatch={pathMatches.onWords}>
                     words
                 </MainNavLink>
             </NavMenuContainer>
@@ -170,7 +184,6 @@ const SiteTitle = styled(TransitionLink)`
     }
     background-color: ${({ theme }) => `${theme.colors.navItemBackground}`};
 
-    
     color: ${({ theme }) => `${theme.colors.navText}`};
 
     padding: 5px;
