@@ -22,6 +22,7 @@ export default {
     light: {
         colors: {
             ...common.commonColors,
+            blogItemBackground: 'rgba(255, 255, 255, 0.9)',
             navItemBackground: 'white',
             pageBackground: 'rgba(255, 255, 255, 0.5)',
             pageSectionBackground: 'rgba(255, 255, 255, 0.8)',
@@ -48,6 +49,7 @@ export default {
         colors: {
             ...common.commonColors,
             text: 'white',
+            blogItemBackground: 'rgba(0, 3, 0, 0.9)',
             navItemBackground: '#000300',
             pageBackground: 'rgba(0, 3, 0, 0.5)',
             pageSectionBackground: 'rgba(0, 3, 0, 0.8)',

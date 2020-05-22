@@ -16,8 +16,8 @@ const getRandomRotation = degree => {
 
 const BlogItemDiv = styled.div`
     height: 120px;
-    background-clip: content-box;
 
+    background: ${({ theme }) => `${theme.colors.blogItemBackground}`};
     margin: 15px 15px;
 
     @media (max-width: 1024px) {
@@ -25,18 +25,13 @@ const BlogItemDiv = styled.div`
     }
 
     padding: 20px;
-    box-sizing: border-box;
-    // border: 1px dashed #e8e8e8;
     border-left: ${({ color }) => `10px solid ${color}`};
 
     cursor: pointer;
     :hover {
         border: ${({ color }) => `1px solid ${color}`};
         border-left: ${({ color }) => `10px solid ${color}`};
-
-        // box-shadow: ${({ color }) => `7px 7px ${color}`};
         box-shadow: ${({ theme }) => `7px 7px 20px -10px ${theme.colors.blogBlur}`};
-
         transform: translate(-4px, -4px);
     }
     box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blogBlur}`};
@@ -46,7 +41,7 @@ const BlogItemDiv = styled.div`
 const BlogImage = styled.div`
     height: 100px;
     width: 100px;
-    // margin: auto;
+
     transform: ${({ rot }) => 'rotate(' + rot + 'deg) translateY(-40px) translateX(-10px)'};
     :hover {
         height: 110px;
@@ -75,12 +70,8 @@ const InnerHorizontal = styled.div`
 const VerticalFlex = styled.div`
     display: flex;
     flex-direction: column;
-    // justify-content: space-between;
-    // height: 100%;
-    // width: 100%;
     position: relative;
     top: -8px;
-    left: -7px;
 `
 
 const BlogTitle = styled.p`
@@ -89,44 +80,45 @@ const BlogTitle = styled.p`
     font-weight: bold;
     display: inline-block;
     color: ${({ theme }) => `${theme.colors.text}`};
-    // background-color: rgba(255, 255, 255, 0.7);
     line-height: 15px;
+
+    position: relative;
+    top: -5px;
 `
 
 const WordCount = styled.p`
     font-size: 13px;
     letter-spacing: 1px;
-    // background-color: rgba(255, 255, 255, 0.7);
     line-height: 17px;
+    color: ${({ theme }) => `${theme.colors.text}`};
 `
 
 const Date = styled.div`
     position: relative;
     top: -15px;
     left: -15px;
-    // color: #9e9fa8;
+
     color: ${({ theme }) => `${theme.colors.text}`};
     display: inline-block;
-    // background-color: white;
-    // border: 1px solid grey;
+
     font-size: 13px;
-    // transform: rotate(-4deg);
 `
 
 const Tags = styled.div`
     display: flex;
     flex-direction: row;
-    // display: inline-block;
     flex-wrap: wrap;
-    // background-color: rgba(255, 255, 255, 0.7);
+    color: ${({ theme }) => `${theme.colors.text}`};
 `
 
 const Tag = styled.div`
     font-size: 11px;
     margin-right: 4px;
     font-style: oblique;
-    // display: inline-block;
     letter-spacing: 2px;
+    :hover {
+        color: ${({ theme }) => `${theme.colors.secondary}`};
+    }
 `
 
 const BlogListItem = ({ postdata }) => {
@@ -162,15 +154,5 @@ const BlogListItem = ({ postdata }) => {
         </TransitionLink>
     )
 }
-
-// const BlogListItem = ({ postdata }) => {
-//     const { date, excerpt, infopic, slug, tags, title, wordCount } = postdata
-//     return (
-//         <TransitionLink to={slug}>
-//             {/* <BlogTitle>{title}</BlogTitle> */}
-//             <Date>{date}</Date>
-//         </TransitionLink>
-//     )
-// }
 
 export default BlogListItem
