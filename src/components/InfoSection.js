@@ -199,8 +199,8 @@ const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
         >
             <NowPlayingVideo src={state.nowPlayingVideo} />
             {/* {state.nowPlayingVideo ? <NowPlayingVideo src={state.nowPlayingVideo} /> : null} */}
-            {/* {state.postAnchors ? <PostOutline list={state.postAnchors} /> : null} */}
-            <PostOutline list={state.postAnchors} />
+            {state.postAnchors ? <PostOutline list={state.postAnchors} /> : null}
+            {/* <PostOutline list={state.postAnchors} /> */}
         </InfoSectionDiv>
     )
 }

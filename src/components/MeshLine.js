@@ -9,7 +9,7 @@ extend(meshline)
 
 function Fatline({ curve, width, color, speed }) {
     const material = useRef()
-    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.09))
+    useFrame(() => (material.current.uniforms.dashOffset.value += speed*0.02))
     return (
         <mesh>
             <meshLine attach='geometry' vertices={curve} />
@@ -20,8 +20,8 @@ function Fatline({ curve, width, color, speed }) {
                 depthTest={false}
                 lineWidth={width}
                 color={color}
-                dashArray={0.5}
-                dashRatio={0.6}
+                dashArray={0.2}
+                dashRatio={0.4}
                 // opacity={0.7}
             />
         </mesh>
@@ -55,7 +55,7 @@ function Lines({ count, colors }) {
                 const curve = new THREE.CatmullRomCurve3(points).getPoints(1000)
                 return {
                     color: colors[parseInt(colors.length * Math.random())],
-                    width: Math.max(0.5, 2.5 * Math.random()),
+                    width: Math.max(0.8, 2.5 * Math.random()),
                     speed: Math.max(0.0001, 0.0005 * Math.random()),
                     curve,
                 }
@@ -65,37 +65,37 @@ function Lines({ count, colors }) {
     return lines.map((props, index) => <Fatline key={index} {...props} />)
 }
 
-function Rig({ mouse }) {
-    const { camera } = useThree()
-    useFrame(() => {
-        camera.position.x += (mouse.current[0] / 50 - camera.position.x) * 0.05
-        camera.position.y += (-mouse.current[1] / 50 - camera.position.y) * 0.05
-        camera.lookAt(0, 0, 0)
-    })
-    return null
-}
+// function Rig({ mouse }) {
+//     const { camera } = useThree()
+//     useFrame(() => {
+//         camera.position.x += (mouse.current[0] / 50 - camera.position.x) * 0.05
+//         camera.position.y += (-mouse.current[1] / 50 - camera.position.y) * 0.05
+//         camera.lookAt(0, 0, 0)
+//     })
+//     return null
+// }
 
 export default React.memo(function App() {
-    const mouse = useRef([0, 0])
+    // const mouse = useRef([0, 0])
     const theme = useContext(ThemeContext)
 
     return (
         <Canvas
             style={{ background: theme.colors.meshLineBackground }}
-            camera={{ position: [0, 0, 50], fov: 3 }}
-            onMouseMove={e =>
-                (mouse.current = [
-                    e.clientX - window.innerWidth / 2,
-                    e.clientY - window.innerHeight / 2,
-                ])
-            }
+            camera={{ position: [0, 0, 30], fov: 4 }}
+            // onMouseMove={e =>
+            //     (mouse.current = [
+            //         e.clientX - window.innerWidth / 2,
+            //         e.clientY - window.innerHeight / 2,
+            //     ])
+            // }
             pixelRatio={typeof window !== `undefined` ? window.devicePixelRatio : undefined}
         >
             <Lines
-                count={35}
+                count={45}
                 colors={theme.colors.meshLineColors}
             />
-            <Rig mouse={mouse} />
+            {/* <Rig mouse={mouse} /> */}
         </Canvas>
     )
 })

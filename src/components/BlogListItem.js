@@ -16,13 +16,9 @@ const getRandomRotation = degree => {
 
 const BlogItemDiv = styled.div`
     height: 120px;
-    background: ${({ stripeRotation, color1, color2, width }) =>
-        `repeating-linear-gradient(${stripeRotation}deg, ${color1}, ${color1} ${width}px, ${color2} ${width}px, ${color2} ${width *
-            2}px)`};
-
     background-clip: content-box;
 
-    margin: 15px 55px;
+    margin: 15px 15px;
 
     @media (max-width: 1024px) {
         margin: 15px 0px;
@@ -30,15 +26,20 @@ const BlogItemDiv = styled.div`
 
     padding: 20px;
     box-sizing: border-box;
-    border: 1px dashed #e8e8e8;
+    // border: 1px dashed #e8e8e8;
+    border-left: ${({ color }) => `10px solid ${color}`};
 
     cursor: pointer;
     :hover {
-        border: ${({ color2 }) => `2px solid ${color2}`};
-        box-shadow: ${({ color2 }) => `7px 7px ${color2}`};
+        border: ${({ color }) => `1px solid ${color}`};
+        border-left: ${({ color }) => `10px solid ${color}`};
+
+        // box-shadow: ${({ color }) => `7px 7px ${color}`};
+        box-shadow: ${({ theme }) => `7px 7px 20px -10px ${theme.colors.blogBlur}`};
+
         transform: translate(-4px, -4px);
     }
-    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blur}`};
+    box-shadow: ${({ theme }) => `0px 2px 15px -9px ${theme.colors.blogBlur}`};
     transition: box-shadow 0.5s, transform 1s;
 `
 
@@ -87,27 +88,29 @@ const BlogTitle = styled.p`
     letter-spacing: 1.5px;
     font-weight: bold;
     display: inline-block;
-    background-color: rgba(255, 255, 255, 0.7);
+    color: ${({ theme }) => `${theme.colors.text}`};
+    // background-color: rgba(255, 255, 255, 0.7);
     line-height: 15px;
 `
 
 const WordCount = styled.p`
     font-size: 13px;
     letter-spacing: 1px;
-    background-color: rgba(255, 255, 255, 0.7);
+    // background-color: rgba(255, 255, 255, 0.7);
     line-height: 17px;
 `
 
 const Date = styled.div`
     position: relative;
-    top: -13px;
-    left: -13px;
-    color: #9e9fa8;
+    top: -15px;
+    left: -15px;
+    // color: #9e9fa8;
+    color: ${({ theme }) => `${theme.colors.text}`};
     display: inline-block;
-    background-color: white;
+    // background-color: white;
     // border: 1px solid grey;
     font-size: 13px;
-    transform: rotate(-4deg);
+    // transform: rotate(-4deg);
 `
 
 const Tags = styled.div`
@@ -115,13 +118,12 @@ const Tags = styled.div`
     flex-direction: row;
     // display: inline-block;
     flex-wrap: wrap;
-    background-color: rgba(255, 255, 255, 0.7)
+    // background-color: rgba(255, 255, 255, 0.7);
 `
-
 
 const Tag = styled.div`
     font-size: 11px;
-    margin: 0px 4px;
+    margin-right: 4px;
     font-style: oblique;
     // display: inline-block;
     letter-spacing: 2px;
@@ -136,14 +138,7 @@ const BlogListItem = ({ postdata }) => {
     return (
         <TransitionLink to={slug}>
             <BlogItemDiv
-                // wide, mainly vertical stripes
-                stripeRotation={getRandomRotation(5)}
-                width={Math.random()* (80 - 20) + 20}
-                //thin, hatched stripes
-                // stripeRotation={getRandomRotation(360)}
-                // width={5 * Math.random()}
-                color1={themeContext.blogColors[type].primary}
-                color2={themeContext.blogColors[type].secondary}
+                color={themeContext.blogColors[type]}
             >
                 <Date>{date}</Date>
                 <InnerHorizontal>
@@ -151,7 +146,9 @@ const BlogListItem = ({ postdata }) => {
                         <BlogTitle>{title}</BlogTitle>
                         <WordCount>{`${wordCount} words`}</WordCount>
                         <Tags>
-                            {tags.map((el,i) => <Tag key={i}>{el}</Tag>)}
+                            {tags.map((el, i) => (
+                                <Tag key={i}>{el}</Tag>
+                            ))}
                         </Tags>
                     </VerticalFlex>
                     <BlogImage rot={imageRotation}>
@@ -165,5 +162,15 @@ const BlogListItem = ({ postdata }) => {
         </TransitionLink>
     )
 }
+
+// const BlogListItem = ({ postdata }) => {
+//     const { date, excerpt, infopic, slug, tags, title, wordCount } = postdata
+//     return (
+//         <TransitionLink to={slug}>
+//             {/* <BlogTitle>{title}</BlogTitle> */}
+//             <Date>{date}</Date>
+//         </TransitionLink>
+//     )
+// }
 
 export default BlogListItem
