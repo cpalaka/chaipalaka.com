@@ -25,6 +25,7 @@ const shortcodes = { TransitionLink, Anchor }
 const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
     const pathSlug = props.path
     const dispatch = useGlobalDispatch()
+    // const postRef = useRef(null)
 
     const setCurrentPostAnchors = useCallback(
         anchors => {
@@ -61,7 +62,7 @@ const BlogPostTemplate = ({ data: { mdx }, ...props }) => {
     return (
         <Page {...props}>
             <SEO title={mdx.frontmatter.title} image={mdx.frontmatter.infopic} />
-            <PageSection top>
+            <PageSection top >
                 <MDXProvider components={shortcodes}>
                     <MDXRenderer>{mdx.body}</MDXRenderer>
                 </MDXProvider>

@@ -126,31 +126,31 @@ const PostOutline = ({ list }) => {
         window.scrollTo({ top: y - 62, left: 0, behavior: 'smooth' })
     }
 
-    const [scrollPos, setScrollPos] = useState(0)
     const [scrollOver, setScrollOver] = useState(0)
 
-    useEffect(() => {
-        for (let i = 0; i < list.length; ++i) {
-            if (
-                scrollPos < list[i].scrollOffset &&
-                scrollPos > (list[i - 1] ? list[i - 1].scrollOffset + window.innerHeight * 0.83 : 0)
-            ) {
-                if (i !== scrollOver) {
-                    setScrollOver(i)
-                }
+    let postOffsets = list.map(el => el.scrollOffset)
+    postOffsets[0] = 0
+
+    // console.log('rerender')
+    const eventHandler = () => {
+        // console.log(list)
+        for (let i = 1; i < postOffsets.length; ++i) {
+            if (window.scrollY < postOffsets[i] && window.scrollY > postOffsets[i - 1]-window.innerHeight*0.5) {
+                setScrollOver(i - 1)
+            }
+            if(window.scrollY > postOffsets[i]-window.innerHeight*0.5&& i === postOffsets.length - 1) {
+                setScrollOver(i )
+            }
+            if(i===1 && window.scrollY < postOffsets[i+1]+window.innerHeight*0.5) {
+                setScrollOver(0)
             }
         }
-    }, [scrollPos])
+    }
 
     useEffect(() => {
-        setScrollPos(window.scrollY)
-        window.addEventListener('scroll', e => {
-            setScrollPos(window.scrollY)
-        })
+        window.setInterval(eventHandler, 300)
         return () => {
-            window.removeEventListener('scroll', e => {
-                setScrollPos(window.scrollY)
-            })
+            window.clearInterval(eventHandler, 300)
         }
     }, [])
 
@@ -170,9 +170,8 @@ const PostOutline = ({ list }) => {
 }
 
 const InfoSection = ({ isDesktop, isWindows, openSection, state }) => {
-    // console.log(state)
     const shouldShow = state.nowPlayingVideo || state.onPost
-    // console.log(state.postAnchors)
+    // let postOffsets = null
     return (
         <InfoSectionDiv
             isDesktop={isDesktop}

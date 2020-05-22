@@ -7,7 +7,7 @@ const common = {
         nav: '50',
     },
     commonColors: {
-        text: '#040f0f',
+        // text: '#040f0f',
         borderBlack: '#040f0f',
     },
     blogColors: {
