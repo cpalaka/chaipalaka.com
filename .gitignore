@@ -13,3 +13,7 @@ assets/
 .vscode/
 .idea/
 *.swp
+
+# Planning docs — kept locally, not tracked
+grillmedoc.md
+PRD.md
