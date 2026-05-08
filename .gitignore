@@ -1,18 +1,42 @@
+# Dependencies
 node_modules/
+.pnp/
+.pnp.*
+
+# Build output
 dist/
 build/
-.DS_Store
-.env
-.env.local
-*.log
+web/dist/
+web/.vite-react-ssg/
+api/dist/
 
 # Large media — synced separately via `make assets-sync`
 assets/
 
-# Editor / IDE
-.vscode/
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
 .idea/
+.vscode/
 *.swp
+Thumbs.db
+
+# Env / secrets — never committed
+.env
+.env.*
+!.env.example
+
+# Test / coverage
+web/coverage/
+api/coverage/
+
+# Vitest cache
+web/.vitest-cache/
 
 # Planning docs — kept locally, not tracked
 grillmedoc.md
