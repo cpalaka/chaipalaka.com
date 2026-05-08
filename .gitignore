@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.DS_Store
+.env
+.env.local
+*.log
+
+# Large media — synced separately via `make assets-sync`
+assets/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
