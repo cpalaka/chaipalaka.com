@@ -1,11 +1,23 @@
 import type { RouteRecord } from 'vite-react-ssg'
-import Home from './routes/Home'
 
 export const routes: RouteRecord[] = [
   {
     path: '/',
-    Component: Home,
-    entry: 'src/routes/Home.tsx',
+    lazy: async () => {
+      const { default: CanvasLayout } = await import('./layouts/CanvasLayout')
+      return { Component: CanvasLayout }
+    },
+    entry: 'src/layouts/CanvasLayout.tsx',
+    children: [
+      {
+        index: true,
+        lazy: async () => {
+          const { default: Home } = await import('./routes/Home')
+          return { Component: Home }
+        },
+        entry: 'src/routes/Home.tsx',
+      },
+    ],
   },
   {
     path: '/test/canvas',
