@@ -2,6 +2,9 @@ export interface CardSpec {
   id: string
   text: string
   fontKey: string
+  /** Pre-computed card dimensions (including padding) — skips internal measure when provided. */
+  width?: number
+  height?: number
 }
 
 export interface CardAnchor {
@@ -40,9 +43,16 @@ export function cardLayout(
 
   return specs.map((spec, i) => {
     const col = i % numCols
-    const measured = measure(spec.text, spec.fontKey, textMaxWidth)
-    const w = measured.width + CARD_PADDING * 2
-    const h = measured.height + CARD_PADDING * 2
+    let w: number
+    let h: number
+    if (spec.width !== undefined && spec.height !== undefined) {
+      w = spec.width
+      h = spec.height
+    } else {
+      const measured = measure(spec.text, spec.fontKey, textMaxWidth)
+      w = measured.width + CARD_PADDING * 2
+      h = measured.height + CARD_PADDING * 2
+    }
 
     const cx = col * colWidth + colWidth / 2
     const cy = colY[col]! + h / 2

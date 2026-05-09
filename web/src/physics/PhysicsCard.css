@@ -2,7 +2,10 @@
   position: fixed;
   top: 0;
   left: 0;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 24px 24px 36px;
   margin: 0;
   background: var(--color-bg-raised);
   color: var(--color-fg);
@@ -17,4 +20,26 @@
   touch-action: none;
   will-change: transform;
   z-index: 10;
+}
+
+/* Reset global margins on direct children so flex gap alone controls spacing. */
+.physics-card > h1,
+.physics-card > h2,
+.physics-card > h3,
+.physics-card > p,
+.physics-card > ul,
+.physics-card > ol,
+.physics-card > time {
+  margin: 0;
+}
+
+.read-post-link {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  pointer-events: auto;
 }
