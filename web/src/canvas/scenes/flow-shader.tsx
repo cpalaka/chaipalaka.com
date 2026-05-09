@@ -87,9 +87,13 @@ function FlowShader() {
     [],
   )
   useFrame((state) => {
-    if (!ref.current) return
-    uniforms.uTime.value = state.clock.elapsedTime
-    uniforms.uResolution.value.set(state.size.width, state.size.height)
+    const mat = ref.current
+    if (!mat) return
+    // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
+    // must go through `mat.uniforms.*`, not the local `uniforms` reference.
+    const u = mat.uniforms
+    if (u.uTime) u.uTime.value = state.clock.elapsedTime
+    if (u.uResolution) u.uResolution.value.set(state.size.width, state.size.height)
   })
   return (
     <mesh frustumCulled={false}>
