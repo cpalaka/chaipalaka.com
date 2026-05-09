@@ -13,19 +13,23 @@ WEB_DIR    := web
 API_DIR    := api
 ASSETS_DIR := assets
 
-.PHONY: help deploy deploy-web deploy-api assets-sync web-install web-build web-dev web-test clean
+.PHONY: help deploy deploy-web deploy-api assets-sync web-install web-build web-dev web-test api-install api-test api-typecheck api-dev clean
 
 help:
 	@echo "Targets:"
 	@echo "  deploy        — deploy-web + deploy-api"
 	@echo "  deploy-web    — build web/ and rsync dist/ to $(SSH_HOST):$(WEB_REMOTE_DIR)"
-	@echo "  deploy-api    — (stub) build and restart the Bun API service"
+	@echo "  deploy-api    — build api/ (bake BUILD_SHA), rsync, restart $(API_SERVICE)"
 	@echo "  assets-sync   — rsync local assets/ to $(SSH_HOST):$(ASSETS_REMOTE_DIR)"
 	@echo "  web-install   — npm install inside web/"
 	@echo "  web-build     — build web/ locally (dist/ output)"
 	@echo "  web-dev       — run vite dev server"
-	@echo "  web-test      — run vitest"
-	@echo "  clean         — remove web/dist and web/node_modules"
+	@echo "  web-test      — run vitest in web/"
+	@echo "  api-install   — bun install inside api/"
+	@echo "  api-test      — run vitest in api/"
+	@echo "  api-typecheck — tsc --noEmit in api/"
+	@echo "  api-dev       — run the Bun API in watch mode locally"
+	@echo "  clean         — remove web/dist, web/node_modules, api/dist, api/node_modules"
 
 deploy: deploy-web deploy-api
 
@@ -37,16 +41,15 @@ deploy-web:
 		$(SSH_HOST):$(WEB_REMOTE_DIR)/
 	@echo "deploy-web complete → https://www.chaipalaka.com"
 
-# Slice 1 stub — fleshed out when api/ ships (slice for backend).
 deploy-api:
-	@if [ -f $(API_DIR)/package.json ]; then \
-		echo "Building api/..."; \
-		cd $(API_DIR) && bun install && bun run build; \
-		rsync -avz --delete $(API_DIR)/dist/ $(SSH_HOST):/opt/chaipalaka-api/; \
-		ssh $(SSH_HOST) "sudo systemctl restart $(API_SERVICE)"; \
-	else \
-		echo "deploy-api: api/ has no package.json yet — skipping (stub)"; \
-	fi
+	@BUILD_SHA=$$(git rev-parse --short HEAD); \
+	echo "Building api/ (BUILD_SHA=$$BUILD_SHA)..."; \
+	cd $(API_DIR) && bun install --frozen-lockfile && \
+	bun build --compile --target=bun-linux-x64 --outfile dist/server src/server.ts \
+		--define "process.env.BUILD_SHA=\"$$BUILD_SHA\""
+	rsync -avz --delete $(API_DIR)/dist/ $(SSH_HOST):/opt/chaipalaka-api/
+	ssh $(SSH_HOST) "sudo systemctl restart $(API_SERVICE)"
+	@echo "deploy-api complete"
 
 assets-sync:
 	@if [ ! -d $(ASSETS_DIR) ]; then \
@@ -69,5 +72,17 @@ web-dev:
 web-test:
 	cd $(WEB_DIR) && npm run test
 
+api-install:
+	cd $(API_DIR) && bun install
+
+api-test:
+	cd $(API_DIR) && bun run test
+
+api-typecheck:
+	cd $(API_DIR) && bun run typecheck
+
+api-dev:
+	cd $(API_DIR) && bun run dev
+
 clean:
-	rm -rf $(WEB_DIR)/dist $(WEB_DIR)/node_modules
+	rm -rf $(WEB_DIR)/dist $(WEB_DIR)/node_modules $(API_DIR)/dist $(API_DIR)/node_modules
