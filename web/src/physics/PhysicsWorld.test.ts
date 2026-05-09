@@ -206,3 +206,73 @@ describe('PhysicsWorld setAnchor', () => {
     expect(Math.abs(pos.y - 400)).toBeLessThan(1)
   })
 })
+
+describe('breathing spring overshoot (underdamped)', () => {
+  test('overshoots anchor at least once after a horizontal impulse', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const anchor = { x: 200, y: 200 }
+    const handle = world.register(anchor, { width: 100, height: 50 })
+    world.applyImpulse(handle, { x: 50, y: 0 })
+
+    let signFlips = 0
+    let prevSign = 0
+    for (let i = 0; i < 400; i++) {
+      world.tick(FIXED_DT_MS)
+      const pos = world.getPosition(handle)
+      const sign = Math.sign(pos.x - anchor.x)
+      if (sign !== 0 && prevSign !== 0 && sign !== prevSign) signFlips++
+      if (sign !== 0) prevSign = sign
+    }
+
+    expect(signFlips).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe('PhysicsWorld angular spring back', () => {
+  test('a rotated card self-rights to horizontal in breathing mode', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+    world.setAngle(handle, 0.5)
+    for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(Math.abs(pos.rotation)).toBeLessThan(0.02)
+  })
+
+  test('angular self-righting overshoots horizontal at least once (elastic)', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+    world.setAngle(handle, 0.5)
+
+    let signFlips = 0
+    let prevSign = 0
+    for (let i = 0; i < 300; i++) {
+      world.tick(FIXED_DT_MS)
+      const pos = world.getPosition(handle)
+      const sign = Math.sign(pos.rotation)
+      if (sign !== 0 && prevSign !== 0 && sign !== prevSign) signFlips++
+      if (sign !== 0) prevSign = sign
+    }
+
+    expect(signFlips).toBeGreaterThanOrEqual(1)
+  })
+
+  test('does not self-right while being dragged', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+    world.setAngle(handle, 0.3)
+    world.setDragging(handle, true)
+    for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(Math.abs(pos.rotation - 0.3)).toBeLessThan(0.001)
+  })
+
+  test('does not self-right in playground mode', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+    world.setMode(handle, 'playground')
+    world.setAngle(handle, 0.3)
+    for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(pos.rotation).toBeGreaterThan(0.25)
+  })
+})
