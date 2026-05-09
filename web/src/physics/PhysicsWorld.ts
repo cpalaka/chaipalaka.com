@@ -160,6 +160,14 @@ export class PhysicsWorld {
     Matter.Body.setStatic(reg.body, dragging)
   }
 
+  setAnchor(handle: PhysicsHandle, anchor: Vec2): void {
+    const reg = this.registrations.get(handle)
+    if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+    reg.anchor = { ...anchor }
+    reg.spring.pointA!.x = anchor.x
+    reg.spring.pointA!.y = anchor.y
+  }
+
   setMode(handle: PhysicsHandle, mode: CardMode): void {
     const reg = this.registrations.get(handle)
     if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
