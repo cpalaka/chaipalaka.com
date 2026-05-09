@@ -69,6 +69,24 @@ describe('cardLayout — breakpoints', () => {
   })
 })
 
+describe('cardLayout — pre-computed dims', () => {
+  test('uses spec.width/height when provided, skipping measure', () => {
+    const spy: MeasureFn = () => { throw new Error('should not measure') }
+    const spec: CardSpec = { id: 'x', text: 'X', fontKey: 'body', width: 300, height: 150 }
+    const [anchor] = cardLayout([spec], { width: 1200, height: 800 }, spy)
+    expect(anchor!.width).toBe(300)
+    expect(anchor!.height).toBe(150)
+  })
+
+  test('falls back to measure when dims are absent', () => {
+    let called = false
+    const spy: MeasureFn = (_t, _f, mw) => { called = true; return { width: Math.min(200, mw), height: 60 } }
+    const spec: CardSpec = { id: 'x', text: 'X', fontKey: 'body' }
+    cardLayout([spec], { width: 1200, height: 800 }, spy)
+    expect(called).toBe(true)
+  })
+})
+
 describe('cardLayout — stability', () => {
   test('positions are identical across two calls with the same inputs', () => {
     const specs = [SPEC_A, SPEC_B, SPEC_C]

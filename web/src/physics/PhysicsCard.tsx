@@ -68,6 +68,7 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor, children, width: 
     const FLING_PAUSE_MS = 50
 
     const onPointerDown = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.closest('.read-post-link')) return
       e.preventDefault()
       dragging = true
       lastX = e.clientX
