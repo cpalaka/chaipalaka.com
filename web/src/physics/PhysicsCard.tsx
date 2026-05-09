@@ -41,11 +41,20 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProp
     let dragging = false
     let lastX = 0
     let lastY = 0
+    let lastT = 0
+    let velX = 0
+    let velY = 0
+    const FLING_VELOCITY_SCALE = 16
+    const FLING_PAUSE_MS = 50
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault()
       dragging = true
       lastX = e.clientX
       lastY = e.clientY
+      lastT = e.timeStamp
+      velX = 0
+      velY = 0
+      world.setDragging(handle, true)
       el.setPointerCapture(e.pointerId)
       el.style.cursor = 'grabbing'
     }
@@ -53,14 +62,28 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProp
       if (!dragging) return
       const dx = e.clientX - lastX
       const dy = e.clientY - lastY
+      const dt = Math.max(e.timeStamp - lastT, 1)
+      velX = dx / dt
+      velY = dy / dt
       const cur = world.getPosition(handle)
       world.setPosition(handle, { x: cur.x + dx, y: cur.y + dy })
       lastX = e.clientX
       lastY = e.clientY
+      lastT = e.timeStamp
     }
     const onPointerUp = (e: PointerEvent) => {
       if (!dragging) return
       dragging = false
+      world.setDragging(handle, false)
+      const sinceLastMove = e.timeStamp - lastT
+      if (sinceLastMove > FLING_PAUSE_MS) {
+        velX = 0
+        velY = 0
+      }
+      world.setVelocity(handle, {
+        x: velX * FLING_VELOCITY_SCALE,
+        y: velY * FLING_VELOCITY_SCALE,
+      })
       el.releasePointerCapture(e.pointerId)
       el.style.cursor = 'grab'
     }

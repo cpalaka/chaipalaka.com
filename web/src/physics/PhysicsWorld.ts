@@ -148,6 +148,18 @@ export class PhysicsWorld {
     }
   }
 
+  setVelocity(handle: PhysicsHandle, velocity: Vec2): void {
+    const reg = this.registrations.get(handle)
+    if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+    Matter.Body.setVelocity(reg.body, velocity)
+  }
+
+  setDragging(handle: PhysicsHandle, dragging: boolean): void {
+    const reg = this.registrations.get(handle)
+    if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+    Matter.Body.setStatic(reg.body, dragging)
+  }
+
   setMode(handle: PhysicsHandle, mode: CardMode): void {
     const reg = this.registrations.get(handle)
     if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
