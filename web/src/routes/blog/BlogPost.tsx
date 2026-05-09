@@ -47,7 +47,7 @@ export default function BlogPost() {
       width={dims.w}
       height={dims.h}
     >
-      <div className="blog-post-card" style={{ width: dims.w, height: dims.h }}>
+      <div className="blog-post-card">
         <article>
           <a className="plain-mode-link" href={`/blog/${slug}/read`}>
             Read in plain mode ↗

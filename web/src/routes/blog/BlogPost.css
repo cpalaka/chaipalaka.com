@@ -1,6 +1,8 @@
 .blog-post-card {
+  flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
-  max-height: 65vh;
+  min-height: 0;
   padding: 0;
 }
 
