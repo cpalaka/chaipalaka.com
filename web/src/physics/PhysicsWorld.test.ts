@@ -194,3 +194,15 @@ describe('PhysicsWorld card modes', () => {
     expect(pos.x).toBeGreaterThan(150)
   })
 })
+
+describe('PhysicsWorld setAnchor', () => {
+  test('after setAnchor, the body springs to the new anchor position', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register({ x: 100, y: 100 }, { width: 100, height: 50 })
+    world.setAnchor(handle, { x: 500, y: 400 })
+    for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(Math.abs(pos.x - 500)).toBeLessThan(1)
+    expect(Math.abs(pos.y - 400)).toBeLessThan(1)
+  })
+})
