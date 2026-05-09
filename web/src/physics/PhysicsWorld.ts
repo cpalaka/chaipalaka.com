@@ -41,17 +41,19 @@ interface Registration {
 }
 
 const MODE_STIFFNESS: Record<CardMode, number> = {
-  breathing: 0.1,
+  breathing: 0.03,
   playground: 1e-9,
 }
 const MODE_DAMPING: Record<CardMode, number> = {
-  breathing: 0.3,
+  breathing: 0.06,
   playground: 0,
 }
 const GRAVITY_RELAXED_STIFFNESS = 1e-9
 const GRAVITY_Y = 0.7
 const BODY_FRICTION_AIR = 0.05
 const FLOOR_THICKNESS = 60
+const ANGULAR_STIFFNESS_BREATHING = 0.002
+const ANGULAR_DAMPING_BREATHING = 0
 
 export class PhysicsWorld {
   private engine: Matter.Engine
@@ -178,7 +180,22 @@ export class PhysicsWorld {
     }
   }
 
+  setAngle(handle: PhysicsHandle, angle: number): void {
+    const reg = this.registrations.get(handle)
+    if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+    Matter.Body.setAngle(reg.body, angle)
+    Matter.Body.setAngularVelocity(reg.body, 0)
+  }
+
   tick(dtMs: number): void {
+    for (const reg of this.registrations.values()) {
+      if (reg.body.isStatic) continue
+      if (reg.mode !== 'breathing') continue
+      const angle = reg.body.angle
+      const angVel = reg.body.angularVelocity
+      const delta = -ANGULAR_STIFFNESS_BREATHING * angle - ANGULAR_DAMPING_BREATHING * angVel
+      Matter.Body.setAngularVelocity(reg.body, angVel + delta)
+    }
     Matter.Engine.update(this.engine, dtMs)
     for (const reg of this.registrations.values()) {
       if (!reg.onTransform) continue
