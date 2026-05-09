@@ -1,0 +1,41 @@
+# systemd unit for the Bun API backend.
+#
+# Install on the Hetzner box:
+#   sudo cp deploy/chaipalaka-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now chaipalaka-api
+#
+# The compiled binary is rsync'd into /opt/chaipalaka-api/server by
+# `make deploy-api`. Secrets are read from /etc/chaipalaka.env (root:root,
+# mode 600) — see deploy/SECRETS.md.
+
+[Unit]
+Description=chaipalaka.com Bun API backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=chaipalaka
+WorkingDirectory=/opt/chaipalaka-api
+EnvironmentFile=/etc/chaipalaka.env
+ExecStart=/opt/chaipalaka-api/server
+Restart=on-failure
+RestartSec=2
+
+# Hardening — service only needs to bind a local port and read env.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target
