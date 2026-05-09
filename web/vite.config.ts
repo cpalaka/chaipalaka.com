@@ -7,6 +7,7 @@ export default defineConfig({
   ssgOptions: {
     script: 'async',
     formatting: 'none',
+    dirStyle: 'nested',
   },
   test: {
     environment: 'node',
