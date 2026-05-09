@@ -12,7 +12,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "zod": "^4.4.3"
+  },
   "devDependencies": {
     "@types/bun": "^1.3.0",
     "typescript": "^5.9.3",
