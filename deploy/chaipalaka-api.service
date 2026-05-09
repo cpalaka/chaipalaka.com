@@ -16,7 +16,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=chaipalaka
+User=chai
 WorkingDirectory=/opt/chaipalaka-api
 EnvironmentFile=/etc/chaipalaka.env
 ExecStart=/opt/chaipalaka-api/server

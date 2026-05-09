@@ -24,7 +24,7 @@ The systemd unit for the Bun service references this file via `EnvironmentFile=`
 [Service]
 EnvironmentFile=/etc/chaipalaka.env
 ExecStart=/opt/chaipalaka-api/server
-User=chaipalaka
+User=chai
 ```
 
 Format (one `KEY=value` per line, no quoting):
