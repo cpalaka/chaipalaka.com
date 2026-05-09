@@ -12,6 +12,33 @@ specific issue and `PRD.md` for design context.
 - `PRD.md` and `grillmedoc.md` are gitignored — they live locally only and
   carry the design rationale; consult them for context but never commit them.
 
+## Session defaults — sandbox + auto-accept edits
+
+The owner runs Claude Code in this repo with **sandbox on** and
+**`acceptEdits` permission mode on by default**. The combination — Claude
+edits/runs without per-call prompts, but inside a sandbox that prevents
+real damage — is the desired baseline for any session in this repo.
+
+These two modes are configured in `.claude/settings.local.json` (gitignored
+— personal, not committed). The file should contain at least:
+
+```jsonc
+{
+  "permissions": { "defaultMode": "acceptEdits" /*, "allow": [...] */ },
+  "sandbox": { "enabled": true }
+}
+```
+
+If your `.claude/settings.local.json` does not have these set, configure
+them before starting work — Claude cannot toggle either of these mid-session
+via a tool call (both are session-init settings). At session start, confirm
+the spinner shows "auto-accepting edits" / sandbox indicator; if it doesn't,
+update the file and restart the session before proceeding.
+
+If the user explicitly wants a session WITHOUT these defaults (e.g., for a
+risky deploy operation that should re-prompt), they will say so — otherwise
+treat the defaults as the standing expectation.
+
 ## Standing process for an issue
 
 When asked to work on issue `N`:
