@@ -18,7 +18,10 @@
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "remark-mdx-images": ["./node_modules/remark-mdx-images/index.d.ts"]
+    }
   },
   "include": ["src", "vite.config.ts"]
 }

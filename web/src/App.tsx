@@ -55,4 +55,48 @@ export const routes: RouteRecord[] = [
       },
     ],
   },
+  {
+    path: '/blog',
+    lazy: async () => {
+      const { default: CanvasLayout } = await import('./layouts/CanvasLayout')
+      return { Component: CanvasLayout }
+    },
+    entry: 'src/layouts/CanvasLayout.tsx',
+    children: [
+      {
+        index: true,
+        lazy: async () => {
+          const { default: BlogIndex } = await import('./routes/blog/BlogIndex')
+          return { Component: BlogIndex }
+        },
+        entry: 'src/routes/blog/BlogIndex.tsx',
+      },
+      {
+        path: ':slug',
+        lazy: async () => {
+          const { default: BlogPost } = await import('./routes/blog/BlogPost')
+          return { Component: BlogPost }
+        },
+        entry: 'src/routes/blog/BlogPost.tsx',
+      },
+    ],
+  },
+  {
+    path: '/blog/:slug/read',
+    lazy: async () => {
+      const { default: PlainLayout } = await import('./layouts/PlainLayout')
+      return { Component: PlainLayout }
+    },
+    entry: 'src/layouts/PlainLayout.tsx',
+    children: [
+      {
+        index: true,
+        lazy: async () => {
+          const { default: BlogPostReader } = await import('./routes/blog/BlogPostReader')
+          return { Component: BlogPostReader }
+        },
+        entry: 'src/routes/blog/BlogPostReader.tsx',
+      },
+    ],
+  },
 ]

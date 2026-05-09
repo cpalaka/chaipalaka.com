@@ -9,11 +9,14 @@ export interface PhysicsCardProps {
   fontKey: string
   maxWidth: number
   anchor: { x: number; y: number }
+  children?: React.ReactNode
+  width?: number
+  height?: number
 }
 
 const CARD_PADDING_PX = 24
 
-export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProps) {
+export function PhysicsCard({ text, fontKey, maxWidth, anchor, children, width: explicitW, height: explicitH }: PhysicsCardProps) {
   const world = usePhysicsWorld()
   const elRef = useRef<HTMLElement | null>(null)
   const handleRef = useRef<PhysicsHandle | null>(null)
@@ -29,9 +32,16 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProp
     if (!el) return
 
     const { x, y } = anchorRef.current
-    const measured = pretextRegistry.measure(text, fontKey, maxWidth)
-    const w = measured.width + CARD_PADDING_PX * 2
-    const h = measured.height + CARD_PADDING_PX * 2
+    let w: number
+    let h: number
+    if (explicitW !== undefined && explicitH !== undefined) {
+      w = explicitW
+      h = explicitH
+    } else {
+      const measured = pretextRegistry.measure(text, fontKey, maxWidth)
+      w = measured.width + CARD_PADDING_PX * 2
+      h = measured.height + CARD_PADDING_PX * 2
+    }
 
     el.style.width = `${w}px`
     el.style.height = `${h}px`
@@ -58,6 +68,7 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProp
     const FLING_PAUSE_MS = 50
 
     const onPointerDown = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.closest('a, button')) return
       e.preventDefault()
       dragging = true
       lastX = e.clientX
@@ -120,7 +131,7 @@ export function PhysicsCard({ text, fontKey, maxWidth, anchor }: PhysicsCardProp
 
   return (
     <article ref={elRef} className="physics-card">
-      {text}
+      {children ?? text}
     </article>
   )
 }

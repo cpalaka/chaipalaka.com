@@ -14,3 +14,9 @@ registry.register('mono', {
   weight: 400,
   lineHeight: 1.6,
 })
+registry.register('card-title', {
+  family: 'Newsreader Variable',
+  size: 36,
+  weight: 600,
+  lineHeight: 1.15,
+})
