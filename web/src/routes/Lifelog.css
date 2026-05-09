@@ -1,0 +1,76 @@
+.lifelog-books {
+  padding: var(--space-2);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+.lifelog-books__heading {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semi);
+  color: var(--color-fg);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lifelog-books__stale {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-fg-faint);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  padding: 1px var(--space-2);
+}
+
+.lifelog-books__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.lifelog-books__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.lifelog-books__status {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  display: inline-block;
+  width: fit-content;
+  background: color-mix(in srgb, var(--color-fg-faint) 20%, transparent);
+  color: var(--color-fg-muted);
+}
+
+.lifelog-books__status--reading {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color: var(--color-accent);
+}
+
+.lifelog-books__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semi);
+  color: var(--color-fg);
+}
+
+.lifelog-books__author {
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+}
+
+.lifelog-books__empty {
+  color: var(--color-fg-faint);
+  margin: 0;
+}
