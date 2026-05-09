@@ -1,0 +1,25 @@
+# Canonical Caddyfile for chaipalaka.com.
+#
+# Lives at /etc/caddy/Caddyfile on the Hetzner box. After editing here,
+# copy and reload:
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo caddy validate --config /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# Caddy handles automatic TLS via Let's Encrypt — no certificate config
+# in this file by design.
+
+chaipalaka.com, www.chaipalaka.com {
+	encode zstd gzip
+
+	# Bun API backend (see deploy/chaipalaka-api.service).
+	handle /api/* {
+		reverse_proxy localhost:3000
+	}
+
+	# Static site (vite-react-ssg output rsync'd by `make deploy-web`).
+	handle {
+		root * /var/www/chaipalaka
+		file_server
+	}
+}
