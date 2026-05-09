@@ -56,6 +56,24 @@ export const routes: RouteRecord[] = [
     ],
   },
   {
+    path: '/lifelog',
+    lazy: async () => {
+      const { default: CanvasLayout } = await import('./layouts/CanvasLayout')
+      return { Component: CanvasLayout }
+    },
+    entry: 'src/layouts/CanvasLayout.tsx',
+    children: [
+      {
+        index: true,
+        lazy: async () => {
+          const { default: Lifelog } = await import('./routes/Lifelog')
+          return { Component: Lifelog }
+        },
+        entry: 'src/routes/Lifelog.tsx',
+      },
+    ],
+  },
+  {
     path: '/blog',
     lazy: async () => {
       const { default: CanvasLayout } = await import('./layouts/CanvasLayout')
