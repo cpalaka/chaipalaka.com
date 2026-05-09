@@ -12,8 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
-    "fallbacks": "node scripts/generate-fallback-pngs.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.6",
