@@ -1,0 +1,225 @@
+/*
+ * Element baseline — the typographic substrate that every page inherits.
+ *
+ * Imports tokens.css and applies them to bare HTML elements (h1-h6, p,
+ * code, pre, blockquote, a, hr, etc.) so that any unstyled MDX or page
+ * gets a coherent default. Component styles, when they arrive, should
+ * still reference tokens — never literal values — so the owner can
+ * re-skin the whole site by editing tokens.css alone.
+ */
+
+@import './tokens.css';
+
+/* ============================================================
+   self-hosted fonts — only the latin + latin-ext subsets are bundled.
+   Variable fonts: Newsreader covers weight 200-800 + opsz; JetBrains
+   Mono covers weight 100-800. Both ship with `font-display: swap`.
+   ============================================================ */
+
+/* Newsreader — Latin */
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Newsreader — Latin Extended */
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/newsreader/files/newsreader-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* JetBrains Mono — Latin */
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* JetBrains Mono — Latin Extended */
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ============================================================
+   reset + page baseline
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;          /* honor user's browser size */
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern', 'liga', 'onum';
+}
+
+::selection {
+  background: var(--color-selection);
+}
+
+/* ============================================================
+   typographic baseline — h1-h6, p, lists, inline + block code,
+   blockquote, links, hr
+   ============================================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  margin: var(--space-6) 0 var(--space-4);
+  font-weight: var(--font-weight-semi);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+  letter-spacing: -0.02em;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  letter-spacing: -0.015em;
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+}
+
+h5 {
+  font-size: var(--font-size-md);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+}
+
+ul,
+ol {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+}
+
+li + li {
+  margin-top: var(--space-1);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: color-mix(in srgb, var(--color-fg) 8%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  background: var(--color-bg-raised);
+  color: var(--color-fg);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-rule);
+  overflow-x: auto;
+  margin: 0 0 var(--space-4);
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+blockquote {
+  margin: var(--space-5) 0;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-fg-muted);
+  font-style: italic;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  transition: color 120ms ease;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--color-rule);
+  margin: var(--space-6) 0;
+}
+
+/* keyboard focus — high-contrast, visible against any background */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* default page wrapper for plain pages and the placeholder home */
+main {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-4);
+}
