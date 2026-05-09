@@ -120,6 +120,66 @@ describe('PhysicsWorld transform callback', () => {
   })
 })
 
+describe('PhysicsWorld dragging', () => {
+  test('while dragging, the body stays where setPosition places it across many ticks', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register(
+      { x: 100, y: 100 },
+      { width: 100, height: 50 },
+    )
+    world.setDragging(handle, true)
+    world.setPosition(handle, { x: 400, y: 300 })
+    for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(pos.x).toBeCloseTo(400, 1)
+    expect(pos.y).toBeCloseTo(300, 1)
+  })
+
+  test('on release, the breathing-mode spring returns the body to its anchor', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register(
+      { x: 100, y: 100 },
+      { width: 100, height: 50 },
+    )
+    world.setDragging(handle, true)
+    world.setPosition(handle, { x: 400, y: 300 })
+    world.setDragging(handle, false)
+    for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(Math.abs(pos.x - 100)).toBeLessThan(1)
+    expect(Math.abs(pos.y - 100)).toBeLessThan(1)
+  })
+
+  test('setVelocity directly sets the body velocity (mass-independent)', () => {
+    const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+    const handle = world.register(
+      { x: 400, y: 100 },
+      { width: 100, height: 50 },
+    )
+    world.setVelocity(handle, { x: 5, y: 0 })
+    world.tick(FIXED_DT_MS)
+    const pos = world.getPosition(handle)
+    expect(pos.x).toBeGreaterThan(401)
+  })
+
+  test('after release, applyImpulse adds velocity to a body that was dragged', () => {
+    const release = (impulseX: number) => {
+      const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+      const handle = world.register(
+        { x: 100, y: 100 },
+        { width: 100, height: 50 },
+      )
+      world.setDragging(handle, true)
+      world.setPosition(handle, { x: 200, y: 100 })
+      world.setDragging(handle, false)
+      if (impulseX !== 0) world.applyImpulse(handle, { x: impulseX, y: 0 })
+      world.tick(FIXED_DT_MS)
+      return world.getPosition(handle).x
+    }
+    expect(release(100)).toBeGreaterThan(release(0))
+  })
+})
+
 describe('PhysicsWorld card modes', () => {
   test('setMode("playground") relaxes the spring so the card stays where pushed', () => {
     const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
