@@ -6,28 +6,34 @@
   "description": "chaipalaka.com — Vite + React + TypeScript frontend, statically generated via vite-react-ssg.",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-fallback-pngs.mjs",
     "build": "vite-react-ssg build",
     "build:vite": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fallbacks": "node scripts/generate-fallback-pngs.mjs"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.6",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/newsreader": "^5.2.10",
+    "@react-three/fiber": "^9.6.1",
     "matter-js": "^0.20.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^6.30.0"
+    "react-router-dom": "^6.30.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@types/matter-js": "^0.20.2",
     "@types/node": "^25.6.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^4.7.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.3",
     "vite": "^7.3.3",
     "vite-react-ssg": "^0.9.1-beta.1",
