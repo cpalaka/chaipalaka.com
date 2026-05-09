@@ -12,24 +12,57 @@ specific issue and `PRD.md` for design context.
 - `PRD.md` and `grillmedoc.md` are gitignored — they live locally only and
   carry the design rationale; consult them for context but never commit them.
 
+## Session defaults — sandbox + auto-accept edits
+
+The owner runs Claude Code in this repo with **sandbox on** and
+**`acceptEdits` permission mode on by default**. The combination — Claude
+edits/runs without per-call prompts, but inside a sandbox that prevents
+real damage — is the desired baseline for any session in this repo.
+
+These two modes are configured in `.claude/settings.local.json` (gitignored
+— personal, not committed). The file should contain at least:
+
+```jsonc
+{
+  "permissions": { "defaultMode": "acceptEdits" /*, "allow": [...] */ },
+  "sandbox": { "enabled": true }
+}
+```
+
+If your `.claude/settings.local.json` does not have these set, configure
+them before starting work — Claude cannot toggle either of these mid-session
+via a tool call (both are session-init settings). At session start, confirm
+the spinner shows "auto-accepting edits" / sandbox indicator; if it doesn't,
+update the file and restart the session before proceeding.
+
+If the user explicitly wants a session WITHOUT these defaults (e.g., for a
+risky deploy operation that should re-prompt), they will say so — otherwise
+treat the defaults as the standing expectation.
+
 ## Standing process for an issue
 
 When asked to work on issue `N`:
 
-1. Read the issue: `gh issue view N --repo cpalaka/chaipalaka.com`.
-2. Re-read the relevant section(s) of `PRD.md` for design context.
-3. Create a branch off `main`: `git checkout main && git pull && git checkout -b <branch-name>` (see naming below).
-4. Plan briefly in the chat (1–5 bullets is fine). Ask only the questions that
+1. **Sync `main` first.** Before reading the issue or doing anything else,
+   run `git checkout main && git pull origin main`. This is required even
+   if you think you're already on `main` and up to date — sibling slices
+   may have been merged since the previous session ended, and branching
+   from a stale base wastes everyone's time. Do not skip this step.
+2. Read the issue: `gh issue view N --repo cpalaka/chaipalaka.com`.
+3. Re-read the relevant section(s) of `PRD.md` for design context.
+4. Create the feature branch: `git checkout -b <branch-name>` (see naming
+   below). You should already be on freshly-pulled `main` from step 1.
+5. Plan briefly in the chat (1–5 bullets is fine). Ask only the questions that
    actually require a decision; do not ask before running standard local commands
    (see "Autonomy" below).
-5. Implement. Use the `/tdd` skill when the slice has verifiable runtime
+6. Implement. Use the `/tdd` skill when the slice has verifiable runtime
    behavior to drive (modules, pure functions, adapters, API endpoints,
    physics math, etc.). Skip TDD for pure scaffolding — slice 1 is the
    archetype for that exception.
-6. Verify locally before committing (see "Local verification").
-7. Commit on the branch with a descriptive message (see "Commits").
-8. Push and open a **draft** PR (see "Pull requests").
-9. Report back: PR URL, what's verified, what's left for the human reviewer.
+7. Verify locally before committing (see "Local verification").
+8. Commit on the branch with a descriptive message (see "Commits").
+9. Push and open a **draft** PR (see "Pull requests").
+10. Report back: PR URL, what's verified, what's left for the human reviewer.
 
 ## Branch naming
 
@@ -132,8 +165,28 @@ Expect zero matches. Secrets live in `/etc/chaipalaka.env` on the server
 
 ## Skills to use
 
-The user has the Superpowers skills installed. Apply per their stated
+The user has Superpowers skills and several Vercel React skills installed.
+The general rule from `using-superpowers` applies: if there's even a 1%
+chance a skill is relevant to what you're about to do, **invoke it via the
+Skill tool before doing the work**, not after. Apply per their stated
 triggers — in particular:
+
+### React work — invoke proactively before touching `.tsx` / `.jsx` files
+
+- **`vercel-react-best-practices`** — invoke before writing or modifying
+  any React component, hook, or page. Even small JSX edits count. Covers
+  bundle splitting, server vs. client boundaries, re-render avoidance,
+  data fetching. Default skill for any React touchpoint in this repo.
+- **`vercel-composition-patterns`** — invoke when designing or refactoring
+  reusable component APIs (compound components, render props, context
+  providers). Highly relevant for the physics-card primitives in slice 5+
+  (`PhysicsCard`, `CardLayout`, `NotesChain`).
+- **`vercel-react-view-transitions`** — invoke when working on
+  `<ViewTransition>`, route-level animations, or shared-element morphs.
+  Slice 6+ (the portfolio thumbnail → detail hero morph is the canonical
+  use case in this repo).
+
+### Process / discipline
 
 - **`/tdd`** — use when implementing any module, adapter, pure function,
   API endpoint, or other code with verifiable runtime behaviour. The PRD's
@@ -148,6 +201,10 @@ triggers — in particular:
   ambiguity (rare, since the PRD is detailed; but possible for additions).
 - **`/grill-with-docs`** — use when a slice introduces new domain language
   or an architectural decision worth promoting into an ADR.
+
+The cost of invoking a skill that turns out not to apply is one tool call.
+The cost of skipping one that did apply is a code review round-trip or a
+shipped regression. Default to invoking.
 
 ## Toolchain pins (do not change without checking peer deps)
 
