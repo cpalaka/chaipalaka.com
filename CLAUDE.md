@@ -61,7 +61,7 @@ When asked to work on issue `N`:
    archetype for that exception.
 7. Verify locally before committing (see "Local verification").
 8. Commit on the branch with a descriptive message (see "Commits").
-9. Push and open a **draft** PR (see "Pull requests").
+9. Push and open the PR (see "Pull requests").
 10. Report back: PR URL, what's verified, what's left for the human reviewer.
 
 ## Branch naming
@@ -93,7 +93,11 @@ matches the dominant change. Examples:
 
 ## Pull requests
 
-- Always **draft** on first push: `gh pr create --draft --title "..." --body "..."`.
+- Open **ready for review** by default: `gh pr create --title "..." --body "..."`.
+  The owner wants PRs reviewable immediately — no draft step. If the work is
+  genuinely incomplete (failing tests, unresolved questions you need a
+  decision on before going further), say so in chat and ask whether to open
+  it as a draft instead; otherwise default to ready.
 - Title format: `<Short description> (#N)` — e.g., `Slice 4: blog index + post route (#4)`.
 - Body sections, in order:
   1. **Summary** — 2–4 bullets on what landed.
@@ -110,8 +114,8 @@ The user has authorised these without per-call confirmation:
 
 - All `gh` read commands (`gh issue view`, `gh issue list`, `gh pr view`,
   `gh pr list`, `gh pr checks`, etc.).
-- `gh pr create --draft` and `gh pr edit` on **branches you own** (i.e.,
-  feature branches you just created).
+- `gh pr create` (ready or draft), `gh pr ready`, and `gh pr edit` on
+  **branches you own** (i.e., feature branches you just created).
 - All local `git` commands on feature branches: `checkout -b`, `add`,
   `commit`, `push -u origin <branch>` for first push, `push` for subsequent
   pushes to the same branch.
@@ -130,7 +134,7 @@ The user has authorised these without per-call confirmation:
 - Pushing to `main` (force or otherwise) — feature branches only.
 - Force-pushing to any branch (`git push --force`, `--force-with-lease`).
 - Deleting branches, tags, or remotes.
-- `gh pr merge`, `gh pr close`, or marking a PR ready for review.
+- `gh pr merge` or `gh pr close`.
 - Modifying anything under `deploy/` that affects production behaviour
   (Caddyfile, systemd unit) — propose first, apply after the human agrees.
 - Running anything that costs money or hits a third-party rate limit
