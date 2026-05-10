@@ -1,13 +1,4 @@
 [data-layout='canvas'] {
     min-height: 100vh;
-    display: flex;
     position: relative;
-}
-
-[data-layout='canvas'][data-frame-edge='top'] {
-    flex-direction: column;
-}
-
-[data-layout='canvas'][data-frame-edge='bottom'] {
-    flex-direction: column-reverse;
 }
