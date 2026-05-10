@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
-import type { CardInteractionMode } from '../../physics/PhysicsCard'
 import type { PhysicsHandle } from '../../physics/PhysicsWorld'
 import type { SandboxConfig } from './state'
 import { ResizeHandles } from './ResizeHandles'
@@ -14,8 +13,8 @@ interface PlaygroundProps {
     onMinimize: () => void
 }
 
-const DEFAULT_W = 290
-const DEFAULT_H = 180
+const DEFAULT_W = 320
+const DEFAULT_H = 220
 
 function computeAnchor(): { x: number; y: number } {
     const availableW = window.innerWidth - 220 // subtract control panel
@@ -35,7 +34,7 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
     const [cardSize, setCardSize] = useState({ width: DEFAULT_W, height: DEFAULT_H })
-    const [interactionMode, setInteractionMode] = useState<CardInteractionMode>('anchored')
+    const [locked, setLocked] = useState(false)
 
     useEffect(() => {
         const onResize = () => setAnchor(computeAnchor())
@@ -55,8 +54,8 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
             height={cardSize.height}
             variant="playground"
             physicsHandleRef={handleRef}
-            interactionMode={interactionMode}
-            header={<CardHeader mode={interactionMode} onChange={setInteractionMode} />}
+            interactionMode={locked ? 'locked' : 'free'}
+            header={<CardHeader locked={locked} onChange={setLocked} />}
         >
             {/* Shader flourish — absolutely positioned behind content within the fixed card */}
             <FlourishMount

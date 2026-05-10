@@ -538,3 +538,45 @@ describe('PhysicsWorld setSensor', () => {
         expect(() => world.setSensor(handle, false)).not.toThrow()
     })
 })
+
+describe('PhysicsWorld setStatic', () => {
+    test('setStatic throws for an unknown handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(() => world.setStatic(999, true)).toThrow()
+    })
+
+    test('setStatic(true) pins the body so a large impulse does not move it', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+        world.setStatic(handle, true)
+        world.applyImpulse(handle, { x: 500, y: 0 })
+        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(Math.abs(pos.x - 200)).toBeLessThan(1)
+        expect(Math.abs(pos.y - 200)).toBeLessThan(1)
+    })
+
+    test('setStatic(false) restores normal physics so impulse moves the body', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+        world.setStatic(handle, true)
+        world.setStatic(handle, false)
+        world.applyImpulse(handle, { x: 50, y: 0 })
+        world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeGreaterThan(200)
+    })
+
+    test('setStatic is idempotent across lock/unlock toggles', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 200, y: 200 }, { width: 100, height: 50 })
+        world.setStatic(handle, true)
+        world.setStatic(handle, false)
+        world.setStatic(handle, true)
+        world.setStatic(handle, false)
+        world.applyImpulse(handle, { x: 50, y: 0 })
+        world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeGreaterThan(200)
+    })
+})

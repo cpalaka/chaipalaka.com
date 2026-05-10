@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
-import type { CardInteractionMode } from '../../physics/PhysicsCard'
 import type { SandboxConfig } from './state'
 import { CardHeader } from './CardHeader'
 
@@ -8,8 +7,8 @@ interface ChainMockProps {
     config: SandboxConfig
 }
 
-const CARD_W = 220
-const CARD_H = 100
+const CARD_W = 240
+const CARD_H = 160
 
 function computeChainAnchors(): Array<{ x: number; y: number }> {
     const availableW = window.innerWidth - 220
@@ -17,8 +16,8 @@ function computeChainAnchors(): Array<{ x: number; y: number }> {
     const startY = 160
     return [
         { x: startX, y: startY + CARD_H * 0.7 },
-        { x: startX + 20, y: startY + CARD_H * 0.7 + CARD_H + 20 },
-        { x: startX - 10, y: startY + CARD_H * 0.7 + (CARD_H + 20) * 2 },
+        { x: startX + 20, y: startY + CARD_H * 0.7 + CARD_H + 60 },
+        { x: startX - 10, y: startY + CARD_H * 0.7 + (CARD_H + 60) * 2 },
     ]
 }
 
@@ -30,7 +29,7 @@ const CHAIN_TEXTS = [
 
 export function ChainMock({ config: _config }: ChainMockProps) {
     const [anchors, setAnchors] = useState<Array<{ x: number; y: number }>>([])
-    const [modes, setModes] = useState<CardInteractionMode[]>(['anchored', 'anchored', 'anchored'])
+    const [locked, setLockedArr] = useState([false, false, false])
 
     useEffect(() => {
         setAnchors(computeChainAnchors())
@@ -41,10 +40,10 @@ export function ChainMock({ config: _config }: ChainMockProps) {
 
     if (anchors.length === 0) return null
 
-    const setMode = (i: number) => (m: CardInteractionMode) =>
-        setModes((prev) => {
-            const next = [...prev] as CardInteractionMode[]
-            next[i] = m
+    const setLocked = (i: number) => (v: boolean) =>
+        setLockedArr((prev) => {
+            const next = [...prev]
+            next[i] = v
             return next
         })
 
@@ -60,8 +59,8 @@ export function ChainMock({ config: _config }: ChainMockProps) {
                     width={CARD_W}
                     height={CARD_H}
                     variant={i === 0 ? 'primary' : 'chain'}
-                    interactionMode={modes[i]}
-                    header={<CardHeader mode={modes[i]!} onChange={setMode(i)} />}
+                    interactionMode={locked[i] ? 'locked' : 'free'}
+                    header={<CardHeader locked={locked[i]!} onChange={setLocked(i)} />}
                 />
             ))}
         </>

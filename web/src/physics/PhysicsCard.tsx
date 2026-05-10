@@ -4,7 +4,7 @@ import { registry as pretextRegistry } from '../text/registry'
 import type { PhysicsHandle } from './PhysicsWorld'
 import './PhysicsCard.css'
 
-export type CardInteractionMode = 'anchored' | 'locked' | 'free'
+export type CardInteractionMode = 'locked' | 'free'
 
 export interface PhysicsCardProps {
     text: string
@@ -154,11 +154,10 @@ export function PhysicsCard({
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
-    // Interaction mode change: update physics state when mode prop changes.
+    // Interaction mode change: pin/unpin the body when lock state changes.
     useEffect(() => {
         if (handleRef.current === null) return
-        world.setSensor(handleRef.current, interactionMode === 'locked')
-        world.setMode(handleRef.current, interactionMode === 'free' ? 'playground' : 'breathing')
+        world.setStatic(handleRef.current, interactionMode === 'locked')
     }, [world, interactionMode])
 
     const cls = ['physics-card', className].filter(Boolean).join(' ')
