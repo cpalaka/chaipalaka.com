@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from './PhysicsContext'
 import { registry as pretextRegistry } from '../text/registry'
+import { useIsMinimized, useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
+import { flipMorph } from '../canvas/flip'
 import type { PhysicsHandle } from './PhysicsWorld'
 import './PhysicsCard.css'
 
@@ -21,6 +23,11 @@ export interface PhysicsCardProps {
     physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
     cardRef?: React.MutableRefObject<HTMLElement | null>
     interactionMode?: CardInteractionMode
+    // minimize support
+    minimizable?: boolean
+    id?: string
+    label?: string
+    kind?: string
 }
 
 const CARD_PADDING_PX = 24
@@ -40,6 +47,10 @@ export function PhysicsCard({
     physicsHandleRef,
     cardRef,
     interactionMode = 'free',
+    minimizable = false,
+    id,
+    label,
+    kind = 'card',
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
@@ -54,8 +65,13 @@ export function PhysicsCard({
     const interactionModeRef = useRef(interactionMode)
     interactionModeRef.current = interactionMode
 
-    // Registration: only re-runs when text content or font changes.
+    const registry = useMinimizedRegistry()
+    const isMinimized = useIsMinimized(minimizable ? id : undefined)
+
+    // Registration: only re-runs when text content, font, or minimize state changes.
+    // Including isMinimized ensures the physics body is unregistered while minimized.
     useEffect(() => {
+        if (isMinimized) return
         const el = elRef.current
         if (!el) return
 
@@ -152,7 +168,7 @@ export function PhysicsCard({
             window.removeEventListener('pointermove', onPointerMove)
             window.removeEventListener('pointerup', onPointerUp)
         }
-    }, [world, text, fontKey, maxWidth])
+    }, [world, text, fontKey, maxWidth, isMinimized])
 
     // Anchor update: moves the spring target when the grid re-flows (e.g. resize).
     useEffect(() => {
@@ -168,6 +184,30 @@ export function PhysicsCard({
         world.setSensor(handleRef.current, locked)
     }, [world, interactionMode])
 
+    // Restore FLIP: when a minimized card re-mounts, animate it in from the chip position.
+    useEffect(() => {
+        if (isMinimized || !id || !minimizable) return
+        const el = elRef.current
+        if (!el) return
+        const fromChipRect = registry.consumeRestoreRect(id)
+        if (!fromChipRect) return
+        // Capture the physics-set transform before the next RAF so we animate TO the anchor.
+        const endTransform = el.style.transform
+        requestAnimationFrame(() => {
+            flipMorph(fromChipRect, el, { opacityFrom: 0.5, endTransform })
+        })
+    }, [isMinimized, id, minimizable, registry])
+
+    if (isMinimized) return null
+
+    function handleMinimize() {
+        const el = elRef.current
+        if (!el || !id) return
+        const fromRect = el.getBoundingClientRect()
+        registry.minimize(id, { label: label ?? text, kind, fromRect })
+    }
+
+    const showHeader = header != null || minimizable
     const cls = ['physics-card', className].filter(Boolean).join(' ')
 
     return (
@@ -181,8 +221,21 @@ export function PhysicsCard({
             data-interaction-mode={interactionMode}
             style={style}
         >
-            {header != null && (
-                <div data-card-header>{header}</div>
+            {showHeader && (
+                <div data-card-header>
+                    {minimizable ? (
+                        <button
+                            type="button"
+                            title="Minimize"
+                            className="physics-card__minimize-btn"
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={handleMinimize}
+                        >
+                            −
+                        </button>
+                    ) : null}
+                    {header}
+                </div>
             )}
             {children ?? text}
         </article>

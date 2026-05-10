@@ -74,6 +74,10 @@ export default function BlogIndex() {
                         anchor={{ x: anchor.x, y: anchor.y }}
                         width={anchor.width}
                         height={anchor.height}
+                        minimizable
+                        id={`blog-${anchor.id}`}
+                        label={post.frontmatter.title}
+                        kind="blog-post"
                     >
                         <h2>{post.frontmatter.title}</h2>
                         <p>{post.frontmatter.description}</p>
