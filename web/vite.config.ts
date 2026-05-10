@@ -15,69 +15,69 @@ import { join, resolve } from 'node:path'
 import matter from 'gray-matter'
 
 async function getBlogSlugs(): Promise<string[]> {
-  try {
-    const contentDir = resolve(process.cwd(), '..', 'content', 'blog')
-    const entries = await readdir(contentDir, { withFileTypes: true })
-    const isProd = process.env.NODE_ENV === 'production'
-    const slugs = await Promise.all(
-      entries
-        .filter(e => e.isDirectory())
-        .map(async (e) => {
-          const mdxPath = join(contentDir, e.name, 'index.mdx')
-          const raw = await readFile(mdxPath, 'utf-8')
-          const { data } = matter(raw)
-          if (isProd && data.draft) return null
-          return e.name.replace(/^\d{4}-\d{2}-\d{2}-/, '')
-        }),
-    )
-    return slugs.filter((s): s is string => s !== null)
-  } catch {
-    return []
-  }
+    try {
+        const contentDir = resolve(process.cwd(), '..', 'content', 'blog')
+        const entries = await readdir(contentDir, { withFileTypes: true })
+        const isProd = process.env.NODE_ENV === 'production'
+        const slugs = await Promise.all(
+            entries
+                .filter((e) => e.isDirectory())
+                .map(async (e) => {
+                    const mdxPath = join(contentDir, e.name, 'index.mdx')
+                    const raw = await readFile(mdxPath, 'utf-8')
+                    const { data } = matter(raw)
+                    if (isProd && data.draft) return null
+                    return e.name.replace(/^\d{4}-\d{2}-\d{2}-/, '')
+                }),
+        )
+        return slugs.filter((s): s is string => s !== null)
+    } catch {
+        return []
+    }
 }
 
 export default defineConfig({
-  plugins: [
-    {
-      enforce: 'pre',
-      ...mdx({
-        remarkPlugins: [
-          remarkFrontmatter,
-          remarkMdxFrontmatter,
-          remarkMdxImages,
-          remarkExtractToc,
-        ],
-        rehypePlugins: [
-          rehypeSlug,
-          [rehypeAutolinkHeadings, { behavior: 'wrap' }] as any,
-          [rehypePrettyCode, { theme: 'github-dark' }] as any,
-        ],
-      }),
+    plugins: [
+        {
+            enforce: 'pre',
+            ...mdx({
+                remarkPlugins: [
+                    remarkFrontmatter,
+                    remarkMdxFrontmatter,
+                    remarkMdxImages,
+                    remarkExtractToc,
+                ],
+                rehypePlugins: [
+                    rehypeSlug,
+                    [rehypeAutolinkHeadings, { behavior: 'wrap' }] as any,
+                    [rehypePrettyCode, { theme: 'github-dark' }] as any,
+                ],
+            }),
+        },
+        react(),
+        vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
+    ],
+    server: {
+        fs: {
+            allow: ['..'],
+        },
     },
-    react(),
-    vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
-  ],
-  server: {
-    fs: {
-      allow: ['..'],
+    ssgOptions: {
+        script: 'async',
+        formatting: 'none',
+        dirStyle: 'nested',
+        async includedRoutes(paths) {
+            const slugs = await getBlogSlugs()
+            const blogPaths = slugs.flatMap((slug) => [
+                `/blog/${slug}`,
+                `/blog/${slug}/read`,
+            ])
+            return [...paths, ...blogPaths]
+        },
     },
-  },
-  ssgOptions: {
-    script: 'async',
-    formatting: 'none',
-    dirStyle: 'nested',
-    async includedRoutes(paths) {
-      const slugs = await getBlogSlugs()
-      const blogPaths = slugs.flatMap(slug => [
-        `/blog/${slug}`,
-        `/blog/${slug}/read`,
-      ])
-      return [...paths, ...blogPaths]
+    test: {
+        environment: 'node',
+        include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        passWithNoTests: true,
     },
-  },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    passWithNoTests: true,
-  },
 })

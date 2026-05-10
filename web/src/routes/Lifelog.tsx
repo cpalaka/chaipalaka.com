@@ -8,50 +8,60 @@ const BOOKS_CARD_MAX_WIDTH = 360
 const GUTTER = 16
 
 function computeBookAnchor(): CardAnchor {
-  const vp = { width: window.innerWidth, height: window.innerHeight }
-  const numCols = vp.width >= 1024 ? 3 : vp.width >= 480 ? 2 : 1
-  const colWidth = vp.width / numCols
-  const w = Math.min(BOOKS_CARD_MAX_WIDTH, colWidth - GUTTER * 2)
-  const anchors = cardLayout(
-    [{ id: 'books', text: 'Books', fontKey: 'body', width: w, height: BOOKS_CARD_HEIGHT }],
-    vp,
-    () => ({ width: 0, height: 0 }),
-  )
-  return anchors[0] ?? {
-    id: 'books',
-    x: vp.width / 2,
-    y: BOOKS_CARD_HEIGHT / 2 + 80,
-    width: w,
-    height: BOOKS_CARD_HEIGHT,
-    maxWidth: w,
-  }
+    const vp = { width: window.innerWidth, height: window.innerHeight }
+    const numCols = vp.width >= 1024 ? 3 : vp.width >= 480 ? 2 : 1
+    const colWidth = vp.width / numCols
+    const w = Math.min(BOOKS_CARD_MAX_WIDTH, colWidth - GUTTER * 2)
+    const anchors = cardLayout(
+        [
+            {
+                id: 'books',
+                text: 'Books',
+                fontKey: 'body',
+                width: w,
+                height: BOOKS_CARD_HEIGHT,
+            },
+        ],
+        vp,
+        () => ({ width: 0, height: 0 }),
+    )
+    return (
+        anchors[0] ?? {
+            id: 'books',
+            x: vp.width / 2,
+            y: BOOKS_CARD_HEIGHT / 2 + 80,
+            width: w,
+            height: BOOKS_CARD_HEIGHT,
+            maxWidth: w,
+        }
+    )
 }
 
 export default function Lifelog() {
-  const [anchor, setAnchor] = useState<CardAnchor | null>(null)
+    const [anchor, setAnchor] = useState<CardAnchor | null>(null)
 
-  useEffect(() => {
-    setAnchor(computeBookAnchor())
-    const onResize = () => setAnchor(computeBookAnchor())
-    window.addEventListener('resize', onResize, { passive: true })
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
+    useEffect(() => {
+        setAnchor(computeBookAnchor())
+        const onResize = () => setAnchor(computeBookAnchor())
+        window.addEventListener('resize', onResize, { passive: true })
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
 
-  if (!anchor) return null
+    if (!anchor) return null
 
-  return (
-    <PhysicsCard
-      text="Books"
-      fontKey="body"
-      maxWidth={anchor.maxWidth}
-      anchor={{ x: anchor.x, y: anchor.y }}
-      width={anchor.width}
-      height={anchor.height}
-    >
-      <div className="lifelog-books">
-        <h2 className="lifelog-books__heading">Books</h2>
-        <p className="lifelog-books__empty">—</p>
-      </div>
-    </PhysicsCard>
-  )
+    return (
+        <PhysicsCard
+            text="Books"
+            fontKey="body"
+            maxWidth={anchor.maxWidth}
+            anchor={{ x: anchor.x, y: anchor.y }}
+            width={anchor.width}
+            height={anchor.height}
+        >
+            <div className="lifelog-books">
+                <h2 className="lifelog-books__heading">Books</h2>
+                <p className="lifelog-books__empty">—</p>
+            </div>
+        </PhysicsCard>
+    )
 }

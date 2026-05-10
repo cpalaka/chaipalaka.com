@@ -1,0 +1,4 @@
+dist/
+.vite-react-ssg-temp/
+public/fallbacks/
+node_modules/
