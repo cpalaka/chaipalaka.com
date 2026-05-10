@@ -72,7 +72,9 @@ export default defineConfig({
                 `/blog/${slug}`,
                 `/blog/${slug}/read`,
             ])
-            return [...paths, ...blogPaths]
+            return [...paths, ...blogPaths].filter(
+                (p) => !p.startsWith('/sandbox'),
+            )
         },
     },
     test: {

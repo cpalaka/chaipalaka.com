@@ -332,6 +332,83 @@ describe('PhysicsWorld angular spring back', () => {
     })
 })
 
+describe('PhysicsWorld setSize', () => {
+    test('setSize throws for unknown handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(() => world.setSize(999, { width: 100, height: 50 })).toThrow()
+    })
+
+    test('getSize returns initial registered dimensions', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        expect(world.getSize(handle)).toEqual({ width: 100, height: 50 })
+    })
+
+    test('setSize updates the stored dimensions', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        world.setSize(handle, { width: 200, height: 100 })
+        expect(world.getSize(handle)).toEqual({ width: 200, height: 100 })
+    })
+
+    test('setSize preserves body center position', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        world.setSize(handle, { width: 200, height: 100 })
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeCloseTo(200, 5)
+        expect(pos.y).toBeCloseTo(200, 5)
+    })
+
+    test('setSize preserves the spring anchor so body still returns to it', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        world.setSize(handle, { width: 200, height: 100 })
+        world.applyImpulse(handle, { x: 50, y: 0 })
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(Math.abs(pos.x - 200)).toBeLessThan(1)
+        expect(Math.abs(pos.y - 200)).toBeLessThan(1)
+    })
+
+    test('setSize is idempotent for the same dimensions', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        world.setSize(handle, { width: 200, height: 100 })
+        world.setSize(handle, { width: 200, height: 100 })
+        expect(world.getSize(handle)).toEqual({ width: 200, height: 100 })
+    })
+
+    test('setSize can grow and then shrink back to the original dimensions', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register(
+            { x: 200, y: 200 },
+            { width: 100, height: 50 },
+        )
+        world.setSize(handle, { width: 200, height: 100 })
+        world.setSize(handle, { width: 100, height: 50 })
+        expect(world.getSize(handle)).toEqual({ width: 100, height: 50 })
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeCloseTo(200, 5)
+        expect(pos.y).toBeCloseTo(200, 5)
+    })
+})
+
 describe('PhysicsWorld static registration (gravity-exempt)', () => {
     test('registerStatic returns a handle that can be queried and unregistered', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })

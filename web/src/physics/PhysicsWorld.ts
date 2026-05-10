@@ -39,6 +39,8 @@ interface Registration {
     mode: CardMode
     isStatic: boolean
     onTransform?: (state: BodyState) => void
+    width: number
+    height: number
 }
 
 const MODE_STIFFNESS: Record<CardMode, number> = {
@@ -114,6 +116,8 @@ export class PhysicsWorld {
             mode,
             isStatic: false,
             onTransform: opts.onTransform,
+            width: size.width,
+            height: size.height,
         })
         return id
     }
@@ -139,6 +143,8 @@ export class PhysicsWorld {
             mode: 'breathing',
             isStatic: true,
             onTransform: opts.onTransform,
+            width: size.width,
+            height: size.height,
         })
         return id
     }
@@ -227,6 +233,22 @@ export class PhysicsWorld {
         if (!this.gravityOn) {
             reg.spring.stiffness = MODE_STIFFNESS[mode]
         }
+    }
+
+    getSize(handle: PhysicsHandle): CardSize {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return { width: reg.width, height: reg.height }
+    }
+
+    setSize(handle: PhysicsHandle, size: CardSize): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        const sx = size.width / reg.width
+        const sy = size.height / reg.height
+        Matter.Body.scale(reg.body, sx, sy)
+        reg.width = size.width
+        reg.height = size.height
     }
 
     setAngle(handle: PhysicsHandle, angle: number): void {
