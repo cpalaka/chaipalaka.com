@@ -16,11 +16,21 @@ function makeStorage(): Map<string, string> {
     return m
 }
 
+function readSystemPreference(): Theme {
+    if (typeof window === 'undefined' || !window.matchMedia) return 'dark'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+}
+
 let controllerInstance: ReturnType<typeof createThemeController> | null = null
 
 function getController() {
     if (!controllerInstance) {
-        controllerInstance = createThemeController({ storage: makeStorage() })
+        controllerInstance = createThemeController({
+            storage: makeStorage(),
+            getSystemPreference: readSystemPreference,
+        })
     }
     return controllerInstance
 }
@@ -37,22 +47,12 @@ export function useTheme(): {
         const unsub = ctrl.subscribe((t) => {
             setThemeState(t)
             if (typeof document !== 'undefined') {
-                const dt = ctrl.getDataTheme()
-                if (dt) {
-                    document.documentElement.dataset.theme = dt
-                } else {
-                    delete document.documentElement.dataset.theme
-                }
+                document.documentElement.dataset.theme = ctrl.getDataTheme()
             }
         })
         // Apply on mount too
-        const dt = ctrl.getDataTheme()
         if (typeof document !== 'undefined') {
-            if (dt) {
-                document.documentElement.dataset.theme = dt
-            } else {
-                delete document.documentElement.dataset.theme
-            }
+            document.documentElement.dataset.theme = ctrl.getDataTheme()
         }
         return unsub
     }, [ctrl])
