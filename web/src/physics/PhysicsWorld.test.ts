@@ -48,24 +48,10 @@ describe('PhysicsWorld dynamics', () => {
         expect(Math.abs(pos.y - 100)).toBeLessThan(1)
     })
 
-    test('after an impulse, the breathing-mode spring returns the body to its anchor', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.applyImpulse(handle, { x: 50, y: 0 })
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.x - 200)).toBeLessThan(1)
-        expect(Math.abs(pos.y - 200)).toBeLessThan(1)
-    })
 })
 
 describe('PhysicsWorld gravity', () => {
-    test('setGravity(true) lets a card fall; setGravity(false) springs it back', () => {
+    test('setGravity(true) makes a card fall', () => {
         const world = new PhysicsWorld({
             viewport: { width: 800, height: 600 },
         })
@@ -73,17 +59,10 @@ describe('PhysicsWorld gravity', () => {
             { x: 100, y: 100 },
             { width: 100, height: 50 },
         )
-
         world.setGravity(true)
         for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
         const fellTo = world.getPosition(handle)
         expect(fellTo.y).toBeGreaterThan(100)
-
-        world.setGravity(false)
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const restored = world.getPosition(handle)
-        expect(Math.abs(restored.x - 100)).toBeLessThan(1)
-        expect(Math.abs(restored.y - 100)).toBeLessThan(1)
     })
 
     test('with gravity on, the floor body catches a falling card (no escape)', () => {
@@ -154,23 +133,6 @@ describe('PhysicsWorld dragging', () => {
         expect(pos.y).toBeCloseTo(300, 1)
     })
 
-    test('on release, the breathing-mode spring returns the body to its anchor', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 100, y: 100 },
-            { width: 100, height: 50 },
-        )
-        world.setDragging(handle, true)
-        world.setPosition(handle, { x: 400, y: 300 })
-        world.setDragging(handle, false)
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.x - 100)).toBeLessThan(1)
-        expect(Math.abs(pos.y - 100)).toBeLessThan(1)
-    })
-
     test('setVelocity directly sets the body velocity (mass-independent)', () => {
         const world = new PhysicsWorld({
             viewport: { width: 800, height: 600 },
@@ -203,132 +165,6 @@ describe('PhysicsWorld dragging', () => {
             return world.getPosition(handle).x
         }
         expect(release(100)).toBeGreaterThan(release(0))
-    })
-})
-
-describe('PhysicsWorld card modes', () => {
-    test('setMode("playground") relaxes the spring so the card stays where pushed', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 100, y: 100 },
-            { width: 100, height: 50 },
-        )
-        world.setMode(handle, 'playground')
-        world.applyImpulse(handle, { x: 30, y: 0 })
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(pos.x).toBeGreaterThan(150)
-    })
-})
-
-describe('PhysicsWorld setAnchor', () => {
-    test('after setAnchor, the body springs to the new anchor position', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 100, y: 100 },
-            { width: 100, height: 50 },
-        )
-        world.setAnchor(handle, { x: 500, y: 400 })
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.x - 500)).toBeLessThan(1)
-        expect(Math.abs(pos.y - 400)).toBeLessThan(1)
-    })
-})
-
-describe('breathing spring overshoot (underdamped)', () => {
-    test('overshoots anchor at least once after a horizontal impulse', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const anchor = { x: 200, y: 200 }
-        const handle = world.register(anchor, { width: 100, height: 50 })
-        world.applyImpulse(handle, { x: 50, y: 0 })
-
-        let signFlips = 0
-        let prevSign = 0
-        for (let i = 0; i < 400; i++) {
-            world.tick(FIXED_DT_MS)
-            const pos = world.getPosition(handle)
-            const sign = Math.sign(pos.x - anchor.x)
-            if (sign !== 0 && prevSign !== 0 && sign !== prevSign) signFlips++
-            if (sign !== 0) prevSign = sign
-        }
-
-        expect(signFlips).toBeGreaterThanOrEqual(1)
-    })
-})
-
-describe('PhysicsWorld angular spring back', () => {
-    test('a rotated card self-rights to horizontal in breathing mode', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.setAngle(handle, 0.5)
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.rotation)).toBeLessThan(0.02)
-    })
-
-    test('angular self-righting overshoots horizontal at least once (elastic)', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.setAngle(handle, 0.5)
-
-        let signFlips = 0
-        let prevSign = 0
-        for (let i = 0; i < 300; i++) {
-            world.tick(FIXED_DT_MS)
-            const pos = world.getPosition(handle)
-            const sign = Math.sign(pos.rotation)
-            if (sign !== 0 && prevSign !== 0 && sign !== prevSign) signFlips++
-            if (sign !== 0) prevSign = sign
-        }
-
-        expect(signFlips).toBeGreaterThanOrEqual(1)
-    })
-
-    test('does not self-right while being dragged', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.setAngle(handle, 0.3)
-        world.setDragging(handle, true)
-        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.rotation - 0.3)).toBeLessThan(0.001)
-    })
-
-    test('does not self-right in playground mode', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-        })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.setMode(handle, 'playground')
-        world.setAngle(handle, 0.3)
-        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(pos.rotation).toBeGreaterThan(0.25)
     })
 })
 
@@ -367,20 +203,6 @@ describe('PhysicsWorld setSize', () => {
         const pos = world.getPosition(handle)
         expect(pos.x).toBeCloseTo(200, 5)
         expect(pos.y).toBeCloseTo(200, 5)
-    })
-
-    test('setSize preserves the spring anchor so body still returns to it', () => {
-        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
-        const handle = world.register(
-            { x: 200, y: 200 },
-            { width: 100, height: 50 },
-        )
-        world.setSize(handle, { width: 200, height: 100 })
-        world.applyImpulse(handle, { x: 50, y: 0 })
-        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-        const pos = world.getPosition(handle)
-        expect(Math.abs(pos.x - 200)).toBeLessThan(1)
-        expect(Math.abs(pos.y - 200)).toBeLessThan(1)
     })
 
     test('setSize is idempotent for the same dimensions', () => {
@@ -485,8 +307,6 @@ describe('PhysicsWorld linkBodies / unlinkBodies', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
         const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
         const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
-        world.setMode(a, 'playground')
-        world.setMode(b, 'playground')
         world.linkBodies(a, b, { length: 0, stiffness: 0.5, damping: 0.5 })
         for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
         const posA = world.getPosition(a)
@@ -499,8 +319,6 @@ describe('PhysicsWorld linkBodies / unlinkBodies', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
         const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
         const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
-        world.setMode(a, 'playground')
-        world.setMode(b, 'playground')
         const link = world.linkBodies(a, b, { length: 0, stiffness: 0.5, damping: 0.5 })
         world.unlinkBodies(link)
         for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
