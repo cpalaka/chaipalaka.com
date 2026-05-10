@@ -1,4 +1,5 @@
 import { useRef, type MutableRefObject } from 'react'
+
 import { usePhysicsWorld } from '../../physics/PhysicsContext'
 import type { PhysicsHandle } from '../../physics/PhysicsWorld'
 import type { ResizeMode } from './state'
@@ -33,6 +34,7 @@ export function ResizeHandles({
     onResizeCommit,
 }: ResizeHandlesProps) {
     const world = usePhysicsWorld()
+    const containerRef = useRef<HTMLDivElement>(null)
     const dragState = useRef<{
         dir: HandleDir
         startX: number
@@ -101,6 +103,13 @@ export function ResizeHandles({
             world.setPosition(handle, { x: newAX, y: newAY })
             world.setAnchor(handle, { x: newAX, y: newAY })
         }
+
+        const cardEl = containerRef.current?.parentElement
+        if (cardEl instanceof HTMLElement) {
+            cardEl.style.width = `${newW}px`
+            cardEl.style.height = `${newH}px`
+            cardEl.style.transform = `translate(${newAX - newW / 2}px, ${newAY - newH / 2}px)`
+        }
     }
 
     function onPointerUp(e: React.PointerEvent) {
@@ -143,6 +152,7 @@ export function ResizeHandles({
 
     return (
         <div
+            ref={containerRef}
             className="resize-handles"
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
