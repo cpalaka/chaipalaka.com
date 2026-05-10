@@ -33,6 +33,25 @@
     margin: 0;
 }
 
+/* Card header bar */
+[data-card-header] {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin: -24px -24px 0;
+    min-height: 32px;
+    font-size: 11px;
+    font-family: var(--card-font-body, var(--font-mono));
+    color: var(--card-fg, var(--color-fg));
+    opacity: 0.75;
+    pointer-events: auto;
+    user-select: none;
+    touch-action: none;
+    cursor: default;
+    flex-shrink: 0;
+}
+
 .read-post-link {
     align-self: flex-start;
     font-family: var(--font-body);

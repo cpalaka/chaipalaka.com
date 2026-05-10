@@ -20,7 +20,7 @@ export interface PhysicsWorldOptions {
 }
 
 export type PhysicsHandle = number
-export type CardMode = 'breathing' | 'playground'
+export type LinkHandle = number
 
 export interface BodyState {
     x: number
@@ -32,29 +32,27 @@ export interface RegisterOptions {
     onTransform?: (state: BodyState) => void
 }
 
+export interface LinkOptions {
+    length?: number
+    stiffness?: number
+    damping?: number
+}
+
 interface Registration {
     body: Matter.Body
     spring?: Matter.Constraint
     anchor: Vec2
-    mode: CardMode
     isStatic: boolean
     onTransform?: (state: BodyState) => void
+    width: number
+    height: number
 }
 
-const MODE_STIFFNESS: Record<CardMode, number> = {
-    breathing: 0.03,
-    playground: 1e-9,
-}
-const MODE_DAMPING: Record<CardMode, number> = {
-    breathing: 0.06,
-    playground: 0,
-}
-const GRAVITY_RELAXED_STIFFNESS = 1e-9
+const SPRING_STIFFNESS = 1e-9
+const SPRING_DAMPING = 0
 const GRAVITY_Y = 0.7
 const BODY_FRICTION_AIR = 0.05
 const FLOOR_THICKNESS = 60
-const ANGULAR_STIFFNESS_BREATHING = 0.002
-const ANGULAR_DAMPING_BREATHING = 0
 
 export class PhysicsWorld {
     private engine: Matter.Engine
@@ -62,7 +60,7 @@ export class PhysicsWorld {
     private floor: Matter.Body
     private nextId: PhysicsHandle = 1
     private registrations = new Map<PhysicsHandle, Registration>()
-    private gravityOn = false
+    private links = new Map<LinkHandle, Matter.Constraint>()
 
     constructor(opts: PhysicsWorldOptions) {
         this.engine = Matter.Engine.create()
@@ -94,15 +92,12 @@ export class PhysicsWorld {
                 frictionAir: BODY_FRICTION_AIR,
             },
         )
-        const mode: CardMode = 'breathing'
         const spring = Matter.Constraint.create({
             pointA: { x: anchor.x, y: anchor.y },
             bodyB: body,
             pointB: { x: 0, y: 0 },
-            stiffness: this.gravityOn
-                ? GRAVITY_RELAXED_STIFFNESS
-                : MODE_STIFFNESS[mode],
-            damping: MODE_DAMPING[mode],
+            stiffness: SPRING_STIFFNESS,
+            damping: SPRING_DAMPING,
             length: 0,
         })
         Matter.Composite.add(this.world, [body, spring])
@@ -111,9 +106,10 @@ export class PhysicsWorld {
             body,
             spring,
             anchor: { ...anchor },
-            mode,
             isStatic: false,
             onTransform: opts.onTransform,
+            width: size.width,
+            height: size.height,
         })
         return id
     }
@@ -136,9 +132,10 @@ export class PhysicsWorld {
             body,
             spring: undefined,
             anchor: { ...position },
-            mode: 'breathing',
             isStatic: true,
             onTransform: opts.onTransform,
+            width: size.width,
+            height: size.height,
         })
         return id
     }
@@ -182,13 +179,10 @@ export class PhysicsWorld {
     }
 
     setGravity(on: boolean): void {
-        this.gravityOn = on
         this.engine.gravity.y = on ? GRAVITY_Y : 0
         for (const reg of this.registrations.values()) {
             if (reg.isStatic || !reg.spring) continue
-            reg.spring.stiffness = on
-                ? GRAVITY_RELAXED_STIFFNESS
-                : MODE_STIFFNESS[reg.mode]
+            reg.spring.stiffness = SPRING_STIFFNESS
         }
     }
 
@@ -218,15 +212,20 @@ export class PhysicsWorld {
         reg.spring.pointA!.y = anchor.y
     }
 
-    setMode(handle: PhysicsHandle, mode: CardMode): void {
+    getSize(handle: PhysicsHandle): CardSize {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        if (reg.isStatic || !reg.spring) return
-        reg.mode = mode
-        reg.spring.damping = MODE_DAMPING[mode]
-        if (!this.gravityOn) {
-            reg.spring.stiffness = MODE_STIFFNESS[mode]
-        }
+        return { width: reg.width, height: reg.height }
+    }
+
+    setSize(handle: PhysicsHandle, size: CardSize): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        const sx = size.width / reg.width
+        const sy = size.height / reg.height
+        Matter.Body.scale(reg.body, sx, sy)
+        reg.width = size.width
+        reg.height = size.height
     }
 
     setAngle(handle: PhysicsHandle, angle: number): void {
@@ -236,17 +235,52 @@ export class PhysicsWorld {
         Matter.Body.setAngularVelocity(reg.body, 0)
     }
 
+    linkBodies(
+        a: PhysicsHandle,
+        b: PhysicsHandle,
+        opts: LinkOptions = {},
+    ): LinkHandle {
+        const regA = this.registrations.get(a)
+        if (!regA) throw new Error(`PhysicsWorld: unknown handle ${a}`)
+        const regB = this.registrations.get(b)
+        if (!regB) throw new Error(`PhysicsWorld: unknown handle ${b}`)
+        const dx = regB.body.position.x - regA.body.position.x
+        const dy = regB.body.position.y - regA.body.position.y
+        const defaultLength = Math.sqrt(dx * dx + dy * dy)
+        const constraint = Matter.Constraint.create({
+            bodyA: regA.body,
+            bodyB: regB.body,
+            length: opts.length ?? defaultLength,
+            stiffness: opts.stiffness ?? 0.05,
+            damping: opts.damping ?? 0.1,
+        })
+        Matter.Composite.add(this.world, constraint)
+        const id = this.nextId++
+        this.links.set(id, constraint)
+        return id
+    }
+
+    unlinkBodies(link: LinkHandle): void {
+        const constraint = this.links.get(link)
+        if (!constraint) return
+        Matter.Composite.remove(this.world, constraint)
+        this.links.delete(link)
+    }
+
+    setSensor(handle: PhysicsHandle, isSensor: boolean): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        Matter.Body.set(reg.body, 'isSensor', isSensor)
+    }
+
+    setStatic(handle: PhysicsHandle, isStatic: boolean): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        if (reg.isStatic) return
+        Matter.Body.setStatic(reg.body, isStatic)
+    }
+
     tick(dtMs: number): void {
-        for (const reg of this.registrations.values()) {
-            if (reg.body.isStatic) continue
-            if (reg.mode !== 'breathing') continue
-            const angle = reg.body.angle
-            const angVel = reg.body.angularVelocity
-            const delta =
-                -ANGULAR_STIFFNESS_BREATHING * angle -
-                ANGULAR_DAMPING_BREATHING * angVel
-            Matter.Body.setAngularVelocity(reg.body, angVel + delta)
-        }
         Matter.Engine.update(this.engine, dtMs)
         for (const reg of this.registrations.values()) {
             if (!reg.onTransform) continue
