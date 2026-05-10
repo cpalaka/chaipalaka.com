@@ -47,6 +47,10 @@ export function PhysicsCard({
     // every resize tick while the spring update is handled separately).
     const anchorRef = useRef(anchor)
     anchorRef.current = anchor
+    // Ref so pointer handlers always read the current interactionMode without
+    // being re-registered on every toggle (rerender-use-ref-transient-values).
+    const interactionModeRef = useRef(interactionMode)
+    interactionModeRef.current = interactionMode
 
     // Registration: only re-runs when text content or font changes.
     useEffect(() => {
@@ -91,7 +95,7 @@ export function PhysicsCard({
         const FLING_PAUSE_MS = 50
 
         const onPointerDown = (e: PointerEvent) => {
-            if (interactionMode !== 'free') return
+            if (interactionModeRef.current !== 'free') return
             if ((e.target as Element | null)?.closest('[data-card-header], a, button')) return
             e.preventDefault()
             dragging = true
@@ -154,10 +158,12 @@ export function PhysicsCard({
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
-    // Interaction mode change: pin/unpin the body when lock state changes.
+    // Interaction mode change: pin/unpin and sensor-toggle when lock state changes.
     useEffect(() => {
         if (handleRef.current === null) return
-        world.setStatic(handleRef.current, interactionMode === 'locked')
+        const locked = interactionMode === 'locked'
+        world.setStatic(handleRef.current, locked)
+        world.setSensor(handleRef.current, locked)
     }, [world, interactionMode])
 
     const cls = ['physics-card', className].filter(Boolean).join(' ')
