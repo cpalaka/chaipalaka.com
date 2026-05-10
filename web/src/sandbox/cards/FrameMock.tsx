@@ -11,7 +11,7 @@ interface FrameMockProps {
 }
 
 export function FrameMock({ config, minimized, onRestore }: FrameMockProps) {
-    const [section, setSection] = useState<string>('/')
+    const [currentPage, setCurrentPage] = useState<string>('/')
 
     return (
         <div
@@ -20,27 +20,28 @@ export function FrameMock({ config, minimized, onRestore }: FrameMockProps) {
             aria-label="Frame chrome mock"
         >
             <div className="frame-bar">
-                <span className="frame-bar__site-name">chaipalaka</span>
-                <select
-                    className="frame-bar__section"
-                    value={section}
-                    onChange={(e) => setSection(e.target.value)}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'inherit',
-                        fontFamily: 'inherit',
-                        fontSize: 11,
-                        cursor: 'pointer',
-                    }}
-                    title="Fake section indicator (sandbox only)"
-                >
+                <div className="frame-bar__title">
+                    <span className="frame-bar__site-name">chaipalaka</span>
+                    <span className="frame-bar__current-page">{currentPage}</span>
+                </div>
+
+                <div className="frame-bar__divider" aria-hidden="true" />
+
+                <nav className="frame-bar__nav" aria-label="Section nav (sandbox only)">
                     {SECTION_OPTIONS.map((s) => (
-                        <option key={s} value={s}>
+                        <button
+                            key={s}
+                            className="frame-bar__nav-btn"
+                            data-active={currentPage === s ? 'true' : 'false'}
+                            onClick={() => setCurrentPage(s)}
+                            type="button"
+                        >
                             {s}
-                        </option>
+                        </button>
                     ))}
-                </select>
+                </nav>
+
+                <div className="frame-bar__divider" aria-hidden="true" />
 
                 <MinimizedStrip
                     hasPlayground={minimized}

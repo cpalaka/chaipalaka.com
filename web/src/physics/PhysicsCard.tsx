@@ -4,18 +4,22 @@ import { registry as pretextRegistry } from '../text/registry'
 import type { PhysicsHandle } from './PhysicsWorld'
 import './PhysicsCard.css'
 
+export type CardInteractionMode = 'anchored' | 'locked' | 'free'
+
 export interface PhysicsCardProps {
     text: string
     fontKey: string
     maxWidth: number
     anchor: { x: number; y: number }
     children?: React.ReactNode
+    header?: React.ReactNode
     width?: number
     height?: number
     variant?: string
     className?: string
     style?: React.CSSProperties
     physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
+    interactionMode?: CardInteractionMode
 }
 
 const CARD_PADDING_PX = 24
@@ -26,12 +30,14 @@ export function PhysicsCard({
     maxWidth,
     anchor,
     children,
+    header,
     width: explicitW,
     height: explicitH,
     variant,
     className,
     style,
     physicsHandleRef,
+    interactionMode = 'free',
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
@@ -85,7 +91,8 @@ export function PhysicsCard({
         const FLING_PAUSE_MS = 50
 
         const onPointerDown = (e: PointerEvent) => {
-            if ((e.target as Element | null)?.closest('a, button')) return
+            if (interactionMode !== 'free') return
+            if ((e.target as Element | null)?.closest('[data-card-header], a, button')) return
             e.preventDefault()
             dragging = true
             lastX = e.clientX
@@ -147,6 +154,13 @@ export function PhysicsCard({
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
+    // Interaction mode change: update physics state when mode prop changes.
+    useEffect(() => {
+        if (handleRef.current === null) return
+        world.setSensor(handleRef.current, interactionMode === 'locked')
+        world.setMode(handleRef.current, interactionMode === 'free' ? 'playground' : 'breathing')
+    }, [world, interactionMode])
+
     const cls = ['physics-card', className].filter(Boolean).join(' ')
 
     return (
@@ -154,8 +168,12 @@ export function PhysicsCard({
             ref={elRef}
             className={cls}
             data-variant={variant}
+            data-interaction-mode={interactionMode}
             style={style}
         >
+            {header != null && (
+                <div data-card-header>{header}</div>
+            )}
             {children ?? text}
         </article>
     )

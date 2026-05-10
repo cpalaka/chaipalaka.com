@@ -33,6 +33,32 @@
     margin: 0;
 }
 
+/* Card header bar */
+[data-card-header] {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    margin: -24px -24px 0;
+    min-height: 22px;
+    border-bottom: 1px solid var(--card-border-color, var(--color-rule));
+    font-size: 10px;
+    font-family: var(--card-font-body, var(--font-mono));
+    color: var(--card-fg, var(--color-fg));
+    opacity: 0.75;
+    pointer-events: auto;
+    user-select: none;
+    touch-action: none;
+    cursor: default;
+    flex-shrink: 0;
+}
+
+/* Locked card: drop behind other physics cards, fade */
+[data-interaction-mode='locked'] {
+    z-index: 2;
+    opacity: 0.5;
+}
+
 .read-post-link {
     align-self: flex-start;
     font-family: var(--font-body);

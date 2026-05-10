@@ -20,6 +20,7 @@ export interface PhysicsWorldOptions {
 }
 
 export type PhysicsHandle = number
+export type LinkHandle = number
 export type CardMode = 'breathing' | 'playground'
 
 export interface BodyState {
@@ -30,6 +31,12 @@ export interface BodyState {
 
 export interface RegisterOptions {
     onTransform?: (state: BodyState) => void
+}
+
+export interface LinkOptions {
+    length?: number
+    stiffness?: number
+    damping?: number
 }
 
 interface Registration {
@@ -64,6 +71,7 @@ export class PhysicsWorld {
     private floor: Matter.Body
     private nextId: PhysicsHandle = 1
     private registrations = new Map<PhysicsHandle, Registration>()
+    private links = new Map<LinkHandle, Matter.Constraint>()
     private gravityOn = false
 
     constructor(opts: PhysicsWorldOptions) {
@@ -256,6 +264,44 @@ export class PhysicsWorld {
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
         Matter.Body.setAngle(reg.body, angle)
         Matter.Body.setAngularVelocity(reg.body, 0)
+    }
+
+    linkBodies(
+        a: PhysicsHandle,
+        b: PhysicsHandle,
+        opts: LinkOptions = {},
+    ): LinkHandle {
+        const regA = this.registrations.get(a)
+        if (!regA) throw new Error(`PhysicsWorld: unknown handle ${a}`)
+        const regB = this.registrations.get(b)
+        if (!regB) throw new Error(`PhysicsWorld: unknown handle ${b}`)
+        const dx = regB.body.position.x - regA.body.position.x
+        const dy = regB.body.position.y - regA.body.position.y
+        const defaultLength = Math.sqrt(dx * dx + dy * dy)
+        const constraint = Matter.Constraint.create({
+            bodyA: regA.body,
+            bodyB: regB.body,
+            length: opts.length ?? defaultLength,
+            stiffness: opts.stiffness ?? 0.05,
+            damping: opts.damping ?? 0.1,
+        })
+        Matter.Composite.add(this.world, constraint)
+        const id = this.nextId++
+        this.links.set(id, constraint)
+        return id
+    }
+
+    unlinkBodies(link: LinkHandle): void {
+        const constraint = this.links.get(link)
+        if (!constraint) return
+        Matter.Composite.remove(this.world, constraint)
+        this.links.delete(link)
+    }
+
+    setSensor(handle: PhysicsHandle, isSensor: boolean): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        Matter.Body.set(reg.body, 'isSensor', isSensor)
     }
 
     tick(dtMs: number): void {

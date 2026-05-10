@@ -9,7 +9,7 @@ export type BorderStyleProp = 'solid' | 'dashed' | 'dotted' | 'double'
 export type ShadowStyle = 'none' | 'hard-offset' | 'soft'
 export type FlourishMode = 'off' | 'static-gradient' | 'wavy-edge' | 'noise-field'
 export type ResizeMode = '4-corner' | '8-handle'
-export type FrameEdge = 'top' | 'bottom' | 'left' | 'right'
+export type FrameEdge = 'top' | 'bottom'
 export type AnimMechanism = 'vt' | 'flip'
 export type ScrollIndicatorStyle =
     | 'gradient-fade'

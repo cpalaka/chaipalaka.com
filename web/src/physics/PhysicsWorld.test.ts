@@ -471,3 +471,70 @@ describe('PhysicsWorld static registration (gravity-exempt)', () => {
         expect(pos.y).toBeCloseTo(300, 1)
     })
 })
+
+describe('PhysicsWorld linkBodies / unlinkBodies', () => {
+    test('linkBodies returns a numeric link handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
+        const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        const link = world.linkBodies(a, b)
+        expect(link).toBeTypeOf('number')
+    })
+
+    test('linkBodies with tight stiffness pulls bodies together over time', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
+        const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        world.setMode(a, 'playground')
+        world.setMode(b, 'playground')
+        world.linkBodies(a, b, { length: 0, stiffness: 0.5, damping: 0.5 })
+        for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
+        const posA = world.getPosition(a)
+        const posB = world.getPosition(b)
+        const dist = Math.abs(posA.x - posB.x) + Math.abs(posA.y - posB.y)
+        expect(dist).toBeLessThan(20)
+    })
+
+    test('unlinkBodies removes the constraint so bodies no longer converge', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
+        const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        world.setMode(a, 'playground')
+        world.setMode(b, 'playground')
+        const link = world.linkBodies(a, b, { length: 0, stiffness: 0.5, damping: 0.5 })
+        world.unlinkBodies(link)
+        for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
+        const posA = world.getPosition(a)
+        const posB = world.getPosition(b)
+        const dist = Math.abs(posA.x - posB.x) + Math.abs(posA.y - posB.y)
+        expect(dist).toBeGreaterThan(50)
+    })
+
+    test('linkBodies throws for an unknown handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
+        expect(() => world.linkBodies(a, 999)).toThrow()
+        expect(() => world.linkBodies(999, a)).toThrow()
+    })
+
+    test('linkBodies with no opts does not throw (uses defaults)', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const a = world.register({ x: 100, y: 200 }, { width: 80, height: 40 })
+        const b = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        expect(() => world.linkBodies(a, b)).not.toThrow()
+    })
+})
+
+describe('PhysicsWorld setSensor', () => {
+    test('setSensor throws for an unknown handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(() => world.setSensor(999, true)).toThrow()
+    })
+
+    test('setSensor does not throw for a valid handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 100, y: 100 }, { width: 80, height: 40 })
+        expect(() => world.setSensor(handle, true)).not.toThrow()
+        expect(() => world.setSensor(handle, false)).not.toThrow()
+    })
+})

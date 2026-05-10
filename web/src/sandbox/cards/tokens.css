@@ -438,16 +438,15 @@
 
 .frame-mock[data-edge='top'] { flex-direction: column; }
 .frame-mock[data-edge='bottom'] { flex-direction: column-reverse; }
-.frame-mock[data-edge='left'] { flex-direction: row; }
-.frame-mock[data-edge='right'] { flex-direction: row-reverse; }
 
 .frame-bar {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
+    align-items: stretch;
+    padding: 0;
     background: var(--card-bg, var(--color-bg-raised));
     border: var(--card-border-width, 2px) var(--card-border-style, solid) var(--card-border-color, #333);
+    border-left: none;
+    border-right: none;
     font-family: var(--card-font-body, var(--font-mono));
     font-size: 12px;
     color: var(--card-fg, var(--color-fg));
@@ -455,24 +454,24 @@
     flex-shrink: 0;
     z-index: 20;
     overflow: hidden;
-}
-
-.frame-mock[data-edge='top'] .frame-bar,
-.frame-mock[data-edge='bottom'] .frame-bar {
-    border-left: none;
-    border-right: none;
-    flex-direction: row;
     min-height: 40px;
 }
 
-.frame-mock[data-edge='left'] .frame-bar,
-.frame-mock[data-edge='right'] .frame-bar {
-    border-top: none;
-    border-bottom: none;
-    flex-direction: column;
-    min-width: 48px;
-    writing-mode: vertical-lr;
-    padding: 12px 6px;
+/* thin hairline divider between the three frame sections */
+.frame-bar__divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--card-border-color, #333);
+    opacity: 0.35;
+    flex-shrink: 0;
+}
+
+.frame-bar__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    flex-shrink: 0;
 }
 
 .frame-bar__site-name {
@@ -480,25 +479,50 @@
     letter-spacing: 0.04em;
 }
 
-.frame-bar__section {
+.frame-bar__current-page {
     color: var(--card-accent, var(--color-accent));
     font-size: 11px;
+}
+
+/* nav button section: no border/margin on the buttons themselves */
+.frame-bar__nav {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+.frame-bar__nav-btn {
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--card-fg, var(--color-fg));
+    cursor: pointer;
+    opacity: 0.65;
+    letter-spacing: 0.02em;
+}
+
+.frame-bar__nav-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.frame-bar__nav-btn[data-active='true'] {
+    opacity: 1;
+    color: var(--card-accent, var(--color-accent));
 }
 
 .frame-bar__minimized-strip {
     display: flex;
     gap: 6px;
-    margin-left: 12px;
+    padding: 0 12px;
     flex: 1;
     overflow: hidden;
     align-items: center;
-}
-
-.frame-mock[data-edge='left'] .frame-bar__minimized-strip,
-.frame-mock[data-edge='right'] .frame-bar__minimized-strip {
-    flex-direction: column;
-    margin-left: 0;
-    margin-top: 8px;
 }
 
 .frame-bar__mini-card {

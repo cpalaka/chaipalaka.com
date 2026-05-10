@@ -255,8 +255,6 @@ export function ControlPanel({ config, onChange }: ControlPanelProps) {
                         options={[
                             { val: 'top', label: 'top' },
                             { val: 'bottom', label: 'bottom' },
-                            { val: 'left', label: 'left' },
-                            { val: 'right', label: 'right' },
                         ]}
                         onChange={(v) => u('frameEdge', v)}
                     />
