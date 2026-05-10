@@ -9,9 +9,9 @@ interface FreeChainMockProps {
     config: SandboxConfig
 }
 
-const CARD_W = 220
-const CARD_H = 100
-const CHAIN_GAP = 30
+const CARD_W = 240
+const CARD_H = 160
+const CHAIN_GAP = 100
 const STRING_STIFFNESS = 0.04
 const STRING_DAMPING = 0.12
 
@@ -31,12 +31,10 @@ const CHAIN_TEXTS = [
     '↳ Follow-on: last node in the free-hanging chain.',
 ]
 
-type InteractionMode = 'anchored' | 'locked' | 'free'
-
 export function FreeChainMock({ config: _config }: FreeChainMockProps) {
     const world = usePhysicsWorld()
     const [positions, setPositions] = useState<Array<{ x: number; y: number }>>([])
-    const [modes, setModes] = useState<InteractionMode[]>(['free', 'free', 'free'])
+    const [locked, setLockedArr] = useState([false, false, false])
 
     const handleRefs = useRef<Array<React.MutableRefObject<PhysicsHandle | null>>>(
         [{ current: null }, { current: null }, { current: null }],
@@ -90,15 +88,15 @@ export function FreeChainMock({ config: _config }: FreeChainMockProps) {
                     width={CARD_W}
                     height={CARD_H}
                     variant={i === 0 ? 'primary' : 'chain'}
-                    interactionMode={modes[i]}
+                    interactionMode={locked[i] ? 'locked' : 'free'}
                     physicsHandleRef={handleRefs.current[i]}
                     header={
                         <CardHeader
-                            mode={modes[i]!}
-                            onChange={(m) =>
-                                setModes((prev) => {
-                                    const next = [...prev] as InteractionMode[]
-                                    next[i] = m
+                            locked={locked[i]!}
+                            onChange={(v) =>
+                                setLockedArr((prev) => {
+                                    const next = [...prev]
+                                    next[i] = v
                                     return next
                                 })
                             }

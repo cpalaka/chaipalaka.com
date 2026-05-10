@@ -304,6 +304,13 @@ export class PhysicsWorld {
         Matter.Body.set(reg.body, 'isSensor', isSensor)
     }
 
+    setStatic(handle: PhysicsHandle, isStatic: boolean): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        if (reg.isStatic) return
+        Matter.Body.setStatic(reg.body, isStatic)
+    }
+
     tick(dtMs: number): void {
         for (const reg of this.registrations.values()) {
             if (reg.body.isStatic) continue

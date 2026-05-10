@@ -1,51 +1,68 @@
-import type { CardInteractionMode } from '../../physics/PhysicsCard'
-
-const MODES: Array<{ value: CardInteractionMode; label: string; title: string }> = [
-    { value: 'anchored', label: 'A', title: 'Anchored — springs back, no drag' },
-    { value: 'locked', label: 'L', title: 'Locked — removed from physics, behind canvas' },
-    { value: 'free', label: 'F', title: 'Free — drag and stays where placed' },
-]
-
 interface CardHeaderProps {
-    mode: CardInteractionMode
-    onChange: (mode: CardInteractionMode) => void
+    locked: boolean
+    onChange: (locked: boolean) => void
 }
 
-export function CardHeader({ mode, onChange }: CardHeaderProps) {
+export function CardHeader({ locked, onChange }: CardHeaderProps) {
     return (
-        <div
+        <button
+            type="button"
+            title={locked ? 'Locked — click to free' : 'Free — click to lock'}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onChange(!locked)}
             style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                padding: '4px 6px',
+                cursor: 'pointer',
+                color: 'var(--card-fg, currentColor)',
+                opacity: locked ? 1 : 0.45,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0,
-                marginLeft: 'auto',
+                lineHeight: 1,
             }}
         >
-            {MODES.map(({ value, label, title }) => (
-                <button
-                    key={value}
-                    type="button"
-                    title={title}
-                    data-active={mode === value ? 'true' : 'false'}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => onChange(value)}
-                    style={{
-                        background: mode === value ? 'var(--card-fg, currentColor)' : 'none',
-                        color: mode === value ? 'var(--card-bg, canvas)' : 'var(--card-fg, currentColor)',
-                        border: 'none',
-                        padding: '1px 5px',
-                        fontFamily: 'inherit',
-                        fontSize: 9,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        letterSpacing: '0.05em',
-                        opacity: mode === value ? 1 : 0.5,
-                        lineHeight: 1.6,
-                    }}
-                >
-                    {label}
-                </button>
-            ))}
-        </div>
+            {locked ? (
+                <svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true">
+                    {/* Closed shackle */}
+                    <path
+                        d="M3 6V4.5a3.5 3.5 0 0 1 7 0V6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                    />
+                    {/* Body */}
+                    <rect x="1" y="6" width="11" height="7.5" rx="1.5" fill="currentColor" />
+                    {/* Keyhole */}
+                    <circle cx="6.5" cy="9.5" r="1.2" fill="var(--card-bg, canvas)" />
+                </svg>
+            ) : (
+                <svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true">
+                    {/* Open shackle (swung to the right) */}
+                    <path
+                        d="M3 6V4.5a3.5 3.5 0 0 1 7 0"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                    />
+                    {/* Body */}
+                    <rect
+                        x="1"
+                        y="6"
+                        width="11"
+                        height="7.5"
+                        rx="1.5"
+                        stroke="currentColor"
+                        strokeWidth="1.25"
+                        fill="none"
+                    />
+                    {/* Keyhole */}
+                    <circle cx="6.5" cy="9.5" r="1.2" fill="currentColor" />
+                </svg>
+            )}
+        </button>
     )
 }
