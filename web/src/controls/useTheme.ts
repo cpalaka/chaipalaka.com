@@ -25,13 +25,17 @@ function getController() {
     return controllerInstance
 }
 
-export function useTheme(): { theme: Theme; cycleTheme: () => void } {
+export function useTheme(): {
+    theme: Theme
+    setTheme: (t: Theme) => void
+    cycleTheme: () => void
+} {
     const ctrl = getController()
-    const [theme, setTheme] = useState(() => ctrl.getTheme())
+    const [theme, setThemeState] = useState(() => ctrl.getTheme())
 
     useEffect(() => {
         const unsub = ctrl.subscribe((t) => {
-            setTheme(t)
+            setThemeState(t)
             if (typeof document !== 'undefined') {
                 const dt = ctrl.getDataTheme()
                 if (dt) {
@@ -53,7 +57,11 @@ export function useTheme(): { theme: Theme; cycleTheme: () => void } {
         return unsub
     }, [ctrl])
 
-    return { theme, cycleTheme: () => ctrl.cycleTheme() }
+    return {
+        theme,
+        setTheme: (t: Theme) => ctrl.setTheme(t),
+        cycleTheme: () => ctrl.cycleTheme(),
+    }
 }
 
 export type { Theme }
