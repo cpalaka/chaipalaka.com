@@ -12,7 +12,7 @@ interface SceneManifestEntry {
 }
 const manifest = rawManifest as unknown as readonly SceneManifestEntry[]
 
-const SCENE_ID = 'flow-shader'
+const SCENE_ID = 'audio-reactive'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
@@ -24,6 +24,8 @@ const VERTEX_SHADER = /* glsl */ `
   }
 `
 
+// Radial concentric pulse — sin(uTime) stands in for future amplitude uniform
+// that slice 17 will replace with the /api/now-playing beat.
 const FRAGMENT_SHADER = /* glsl */ `
   precision highp float;
 
@@ -33,50 +35,34 @@ const FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
 
-  vec2 hash22(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-  }
-
-  float gnoise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(dot(hash22(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-          dot(hash22(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-      mix(dot(hash22(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-          dot(hash22(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
-      u.y
-    );
-  }
-
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 5; i++) {
-      v += a * gnoise(p);
-      p *= 2.02;
-      a *= 0.5;
-    }
-    return v;
-  }
-
   void main() {
     vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-    vec2 p = (vUv - 0.5) * aspect * 2.0;
+    vec2 uv = (vUv - 0.5) * aspect;
 
-    float t = uTime * 0.05;
-    vec2 flow = vec2(fbm(p + vec2(t, 0.0)), fbm(p + vec2(0.0, t * 1.3)));
-    float n = fbm(p * 1.4 + flow * 1.6 + t);
-    float intensity = smoothstep(-0.6, 0.7, n);
+    float dist = length(uv);
 
-    vec3 color = mix(uColorA, uColorB, intensity);
+    // Simulated beat: amplitude cycles between 0 and 1.
+    float beat = 0.5 + 0.5 * sin(uTime * 2.4);
+
+    // Concentric rings expanding outward, modulated by beat.
+    float rings = 8.0;
+    float phase = dist * rings - uTime * 0.6;
+    float wave = 0.5 + 0.5 * sin(phase * 3.14159 * 2.0);
+
+    // Beat brightens the inner circle.
+    float inner = 1.0 - smoothstep(0.0, 0.25, dist - beat * 0.1);
+
+    float mask = mix(wave, 1.0, inner * beat * 0.6);
+    // Fade rings at the edges.
+    float vignette = 1.0 - smoothstep(0.35, 0.65, dist);
+    mask *= vignette;
+
+    vec3 color = mix(uColorA, uColorB, mask);
     gl_FragColor = vec4(color, 1.0);
   }
 `
 
-function FlowShader() {
+function AudioReactive() {
     const ref = useRef<ShaderMaterial>(null)
     const uniforms = useMemo(
         () => ({
@@ -90,8 +76,6 @@ function FlowShader() {
     useFrame((state) => {
         const mat = ref.current
         if (!mat) return
-        // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
-        // must go through `mat.uniforms.*`, not the local `uniforms` reference.
         const u = mat.uniforms
         if (u.uTime) u.uTime.value = state.clock.elapsedTime
         if (u.uResolution)
@@ -112,9 +96,9 @@ function FlowShader() {
     )
 }
 
-export const flowShaderScene: BackgroundScene = {
+export const audioReactiveScene: BackgroundScene = {
     id: meta.id,
-    Component: FlowShader,
+    Component: AudioReactive,
     accentColor: meta.accentColor,
     fallbackColors: meta.fallbackColors,
     fallbackPng: meta.fallbackPng,
