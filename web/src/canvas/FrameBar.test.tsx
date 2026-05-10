@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FrameBar } from './FrameBar'
+import { getFrameEdgeController } from './useFrameEdge'
 
 function renderInRouter(initialPath = '/') {
     return render(
@@ -90,5 +91,91 @@ describe('FrameBar', () => {
     test('section nav has accessible label', () => {
         renderInRouter()
         expect(screen.getByRole('navigation', { name: 'Section nav' })).toBeInTheDocument()
+    })
+
+    test('settings menu shows all four control groups when open', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        expect(screen.getByText('Background')).toBeInTheDocument()
+        expect(screen.getByText('Color mode')).toBeInTheDocument()
+        expect(screen.getByText('Frame edge')).toBeInTheDocument()
+        expect(screen.getByText('Gravity')).toBeInTheDocument()
+    })
+
+    test('background select has all four scene options', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        const select = screen.getByRole('combobox', { name: 'Background' })
+        const options = Array.from(select.querySelectorAll('option')).map(
+            (o) => (o as HTMLOptionElement).value,
+        )
+        expect(options).toContain('flow-shader')
+        expect(options).toContain('particles')
+        expect(options).toContain('geometric')
+        expect(options).toContain('audio-reactive')
+    })
+
+    test('changing background select updates the selected value', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        const select = screen.getByRole('combobox', { name: 'Background' }) as HTMLSelectElement
+        await userEvent.selectOptions(select, 'particles')
+        expect(select.value).toBe('particles')
+        // restore
+        await userEvent.selectOptions(select, 'flow-shader')
+    })
+
+    test('color-mode button toggles document theme', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        const themeBefore = document.documentElement.dataset.theme
+        const themeBtn = screen.getByRole('button', {
+            name: /light|dark/i,
+        })
+        await userEvent.click(themeBtn)
+        expect(document.documentElement.dataset.theme).not.toBe(themeBefore)
+        // restore
+        await userEvent.click(themeBtn)
+    })
+
+    test('frame-edge select updates the controller edge', async () => {
+        const ctrl = getFrameEdgeController()
+        const original = ctrl.getEdge()
+        const target = original === 'bottom' ? 'top' : 'bottom'
+
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        const select = screen.getByRole('combobox', { name: 'Frame edge' }) as HTMLSelectElement
+        await userEvent.selectOptions(select, target)
+        expect(ctrl.getEdge()).toBe(target)
+
+        // restore
+        await userEvent.selectOptions(select, original)
+    })
+
+    test('gravity button renders as placeholder with aria-pressed="false"', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        const gravBtn = screen.getByRole('button', { name: /off/i })
+        expect(gravBtn).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    test('pressing Esc closes the menu and returns focus to the trigger', async () => {
+        renderInRouter()
+        const trigger = screen.getByRole('button', { name: 'Site settings' })
+        await userEvent.click(trigger)
+        expect(screen.getByRole('menu')).toBeInTheDocument()
+        await userEvent.keyboard('{Escape}')
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+        expect(document.activeElement).toBe(trigger)
+    })
+
+    test('clicking outside the settings container closes the menu', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        expect(screen.getByRole('menu')).toBeInTheDocument()
+        // mousedown outside the settings container
+        await userEvent.pointer({ target: document.body, keys: '[MouseLeft>]' })
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 })
