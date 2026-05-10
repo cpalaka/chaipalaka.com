@@ -21,12 +21,13 @@
    Override .physics-card within sandbox — reads sandbox-local card vars
    ────────────────────────────────────────────────────────────────────────── */
 [data-sandbox] .physics-card {
+    --card-bg: #d0e8f7;
     border-width: var(--card-border-width, 2px);
     border-style: var(--card-border-style, solid);
     border-color: var(--card-border-color, #333);
     border-radius: var(--card-radius, 0px);
     box-shadow: var(--card-shadow-val, 4px 4px 0 #333);
-    background: var(--card-bg, #fff);
+    background: var(--card-bg, #d0e8f7);
     color: var(--card-fg, #111);
     font-family: var(--card-font-body, ui-sans-serif, system-ui, sans-serif);
     font-size: var(--card-font-size, 1rem);
@@ -188,7 +189,7 @@
     position: fixed;
     inset: 0;
     overflow: hidden;
-    background: var(--color-bg);
+    background: #ffffff;
     color: var(--color-fg);
     font-family: var(--font-mono);
     display: flex;
