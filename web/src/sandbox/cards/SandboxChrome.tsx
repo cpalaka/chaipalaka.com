@@ -1,20 +1,12 @@
-import type { SandboxConfig, ColorMode, ViewportSim } from './state'
+import type { SandboxConfig, ColorMode, FrameEdge } from './state'
 
 interface SandboxChromeProps {
     config: SandboxConfig
     onChange: (cfg: SandboxConfig) => void
     onSnapshot: () => void
-    showPlainMock: boolean
-    onTogglePlainMock: () => void
 }
 
-export function SandboxChrome({
-    config,
-    onChange,
-    onSnapshot,
-    showPlainMock,
-    onTogglePlainMock,
-}: SandboxChromeProps) {
+export function SandboxChrome({ config, onChange, onSnapshot }: SandboxChromeProps) {
     return (
         <header className="sandbox-chrome" aria-label="Sandbox controls bar">
             <span className="sandbox-chrome__title">/sandbox/cards</span>
@@ -33,26 +25,17 @@ export function SandboxChrome({
             </label>
 
             <label>
-                <span className="sandbox-chrome__label">viewport</span>
+                <span className="sandbox-chrome__label">frame</span>
                 <select
-                    value={config.viewportSim}
+                    value={config.frameEdge}
                     onChange={(e) =>
-                        onChange({
-                            ...config,
-                            viewportSim: e.target.value as ViewportSim,
-                        })
+                        onChange({ ...config, frameEdge: e.target.value as FrameEdge })
                     }
                 >
-                    <option value="free">free</option>
-                    <option value="mobile">375px</option>
-                    <option value="tablet">768px</option>
-                    <option value="desktop">1280px</option>
+                    <option value="bottom">bottom</option>
+                    <option value="top">top</option>
                 </select>
             </label>
-
-            <button onClick={onTogglePlainMock}>
-                {showPlainMock ? 'hide plain mock' : 'plain frame mock'}
-            </button>
 
             <button
                 className="sandbox-chrome__snapshot-btn"

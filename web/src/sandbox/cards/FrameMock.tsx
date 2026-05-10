@@ -46,7 +46,6 @@ export function FrameMock({ config, minimized, onRestore, chipRef }: FrameMockPr
 
                 <MinimizedStrip
                     hasPlayground={minimized}
-                    animMechanism={config.animMechanism}
                     onRestorePlayground={onRestore}
                     chipRef={chipRef}
                 />

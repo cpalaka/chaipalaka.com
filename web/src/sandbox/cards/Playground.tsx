@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
 import type { PhysicsHandle } from '../../physics/PhysicsWorld'
-import type { SandboxConfig } from './state'
-import { ResizeHandles } from './ResizeHandles'
-import { FlourishMount } from './shaders/FlourishMount'
 import { HiddenScroll } from './HiddenScroll'
 import { CardHeader } from './CardHeader'
 
 interface PlaygroundProps {
-    config: SandboxConfig
     minimized: boolean
     onMinimize: () => void
     cardRef?: import('react').MutableRefObject<HTMLElement | null>
@@ -18,8 +14,8 @@ const DEFAULT_W = 320
 const DEFAULT_H = 220
 
 function computeAnchor(): { x: number; y: number } {
-    const availableW = window.innerWidth - 220 // subtract control panel
-    const availableH = window.innerHeight - 120 // subtract chrome + flavor strip
+    const availableW = window.innerWidth
+    const availableH = window.innerHeight - 120
     return {
         x: availableW * 0.38,
         y: 120 + availableH * 0.45,
@@ -29,12 +25,12 @@ function computeAnchor(): { x: number; y: number } {
 const LOREM =
     'Type specimen — the quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow. Now is the time for bold decisions.'
 
-export function Playground({ config, minimized, onMinimize, cardRef }: PlaygroundProps) {
+export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) {
     const handleRef = useRef<PhysicsHandle | null>(null)
     const [anchor, setAnchor] = useState<{ x: number; y: number }>(() =>
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
-    const [cardSize, setCardSize] = useState({ width: DEFAULT_W, height: DEFAULT_H })
+    const [cardSize] = useState({ width: DEFAULT_W, height: DEFAULT_H })
     const [locked, setLocked] = useState(false)
 
     useEffect(() => {
@@ -57,16 +53,8 @@ export function Playground({ config, minimized, onMinimize, cardRef }: Playgroun
             physicsHandleRef={handleRef}
             cardRef={cardRef}
             interactionMode={locked ? 'locked' : 'free'}
-            style={config.animMechanism === 'vt' ? { viewTransitionName: 'playground-card' } : undefined}
             header={<CardHeader locked={locked} onChange={setLocked} onMinimize={onMinimize} />}
         >
-            {/* Shader flourish — absolutely positioned behind content within the fixed card */}
-            <FlourishMount
-                flourish={config.flourish}
-                style={{ position: 'absolute', inset: 0, zIndex: 1 }}
-            />
-
-            {/* Card content — above the shader layer */}
             <div
                 style={{
                     position: 'relative',
@@ -78,10 +66,7 @@ export function Playground({ config, minimized, onMinimize, cardRef }: Playgroun
                     minHeight: 0,
                 }}
             >
-                <HiddenScroll
-                    indicator={config.scrollIndicator}
-                    style={{ flex: 1 }}
-                >
+                <HiddenScroll style={{ flex: 1 }}>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9em' }}>
                         Playground
                     </p>
@@ -89,21 +74,6 @@ export function Playground({ config, minimized, onMinimize, cardRef }: Playgroun
                     <p style={{ margin: '6px 0 0', opacity: 0.55 }}>{LOREM}</p>
                 </HiddenScroll>
             </div>
-
-            {/* Resize handles — topmost layer, position absolute covers entire card */}
-            <ResizeHandles
-                physicsHandleRef={handleRef}
-                width={cardSize.width}
-                height={cardSize.height}
-                anchor={anchor}
-                resizeMode={config.resizeMode}
-                snapToGrid={config.snapToGrid}
-                springDuringResize={config.springDuringResize}
-                onResizeCommit={(newSize, newAnchor) => {
-                    setCardSize(newSize)
-                    setAnchor(newAnchor)
-                }}
-            />
         </PhysicsCard>
     )
 }

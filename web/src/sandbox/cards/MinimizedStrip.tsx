@@ -1,5 +1,4 @@
 import type { RefObject } from 'react'
-import type { AnimMechanism } from './state'
 
 interface MinimizedCard {
     id: string
@@ -15,17 +14,11 @@ const MOCK_MINIMIZED: MinimizedCard[] = [
 
 interface MinimizedStripProps {
     hasPlayground: boolean
-    animMechanism: AnimMechanism
     onRestorePlayground: () => void
     chipRef?: RefObject<HTMLButtonElement | null>
 }
 
-export function MinimizedStrip({
-    hasPlayground,
-    animMechanism,
-    onRestorePlayground,
-    chipRef,
-}: MinimizedStripProps) {
+export function MinimizedStrip({ hasPlayground, onRestorePlayground, chipRef }: MinimizedStripProps) {
     const allCards = hasPlayground
         ? [{ id: 'playground', label: 'Playground', kind: 'playground' }, ...MOCK_MINIMIZED]
         : MOCK_MINIMIZED
@@ -39,11 +32,6 @@ export function MinimizedStrip({
                     className="frame-bar__mini-card"
                     onClick={card.id === 'playground' ? onRestorePlayground : undefined}
                     title={`Restore: ${card.label}`}
-                    style={
-                        card.id === 'playground' && animMechanism === 'vt'
-                            ? { viewTransitionName: 'playground-card' }
-                            : undefined
-                    }
                 >
                     <span style={{ fontSize: 8 }}>
                         {card.kind === 'note' ? '📝' : card.kind === 'blog-post' ? '📄' : card.kind === 'portfolio' ? '🖼' : '⬜'}
