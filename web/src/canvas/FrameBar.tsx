@@ -21,7 +21,9 @@ export function FrameBar() {
         <header role="banner" className="frame-bar">
             <div className="frame-bar__title">
                 <span className="frame-bar__site-name">chaipalaka</span>
-                <span className="frame-bar__current-page">{pathname}</span>
+                {pathname !== '/' ? (
+                    <span className="frame-bar__current-page">{pathname}</span>
+                ) : null}
             </div>
 
             <div className="frame-bar__divider" aria-hidden="true" />

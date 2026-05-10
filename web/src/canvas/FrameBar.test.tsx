@@ -23,6 +23,11 @@ describe('FrameBar', () => {
         expect(screen.getByText('/blog')).toBeInTheDocument()
     })
 
+    test('no current-page indicator shown at home (/)', () => {
+        renderInRouter('/')
+        expect(document.querySelector('.frame-bar__current-page')).not.toBeInTheDocument()
+    })
+
     test('blog nav link is active when at /blog', () => {
         renderInRouter('/blog')
         const link = screen.getByRole('link', { name: 'blog' })

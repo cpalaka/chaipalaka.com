@@ -1,4 +1,8 @@
 .frame-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: stretch;
     padding: 0;
@@ -8,11 +12,19 @@
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
     color: var(--color-fg);
-    flex-shrink: 0;
     z-index: 20;
-    overflow: hidden;
     min-height: 40px;
-    position: relative;
+}
+
+/* Hide the border facing the viewport edge */
+[data-frame-edge='bottom'] .frame-bar {
+    border-bottom-width: 0;
+}
+
+[data-frame-edge='top'] .frame-bar {
+    bottom: auto;
+    top: 0;
+    border-top-width: 0;
 }
 
 .frame-bar__divider {
