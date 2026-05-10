@@ -53,6 +53,22 @@
     flex-shrink: 0;
 }
 
+.physics-card__minimize-btn {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--card-fg, currentColor);
+    opacity: 0.55;
+    font-size: 18px;
+    line-height: 1;
+    font-family: inherit;
+}
+
+.physics-card__minimize-btn:hover {
+    opacity: 1;
+}
+
 .read-post-link {
     align-self: flex-start;
     font-family: var(--font-body);
