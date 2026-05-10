@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type RefObject } from 'react'
 import type { SandboxConfig } from './state'
 import { MinimizedStrip } from './MinimizedStrip'
 
@@ -8,9 +8,10 @@ interface FrameMockProps {
     config: SandboxConfig
     minimized: boolean
     onRestore: () => void
+    chipRef?: RefObject<HTMLButtonElement | null>
 }
 
-export function FrameMock({ config, minimized, onRestore }: FrameMockProps) {
+export function FrameMock({ config, minimized, onRestore, chipRef }: FrameMockProps) {
     const [currentPage, setCurrentPage] = useState<string>('/')
 
     return (
@@ -47,6 +48,7 @@ export function FrameMock({ config, minimized, onRestore }: FrameMockProps) {
                     hasPlayground={minimized}
                     animMechanism={config.animMechanism}
                     onRestorePlayground={onRestore}
+                    chipRef={chipRef}
                 />
             </div>
         </div>

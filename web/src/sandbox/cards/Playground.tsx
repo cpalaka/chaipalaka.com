@@ -11,6 +11,7 @@ interface PlaygroundProps {
     config: SandboxConfig
     minimized: boolean
     onMinimize: () => void
+    cardRef?: import('react').MutableRefObject<HTMLElement | null>
 }
 
 const DEFAULT_W = 320
@@ -28,7 +29,7 @@ function computeAnchor(): { x: number; y: number } {
 const LOREM =
     'Type specimen — the quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow. Now is the time for bold decisions.'
 
-export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
+export function Playground({ config, minimized, onMinimize, cardRef }: PlaygroundProps) {
     const handleRef = useRef<PhysicsHandle | null>(null)
     const [anchor, setAnchor] = useState<{ x: number; y: number }>(() =>
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
@@ -54,7 +55,9 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
             height={cardSize.height}
             variant="playground"
             physicsHandleRef={handleRef}
+            cardRef={cardRef}
             interactionMode={locked ? 'locked' : 'free'}
+            style={config.animMechanism === 'vt' ? { viewTransitionName: 'playground-card' } : undefined}
             header={<CardHeader locked={locked} onChange={setLocked} onMinimize={onMinimize} />}
         >
             {/* Shader flourish — absolutely positioned behind content within the fixed card */}

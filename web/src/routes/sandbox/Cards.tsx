@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
 import { DEFAULT_CONFIG, FONT_FAMILIES, type SandboxConfig } from '../../sandbox/cards/state'
 import { encode, decode } from '../../sandbox/cards/snapshot'
@@ -42,6 +42,91 @@ export default function Cards() {
     const [playgroundMinimized, setPlaygroundMinimized] = useState(false)
     const [showPlainMock, setShowPlainMock] = useState(false)
 
+    const playgroundCardRef = useRef<HTMLElement | null>(null)
+    const playgroundChipRef = useRef<HTMLButtonElement | null>(null)
+
+    function startVT(cb: () => void) {
+        if ('startViewTransition' in document) {
+            ;(document as Document & { startViewTransition: (cb: () => void) => void }).startViewTransition(cb)
+        } else {
+            cb()
+        }
+    }
+
+    function flipMinimize() {
+        const cardEl = playgroundCardRef.current
+        const fromRect = cardEl?.getBoundingClientRect() ?? null
+        setPlaygroundMinimized(true)
+        if (!fromRect) return
+        requestAnimationFrame(() => {
+            const chipEl = playgroundChipRef.current
+            if (!chipEl) return
+            const toRect = chipEl.getBoundingClientRect()
+            const scaleX = fromRect.width / toRect.width
+            const scaleY = fromRect.height / toRect.height
+            const dx = fromRect.left - toRect.left
+            const dy = fromRect.top - toRect.top
+            chipEl.animate(
+                [
+                    {
+                        transform: `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`,
+                        transformOrigin: '0 0',
+                        opacity: '0.85',
+                    },
+                    {
+                        transform: 'translate(0, 0) scale(1, 1)',
+                        transformOrigin: '0 0',
+                        opacity: '1',
+                    },
+                ],
+                { duration: 340, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+            )
+        })
+    }
+
+    function flipRestore() {
+        const chipEl = playgroundChipRef.current
+        const fromRect = chipEl?.getBoundingClientRect() ?? null
+        setPlaygroundMinimized(false)
+        if (!fromRect) return
+        requestAnimationFrame(() => {
+            const cardEl = playgroundCardRef.current
+            if (!cardEl) return
+            const toRect = cardEl.getBoundingClientRect()
+            const scaleX = fromRect.width / toRect.width
+            const scaleY = fromRect.height / toRect.height
+            const dx = fromRect.left - toRect.left
+            const dy = fromRect.top - toRect.top
+            cardEl.animate(
+                [
+                    {
+                        transform: `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`,
+                        transformOrigin: '0 0',
+                        opacity: '0.5',
+                    },
+                    {
+                        transform: cardEl.style.transform,
+                        transformOrigin: '0 0',
+                        opacity: '1',
+                    },
+                ],
+                { duration: 340, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+            )
+        })
+    }
+
+    const handleMinimize = useCallback(() => {
+        if (config.animMechanism === 'vt') { startVT(() => setPlaygroundMinimized(true)); return }
+        if (config.animMechanism === 'flip') { flipMinimize(); return }
+        setPlaygroundMinimized(true)
+    }, [config.animMechanism])
+
+    const handleRestore = useCallback(() => {
+        if (config.animMechanism === 'vt') { startVT(() => setPlaygroundMinimized(false)); return }
+        if (config.animMechanism === 'flip') { flipRestore(); return }
+        setPlaygroundMinimized(false)
+    }, [config.animMechanism])
+
     const handleSnapshot = useCallback(() => {
         const params = encode(config)
         const search = params.toString()
@@ -74,12 +159,14 @@ export default function Cards() {
                         <FrameMock
                             config={config}
                             minimized={playgroundMinimized}
-                            onRestore={() => setPlaygroundMinimized(false)}
+                            onRestore={handleRestore}
+                            chipRef={playgroundChipRef}
                         />
                         <Playground
                             config={config}
                             minimized={playgroundMinimized}
-                            onMinimize={() => setPlaygroundMinimized(true)}
+                            onMinimize={handleMinimize}
+                            cardRef={playgroundCardRef}
                         />
                         <ChainMock config={config} />
                         <FreeChainMock config={config} />
