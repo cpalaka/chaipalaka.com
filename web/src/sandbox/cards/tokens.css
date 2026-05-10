@@ -1,184 +1,48 @@
 /* Sandbox fonts — only loaded when this route is active */
-@import '@fontsource-variable/inter/index.css';
 @import '@fontsource/ibm-plex-sans/400.css';
 @import '@fontsource/ibm-plex-sans/700.css';
-@import '@fontsource/ibm-plex-mono/400.css';
 
 /*
- * Sandbox-scoped brutalist design tokens.
+ * Sandbox-scoped design tokens — Swiss Grid palette baked in.
  * All selectors are scoped to [data-sandbox] so nothing leaks to production.
  *
- * Pattern: [data-sandbox][data-flavor="X"][data-color-mode="Y"] sets the
- * baseline vars for each flavor × mode combination. The control panel then
- * applies per-axis overrides as inline style vars on the root element, which
- * take precedence (inline > attribute selector specificity).
- *
- * .physics-card override rule reads these vars, replacing the global tokens
- * for any card rendered inside the sandbox DOM tree.
+ * Two user-toggleable axes: data-color-mode (light/dark) and
+ * data-edge on frame-mock (top/bottom). Everything else is a constant.
  */
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Override .physics-card within sandbox — reads sandbox-local card vars
-   ────────────────────────────────────────────────────────────────────────── */
-[data-sandbox] .physics-card {
-    --card-bg: #d0e8f7;
-    border-width: var(--card-border-width, 2px);
-    border-style: var(--card-border-style, solid);
-    border-color: var(--card-border-color, #333);
-    border-radius: var(--card-radius, 0px);
-    box-shadow: var(--card-shadow-val, 4px 4px 0 #333);
-    background: var(--card-bg, #d0e8f7);
-    color: var(--card-fg, #111);
-    font-family: var(--card-font-body, ui-sans-serif, system-ui, sans-serif);
-    font-size: var(--card-font-size, 1rem);
-    line-height: var(--card-line-height, 1.5);
-    letter-spacing: var(--card-letter-spacing, 0em);
-    padding: var(--card-padding-val, 24px);
-    gap: var(--card-padding-val, 24px);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Flavor 1: Raw HTML Brutalism (Gumroad/Vercel-error style)
-   Hard-offset shadow, saturated yellow accent, grotesque sans, dense
+   Physics card — baked-in design tokens (Swiss Grid, "Restrained")
    ────────────────────────────────────────────────────────────────────────── */
 
-[data-sandbox][data-flavor='raw'][data-color-mode='light'],
-[data-sandbox][data-flavor='raw']:not([data-color-mode='dark']) {
-    --card-border-width: 3px;
-    --card-border-style: solid;
-    --card-border-color: #111;
-    --card-radius: 0px;
-    --card-shadow-val: 5px 5px 0 #111;
-    --card-bg: #fffbe6;
-    --card-fg: #111;
-    --card-accent: #ffe600;
-    --card-font-body: ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --flavor-bg: #fffbe6;
-    --flavor-fg: #111;
-    --flavor-accent: #ffe600;
-    --flavor-shadow: 5px 5px 0 #111;
-    --flavor-border: 3px solid #111;
-    --flavor-radius: 0px;
+.sandbox-root .physics-card {
+    border: 4px solid var(--card-border-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    background: var(--card-bg);
+    color: var(--card-fg);
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    padding: 24px;
+    gap: 24px;
 }
 
-[data-sandbox][data-flavor='raw'][data-color-mode='dark'] {
-    --card-border-color: #ffe600;
-    --card-shadow-val: 5px 5px 0 #ffe600;
-    --card-bg: #111;
-    --card-fg: #fffbe6;
-    --flavor-bg: #111;
-    --flavor-fg: #fffbe6;
-    --flavor-shadow: 5px 5px 0 #ffe600;
-    --flavor-border: 3px solid #ffe600;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Flavor 2: Neobrutalism (thick borders, accent-colored hard shadows)
-   2–3 saturated colors, playful
-   ────────────────────────────────────────────────────────────────────────── */
-
-[data-sandbox][data-flavor='neo'][data-color-mode='light'],
-[data-sandbox][data-flavor='neo']:not([data-color-mode='dark']) {
-    --card-border-width: 4px;
-    --card-border-style: solid;
-    --card-border-color: #111;
-    --card-radius: 2px;
-    --card-shadow-val: 6px 6px 0 #ff6b6b;
-    --card-bg: #fff9f9;
-    --card-fg: #111;
-    --card-accent: #ff6b6b;
-    --card-font-body: ui-sans-serif, system-ui, sans-serif;
-    --flavor-bg: #fff9f9;
-    --flavor-fg: #111;
-    --flavor-accent: #ff6b6b;
-    --flavor-shadow: 6px 6px 0 #ff6b6b;
-    --flavor-border: 4px solid #111;
-    --flavor-radius: 2px;
-}
-
-[data-sandbox][data-flavor='neo'][data-color-mode='dark'] {
-    --card-bg: #1a1a1a;
-    --card-fg: #f5f5f5;
-    --card-border-color: #ff6b6b;
-    --card-shadow-val: 6px 6px 0 #ff6b6b;
-    --flavor-bg: #1a1a1a;
-    --flavor-fg: #f5f5f5;
-    --flavor-border: 4px solid #ff6b6b;
-    --flavor-shadow: 6px 6px 0 #ff6b6b;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Flavor 3: Swiss-grid Brutalism
-   Heavy grid lines, mono+grotesque type, restrained palette, dense hierarchy
-   ────────────────────────────────────────────────────────────────────────── */
-
-[data-sandbox][data-flavor='swiss'][data-color-mode='light'],
-[data-sandbox][data-flavor='swiss']:not([data-color-mode='dark']) {
-    --card-border-width: 2px;
-    --card-border-style: solid;
-    --card-border-color: #000;
-    --card-radius: 0px;
-    --card-shadow-val: none;
+/* Light palette */
+[data-sandbox][data-color-mode='light'] {
     --card-bg: #f8f8f8;
     --card-fg: #000;
+    --card-border-color: #000;
     --card-accent: #e60000;
-    --card-font-body: ui-sans-serif, 'Helvetica Neue', Helvetica, Arial,
-        sans-serif;
-    --flavor-bg: #f8f8f8;
-    --flavor-fg: #000;
-    --flavor-accent: #e60000;
-    --flavor-shadow: none;
-    --flavor-border: 2px solid #000;
-    --flavor-radius: 0px;
 }
 
-[data-sandbox][data-flavor='swiss'][data-color-mode='dark'] {
+/* Dark palette (default) */
+[data-sandbox][data-color-mode='dark'],
+[data-sandbox]:not([data-color-mode='light']) {
     --card-bg: #0a0a0a;
     --card-fg: #f8f8f8;
     --card-border-color: #f8f8f8;
-    --card-shadow-val: none;
-    --flavor-bg: #0a0a0a;
-    --flavor-fg: #f8f8f8;
-    --flavor-border: 2px solid #f8f8f8;
-    --flavor-shadow: none;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Flavor 4: 90s-web Brutalism
-   System fonts, rough, hi-contrast monochrome, inset shadows
-   ────────────────────────────────────────────────────────────────────────── */
-
-[data-sandbox][data-flavor='nineties'][data-color-mode='light'],
-[data-sandbox][data-flavor='nineties']:not([data-color-mode='dark']) {
-    --card-border-width: 2px;
-    --card-border-style: solid;
-    --card-border-color: #808080;
-    --card-radius: 0px;
-    --card-shadow-val: inset 2px 2px 0 #fff, inset -2px -2px 0 #808080;
-    --card-bg: #d4d0c8;
-    --card-fg: #000;
-    --card-accent: #000080;
-    --card-font-body: 'Times New Roman', ui-serif, serif;
-    --flavor-bg: #d4d0c8;
-    --flavor-fg: #000;
-    --flavor-accent: #000080;
-    --flavor-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #808080;
-    --flavor-border: 2px solid #808080;
-    --flavor-radius: 0px;
-}
-
-[data-sandbox][data-flavor='nineties'][data-color-mode='dark'] {
-    --card-bg: #0c0c0c;
-    --card-fg: #00ff00;
-    --card-border-color: #00ff00;
-    --card-shadow-val: 0 0 6px #00ff00;
-    --card-font-body: 'Courier New', ui-monospace, monospace;
-    --card-accent: #00ff00;
-    --flavor-bg: #0c0c0c;
-    --flavor-fg: #00ff00;
-    --flavor-border: 2px solid #00ff00;
-    --flavor-shadow: 0 0 6px #00ff00;
-    --flavor-accent: #00ff00;
+    --card-accent: #e60000;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -247,94 +111,7 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Flavor strip (top strip — static display, not physics)
-   ────────────────────────────────────────────────────────────────────────── */
-
-.flavor-strip {
-    display: flex;
-    gap: 0;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--color-rule);
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.flavor-strip::-webkit-scrollbar {
-    display: none;
-}
-
-.flavor-card {
-    flex: 1 0 160px;
-    padding: 14px 16px;
-    cursor: pointer;
-    border-right: 1px solid var(--color-rule);
-    transition: opacity 120ms;
-    user-select: none;
-    min-width: 0;
-}
-
-.flavor-card:last-child {
-    border-right: none;
-}
-
-.flavor-card[data-active='true'] {
-    outline: 2px solid var(--color-accent);
-    outline-offset: -2px;
-}
-
-.flavor-card[data-active='false'] {
-    opacity: 0.6;
-}
-
-.flavor-card[data-active='false']:hover {
-    opacity: 0.85;
-}
-
-.flavor-card__label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    opacity: 0.7;
-}
-
-.flavor-card__demo {
-    padding: var(--flavor-padding, 12px);
-    background: var(--flavor-bg, var(--color-bg-raised));
-    color: var(--flavor-fg, var(--color-fg));
-    border: var(--flavor-border, 1px solid #333);
-    border-radius: var(--flavor-radius, 0);
-    box-shadow: var(--flavor-shadow, none);
-    font-size: 12px;
-}
-
-.flavor-card__demo h4 {
-    margin: 0 0 4px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--flavor-fg, inherit);
-    font-family: var(--card-font-body, sans-serif);
-}
-
-.flavor-card__demo p {
-    margin: 0;
-    font-size: 11px;
-    opacity: 0.85;
-    font-family: var(--card-font-body, sans-serif);
-}
-
-.flavor-card__demo .accent-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: var(--flavor-accent, #ffe600);
-    margin-right: 4px;
-    vertical-align: middle;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Main layout: frame mock area + control panel
+   Main layout
    ────────────────────────────────────────────────────────────────────────── */
 
 .sandbox-body {
@@ -348,82 +125,6 @@
     flex: 1;
     position: relative;
     overflow: hidden;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Control panel (sidebar)
-   ────────────────────────────────────────────────────────────────────────── */
-
-.control-panel {
-    width: 220px;
-    flex-shrink: 0;
-    border-left: 1px solid var(--color-rule);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    background: var(--color-bg);
-    font-family: var(--font-mono);
-    font-size: 11px;
-}
-
-.control-panel__section {
-    border-bottom: 1px solid var(--color-rule);
-    padding: 10px 12px;
-}
-
-.control-panel__section-title {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-fg-muted);
-    margin-bottom: 8px;
-    font-weight: 700;
-}
-
-.control-panel__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.control-panel__row:last-child {
-    margin-bottom: 0;
-}
-
-.control-panel__row label {
-    color: var(--color-fg-muted);
-    flex-shrink: 0;
-    min-width: 70px;
-}
-
-.control-panel__row select,
-.control-panel__row input[type='range'] {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    background: var(--color-bg-raised);
-    color: var(--color-fg);
-    border: 1px solid var(--color-rule);
-    padding: 2px 4px;
-}
-
-.control-panel__row input[type='range'] {
-    padding: 0;
-    border: none;
-    background: transparent;
-    accent-color: var(--color-accent);
-}
-
-.control-panel__row input[type='checkbox'] {
-    accent-color: var(--color-accent);
-}
-
-.control-panel__val {
-    color: var(--color-fg-muted);
-    min-width: 28px;
-    text-align: right;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -445,10 +146,10 @@
     align-items: stretch;
     padding: 0;
     background: var(--card-bg, var(--color-bg-raised));
-    border: var(--card-border-width, 2px) var(--card-border-style, solid) var(--card-border-color, #333);
+    border: 4px solid var(--card-border-color, #333);
     border-left: none;
     border-right: none;
-    font-family: var(--card-font-body, var(--font-mono));
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     font-size: 12px;
     color: var(--card-fg, var(--color-fg));
     pointer-events: auto;
@@ -458,7 +159,6 @@
     min-height: 40px;
 }
 
-/* thin hairline divider between the three frame sections */
 .frame-bar__divider {
     width: 1px;
     align-self: stretch;
@@ -485,7 +185,6 @@
     font-size: 11px;
 }
 
-/* nav button section: no border/margin on the buttons themselves */
 .frame-bar__nav {
     display: flex;
     align-items: center;
@@ -546,86 +245,7 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   View Transition — playground card ↔ chip morph
-   ────────────────────────────────────────────────────────────────────────── */
-
-::view-transition-group(playground-card) {
-    animation-duration: 380ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-::view-transition-old(playground-card) {
-    animation-duration: 380ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-::view-transition-new(playground-card) {
-    animation-duration: 380ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Resize handles
-   ────────────────────────────────────────────────────────────────────────── */
-
-.resize-handles {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.resize-handle {
-    position: absolute;
-    background: var(--card-accent, var(--color-accent));
-    border: 2px solid var(--card-fg, #111);
-    pointer-events: auto;
-    z-index: 15;
-}
-
-/* corners */
-.resize-handle[data-dir='nw'],
-.resize-handle[data-dir='ne'],
-.resize-handle[data-dir='sw'],
-.resize-handle[data-dir='se'] {
-    width: 10px;
-    height: 10px;
-}
-.resize-handle[data-dir='nw'] { top: -5px; left: -5px; cursor: nw-resize; }
-.resize-handle[data-dir='ne'] { top: -5px; right: -5px; cursor: ne-resize; }
-.resize-handle[data-dir='sw'] { bottom: -5px; left: -5px; cursor: sw-resize; }
-.resize-handle[data-dir='se'] { bottom: -5px; right: -5px; cursor: se-resize; }
-
-/* edges */
-.resize-handle[data-dir='n'],
-.resize-handle[data-dir='s'] {
-    width: calc(100% - 20px);
-    height: 8px;
-    left: 10px;
-}
-.resize-handle[data-dir='e'],
-.resize-handle[data-dir='w'] {
-    height: calc(100% - 20px);
-    width: 8px;
-    top: 10px;
-}
-.resize-handle[data-dir='n'] { top: -4px; cursor: n-resize; }
-.resize-handle[data-dir='s'] { bottom: -4px; cursor: s-resize; }
-.resize-handle[data-dir='e'] { right: -4px; cursor: e-resize; }
-.resize-handle[data-dir='w'] { left: -4px; cursor: w-resize; }
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Chain mock
-   ────────────────────────────────────────────────────────────────────────── */
-
-[data-sandbox] .physics-card[data-variant='chain'] {
-    border-style: dashed;
-    border-width: calc(var(--card-border-width, 2px) * 0.6);
-    box-shadow: none;
-    opacity: 0.85;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Scroll indicators
+   Scroll indicator — arrow only
    ────────────────────────────────────────────────────────────────────────── */
 
 .hidden-scroll-wrapper {
@@ -643,33 +263,6 @@
     display: none;
 }
 
-/* gradient-fade */
-.scroll-indicator-fade::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 48px;
-    background: linear-gradient(to bottom, transparent, var(--card-bg, var(--color-bg)));
-    pointer-events: none;
-}
-
-/* dot */
-.scroll-indicator-dot::after {
-    content: '•••';
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
-    color: var(--card-fg, var(--color-fg));
-    opacity: 0.4;
-    letter-spacing: 3px;
-    pointer-events: none;
-}
-
-/* arrow */
 .scroll-indicator-arrow::after {
     content: '▼';
     position: absolute;
@@ -679,77 +272,4 @@
     color: var(--card-fg, var(--color-fg));
     opacity: 0.5;
     pointer-events: none;
-}
-
-/* progress line — driven by --scroll-progress CSS var set via JS */
-.scroll-indicator-progress::before {
-    content: '';
-    position: absolute;
-    right: 2px;
-    top: 0;
-    width: 2px;
-    height: calc(var(--scroll-progress, 0) * 100%);
-    background: var(--card-accent, var(--color-accent));
-    pointer-events: none;
-    transition: height 100ms;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Plain minimal frame mock (side panel)
-   ────────────────────────────────────────────────────────────────────────── */
-
-.plain-frame-mock-panel {
-    position: fixed;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 200px;
-    background: var(--color-bg-raised);
-    border: 1px solid var(--color-rule);
-    border-left: none;
-    padding: 16px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    z-index: 50;
-}
-
-.plain-frame-mock-panel__title {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-fg-muted);
-    margin-bottom: 12px;
-}
-
-.plain-frame-mock-panel .plain-frame-bar {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px;
-    border: 1px solid var(--card-border-color, #333);
-    background: var(--card-bg, var(--color-bg-raised));
-    color: var(--card-fg, var(--color-fg));
-    font-family: var(--card-font-body, var(--font-mono));
-}
-
-.plain-frame-bar__site-name {
-    font-weight: 700;
-    font-size: 12px;
-}
-
-.plain-frame-bar__section {
-    color: var(--card-accent, var(--color-accent));
-    font-size: 11px;
-}
-
-.plain-frame-bar__back-link {
-    font-size: 10px;
-    color: var(--card-accent, var(--color-accent));
-    text-decoration: underline;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: inherit;
-    margin-top: 4px;
 }

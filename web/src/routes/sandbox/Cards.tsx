@@ -1,37 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
-import { DEFAULT_CONFIG, FONT_FAMILIES, type SandboxConfig } from '../../sandbox/cards/state'
+import { DEFAULT_CONFIG, type SandboxConfig } from '../../sandbox/cards/state'
 import { encode, decode } from '../../sandbox/cards/snapshot'
 import { SandboxChrome } from '../../sandbox/cards/SandboxChrome'
-import { FlavorStrip } from '../../sandbox/cards/FlavorStrip'
 import { Playground } from '../../sandbox/cards/Playground'
-import { ChainMock } from '../../sandbox/cards/ChainMock'
-import { FreeChainMock } from '../../sandbox/cards/FreeChainMock'
-import { ControlPanel } from '../../sandbox/cards/ControlPanel'
 import { FrameMock } from '../../sandbox/cards/FrameMock'
-import { PlainMinimalFrameMock } from '../../sandbox/cards/PlainMinimalFrameMock'
 import '../../sandbox/cards/tokens.css'
-
-function computeCardVars(config: SandboxConfig): Record<string, string> {
-    const shadowVal =
-        config.shadow === 'none'
-            ? 'none'
-            : config.shadow === 'hard-offset'
-              ? '5px 5px 0 var(--card-border-color)'
-              : '0 4px 16px rgba(0,0,0,0.4)'
-
-    return {
-        '--card-border-width': `${config.borderWidth}px`,
-        '--card-border-style': config.borderStyle,
-        '--card-radius': `${config.radius}px`,
-        '--card-shadow-val': shadowVal,
-        '--card-font-size': `${config.fontSize}px`,
-        '--card-line-height': String(config.lineHeight),
-        '--card-letter-spacing': `${config.letterSpacing}em`,
-        '--card-padding-val': `${config.padding}px`,
-        '--card-font-body': FONT_FAMILIES[config.font],
-    }
-}
 
 export default function Cards() {
     const [config, setConfig] = useState<SandboxConfig>(() =>
@@ -40,18 +14,9 @@ export default function Cards() {
             : DEFAULT_CONFIG,
     )
     const [playgroundMinimized, setPlaygroundMinimized] = useState(false)
-    const [showPlainMock, setShowPlainMock] = useState(false)
 
     const playgroundCardRef = useRef<HTMLElement | null>(null)
     const playgroundChipRef = useRef<HTMLButtonElement | null>(null)
-
-    function startVT(cb: () => void) {
-        if ('startViewTransition' in document) {
-            ;(document as Document & { startViewTransition: (cb: () => void) => void }).startViewTransition(cb)
-        } else {
-            cb()
-        }
-    }
 
     function flipMinimize() {
         const cardEl = playgroundCardRef.current
@@ -115,17 +80,8 @@ export default function Cards() {
         })
     }
 
-    const handleMinimize = useCallback(() => {
-        if (config.animMechanism === 'vt') { startVT(() => setPlaygroundMinimized(true)); return }
-        if (config.animMechanism === 'flip') { flipMinimize(); return }
-        setPlaygroundMinimized(true)
-    }, [config.animMechanism])
-
-    const handleRestore = useCallback(() => {
-        if (config.animMechanism === 'vt') { startVT(() => setPlaygroundMinimized(false)); return }
-        if (config.animMechanism === 'flip') { flipRestore(); return }
-        setPlaygroundMinimized(false)
-    }, [config.animMechanism])
+    const handleMinimize = useCallback(() => { flipMinimize() }, [])
+    const handleRestore = useCallback(() => { flipRestore() }, [])
 
     const handleSnapshot = useCallback(() => {
         const params = encode(config)
@@ -135,25 +91,18 @@ export default function Cards() {
         navigator.clipboard.writeText(window.location.href).catch(() => {})
     }, [config])
 
-    const cardVars = useMemo(() => computeCardVars(config), [config])
-
     return (
         <PhysicsProvider>
             <div
                 data-sandbox=""
-                data-flavor={config.flavor}
                 data-color-mode={config.colorMode}
                 className="sandbox-root"
-                style={cardVars as React.CSSProperties}
             >
                 <SandboxChrome
                     config={config}
                     onChange={setConfig}
                     onSnapshot={handleSnapshot}
-                    showPlainMock={showPlainMock}
-                    onTogglePlainMock={() => setShowPlainMock((p) => !p)}
                 />
-                <FlavorStrip config={config} onChange={setConfig} />
                 <div className="sandbox-body">
                     <div className="sandbox-canvas-area">
                         <FrameMock
@@ -163,17 +112,12 @@ export default function Cards() {
                             chipRef={playgroundChipRef}
                         />
                         <Playground
-                            config={config}
                             minimized={playgroundMinimized}
                             onMinimize={handleMinimize}
                             cardRef={playgroundCardRef}
                         />
-                        <ChainMock config={config} />
-                        <FreeChainMock config={config} />
                     </div>
-                    <ControlPanel config={config} onChange={setConfig} />
                 </div>
-                {showPlainMock && <PlainMinimalFrameMock />}
             </div>
         </PhysicsProvider>
     )
