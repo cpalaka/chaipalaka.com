@@ -546,6 +546,25 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   View Transition — playground card ↔ chip morph
+   ────────────────────────────────────────────────────────────────────────── */
+
+::view-transition-group(playground-card) {
+    animation-duration: 380ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(playground-card) {
+    animation-duration: 380ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-new(playground-card) {
+    animation-duration: 380ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    Resize handles
    ────────────────────────────────────────────────────────────────────────── */
 

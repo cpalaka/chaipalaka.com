@@ -19,6 +19,7 @@ export interface PhysicsCardProps {
     className?: string
     style?: React.CSSProperties
     physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
+    cardRef?: React.MutableRefObject<HTMLElement | null>
     interactionMode?: CardInteractionMode
 }
 
@@ -37,6 +38,7 @@ export function PhysicsCard({
     className,
     style,
     physicsHandleRef,
+    cardRef,
     interactionMode = 'free',
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
@@ -170,7 +172,10 @@ export function PhysicsCard({
 
     return (
         <article
-            ref={elRef}
+            ref={(el) => {
+                elRef.current = el
+                if (cardRef) cardRef.current = el
+            }}
             className={cls}
             data-variant={variant}
             data-interaction-mode={interactionMode}
