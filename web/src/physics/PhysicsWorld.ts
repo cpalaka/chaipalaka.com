@@ -21,7 +21,6 @@ export interface PhysicsWorldOptions {
 
 export type PhysicsHandle = number
 export type LinkHandle = number
-export type CardMode = 'breathing' | 'playground'
 
 export interface BodyState {
     x: number
@@ -43,27 +42,17 @@ interface Registration {
     body: Matter.Body
     spring?: Matter.Constraint
     anchor: Vec2
-    mode: CardMode
     isStatic: boolean
     onTransform?: (state: BodyState) => void
     width: number
     height: number
 }
 
-const MODE_STIFFNESS: Record<CardMode, number> = {
-    breathing: 0.03,
-    playground: 1e-9,
-}
-const MODE_DAMPING: Record<CardMode, number> = {
-    breathing: 0.06,
-    playground: 0,
-}
-const GRAVITY_RELAXED_STIFFNESS = 1e-9
+const SPRING_STIFFNESS = 1e-9
+const SPRING_DAMPING = 0
 const GRAVITY_Y = 0.7
 const BODY_FRICTION_AIR = 0.05
 const FLOOR_THICKNESS = 60
-const ANGULAR_STIFFNESS_BREATHING = 0.002
-const ANGULAR_DAMPING_BREATHING = 0
 
 export class PhysicsWorld {
     private engine: Matter.Engine
@@ -72,7 +61,6 @@ export class PhysicsWorld {
     private nextId: PhysicsHandle = 1
     private registrations = new Map<PhysicsHandle, Registration>()
     private links = new Map<LinkHandle, Matter.Constraint>()
-    private gravityOn = false
 
     constructor(opts: PhysicsWorldOptions) {
         this.engine = Matter.Engine.create()
@@ -104,15 +92,12 @@ export class PhysicsWorld {
                 frictionAir: BODY_FRICTION_AIR,
             },
         )
-        const mode: CardMode = 'breathing'
         const spring = Matter.Constraint.create({
             pointA: { x: anchor.x, y: anchor.y },
             bodyB: body,
             pointB: { x: 0, y: 0 },
-            stiffness: this.gravityOn
-                ? GRAVITY_RELAXED_STIFFNESS
-                : MODE_STIFFNESS[mode],
-            damping: MODE_DAMPING[mode],
+            stiffness: SPRING_STIFFNESS,
+            damping: SPRING_DAMPING,
             length: 0,
         })
         Matter.Composite.add(this.world, [body, spring])
@@ -121,7 +106,6 @@ export class PhysicsWorld {
             body,
             spring,
             anchor: { ...anchor },
-            mode,
             isStatic: false,
             onTransform: opts.onTransform,
             width: size.width,
@@ -148,7 +132,6 @@ export class PhysicsWorld {
             body,
             spring: undefined,
             anchor: { ...position },
-            mode: 'breathing',
             isStatic: true,
             onTransform: opts.onTransform,
             width: size.width,
@@ -196,13 +179,10 @@ export class PhysicsWorld {
     }
 
     setGravity(on: boolean): void {
-        this.gravityOn = on
         this.engine.gravity.y = on ? GRAVITY_Y : 0
         for (const reg of this.registrations.values()) {
             if (reg.isStatic || !reg.spring) continue
-            reg.spring.stiffness = on
-                ? GRAVITY_RELAXED_STIFFNESS
-                : MODE_STIFFNESS[reg.mode]
+            reg.spring.stiffness = SPRING_STIFFNESS
         }
     }
 
@@ -230,17 +210,6 @@ export class PhysicsWorld {
         reg.anchor = { ...anchor }
         reg.spring.pointA!.x = anchor.x
         reg.spring.pointA!.y = anchor.y
-    }
-
-    setMode(handle: PhysicsHandle, mode: CardMode): void {
-        const reg = this.registrations.get(handle)
-        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        if (reg.isStatic || !reg.spring) return
-        reg.mode = mode
-        reg.spring.damping = MODE_DAMPING[mode]
-        if (!this.gravityOn) {
-            reg.spring.stiffness = MODE_STIFFNESS[mode]
-        }
     }
 
     getSize(handle: PhysicsHandle): CardSize {
@@ -312,16 +281,6 @@ export class PhysicsWorld {
     }
 
     tick(dtMs: number): void {
-        for (const reg of this.registrations.values()) {
-            if (reg.body.isStatic) continue
-            if (reg.mode !== 'breathing') continue
-            const angle = reg.body.angle
-            const angVel = reg.body.angularVelocity
-            const delta =
-                -ANGULAR_STIFFNESS_BREATHING * angle -
-                ANGULAR_DAMPING_BREATHING * angVel
-            Matter.Body.setAngularVelocity(reg.body, angVel + delta)
-        }
         Matter.Engine.update(this.engine, dtMs)
         for (const reg of this.registrations.values()) {
             if (!reg.onTransform) continue
