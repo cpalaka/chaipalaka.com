@@ -12,7 +12,7 @@ interface SceneManifestEntry {
 }
 const manifest = rawManifest as unknown as readonly SceneManifestEntry[]
 
-const SCENE_ID = 'flow-shader'
+const SCENE_ID = 'geometric'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
@@ -24,6 +24,7 @@ const VERTEX_SHADER = /* glsl */ `
   }
 `
 
+// Diagonal square grid scrolling with a subtle sine warp.
 const FRAGMENT_SHADER = /* glsl */ `
   precision highp float;
 
@@ -33,50 +34,38 @@ const FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
 
-  vec2 hash22(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-  }
-
-  float gnoise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(dot(hash22(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-          dot(hash22(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-      mix(dot(hash22(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-          dot(hash22(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
-      u.y
-    );
-  }
-
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 5; i++) {
-      v += a * gnoise(p);
-      p *= 2.02;
-      a *= 0.5;
-    }
-    return v;
-  }
-
   void main() {
     vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-    vec2 p = (vUv - 0.5) * aspect * 2.0;
+    vec2 uv = (vUv - 0.5) * aspect;
 
-    float t = uTime * 0.05;
-    vec2 flow = vec2(fbm(p + vec2(t, 0.0)), fbm(p + vec2(0.0, t * 1.3)));
-    float n = fbm(p * 1.4 + flow * 1.6 + t);
-    float intensity = smoothstep(-0.6, 0.7, n);
+    float t = uTime * 0.08;
 
-    vec3 color = mix(uColorA, uColorB, intensity);
+    // Warp the UV slightly for an organic feel.
+    float warpX = sin(uv.y * 4.0 + t * 1.3) * 0.04;
+    float warpY = sin(uv.x * 4.0 + t) * 0.04;
+    vec2 warped = uv + vec2(warpX, warpY);
+
+    // Diagonal scroll.
+    vec2 scrolled = warped + vec2(t, t * 0.7);
+
+    // Grid lines — both axis-aligned and diagonal.
+    float cellSize = 0.12;
+    vec2 grid = fract(scrolled / cellSize);
+    float lineWidth = 0.04;
+    float lineX = smoothstep(0.0, lineWidth, grid.x) - smoothstep(1.0 - lineWidth, 1.0, grid.x);
+    float lineY = smoothstep(0.0, lineWidth, grid.y) - smoothstep(1.0 - lineWidth, 1.0, grid.y);
+    float lines = 1.0 - lineX * lineY;
+
+    // Dim the grid toward the edges.
+    float vignette = 1.0 - smoothstep(0.3, 0.8, length(uv));
+
+    float mask = lines * vignette;
+    vec3 color = mix(uColorA, uColorB, mask);
     gl_FragColor = vec4(color, 1.0);
   }
 `
 
-function FlowShader() {
+function Geometric() {
     const ref = useRef<ShaderMaterial>(null)
     const uniforms = useMemo(
         () => ({
@@ -90,8 +79,6 @@ function FlowShader() {
     useFrame((state) => {
         const mat = ref.current
         if (!mat) return
-        // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
-        // must go through `mat.uniforms.*`, not the local `uniforms` reference.
         const u = mat.uniforms
         if (u.uTime) u.uTime.value = state.clock.elapsedTime
         if (u.uResolution)
@@ -112,9 +99,9 @@ function FlowShader() {
     )
 }
 
-export const flowShaderScene: BackgroundScene = {
+export const geometricScene: BackgroundScene = {
     id: meta.id,
-    Component: FlowShader,
+    Component: Geometric,
     accentColor: meta.accentColor,
     fallbackColors: meta.fallbackColors,
     fallbackPng: meta.fallbackPng,
