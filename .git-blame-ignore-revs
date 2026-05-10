@@ -1,0 +1,5 @@
+# Mass reformats — add new ones here so git blame skips them.
+# Configure once: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# chore: add Prettier with 4-space indent + pre-commit auto-format
+7e4b2f981879258b8f0ca3fac51b84fb6f0d3372
