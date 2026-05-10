@@ -16,11 +16,11 @@ export function CardHeader({ locked, onChange, onMinimize }: CardHeaderProps) {
                     style={{
                         background: 'none',
                         border: 'none',
-                        padding: '4px 6px',
+                        padding: '4px 8px',
                         cursor: 'pointer',
                         color: 'var(--card-fg, currentColor)',
                         opacity: 0.55,
-                        fontSize: 14,
+                        fontSize: 18,
                         lineHeight: 1,
                         fontFamily: 'inherit',
                     }}
@@ -47,7 +47,7 @@ export function CardHeader({ locked, onChange, onMinimize }: CardHeaderProps) {
             }}
         >
             {locked ? (
-                <svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true">
+                <svg width="17" height="18" viewBox="0 0 13 14" fill="none" aria-hidden="true">
                     {/* Closed shackle */}
                     <path
                         d="M3 6V4.5a3.5 3.5 0 0 1 7 0V6"
@@ -62,7 +62,7 @@ export function CardHeader({ locked, onChange, onMinimize }: CardHeaderProps) {
                     <circle cx="6.5" cy="9.5" r="1.2" fill="var(--card-bg, canvas)" />
                 </svg>
             ) : (
-                <svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true">
+                <svg width="17" height="18" viewBox="0 0 13 14" fill="none" aria-hidden="true">
                     {/* Open shackle (swung to the right) */}
                     <path
                         d="M3 6V4.5a3.5 3.5 0 0 1 7 0"

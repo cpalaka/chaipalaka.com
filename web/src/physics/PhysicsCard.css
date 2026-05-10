@@ -38,9 +38,10 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 2px 8px;
+    padding: 4px 8px;
     margin: -24px -24px 0;
-    font-size: 10px;
+    min-height: 32px;
+    font-size: 11px;
     font-family: var(--card-font-body, var(--font-mono));
     color: var(--card-fg, var(--color-fg));
     opacity: 0.75;

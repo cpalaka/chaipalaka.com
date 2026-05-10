@@ -83,7 +83,7 @@ export function FlourishMount({
     return (
         <div
             className={className}
-            style={{ position: 'relative', ...style }}
+            style={{ position: 'relative', pointerEvents: 'none', ...style }}
         >
             {SceneComponent && slotGranted && (
                 <div
