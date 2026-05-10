@@ -12,7 +12,7 @@ interface SceneManifestEntry {
 }
 const manifest = rawManifest as unknown as readonly SceneManifestEntry[]
 
-const SCENE_ID = 'flow-shader'
+const SCENE_ID = 'particles'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
@@ -24,6 +24,7 @@ const VERTEX_SHADER = /* glsl */ `
   }
 `
 
+// Soft polka-dot field drifting on a Perlin-style flow.
 const FRAGMENT_SHADER = /* glsl */ `
   precision highp float;
 
@@ -33,50 +34,53 @@ const FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
 
-  vec2 hash22(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
   }
 
-  float gnoise(vec2 p) {
+  float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
     return mix(
-      mix(dot(hash22(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-          dot(hash22(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-      mix(dot(hash22(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-          dot(hash22(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
+      mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
       u.y
     );
   }
 
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 5; i++) {
-      v += a * gnoise(p);
-      p *= 2.02;
-      a *= 0.5;
-    }
-    return v;
-  }
-
   void main() {
     vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-    vec2 p = (vUv - 0.5) * aspect * 2.0;
+    vec2 uv = vUv * aspect * 8.0;
 
-    float t = uTime * 0.05;
-    vec2 flow = vec2(fbm(p + vec2(t, 0.0)), fbm(p + vec2(0.0, t * 1.3)));
-    float n = fbm(p * 1.4 + flow * 1.6 + t);
-    float intensity = smoothstep(-0.6, 0.7, n);
+    // Drift each cell's centre with a slow noise field.
+    float t = uTime * 0.12;
+    vec2 cell = floor(uv);
+    vec2 local = fract(uv);
 
-    vec3 color = mix(uColorA, uColorB, intensity);
+    float dot_mask = 0.0;
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        vec2 neighbor = cell + vec2(float(dx), float(dy));
+        float h1 = hash(neighbor + vec2(0.3));
+        float h2 = hash(neighbor + vec2(0.7));
+        vec2 drift = vec2(
+          noise(neighbor * 0.5 + t),
+          noise(neighbor * 0.5 + t + 3.7)
+        ) * 0.4;
+        vec2 centre = vec2(h1, h2) * 0.6 + 0.2 + drift;
+        float r = 0.18 + hash(neighbor + 1.1) * 0.12;
+        float d = length(local - centre + vec2(float(dx), float(dy)) - vec2(0.0));
+        dot_mask = max(dot_mask, 1.0 - smoothstep(r - 0.02, r + 0.02, d));
+      }
+    }
+
+    vec3 color = mix(uColorA, uColorB, dot_mask);
     gl_FragColor = vec4(color, 1.0);
   }
 `
 
-function FlowShader() {
+function Particles() {
     const ref = useRef<ShaderMaterial>(null)
     const uniforms = useMemo(
         () => ({
@@ -90,8 +94,6 @@ function FlowShader() {
     useFrame((state) => {
         const mat = ref.current
         if (!mat) return
-        // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
-        // must go through `mat.uniforms.*`, not the local `uniforms` reference.
         const u = mat.uniforms
         if (u.uTime) u.uTime.value = state.clock.elapsedTime
         if (u.uResolution)
@@ -112,9 +114,9 @@ function FlowShader() {
     )
 }
 
-export const flowShaderScene: BackgroundScene = {
+export const particlesScene: BackgroundScene = {
     id: meta.id,
-    Component: FlowShader,
+    Component: Particles,
     accentColor: meta.accentColor,
     fallbackColors: meta.fallbackColors,
     fallbackPng: meta.fallbackPng,

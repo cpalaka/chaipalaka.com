@@ -5,8 +5,19 @@
     pointer-events: none;
 }
 
-.background-canvas-layer > canvas,
-.background-canvas-layer > img {
+.background-canvas-layer__layer {
+    position: absolute;
+    inset: 0;
+    opacity: 1;
+    transition: opacity 250ms linear;
+}
+
+.background-canvas-layer__layer[data-fading='out'] {
+    opacity: 0;
+}
+
+.background-canvas-layer__layer > canvas,
+.background-canvas-layer__layer > img {
     display: block;
     width: 100%;
     height: 100%;
@@ -14,4 +25,10 @@
 
 .background-canvas-fallback {
     object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .background-canvas-layer__layer {
+        transition: none;
+    }
 }

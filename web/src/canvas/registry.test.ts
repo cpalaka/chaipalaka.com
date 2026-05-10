@@ -6,6 +6,7 @@ function makeScene(id: string): BackgroundScene {
     return {
         id,
         Component: () => null,
+        accentColor: '#000000',
         fallbackColors: ['#000000', '#111111'],
         fallbackPng: `/fallbacks/${id}.png`,
     }
