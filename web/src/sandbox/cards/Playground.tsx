@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
+import type { CardInteractionMode } from '../../physics/PhysicsCard'
 import type { PhysicsHandle } from '../../physics/PhysicsWorld'
 import type { SandboxConfig } from './state'
 import { ResizeHandles } from './ResizeHandles'
 import { FlourishMount } from './shaders/FlourishMount'
 import { HiddenScroll } from './HiddenScroll'
+import { CardHeader } from './CardHeader'
 
 interface PlaygroundProps {
     config: SandboxConfig
@@ -33,6 +35,7 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
     const [cardSize, setCardSize] = useState({ width: DEFAULT_W, height: DEFAULT_H })
+    const [interactionMode, setInteractionMode] = useState<CardInteractionMode>('anchored')
 
     useEffect(() => {
         const onResize = () => setAnchor(computeAnchor())
@@ -52,6 +55,8 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
             height={cardSize.height}
             variant="playground"
             physicsHandleRef={handleRef}
+            interactionMode={interactionMode}
+            header={<CardHeader mode={interactionMode} onChange={setInteractionMode} />}
         >
             {/* Shader flourish — absolutely positioned behind content within the fixed card */}
             <FlourishMount

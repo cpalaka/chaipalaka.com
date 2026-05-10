@@ -29,7 +29,7 @@ describe('snapshot encode/decode round-trip', () => {
             resizeMode: '4-corner',
             springDuringResize: true,
             snapToGrid: true,
-            frameEdge: 'left',
+            frameEdge: 'top',
             animMechanism: 'vt',
             scrollIndicator: 'progress-line',
             viewportSim: 'mobile',

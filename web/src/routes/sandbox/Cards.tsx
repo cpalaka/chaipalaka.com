@@ -6,6 +6,7 @@ import { SandboxChrome } from '../../sandbox/cards/SandboxChrome'
 import { FlavorStrip } from '../../sandbox/cards/FlavorStrip'
 import { Playground } from '../../sandbox/cards/Playground'
 import { ChainMock } from '../../sandbox/cards/ChainMock'
+import { FreeChainMock } from '../../sandbox/cards/FreeChainMock'
 import { ControlPanel } from '../../sandbox/cards/ControlPanel'
 import { FrameMock } from '../../sandbox/cards/FrameMock'
 import { PlainMinimalFrameMock } from '../../sandbox/cards/PlainMinimalFrameMock'
@@ -81,6 +82,7 @@ export default function Cards() {
                             onMinimize={() => setPlaygroundMinimized(true)}
                         />
                         <ChainMock config={config} />
+                        <FreeChainMock config={config} />
                     </div>
                     <ControlPanel config={config} onChange={setConfig} />
                 </div>

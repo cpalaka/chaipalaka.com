@@ -65,7 +65,7 @@ const FLOURISH_MODES = new Set<FlourishMode>([
     'noise-field',
 ])
 const RESIZE_MODES = new Set<ResizeMode>(['4-corner', '8-handle'])
-const FRAME_EDGES = new Set<FrameEdge>(['top', 'bottom', 'left', 'right'])
+const FRAME_EDGES = new Set<FrameEdge>(['top', 'bottom'])
 const ANIM_MECHANISMS = new Set<AnimMechanism>(['vt', 'flip'])
 const SCROLL_INDICATORS = new Set<ScrollIndicatorStyle>([
     'gradient-fade',

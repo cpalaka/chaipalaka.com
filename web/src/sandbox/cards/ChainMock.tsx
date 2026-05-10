@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
+import type { CardInteractionMode } from '../../physics/PhysicsCard'
 import type { SandboxConfig } from './state'
+import { CardHeader } from './CardHeader'
 
 interface ChainMockProps {
     config: SandboxConfig
@@ -28,6 +30,7 @@ const CHAIN_TEXTS = [
 
 export function ChainMock({ config: _config }: ChainMockProps) {
     const [anchors, setAnchors] = useState<Array<{ x: number; y: number }>>([])
+    const [modes, setModes] = useState<CardInteractionMode[]>(['anchored', 'anchored', 'anchored'])
 
     useEffect(() => {
         setAnchors(computeChainAnchors())
@@ -38,38 +41,29 @@ export function ChainMock({ config: _config }: ChainMockProps) {
 
     if (anchors.length === 0) return null
 
+    const setMode = (i: number) => (m: CardInteractionMode) =>
+        setModes((prev) => {
+            const next = [...prev] as CardInteractionMode[]
+            next[i] = m
+            return next
+        })
+
     return (
         <>
-            <PhysicsCard
-                key="chain-parent"
-                text={CHAIN_TEXTS[0]!}
-                fontKey="body"
-                maxWidth={CARD_W - 32}
-                anchor={anchors[0]!}
-                width={CARD_W}
-                height={CARD_H}
-                variant="primary"
-            />
-            <PhysicsCard
-                key="chain-1"
-                text={CHAIN_TEXTS[1]!}
-                fontKey="body"
-                maxWidth={CARD_W - 32}
-                anchor={anchors[1]!}
-                width={CARD_W}
-                height={CARD_H}
-                variant="chain"
-            />
-            <PhysicsCard
-                key="chain-2"
-                text={CHAIN_TEXTS[2]!}
-                fontKey="body"
-                maxWidth={CARD_W - 32}
-                anchor={anchors[2]!}
-                width={CARD_W}
-                height={CARD_H}
-                variant="chain"
-            />
+            {CHAIN_TEXTS.map((text, i) => (
+                <PhysicsCard
+                    key={`anchored-chain-${i}`}
+                    text={text}
+                    fontKey="body"
+                    maxWidth={CARD_W - 32}
+                    anchor={anchors[i]!}
+                    width={CARD_W}
+                    height={CARD_H}
+                    variant={i === 0 ? 'primary' : 'chain'}
+                    interactionMode={modes[i]}
+                    header={<CardHeader mode={modes[i]!} onChange={setMode(i)} />}
+                />
+            ))}
         </>
     )
 }
