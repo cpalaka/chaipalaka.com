@@ -1,7 +1,26 @@
 [
     {
         "id": "flow-shader",
+        "accentColor": "#c19a4b",
         "fallbackColors": ["#ffffff", "#ff6a00"],
         "fallbackPng": "/fallbacks/flow-shader.png"
+    },
+    {
+        "id": "particles",
+        "accentColor": "#5fb6c4",
+        "fallbackColors": ["#0a0e1a", "#5fb6c4"],
+        "fallbackPng": "/fallbacks/particles.png"
+    },
+    {
+        "id": "geometric",
+        "accentColor": "#a47bd0",
+        "fallbackColors": ["#1a0e1f", "#a47bd0"],
+        "fallbackPng": "/fallbacks/geometric.png"
+    },
+    {
+        "id": "audio-reactive",
+        "accentColor": "#d97a5b",
+        "fallbackColors": ["#1f0e0e", "#d97a5b"],
+        "fallbackPng": "/fallbacks/audio-reactive.png"
     }
 ]
