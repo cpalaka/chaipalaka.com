@@ -39,22 +39,11 @@ function savePosition(pos: SavedPosition) {
     }
 }
 
-const THEME_ICONS: Record<string, string> = {
-    dark: '🌙',
-    light: '☀️',
-    system: '⚙️',
-}
-
-const THEME_LABELS: Record<string, string> = {
-    dark: 'Dark',
-    light: 'Light',
-    system: 'System',
-}
 
 export function ControlsPanel() {
     const world = usePhysicsWorld()
     const { active, setActive } = useGallery()
-    const { theme, cycleTheme } = useTheme()
+    const { theme, setTheme } = useTheme()
     const [collapsed, setCollapsed] = useState(false)
     const [gravityOn] = useState(false)
 
@@ -88,7 +77,7 @@ export function ControlsPanel() {
         let lastY = 0
 
         const onPointerDown = (e: PointerEvent) => {
-            if ((e.target as Element | null)?.closest('button')) return
+            if ((e.target as Element | null)?.closest('button, select')) return
             e.preventDefault()
             dragging = true
             lastX = e.clientX
@@ -157,31 +146,47 @@ export function ControlsPanel() {
             {!collapsed && (
                 <div className="controls-panel__body">
                     <div className="controls-panel__section">
-                        <div className="controls-panel__label">Background</div>
-                        <div className="controls-panel__bg-row">
+                        <label
+                            className="controls-panel__label"
+                            htmlFor="cp-background"
+                        >
+                            Background
+                        </label>
+                        <select
+                            id="cp-background"
+                            className="controls-panel__select"
+                            value={active.id}
+                            onChange={(e) => setActive(e.target.value)}
+                        >
                             {manifest.map((scene) => (
-                                <button
-                                    key={scene.id}
-                                    className={`controls-panel__bg-dot${active.id === scene.id ? ' controls-panel__bg-dot--active' : ''}`}
-                                    style={{ background: scene.accentColor }}
-                                    onClick={() => setActive(scene.id)}
-                                    aria-label={`Switch to ${scene.id} background`}
-                                    aria-pressed={active.id === scene.id}
-                                />
+                                <option key={scene.id} value={scene.id}>
+                                    {scene.id}
+                                </option>
                             ))}
-                        </div>
+                        </select>
                     </div>
 
                     <div className="controls-panel__section">
-                        <div className="controls-panel__label">Theme</div>
-                        <button
-                            className="controls-panel__icon-btn"
-                            onClick={cycleTheme}
-                            aria-label={`Current theme: ${theme}. Click to cycle.`}
+                        <label
+                            className="controls-panel__label"
+                            htmlFor="cp-theme"
                         >
-                            {THEME_ICONS[theme]}{' '}
-                            <span>{THEME_LABELS[theme]}</span>
-                        </button>
+                            Theme
+                        </label>
+                        <select
+                            id="cp-theme"
+                            className="controls-panel__select"
+                            value={theme}
+                            onChange={(e) =>
+                                setTheme(
+                                    e.target.value as 'dark' | 'light' | 'system',
+                                )
+                            }
+                        >
+                            <option value="system">System</option>
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
                     </div>
 
                     <div className="controls-panel__section">

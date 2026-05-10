@@ -6,6 +6,7 @@ const CYCLE: readonly Theme[] = ['system', 'dark', 'light']
 
 export interface ThemeController {
     getTheme(): Theme
+    setTheme(theme: Theme): void
     cycleTheme(): void
     getDataTheme(): string
     subscribe(listener: (theme: Theme) => void): () => void
@@ -33,6 +34,12 @@ export function createThemeController(
     return {
         getTheme() {
             return current
+        },
+
+        setTheme(theme: Theme) {
+            current = theme
+            storage.set(THEME_STORAGE_KEY, current)
+            for (const l of listeners) l(current)
         },
 
         cycleTheme() {
