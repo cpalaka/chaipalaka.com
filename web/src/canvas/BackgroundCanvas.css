@@ -1,17 +1,17 @@
 .background-canvas-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .background-canvas-layer > canvas,
 .background-canvas-layer > img {
-  display: block;
-  width: 100%;
-  height: 100%;
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .background-canvas-fallback {
-  object-fit: cover;
+    object-fit: cover;
 }

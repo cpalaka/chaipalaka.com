@@ -1,25 +1,25 @@
 .physics-card {
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: 24px;
-  margin: 0;
-  background: var(--color-bg-raised);
-  color: var(--color-fg);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-base);
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-  will-change: transform;
-  z-index: 10;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: 24px;
+    margin: 0;
+    background: var(--color-bg-raised);
+    color: var(--color-fg);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    will-change: transform;
+    z-index: 10;
 }
 
 /* Reset global margins on direct children so flex gap alone controls spacing. */
@@ -30,16 +30,16 @@
 .physics-card > ul,
 .physics-card > ol,
 .physics-card > time {
-  margin: 0;
+    margin: 0;
 }
 
 .read-post-link {
-  align-self: flex-start;
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: 1px;
-  pointer-events: auto;
+    align-self: flex-start;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+    pointer-events: auto;
 }
