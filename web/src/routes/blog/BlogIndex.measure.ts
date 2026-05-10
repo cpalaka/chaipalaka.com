@@ -6,8 +6,8 @@ export type MeasureFn = (
     maxWidth: number,
 ) => { width: number; height: number }
 
-/** Gap between flex children inside a card — must match the CSS `gap` in PhysicsCard.css. */
-export const CARD_GAP = 12
+/** Gap between flex children inside a card — must match the CSS `gap` in PhysicsCard.css (--card-gap). */
+export const CARD_GAP = 24
 /** Horizontal and top padding inside the card — must match the CSS padding in PhysicsCard.css. */
 export const CARD_PADDING = 24
 /** Bottom padding — larger than top to give the CTA link more visual breathing room. */
