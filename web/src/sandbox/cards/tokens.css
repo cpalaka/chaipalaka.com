@@ -1,0 +1,275 @@
+/* Sandbox fonts — only loaded when this route is active */
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/700.css';
+
+/*
+ * Sandbox-scoped design tokens — Swiss Grid palette baked in.
+ * All selectors are scoped to [data-sandbox] so nothing leaks to production.
+ *
+ * Two user-toggleable axes: data-color-mode (light/dark) and
+ * data-edge on frame-mock (top/bottom). Everything else is a constant.
+ */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Physics card — baked-in design tokens (Swiss Grid, "Restrained")
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sandbox-root .physics-card {
+    border: 4px solid var(--card-border-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    background: var(--card-bg);
+    color: var(--card-fg);
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    padding: 24px;
+    gap: 24px;
+}
+
+/* Light palette */
+[data-sandbox][data-color-mode='light'] {
+    --card-bg: #f8f8f8;
+    --card-fg: #000;
+    --card-border-color: #000;
+    --card-accent: #e60000;
+}
+
+/* Dark palette (default) */
+[data-sandbox][data-color-mode='dark'],
+[data-sandbox]:not([data-color-mode='light']) {
+    --card-bg: #0a0a0a;
+    --card-fg: #f8f8f8;
+    --card-border-color: #f8f8f8;
+    --card-accent: #e60000;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Sandbox chrome styles
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sandbox-root {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #ffffff;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    display: flex;
+    flex-direction: column;
+}
+
+.sandbox-chrome {
+    position: relative;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-rule);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.sandbox-chrome__title {
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-right: 8px;
+}
+
+.sandbox-chrome__label {
+    color: var(--color-fg-muted);
+    margin-right: 4px;
+}
+
+.sandbox-chrome select,
+.sandbox-chrome button {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--color-bg-raised);
+    color: var(--color-fg);
+    border: 1px solid var(--color-rule);
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+.sandbox-chrome select:hover,
+.sandbox-chrome button:hover {
+    border-color: var(--color-accent);
+}
+
+.sandbox-chrome__snapshot-btn {
+    margin-left: auto;
+    background: var(--color-accent) !important;
+    color: var(--color-bg) !important;
+    font-weight: 700;
+    border: none !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Main layout
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sandbox-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.sandbox-canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Frame mock
+   ────────────────────────────────────────────────────────────────────────── */
+
+.frame-mock {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    pointer-events: none;
+}
+
+.frame-mock[data-edge='top'] { flex-direction: column; }
+.frame-mock[data-edge='bottom'] { flex-direction: column-reverse; }
+
+.frame-bar {
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    background: var(--card-bg, var(--color-bg-raised));
+    border: 4px solid var(--card-border-color, #333);
+    border-left: none;
+    border-right: none;
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--card-fg, var(--color-fg));
+    pointer-events: auto;
+    flex-shrink: 0;
+    z-index: 20;
+    overflow: hidden;
+    min-height: 40px;
+}
+
+.frame-bar__divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--card-border-color, #333);
+    opacity: 0.35;
+    flex-shrink: 0;
+}
+
+.frame-bar__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    flex-shrink: 0;
+}
+
+.frame-bar__site-name {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.frame-bar__current-page {
+    color: var(--card-accent, var(--color-accent));
+    font-size: 11px;
+}
+
+.frame-bar__nav {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+.frame-bar__nav-btn {
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--card-fg, var(--color-fg));
+    cursor: pointer;
+    opacity: 0.65;
+    letter-spacing: 0.02em;
+}
+
+.frame-bar__nav-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.frame-bar__nav-btn[data-active='true'] {
+    opacity: 1;
+    color: var(--card-accent, var(--color-accent));
+}
+
+.frame-bar__minimized-strip {
+    display: flex;
+    gap: 6px;
+    padding: 0 12px;
+    flex: 1;
+    overflow: hidden;
+    align-items: center;
+}
+
+.frame-bar__mini-card {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border: 1px solid var(--card-border-color, #333);
+    background: var(--card-bg, #fff);
+    color: var(--card-fg, #111);
+    font-size: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    pointer-events: auto;
+}
+
+.frame-bar__mini-card:hover {
+    background: var(--card-accent, var(--color-accent));
+    color: var(--card-bg, #fff);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Scroll indicator — arrow only
+   ────────────────────────────────────────────────────────────────────────── */
+
+.hidden-scroll-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.hidden-scroll-inner {
+    overflow-y: auto;
+    scrollbar-width: none;
+    height: 100%;
+}
+
+.hidden-scroll-inner::-webkit-scrollbar {
+    display: none;
+}
+
+.scroll-indicator-arrow::after {
+    content: '▼';
+    position: absolute;
+    bottom: 6px;
+    right: 10px;
+    font-size: 10px;
+    color: var(--card-fg, var(--color-fg));
+    opacity: 0.5;
+    pointer-events: none;
+}

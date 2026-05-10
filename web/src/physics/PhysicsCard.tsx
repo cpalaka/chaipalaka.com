@@ -4,14 +4,23 @@ import { registry as pretextRegistry } from '../text/registry'
 import type { PhysicsHandle } from './PhysicsWorld'
 import './PhysicsCard.css'
 
+export type CardInteractionMode = 'locked' | 'free'
+
 export interface PhysicsCardProps {
     text: string
     fontKey: string
     maxWidth: number
     anchor: { x: number; y: number }
     children?: React.ReactNode
+    header?: React.ReactNode
     width?: number
     height?: number
+    variant?: string
+    className?: string
+    style?: React.CSSProperties
+    physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
+    cardRef?: React.MutableRefObject<HTMLElement | null>
+    interactionMode?: CardInteractionMode
 }
 
 const CARD_PADDING_PX = 24
@@ -22,8 +31,15 @@ export function PhysicsCard({
     maxWidth,
     anchor,
     children,
+    header,
     width: explicitW,
     height: explicitH,
+    variant,
+    className,
+    style,
+    physicsHandleRef,
+    cardRef,
+    interactionMode = 'free',
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
@@ -33,6 +49,10 @@ export function PhysicsCard({
     // every resize tick while the spring update is handled separately).
     const anchorRef = useRef(anchor)
     anchorRef.current = anchor
+    // Ref so pointer handlers always read the current interactionMode without
+    // being re-registered on every toggle (rerender-use-ref-transient-values).
+    const interactionModeRef = useRef(interactionMode)
+    interactionModeRef.current = interactionMode
 
     // Registration: only re-runs when text content or font changes.
     useEffect(() => {
@@ -65,6 +85,7 @@ export function PhysicsCard({
             },
         )
         handleRef.current = handle
+        if (physicsHandleRef) physicsHandleRef.current = handle
 
         let dragging = false
         let lastX = 0
@@ -76,7 +97,8 @@ export function PhysicsCard({
         const FLING_PAUSE_MS = 50
 
         const onPointerDown = (e: PointerEvent) => {
-            if ((e.target as Element | null)?.closest('a, button')) return
+            if (interactionModeRef.current !== 'free') return
+            if ((e.target as Element | null)?.closest('[data-card-header], a, button')) return
             e.preventDefault()
             dragging = true
             lastX = e.clientX
@@ -125,6 +147,7 @@ export function PhysicsCard({
         return () => {
             world.unregister(handle)
             handleRef.current = null
+            if (physicsHandleRef) physicsHandleRef.current = null
             el.removeEventListener('pointerdown', onPointerDown)
             window.removeEventListener('pointermove', onPointerMove)
             window.removeEventListener('pointerup', onPointerUp)
@@ -137,8 +160,30 @@ export function PhysicsCard({
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
+    // Interaction mode change: pin/unpin and sensor-toggle when lock state changes.
+    useEffect(() => {
+        if (handleRef.current === null) return
+        const locked = interactionMode === 'locked'
+        world.setStatic(handleRef.current, locked)
+        world.setSensor(handleRef.current, locked)
+    }, [world, interactionMode])
+
+    const cls = ['physics-card', className].filter(Boolean).join(' ')
+
     return (
-        <article ref={elRef} className="physics-card">
+        <article
+            ref={(el) => {
+                elRef.current = el
+                if (cardRef) cardRef.current = el
+            }}
+            className={cls}
+            data-variant={variant}
+            data-interaction-mode={interactionMode}
+            style={style}
+        >
+            {header != null && (
+                <div data-card-header>{header}</div>
+            )}
             {children ?? text}
         </article>
     )
