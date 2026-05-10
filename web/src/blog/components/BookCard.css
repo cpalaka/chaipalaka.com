@@ -1,56 +1,56 @@
 .book-card {
-  display: flex;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
 }
 
 .book-card--placeholder {
-  color: var(--color-fg-faint);
+    color: var(--color-fg-faint);
 }
 
 .book-card__cover {
-  width: 56px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
+    width: 56px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
 }
 
 .book-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
 }
 
 .book-card__status {
-  font-size: var(--font-size-xs);
-  font-family: var(--font-mono);
-  border-radius: var(--radius-pill);
-  padding: 2px var(--space-2);
-  display: inline-block;
-  width: fit-content;
-  background: color-mix(in srgb, var(--color-fg-faint) 20%, transparent);
-  color: var(--color-fg-muted);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    border-radius: var(--radius-pill);
+    padding: 2px var(--space-2);
+    display: inline-block;
+    width: fit-content;
+    background: color-mix(in srgb, var(--color-fg-faint) 20%, transparent);
+    color: var(--color-fg-muted);
 }
 
 .book-card__status--reading {
-  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+    color: var(--color-accent);
 }
 
 .book-card__title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semi);
-  color: var(--color-fg);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .book-card__author {
-  font-size: var(--font-size-xs);
-  color: var(--color-fg-muted);
-  margin: 0;
+    font-size: var(--font-size-xs);
+    color: var(--color-fg-muted);
+    margin: 0;
 }

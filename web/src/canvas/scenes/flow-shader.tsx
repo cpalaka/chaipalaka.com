@@ -5,9 +5,9 @@ import type { BackgroundScene } from '../types'
 import rawManifest from './manifest.json'
 
 interface SceneManifestEntry {
-  id: string
-  fallbackColors: readonly [string, string]
-  fallbackPng: string
+    id: string
+    fallbackColors: readonly [string, string]
+    fallbackPng: string
 }
 const manifest = rawManifest as unknown as readonly SceneManifestEntry[]
 
@@ -76,43 +76,44 @@ const FRAGMENT_SHADER = /* glsl */ `
 `
 
 function FlowShader() {
-  const ref = useRef<ShaderMaterial>(null)
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uResolution: { value: new Vector2(1, 1) },
-      uColorA: { value: new Color(meta!.fallbackColors[0]) },
-      uColorB: { value: new Color(meta!.fallbackColors[1]) },
-    }),
-    [],
-  )
-  useFrame((state) => {
-    const mat = ref.current
-    if (!mat) return
-    // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
-    // must go through `mat.uniforms.*`, not the local `uniforms` reference.
-    const u = mat.uniforms
-    if (u.uTime) u.uTime.value = state.clock.elapsedTime
-    if (u.uResolution) u.uResolution.value.set(state.size.width, state.size.height)
-  })
-  return (
-    <mesh frustumCulled={false}>
-      <planeGeometry args={[2, 2]} />
-      <shaderMaterial
-        ref={ref}
-        uniforms={uniforms}
-        vertexShader={VERTEX_SHADER}
-        fragmentShader={FRAGMENT_SHADER}
-        depthTest={false}
-        depthWrite={false}
-      />
-    </mesh>
-  )
+    const ref = useRef<ShaderMaterial>(null)
+    const uniforms = useMemo(
+        () => ({
+            uTime: { value: 0 },
+            uResolution: { value: new Vector2(1, 1) },
+            uColorA: { value: new Color(meta!.fallbackColors[0]) },
+            uColorB: { value: new Color(meta!.fallbackColors[1]) },
+        }),
+        [],
+    )
+    useFrame((state) => {
+        const mat = ref.current
+        if (!mat) return
+        // ShaderMaterial deep-clones `uniforms` in its constructor, so writes
+        // must go through `mat.uniforms.*`, not the local `uniforms` reference.
+        const u = mat.uniforms
+        if (u.uTime) u.uTime.value = state.clock.elapsedTime
+        if (u.uResolution)
+            u.uResolution.value.set(state.size.width, state.size.height)
+    })
+    return (
+        <mesh frustumCulled={false}>
+            <planeGeometry args={[2, 2]} />
+            <shaderMaterial
+                ref={ref}
+                uniforms={uniforms}
+                vertexShader={VERTEX_SHADER}
+                fragmentShader={FRAGMENT_SHADER}
+                depthTest={false}
+                depthWrite={false}
+            />
+        </mesh>
+    )
 }
 
 export const flowShaderScene: BackgroundScene = {
-  id: meta.id,
-  Component: FlowShader,
-  fallbackColors: meta.fallbackColors,
-  fallbackPng: meta.fallbackPng,
+    id: meta.id,
+    Component: FlowShader,
+    fallbackColors: meta.fallbackColors,
+    fallbackPng: meta.fallbackPng,
 }

@@ -1,19 +1,23 @@
 .callout {
-  border-left: 4px solid var(--callout-border, var(--color-accent));
-  padding: var(--space-3) var(--space-4);
-  margin: var(--space-4) 0;
-  background: color-mix(in srgb, var(--callout-border, var(--color-accent)) 8%, transparent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-left: 4px solid var(--callout-border, var(--color-accent));
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+    background: color-mix(
+        in srgb,
+        var(--callout-border, var(--color-accent)) 8%,
+        transparent
+    );
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .callout--note {
-  --callout-border: #60a5fa;
+    --callout-border: #60a5fa;
 }
 
 .callout--warn {
-  --callout-border: #fb923c;
+    --callout-border: #fb923c;
 }
 
 .callout--aside {
-  --callout-border: #a78bfa;
+    --callout-border: #a78bfa;
 }
