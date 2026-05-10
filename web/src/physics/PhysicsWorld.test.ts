@@ -331,3 +331,66 @@ describe('PhysicsWorld angular spring back', () => {
         expect(pos.rotation).toBeGreaterThan(0.25)
     })
 })
+
+describe('PhysicsWorld static registration (gravity-exempt)', () => {
+    test('registerStatic returns a handle that can be queried and unregistered', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerStatic(
+            { x: 200, y: 500 },
+            { width: 120, height: 60 },
+        )
+        expect(handle).toBeDefined()
+        expect(world.has(handle)).toBe(true)
+        world.unregister(handle)
+        expect(world.has(handle)).toBe(false)
+    })
+
+    test('a static body sits at its initial position', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerStatic(
+            { x: 200, y: 500 },
+            { width: 120, height: 60 },
+        )
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeCloseTo(200, 5)
+        expect(pos.y).toBeCloseTo(500, 5)
+    })
+
+    test('a static body does not fall when gravity is on', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerStatic(
+            { x: 200, y: 200 },
+            { width: 120, height: 60 },
+        )
+        world.setGravity(true)
+        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.y).toBeCloseTo(200, 1)
+    })
+
+    test('setPosition moves a static body to the target immediately', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerStatic(
+            { x: 200, y: 500 },
+            { width: 120, height: 60 },
+        )
+        world.setPosition(handle, { x: 400, y: 300 })
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeCloseTo(400, 5)
+        expect(pos.y).toBeCloseTo(300, 5)
+    })
+
+    test('a static body stays put after setPosition across many ticks with gravity', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerStatic(
+            { x: 200, y: 500 },
+            { width: 120, height: 60 },
+        )
+        world.setGravity(true)
+        world.setPosition(handle, { x: 400, y: 300 })
+        for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.x).toBeCloseTo(400, 1)
+        expect(pos.y).toBeCloseTo(300, 1)
+    })
+})
