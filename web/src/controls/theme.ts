@@ -1,8 +1,6 @@
-export type Theme = 'dark' | 'light' | 'system'
+export type Theme = 'dark' | 'light'
 
 export const THEME_STORAGE_KEY = 'chaipalaka.theme'
-
-const CYCLE: readonly Theme[] = ['system', 'dark', 'light']
 
 export interface ThemeController {
     getTheme(): Theme
@@ -14,21 +12,28 @@ export interface ThemeController {
 
 export interface ThemeControllerDeps {
     storage: Map<string, string>
+    getSystemPreference: () => Theme
 }
 
-function readTheme(storage: Map<string, string>): Theme {
+function readTheme(
+    storage: Map<string, string>,
+    getSystemPreference: () => Theme,
+): Theme {
     const stored = storage.get(THEME_STORAGE_KEY)
-    if (stored === 'dark' || stored === 'light' || stored === 'system') {
+    if (stored === 'dark' || stored === 'light') {
         return stored
     }
-    return 'system'
+    // Migrate stored 'system' or any unrecognised value to the resolved OS preference
+    const resolved = getSystemPreference()
+    storage.set(THEME_STORAGE_KEY, resolved)
+    return resolved
 }
 
 export function createThemeController(
     deps: ThemeControllerDeps,
 ): ThemeController {
-    const { storage } = deps
-    let current: Theme = readTheme(storage)
+    const { storage, getSystemPreference } = deps
+    let current: Theme = readTheme(storage, getSystemPreference)
     const listeners = new Set<(theme: Theme) => void>()
 
     return {
@@ -43,14 +48,13 @@ export function createThemeController(
         },
 
         cycleTheme() {
-            const idx = CYCLE.indexOf(current)
-            current = CYCLE[(idx + 1) % CYCLE.length]!
+            current = current === 'dark' ? 'light' : 'dark'
             storage.set(THEME_STORAGE_KEY, current)
             for (const l of listeners) l(current)
         },
 
         getDataTheme() {
-            return current === 'system' ? '' : current
+            return current
         },
 
         subscribe(listener) {

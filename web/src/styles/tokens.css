@@ -9,23 +9,29 @@
  * Theme resolution order (later wins):
  *   1. `:root`                                — dark defaults
  *   2. `@media (prefers-color-scheme: light)` — system-respected light mode
- *   3. `:root[data-theme="light"|"dark"]`     — manual override (toggle UI lands later)
+ *   3. `:root[data-theme="light"|"dark"]`     — manual override (toggle UI)
  */
 
 :root {
     /* ---------- color (dark default) ---------- */
-    --color-bg: #0d0d10;
-    --color-bg-raised: #16161b;
-    --color-fg: #e8e6e1;
-    --color-fg-muted: #a8a4a0;
-    --color-fg-faint: #6e6c69;
-    --color-accent: #c19a4b;
-    --color-rule: rgba(255, 255, 255, 0.08);
-    --color-selection: rgba(193, 154, 75, 0.35);
+    --color-bg: #0a0a0a;
+    --color-bg-raised: #111111;
+    --color-fg: #f8f8f8;
+    --color-fg-muted: #999999;
+    --color-fg-faint: #555555;
+    --color-accent: #e60000;
+    --color-rule: rgba(255, 255, 255, 0.1);
+    --color-selection: rgba(230, 0, 0, 0.25);
+
+    /* ---------- card tokens ---------- */
+    --card-border-width: 4px;
+    --card-radius: 4px;
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --card-padding: 24px;
+    --card-gap: 24px;
 
     /* ---------- typography ---------- */
-    --font-body:
-        'Newsreader Variable', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     --font-mono:
         'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas,
         monospace;
@@ -79,14 +85,14 @@
 /* light theme via system preference */
 @media (prefers-color-scheme: light) {
     :root {
-        --color-bg: #f7f5f1;
+        --color-bg: #f8f8f8;
         --color-bg-raised: #ffffff;
-        --color-fg: #1a1a1c;
-        --color-fg-muted: #5a5a5c;
-        --color-fg-faint: #8a8a8c;
-        --color-accent: #8a6321;
+        --color-fg: #000000;
+        --color-fg-muted: #555555;
+        --color-fg-faint: #999999;
+        --color-accent: #e60000;
         --color-rule: rgba(0, 0, 0, 0.1);
-        --color-selection: rgba(138, 99, 33, 0.25);
+        --color-selection: rgba(230, 0, 0, 0.15);
 
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
         --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -96,14 +102,14 @@
 
 /* manual override: light */
 :root[data-theme='light'] {
-    --color-bg: #f7f5f1;
+    --color-bg: #f8f8f8;
     --color-bg-raised: #ffffff;
-    --color-fg: #1a1a1c;
-    --color-fg-muted: #5a5a5c;
-    --color-fg-faint: #8a8a8c;
-    --color-accent: #8a6321;
+    --color-fg: #000000;
+    --color-fg-muted: #555555;
+    --color-fg-faint: #999999;
+    --color-accent: #e60000;
     --color-rule: rgba(0, 0, 0, 0.1);
-    --color-selection: rgba(138, 99, 33, 0.25);
+    --color-selection: rgba(230, 0, 0, 0.15);
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -112,14 +118,14 @@
 
 /* manual override: dark — re-asserts the defaults so a light-system user can force dark */
 :root[data-theme='dark'] {
-    --color-bg: #0d0d10;
-    --color-bg-raised: #16161b;
-    --color-fg: #e8e6e1;
-    --color-fg-muted: #a8a4a0;
-    --color-fg-faint: #6e6c69;
-    --color-accent: #c19a4b;
-    --color-rule: rgba(255, 255, 255, 0.08);
-    --color-selection: rgba(193, 154, 75, 0.35);
+    --color-bg: #0a0a0a;
+    --color-bg-raised: #111111;
+    --color-fg: #f8f8f8;
+    --color-fg-muted: #999999;
+    --color-fg-faint: #555555;
+    --color-accent: #e60000;
+    --color-rule: rgba(255, 255, 255, 0.1);
+    --color-selection: rgba(230, 0, 0, 0.25);
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
