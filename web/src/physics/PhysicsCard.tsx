@@ -12,6 +12,10 @@ export interface PhysicsCardProps {
     children?: React.ReactNode
     width?: number
     height?: number
+    variant?: string
+    className?: string
+    style?: React.CSSProperties
+    physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
 }
 
 const CARD_PADDING_PX = 24
@@ -24,6 +28,10 @@ export function PhysicsCard({
     children,
     width: explicitW,
     height: explicitH,
+    variant,
+    className,
+    style,
+    physicsHandleRef,
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
@@ -65,6 +73,7 @@ export function PhysicsCard({
             },
         )
         handleRef.current = handle
+        if (physicsHandleRef) physicsHandleRef.current = handle
 
         let dragging = false
         let lastX = 0
@@ -125,6 +134,7 @@ export function PhysicsCard({
         return () => {
             world.unregister(handle)
             handleRef.current = null
+            if (physicsHandleRef) physicsHandleRef.current = null
             el.removeEventListener('pointerdown', onPointerDown)
             window.removeEventListener('pointermove', onPointerMove)
             window.removeEventListener('pointerup', onPointerUp)
@@ -137,8 +147,15 @@ export function PhysicsCard({
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
+    const cls = ['physics-card', className].filter(Boolean).join(' ')
+
     return (
-        <article ref={elRef} className="physics-card">
+        <article
+            ref={elRef}
+            className={cls}
+            data-variant={variant}
+            style={style}
+        >
             {children ?? text}
         </article>
     )
