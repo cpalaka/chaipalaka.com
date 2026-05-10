@@ -1,14 +1,21 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BackgroundCanvas } from '../canvas/BackgroundCanvas'
 import { CANVAS_ONLY_BUNDLE_MARKER } from '../lib/canvas-only-marker'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { ControlsPanel } from '../controls/ControlsPanel'
 import { FrameBar } from '../canvas/FrameBar'
 import { useFrameEdge } from '../canvas/useFrameEdge'
 import './CanvasLayout.css'
 
 export default function CanvasLayout() {
     const { edge } = useFrameEdge()
+
+    useEffect(() => {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('chaipalaka.controls.position')
+        }
+    }, [])
+
     return (
         <PhysicsProvider>
             <div
@@ -17,7 +24,6 @@ export default function CanvasLayout() {
                 data-frame-edge={edge}
             >
                 <BackgroundCanvas />
-                <ControlsPanel />
                 <FrameBar />
                 <Outlet />
             </div>

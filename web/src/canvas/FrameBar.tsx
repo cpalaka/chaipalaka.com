@@ -1,5 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
+import { useGallery } from './useGallery'
+import { useTheme } from '../controls/useTheme'
+import { useFrameEdge } from './useFrameEdge'
+import manifest from './scenes/manifest.json'
 import './FrameBar.css'
 
 const SECTIONS = [
@@ -16,6 +20,36 @@ export function isActiveRoute(pathname: string, target: string): boolean {
 export function FrameBar() {
     const { pathname } = useLocation()
     const [settingsOpen, setSettingsOpen] = useState(false)
+    const { active, setActive } = useGallery()
+    const { theme, cycleTheme } = useTheme()
+    const { edge, setEdge } = useFrameEdge()
+    const [gravityOn] = useState(false)
+
+    const settingsContainerRef = useRef<HTMLDivElement>(null)
+    const settingsBtnRef = useRef<HTMLButtonElement>(null)
+
+    useEffect(() => {
+        if (!settingsOpen) return
+        const onMouseDown = (e: MouseEvent) => {
+            if (!settingsContainerRef.current?.contains(e.target as Node)) {
+                setSettingsOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', onMouseDown)
+        return () => document.removeEventListener('mousedown', onMouseDown)
+    }, [settingsOpen])
+
+    useEffect(() => {
+        if (!settingsOpen) return
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setSettingsOpen(false)
+                settingsBtnRef.current?.focus()
+            }
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => document.removeEventListener('keydown', onKeyDown)
+    }, [settingsOpen])
 
     return (
         <header role="banner" className="frame-bar">
@@ -50,8 +84,9 @@ export function FrameBar() {
                 className="frame-bar__minimized-strip"
             />
 
-            <div className="frame-bar__settings">
+            <div ref={settingsContainerRef} className="frame-bar__settings">
                 <button
+                    ref={settingsBtnRef}
                     type="button"
                     className="frame-bar__settings-btn"
                     aria-label="Site settings"
@@ -62,7 +97,93 @@ export function FrameBar() {
                     ≡
                 </button>
                 {settingsOpen ? (
-                    <div role="menu" className="frame-bar__settings-menu" />
+                    <div role="menu" className="frame-bar__settings-menu">
+                        <div
+                            role="group"
+                            aria-labelledby="fb-bg-label"
+                            className="frame-bar__menu-group"
+                        >
+                            <label
+                                id="fb-bg-label"
+                                htmlFor="fb-bg"
+                                className="frame-bar__menu-label"
+                            >
+                                Background
+                            </label>
+                            <select
+                                id="fb-bg"
+                                className="frame-bar__menu-select"
+                                value={active.id}
+                                onChange={(e) => setActive(e.target.value)}
+                            >
+                                {manifest.map((scene) => (
+                                    <option key={scene.id} value={scene.id}>
+                                        {scene.id}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div
+                            role="group"
+                            aria-labelledby="fb-theme-label"
+                            className="frame-bar__menu-group"
+                        >
+                            <span id="fb-theme-label" className="frame-bar__menu-label">
+                                Color mode
+                            </span>
+                            <button
+                                type="button"
+                                className="frame-bar__menu-toggle"
+                                aria-pressed={theme === 'light'}
+                                onClick={cycleTheme}
+                            >
+                                {theme === 'light' ? 'Light' : 'Dark'}
+                            </button>
+                        </div>
+
+                        <div
+                            role="group"
+                            aria-labelledby="fb-edge-label"
+                            className="frame-bar__menu-group"
+                        >
+                            <label
+                                id="fb-edge-label"
+                                htmlFor="fb-edge"
+                                className="frame-bar__menu-label"
+                            >
+                                Frame edge
+                            </label>
+                            <select
+                                id="fb-edge"
+                                className="frame-bar__menu-select"
+                                value={edge}
+                                onChange={(e) =>
+                                    setEdge(e.target.value as 'top' | 'bottom')
+                                }
+                            >
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                            </select>
+                        </div>
+
+                        <div
+                            role="group"
+                            aria-labelledby="fb-grav-label"
+                            className="frame-bar__menu-group"
+                        >
+                            <span id="fb-grav-label" className="frame-bar__menu-label">
+                                Gravity
+                            </span>
+                            <button
+                                type="button"
+                                className="frame-bar__menu-toggle"
+                                aria-pressed={gravityOn}
+                            >
+                                {gravityOn ? 'On' : 'Off'}
+                            </button>
+                        </div>
+                    </div>
                 ) : null}
             </div>
         </header>
