@@ -55,7 +55,7 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
             variant="playground"
             physicsHandleRef={handleRef}
             interactionMode={locked ? 'locked' : 'free'}
-            header={<CardHeader locked={locked} onChange={setLocked} />}
+            header={<CardHeader locked={locked} onChange={setLocked} onMinimize={onMinimize} />}
         >
             {/* Shader flourish — absolutely positioned behind content within the fixed card */}
             <FlourishMount
@@ -85,22 +85,6 @@ export function Playground({ config, minimized, onMinimize }: PlaygroundProps) {
                     <p style={{ margin: '6px 0 0' }}>{LOREM}</p>
                     <p style={{ margin: '6px 0 0', opacity: 0.55 }}>{LOREM}</p>
                 </HiddenScroll>
-                <button
-                    onClick={onMinimize}
-                    style={{
-                        alignSelf: 'flex-start',
-                        fontFamily: 'var(--card-font-body, inherit)',
-                        fontSize: 11,
-                        padding: '2px 8px',
-                        background: 'var(--card-accent, var(--color-accent))',
-                        color: 'var(--card-bg, var(--color-bg))',
-                        border:
-                            '1px solid var(--card-border-color, currentColor)',
-                        cursor: 'pointer',
-                    }}
-                >
-                    minimize ↓
-                </button>
             </div>
 
             {/* Resize handles — topmost layer, position absolute covers entire card */}

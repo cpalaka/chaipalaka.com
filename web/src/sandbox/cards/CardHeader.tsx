@@ -1,17 +1,40 @@
 interface CardHeaderProps {
     locked: boolean
     onChange: (locked: boolean) => void
+    onMinimize?: () => void
 }
 
-export function CardHeader({ locked, onChange }: CardHeaderProps) {
+export function CardHeader({ locked, onChange, onMinimize }: CardHeaderProps) {
     return (
-        <button
-            type="button"
-            title={locked ? 'Locked — click to free' : 'Free — click to lock'}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onChange(!locked)}
-            style={{
-                marginLeft: 'auto',
+        <>
+            {onMinimize != null && (
+                <button
+                    type="button"
+                    title="Minimize"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={onMinimize}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '4px 6px',
+                        cursor: 'pointer',
+                        color: 'var(--card-fg, currentColor)',
+                        opacity: 0.55,
+                        fontSize: 14,
+                        lineHeight: 1,
+                        fontFamily: 'inherit',
+                    }}
+                >
+                    −
+                </button>
+            )}
+            <button
+                type="button"
+                title={locked ? 'Locked — click to free' : 'Free — click to lock'}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onChange(!locked)}
+                style={{
+                    marginLeft: 'auto',
                 background: 'none',
                 border: 'none',
                 padding: '4px 6px',
@@ -64,5 +87,6 @@ export function CardHeader({ locked, onChange }: CardHeaderProps) {
                 </svg>
             )}
         </button>
+        </>
     )
 }
