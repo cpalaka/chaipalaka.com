@@ -5,6 +5,7 @@ import {
     CARD_GAP,
     CARD_PADDING,
     CARD_PADDING_BOTTOM,
+    CARD_HEADER_HEIGHT,
 } from './BlogIndex.measure'
 import type { PostFrontmatter } from '../../blog/types'
 
@@ -33,20 +34,20 @@ describe('measureBlogCard', () => {
         expect(width).toBe(100 + CARD_PADDING * 2)
     })
 
-    test('height = sum of 5 parts (title+desc+date+tags+cta) + 4 gaps + top + bottom padding', () => {
+    test('height = sum of 5 parts (title+desc+date+tags+cta) + 4 gaps + top + bottom padding + header', () => {
         const { height } = measureBlogCard(baseFrontmatter, 400, fixedMeasure)
         const expectedContent = 5 * 20 + 4 * CARD_GAP
         expect(height).toBe(
-            expectedContent + CARD_PADDING + CARD_PADDING_BOTTOM,
+            expectedContent + CARD_PADDING + CARD_PADDING_BOTTOM + CARD_HEADER_HEIGHT,
         )
     })
 
-    test('tag-less post omits the tags row — 4 parts + 3 gaps', () => {
+    test('tag-less post omits the tags row — 4 parts + 3 gaps + header', () => {
         const noTags: PostFrontmatter = { ...baseFrontmatter, tags: [] }
         const { height } = measureBlogCard(noTags, 400, fixedMeasure)
         const expectedContent = 4 * 20 + 3 * CARD_GAP
         expect(height).toBe(
-            expectedContent + CARD_PADDING + CARD_PADDING_BOTTOM,
+            expectedContent + CARD_PADDING + CARD_PADDING_BOTTOM + CARD_HEADER_HEIGHT,
         )
     })
 

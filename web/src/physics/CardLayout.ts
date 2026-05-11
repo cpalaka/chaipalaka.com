@@ -1,4 +1,4 @@
-export interface CardSpec {
+export interface LayoutInput {
     id: string
     text: string
     fontKey: string
@@ -33,7 +33,7 @@ function colsForWidth(viewportWidth: number): number {
 }
 
 export function cardLayout(
-    specs: CardSpec[],
+    specs: LayoutInput[],
     viewport: { width: number; height: number },
     measure: MeasureFn,
 ): CardAnchor[] {
