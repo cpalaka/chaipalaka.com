@@ -7,44 +7,50 @@ import {
     measureBlogCard,
     formatPostDate,
     CARD_PADDING,
+    type MeasureFn,
 } from './BlogIndex.measure'
-import type { PageDef } from '../../physics/PageDef'
+import type { PageDef, CardSpec } from '../../physics/PageDef'
+import type { Post } from '../../blog/types'
+import type { Viewport } from '../../physics/PhysicsWorld'
 
 const GUTTER = 16
 
+export const CHAIN_GAP = 60
+export const CHAIN_X_FRACTION = 0.5
+export const CHAIN_TOP = 80
+
 const posts = getPosts()
 
-const pageDef: PageDef = {
-    gravity: 'down',
-    cards: posts.map((post) => ({
-        id: `blog-${post.slug}`,
-        kind: 'blog' as const,
-        parent: 'ceiling' as const,
-    })),
-}
+export function buildChain(
+    postList: Post[],
+    vp: Viewport,
+    measure: MeasureFn,
+): { pageDef: PageDef; cardContent: Record<string, CardContent> } {
+    const textMaxWidth = Math.max(1, vp.width * 0.6 - GUTTER * 2 - CARD_PADDING * 2)
 
-function colsForWidth(vw: number): number {
-    if (vw >= 1024) return 3
-    if (vw >= 480) return 2
-    return 1
-}
+    const cards: CardSpec[] = []
+    const cardContent: Record<string, CardContent> = {}
 
-function buildCardContent(): Record<string, CardContent> {
-    const vw = typeof window !== 'undefined' ? window.innerWidth : 1024
-    const numCols = colsForWidth(vw)
-    const colWidth = vw / numCols
-    const textMaxWidth = Math.max(1, colWidth - GUTTER * 2 - CARD_PADDING * 2)
-    const measure = (text: string, fontKey: string, mw: number) =>
-        pretextRegistry.measure(text, fontKey, mw)
+    let y = CHAIN_TOP
 
-    const content: Record<string, CardContent> = {}
-    for (const post of posts) {
-        const { width, height } = measureBlogCard(
-            post.frontmatter,
-            textMaxWidth,
-            measure,
-        )
-        content[`blog-${post.slug}`] = {
+    for (let i = 0; i < postList.length; i++) {
+        const post = postList[i]!
+        const { width, height } = measureBlogCard(post.frontmatter, textMaxWidth, measure)
+
+        const capturedY = y + height / 2
+        const id = `blog-${post.slug}`
+
+        cards.push({
+            id,
+            kind: 'blog',
+            parent: i === 0 ? 'ceiling' : `blog-${postList[i - 1]!.slug}`,
+            anchor: (viewport: Viewport) => ({
+                x: viewport.width * CHAIN_X_FRACTION,
+                y: capturedY,
+            }),
+        })
+
+        cardContent[id] = {
             text: post.frontmatter.title,
             width,
             height,
@@ -71,23 +77,41 @@ function buildCardContent(): Record<string, CardContent> {
                 </>
             ),
         }
+
+        y += height + CHAIN_GAP
     }
-    return content
+
+    return {
+        pageDef: { gravity: 'down', cards },
+        cardContent,
+    }
+}
+
+function getViewport(): Viewport {
+    return typeof window !== 'undefined'
+        ? { width: window.innerWidth, height: window.innerHeight }
+        : { width: 1024, height: 768 }
+}
+
+const emptyPage: { pageDef: PageDef; cardContent: Record<string, CardContent> } = {
+    pageDef: { gravity: 'down', cards: [] },
+    cardContent: {},
 }
 
 export default function BlogIndex() {
-    const [cardContent, setCardContent] = useState<Record<string, CardContent>>(
-        {},
-    )
+    const [page, setPage] = useState(emptyPage)
 
     useEffect(() => {
         function update() {
-            setCardContent(buildCardContent())
+            const vp = getViewport()
+            const measure = (text: string, fontKey: string, mw: number) =>
+                pretextRegistry.measure(text, fontKey, mw)
+            setPage(buildChain(posts, vp, measure))
         }
         update()
         window.addEventListener('resize', update, { passive: true })
         return () => window.removeEventListener('resize', update)
     }, [])
 
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <PhysicsPage pageDef={page.pageDef} cardContent={page.cardContent} />
 }

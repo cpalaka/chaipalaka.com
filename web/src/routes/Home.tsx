@@ -8,8 +8,18 @@ const CARD_H = 160
 const pageDef: PageDef = {
     gravity: 'down',
     cards: [
-        { id: 'card-a', kind: 'headline', parent: 'ceiling' },
-        { id: 'card-b', kind: 'headline', parent: 'ceiling' },
+        {
+            id: 'card-a',
+            kind: 'headline',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.3, y: 180 }),
+        },
+        {
+            id: 'card-b',
+            kind: 'headline',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.7, y: 180 }),
+        },
     ],
 }
 
