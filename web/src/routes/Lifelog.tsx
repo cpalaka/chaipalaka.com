@@ -6,7 +6,7 @@ import './Lifelog.css'
 const BOOKS_W = 240
 const BOOKS_H = 160
 const NOTE_W = 200
-const NOTE_H = 100
+const NOTE_H = 240
 
 const booksChildren = (
     <div className="lifelog-books">
