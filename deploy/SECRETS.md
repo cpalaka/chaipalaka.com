@@ -31,8 +31,9 @@ Format (one `KEY=value` per line, no quoting):
 
 ```
 LASTFM_API_KEY=xxxxxxxxxxxxxxxxxxxx
-LASTFM_USER=chaipalaka
-LETTERBOXD_USER=chaipalaka
+LASTFM_USER=cpalaka
+GOODREADS_USER_ID=<your-numeric-id>
+LETTERBOXD_USER=cpalaka
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 ```
 

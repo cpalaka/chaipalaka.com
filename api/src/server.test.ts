@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GoodreadsShelf, type Book } from './adapters/GoodreadsAdapter';
 import type { Track } from './adapters/LastFmAdapter';
+import type { Film } from './adapters/LetterboxdAdapter';
 import { handle } from './server';
 
 const FIXTURE_BOOKS: Book[] = [
@@ -232,5 +233,95 @@ describe('/api/recent-tracks', () => {
     );
 
     expect(adapter.fetchRecentTracks).toHaveBeenCalledTimes(1);
+  });
+});
+
+const FIXTURE_FILMS: Film[] = [
+  {
+    letterboxdId: '1278965807',
+    title: 'The Lord of the Rings: The Fellowship of the Ring',
+    year: 2001,
+    watchedDate: '2026-04-12',
+    rating: 5.0,
+    posterUrl: 'https://a.ltrbxd.com/poster.jpg',
+    rewatch: true,
+    link: 'https://letterboxd.com/cpalaka/film/lotr-fotr/1/',
+  },
+  {
+    letterboxdId: '1268084157',
+    title: "There's Something About Mary",
+    year: 1998,
+    watchedDate: '2026-04-05',
+    rating: 3.5,
+    review: "They really don't make em like they used to",
+    posterUrl: 'https://a.ltrbxd.com/poster2.jpg',
+    rewatch: true,
+    link: 'https://letterboxd.com/cpalaka/film/theres-something-about-mary/',
+  },
+];
+
+function makeFilmsAdapter(films: Film[] = FIXTURE_FILMS, fail = false) {
+  return {
+    fetchFilms: vi.fn(async () => {
+      if (fail) throw new Error('upstream letterboxd');
+      return films;
+    }),
+  };
+}
+
+describe('/api/films', () => {
+  it('returns { films, stale: false } with the adapter results', async () => {
+    const adapter = makeFilmsAdapter();
+    const res = await handle(
+      new Request('http://localhost/api/films'),
+      { letterboxdUser: 'cpalaka', filmsAdapter: adapter },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { films: Film[]; stale: boolean };
+    expect(body.stale).toBe(false);
+    expect(body.films).toHaveLength(2);
+    expect(body.films[0]?.letterboxdId).toBe('1278965807');
+  });
+
+  it('returns empty films (not stale) when letterboxdUser is absent', async () => {
+    const res = await handle(new Request('http://localhost/api/films'), {});
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { films: Film[]; stale: boolean };
+    expect(body.films).toEqual([]);
+    expect(body.stale).toBe(false);
+  });
+
+  it('returns empty films with stale:true when adapter throws and cache is cold', async () => {
+    const adapter = makeFilmsAdapter([], true);
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const res = await handle(
+      new Request('http://localhost/api/films'),
+      { letterboxdUser: 'cpalaka', filmsAdapter: adapter, cache: new CacheLayer() },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { films: Film[]; stale: boolean; error: string };
+    expect(body.films).toEqual([]);
+    expect(body.stale).toBe(true);
+    expect(body.error).toBeDefined();
+  });
+
+  it('caches: calls fetchFilms only once across two requests within TTL', async () => {
+    const adapter = makeFilmsAdapter();
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const cache = new CacheLayer();
+
+    await handle(
+      new Request('http://localhost/api/films'),
+      { letterboxdUser: 'cpalaka', filmsAdapter: adapter, cache },
+    );
+    await handle(
+      new Request('http://localhost/api/films'),
+      { letterboxdUser: 'cpalaka', filmsAdapter: adapter, cache },
+    );
+
+    expect(adapter.fetchFilms).toHaveBeenCalledTimes(1);
   });
 });
