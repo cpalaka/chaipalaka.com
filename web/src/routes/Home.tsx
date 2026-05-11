@@ -1,50 +1,37 @@
 import { useState, useEffect } from 'react'
 import { PhysicsCard } from '../physics/PhysicsCard'
-import {
-    cardLayout,
-    type CardSpec,
-    type CardAnchor,
-} from '../physics/CardLayout'
-import { registry as pretextRegistry } from '../text/registry'
+import { cardLayout, type CardSpec, type CardAnchor } from '../physics/CardLayout'
+
+const CARD_W = 280
+const CARD_H = 160
 
 const CARD_SPECS: CardSpec[] = [
     {
-        id: 'hero',
-        text: 'chaipalaka.com — personal site of Chai Palaka, frontend engineer and creative coder.',
+        id: 'card-a',
+        text: 'The quick brown fox jumps over the lazy dog.',
         fontKey: 'body',
+        width: CARD_W,
+        height: CARD_H,
     },
     {
-        id: 'about',
-        text: 'Building interfaces at the intersection of craft and code. Physics-driven UI, generative art, and the web as a creative medium.',
+        id: 'card-b',
+        text: 'Pack my box with five dozen liquor jugs.',
         fontKey: 'body',
-    },
-    {
-        id: 'blog',
-        text: '/blog — writing on frontend architecture, creative coding, and the open web.',
-        fontKey: 'body',
-    },
-    {
-        id: 'portfolio',
-        text: '/portfolio — Flash-era stick-figure animations and interactive experiments, playable in-browser.',
-        fontKey: 'body',
+        width: CARD_W,
+        height: CARD_H,
     },
 ]
 
 function computeAnchors(): CardAnchor[] {
     const vp = { width: window.innerWidth, height: window.innerHeight }
-    return cardLayout(CARD_SPECS, vp, (text, fontKey, maxWidth) =>
-        pretextRegistry.measure(text, fontKey, maxWidth),
-    )
+    return cardLayout(CARD_SPECS, vp, () => ({ width: 0, height: 0 }))
 }
 
 export default function Home() {
-    // Anchors are computed client-side only: canvas text measurement is not
-    // available in the SSR (Node.js) prerender environment.
     const [anchors, setAnchors] = useState<CardAnchor[]>([])
 
     useEffect(() => {
         setAnchors(computeAnchors())
-
         const onResize = () => setAnchors(computeAnchors())
         window.addEventListener('resize', onResize, { passive: true })
         return () => window.removeEventListener('resize', onResize)
@@ -58,9 +45,13 @@ export default function Home() {
                     <PhysicsCard
                         key={anchor.id}
                         text={spec.text}
-                        fontKey={spec.fontKey}
-                        maxWidth={anchor.maxWidth}
                         anchor={{ x: anchor.x, y: anchor.y }}
+                        width={anchor.width}
+                        height={anchor.height}
+                        minimizable
+                        id={`home-${anchor.id}`}
+                        label={anchor.id}
+                        kind="home"
                     />
                 )
             })}
