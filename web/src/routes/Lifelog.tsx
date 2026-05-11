@@ -77,7 +77,7 @@ function BooksPanel() {
 // ─── Now-playing card ─────────────────────────────────────────────────────────
 
 const NOW_PLAYING_W = 280
-const NOW_PLAYING_H = 120
+const NOW_PLAYING_H = 180
 
 export const nowPlayingAnchor = (vp: Viewport): Vec2 => ({ x: vp.width - 200, y: 80 })
 
@@ -94,14 +94,21 @@ interface NowPlayingApiResponse {
     stale: boolean
 }
 
+const NOW_PLAYING_POLL_MS = 60_000
+
 function NowPlayingPanel() {
     const [data, setData] = useState<NowPlayingApiResponse | null>(null)
 
     useEffect(() => {
-        fetch('/api/now-playing')
-            .then((r) => r.json() as Promise<NowPlayingApiResponse>)
-            .then(setData)
-            .catch(() => setData(null))
+        const poll = () => {
+            fetch('/api/now-playing')
+                .then((r) => r.json() as Promise<NowPlayingApiResponse>)
+                .then(setData)
+                .catch(() => {})
+        }
+        poll()
+        const id = setInterval(poll, NOW_PLAYING_POLL_MS)
+        return () => clearInterval(id)
     }, [])
 
     const track = data?.track ?? null

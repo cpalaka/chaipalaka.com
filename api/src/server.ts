@@ -16,7 +16,7 @@ export type ServerConfig = {
 
 const sharedCache = new CacheLayer();
 const BOOKS_TTL_MS = 30 * 60 * 1000;
-const NOW_PLAYING_TTL_MS = 30_000;
+const NOW_PLAYING_TTL_MS = 3 * 60_000;
 const RECENT_TRACKS_TTL_MS = 5 * 60_000;
 const RECENT_TRACKS_LIMIT = 10;
 
