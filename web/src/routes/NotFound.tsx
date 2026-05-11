@@ -9,14 +9,33 @@ const recentPosts = getPosts().slice(0, 3)
 const pageDef: PageDef = {
     gravity: 'up',
     cards: [
-        { id: 'notfound-headline', kind: 'headline', parent: 'floor' },
-        ...recentPosts.map((p) => ({
+        {
+            id: 'notfound-headline',
+            kind: 'headline',
+            parent: 'floor',
+            anchor: (vp) => ({ x: vp.width * 0.5, y: vp.height - 200 }),
+        },
+        ...recentPosts.map((p, i) => ({
             id: `notfound-blog-${p.slug}`,
             kind: 'blog' as const,
             parent: 'floor' as const,
+            anchor: (vp: { width: number; height: number }) => ({
+                x: vp.width * (0.25 + i * 0.25),
+                y: vp.height - 400,
+            }),
         })),
-        { id: 'notfound-portfolio', kind: 'portfolio', parent: 'floor' },
-        { id: 'notfound-link', kind: 'link', parent: 'floor' },
+        {
+            id: 'notfound-portfolio',
+            kind: 'portfolio',
+            parent: 'floor',
+            anchor: (vp) => ({ x: vp.width * 0.2, y: vp.height - 200 }),
+        },
+        {
+            id: 'notfound-link',
+            kind: 'link',
+            parent: 'floor',
+            anchor: (vp) => ({ x: vp.width * 0.8, y: vp.height - 200 }),
+        },
     ],
 }
 
