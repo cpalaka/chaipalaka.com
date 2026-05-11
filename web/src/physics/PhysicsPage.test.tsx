@@ -7,8 +7,8 @@ import type { PageDef } from './PageDef'
 const pageDef: PageDef = {
     gravity: 'down',
     cards: [
-        { id: 'parent-card', kind: 'headline', parent: 'ceiling' },
-        { id: 'child-card', kind: 'note', parent: 'parent-card' },
+        { id: 'parent-card', kind: 'headline', parent: 'ceiling', anchor: () => ({ x: 200, y: 100 }) },
+        { id: 'child-card', kind: 'note', parent: 'parent-card', anchor: () => ({ x: 200, y: 300 }) },
     ],
 }
 
