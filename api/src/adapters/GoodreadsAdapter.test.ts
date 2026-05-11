@@ -6,14 +6,10 @@ import { GoodreadsAdapter } from './GoodreadsAdapter';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 
-function mockFetch(responses: Record<string, string>): typeof globalThis.fetch {
-  return vi.fn(async (input: string | URL | Request) => {
-    const url = input.toString();
-    const shelf = new URL(url).searchParams.get('shelf') ?? '';
-    const body = responses[shelf];
-    if (!body) throw new Error(`No mock for shelf=${shelf}`);
-    return new Response(body, { status: 200, headers: { 'content-type': 'application/rss+xml' } });
-  }) as unknown as typeof globalThis.fetch;
+function mockFetch(xml: string): typeof globalThis.fetch {
+  return vi.fn(async () =>
+    new Response(xml, { status: 200, headers: { 'content-type': 'application/rss+xml' } }),
+  ) as unknown as typeof globalThis.fetch;
 }
 
 const currentlyReadingXml = readFileSync(join(FIXTURES, 'goodreads-currently-reading.xml'), 'utf-8');
@@ -21,10 +17,10 @@ const readXml = readFileSync(join(FIXTURES, 'goodreads-read.xml'), 'utf-8');
 
 describe('GoodreadsAdapter', () => {
   describe('fetchBooks() — happy path', () => {
-    it('returns a Book for each valid item in the currently-reading shelf', async () => {
+    it('returns a Book for each valid item', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': currentlyReadingXml, favorites: readXml }),
+        fetch: mockFetch(currentlyReadingXml),
       });
 
       const books = await adapter.fetchBooks();
@@ -36,57 +32,17 @@ describe('GoodreadsAdapter', () => {
       expect(dune?.status).toBe('currently-reading');
       expect(dune?.cover).toBe('https://images.gr-assets.com/books/1555447414m/44767458.jpg');
     });
-
-    it('returns Books for each valid item in the favorites shelf', async () => {
-      const adapter = new GoodreadsAdapter({
-        userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': currentlyReadingXml, favorites: readXml }),
-      });
-
-      const books = await adapter.fetchBooks();
-      const foundation = books.find((b) => b.slug === '29579');
-
-      expect(foundation).toBeDefined();
-      expect(foundation?.status).toBe('favorites'); // GoodreadsShelf.Favorites
-      expect(foundation?.title).toBe('Foundation');
-      expect(foundation?.author).toBe('Isaac Asimov');
-    });
-
-    it('includes both shelves in the returned array', async () => {
-      const adapter = new GoodreadsAdapter({
-        userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': currentlyReadingXml, favorites: readXml }),
-      });
-
-      const books = await adapter.fetchBooks();
-      const slugs = books.map((b) => b.slug);
-
-      expect(slugs).toContain('44767458'); // currently-reading
-      expect(slugs).toContain('29579');    // favorites
-      expect(slugs).toContain('40961427'); // favorites
-    });
   });
 
   describe('status mapping', () => {
-    it('maps currently-reading shelf to status "reading"', async () => {
+    it('sets status to "currently-reading" for all items', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': currentlyReadingXml, favorites: '<rss><channel></channel></rss>' }),
+        fetch: mockFetch(currentlyReadingXml),
       });
 
       const books = await adapter.fetchBooks();
       expect(books.every((b) => b.status === 'currently-reading')).toBe(true);
-    });
-
-    it('maps favorites shelf to status "favorites"', async () => {
-      const adapter = new GoodreadsAdapter({
-        userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': '<rss><channel></channel></rss>', favorites: readXml }),
-      });
-
-      const books = await adapter.fetchBooks();
-      const favBooks = books.filter((b) => b.slug !== '');
-      expect(favBooks.every((b) => b.status === 'favorites')).toBe(true); // GoodreadsShelf.Favorites
     });
   });
 
@@ -94,7 +50,7 @@ describe('GoodreadsAdapter', () => {
     it('includes rating when user_rating is 1–5', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': '<rss><channel></channel></rss>', favorites: readXml }),
+        fetch: mockFetch(readXml),
       });
 
       const books = await adapter.fetchBooks();
@@ -106,7 +62,7 @@ describe('GoodreadsAdapter', () => {
     it('omits rating when user_rating is 0 (unrated)', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': currentlyReadingXml, favorites: '<rss><channel></channel></rss>' }),
+        fetch: mockFetch(currentlyReadingXml),
       });
 
       const books = await adapter.fetchBooks();
@@ -115,10 +71,10 @@ describe('GoodreadsAdapter', () => {
       expect(dune?.rating).toBeUndefined();
     });
 
-    it('omits rating when user_rating is 0 for a finished book', async () => {
+    it('omits rating when user_rating is 0 even when read_at is set', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': '<rss><channel></channel></rss>', favorites: readXml }),
+        fetch: mockFetch(readXml),
       });
 
       const books = await adapter.fetchBooks();
@@ -132,14 +88,14 @@ describe('GoodreadsAdapter', () => {
     it('skips items missing a book_id without throwing', async () => {
       const adapter = new GoodreadsAdapter({
         userId: '12345678',
-        fetch: mockFetch({ 'currently-reading': '<rss><channel></channel></rss>', favorites: readXml }),
+        fetch: mockFetch(readXml),
       });
 
       const books = await adapter.fetchBooks();
       const malformed = books.find((b) => b.title === 'Malformed No ID Book');
 
       expect(malformed).toBeUndefined();
-      expect(books.length).toBeGreaterThan(0); // others survived
+      expect(books.length).toBeGreaterThan(0);
     });
   });
 });
