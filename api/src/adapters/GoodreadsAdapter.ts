@@ -1,6 +1,5 @@
 export enum GoodreadsShelf {
   CurrentlyReading = 'currently-reading',
-  Favorites = 'favorites',
 }
 
 export interface Book {
@@ -76,16 +75,16 @@ export class GoodreadsAdapter {
   }
 
   async fetchBooks(): Promise<Book[]> {
-    const [reading, favorites] = await Promise.all([
-      this.fetchShelf(GoodreadsShelf.CurrentlyReading),
-      this.fetchShelf(GoodreadsShelf.Favorites),
-    ])
-    return [...reading, ...favorites]
+    return this.fetchShelf(GoodreadsShelf.CurrentlyReading)
   }
 
   private async fetchShelf(shelf: GoodreadsShelf): Promise<Book[]> {
     const url = `https://www.goodreads.com/review/list_rss/${this.userId}?shelf=${shelf}`
-    const res = await this.fetchFn(url)
+    const res = await this.fetchFn(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+    })
     if (!res.ok) throw new Error(`Goodreads ${shelf} returned ${res.status}`)
     const xml = await res.text()
     return parseItems(xml, shelf)

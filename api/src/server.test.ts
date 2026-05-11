@@ -14,7 +14,7 @@ const FIXTURE_BOOKS: Book[] = [
     slug: '29579',
     title: 'Foundation',
     author: 'Isaac Asimov',
-    status: GoodreadsShelf.Favorites,
+    status: GoodreadsShelf.CurrentlyReading,
     rating: 5,
   },
 ]
