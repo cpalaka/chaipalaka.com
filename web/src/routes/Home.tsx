@@ -1,60 +1,35 @@
-import { useState, useEffect } from 'react'
-import { PhysicsCard } from '../physics/PhysicsCard'
-import { cardLayout, type CardSpec, type CardAnchor } from '../physics/CardLayout'
+import { PhysicsPage } from '../physics/PhysicsPage'
+import type { PageDef } from '../physics/PageDef'
+import type { CardContent } from '../physics/PhysicsPage'
 
 const CARD_W = 280
 const CARD_H = 160
 
-const CARD_SPECS: CardSpec[] = [
-    {
-        id: 'card-a',
-        text: 'The quick brown fox jumps over the lazy dog.',
-        fontKey: 'body',
-        width: CARD_W,
-        height: CARD_H,
-    },
-    {
-        id: 'card-b',
-        text: 'Pack my box with five dozen liquor jugs.',
-        fontKey: 'body',
-        width: CARD_W,
-        height: CARD_H,
-    },
-]
+const pageDef: PageDef = {
+    gravity: 'down',
+    cards: [
+        { id: 'card-a', kind: 'headline', parent: 'ceiling' },
+        { id: 'card-b', kind: 'headline', parent: 'ceiling' },
+    ],
+}
 
-function computeAnchors(): CardAnchor[] {
-    const vp = { width: window.innerWidth, height: window.innerHeight }
-    return cardLayout(CARD_SPECS, vp, () => ({ width: 0, height: 0 }))
+const cardContent: Record<string, CardContent> = {
+    'card-a': {
+        text: 'The quick brown fox jumps over the lazy dog.',
+        width: CARD_W,
+        height: CARD_H,
+        minimizable: true,
+        label: 'card-a',
+    },
+    'card-b': {
+        text: 'Pack my box with five dozen liquor jugs.',
+        width: CARD_W,
+        height: CARD_H,
+        minimizable: true,
+        label: 'card-b',
+    },
 }
 
 export default function Home() {
-    const [anchors, setAnchors] = useState<CardAnchor[]>([])
-
-    useEffect(() => {
-        setAnchors(computeAnchors())
-        const onResize = () => setAnchors(computeAnchors())
-        window.addEventListener('resize', onResize, { passive: true })
-        return () => window.removeEventListener('resize', onResize)
-    }, [])
-
-    return (
-        <>
-            {anchors.map((anchor) => {
-                const spec = CARD_SPECS.find((s) => s.id === anchor.id)!
-                return (
-                    <PhysicsCard
-                        key={anchor.id}
-                        text={spec.text}
-                        anchor={{ x: anchor.x, y: anchor.y }}
-                        width={anchor.width}
-                        height={anchor.height}
-                        minimizable
-                        id={`home-${anchor.id}`}
-                        label={anchor.id}
-                        kind="home"
-                    />
-                )
-            })}
-        </>
-    )
+    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
 }

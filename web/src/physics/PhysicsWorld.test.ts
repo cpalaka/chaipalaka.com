@@ -143,6 +143,33 @@ describe('PhysicsWorld setViewport', () => {
         const pos = world.getPosition(handle)
         expect(pos.y).toBeLessThanOrEqual(200)
     })
+
+    test('top inset at construction: ceiling stops upward-rising body at or below inset y', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 }, insets: { top: 40, bottom: 0 } })
+        const handle = world.register({ x: 400, y: 400 }, { width: 80, height: 40 })
+        world.setGravityDirection('up')
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.y).toBeGreaterThanOrEqual(40)
+    })
+
+    test('bottom inset at construction: floor catches a falling body above viewport bottom', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 400 }, insets: { top: 0, bottom: 40 } })
+        const handle = world.register({ x: 400, y: 50 }, { width: 80, height: 40 })
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.y).toBeLessThanOrEqual(360)
+    })
+
+    test('setViewport with top inset repositions ceiling so rising body stops at inset y', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 400 }, { width: 80, height: 40 })
+        world.setGravityDirection('up')
+        world.setViewport({ width: 800, height: 600 }, { top: 40, bottom: 0 })
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.y).toBeGreaterThanOrEqual(40)
+    })
 })
 
 describe('PhysicsWorld drag handles', () => {

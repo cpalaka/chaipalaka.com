@@ -18,6 +18,14 @@ export const routes: RouteRecord[] = [
                 },
                 entry: 'src/routes/Home.tsx',
             },
+            {
+                path: '*',
+                lazy: async () => {
+                    const { default: NotFound } =
+                        await import('./routes/NotFound')
+                    return { Component: NotFound }
+                },
+            },
         ],
     },
     {
@@ -77,6 +85,26 @@ export const routes: RouteRecord[] = [
                     return { Component: Lifelog }
                 },
                 entry: 'src/routes/Lifelog.tsx',
+            },
+        ],
+    },
+    {
+        path: '/portfolio',
+        lazy: async () => {
+            const { default: CanvasLayout } =
+                await import('./layouts/CanvasLayout')
+            return { Component: CanvasLayout }
+        },
+        entry: 'src/layouts/CanvasLayout.tsx',
+        children: [
+            {
+                index: true,
+                lazy: async () => {
+                    const { default: Portfolio } =
+                        await import('./routes/Portfolio')
+                    return { Component: Portfolio }
+                },
+                entry: 'src/routes/Portfolio.tsx',
             },
         ],
     },
