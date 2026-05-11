@@ -68,7 +68,7 @@ interface Registration {
 }
 
 const GRAVITY_Y = 0.7
-const BODY_FRICTION_AIR = 0.05
+const BODY_FRICTION_AIR = 0.005
 const FLOOR_THICKNESS = 60
 const TETHER_STIFFNESS = 1.75e-5
 const BUOYANCY_GAIN = 1.5
