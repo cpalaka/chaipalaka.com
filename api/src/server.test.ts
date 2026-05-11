@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { GoodreadsShelf, type Book } from './adapters/GoodreadsAdapter';
 import type { Track } from './adapters/LastFmAdapter';
 import type { Film } from './adapters/LetterboxdAdapter';
+import type { Activity } from './adapters/GitHubAdapter';
 import { handle } from './server';
 
 const FIXTURE_BOOKS: Book[] = [
@@ -323,5 +324,88 @@ describe('/api/films', () => {
     );
 
     expect(adapter.fetchFilms).toHaveBeenCalledTimes(1);
+  });
+});
+
+const FIXTURE_ACTIVITY: Activity[] = [
+  {
+    type: 'push',
+    repo: 'cpalaka/chaipalaka.com',
+    summary: 'Pushed 2 commits to main',
+    url: 'https://github.com/cpalaka/chaipalaka.com/commit/abc123',
+    ts: '2026-05-11T10:00:00Z',
+  },
+  {
+    type: 'star',
+    repo: 'vitejs/vite',
+    summary: 'Starred vitejs/vite',
+    url: 'https://github.com/vitejs/vite',
+    ts: '2026-05-10T20:00:00Z',
+  },
+];
+
+function makeActivityAdapter(activity: Activity[] = FIXTURE_ACTIVITY, fail = false) {
+  return {
+    fetchActivity: vi.fn(async () => {
+      if (fail) throw new Error('upstream github');
+      return activity;
+    }),
+  };
+}
+
+describe('/api/github', () => {
+  it('returns { activity, stale: false } with the adapter results', async () => {
+    const adapter = makeActivityAdapter();
+    const res = await handle(
+      new Request('http://localhost/api/github'),
+      { githubUser: 'cpalaka', activityAdapter: adapter },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { activity: Activity[]; stale: boolean };
+    expect(body.stale).toBe(false);
+    expect(body.activity).toHaveLength(2);
+    expect(body.activity[0]?.type).toBe('push');
+  });
+
+  it('returns empty activity (not stale) when githubUser is absent', async () => {
+    const res = await handle(new Request('http://localhost/api/github'), {});
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { activity: Activity[]; stale: boolean };
+    expect(body.activity).toEqual([]);
+    expect(body.stale).toBe(false);
+  });
+
+  it('returns empty activity with stale:true when adapter throws and cache is cold', async () => {
+    const adapter = makeActivityAdapter([], true);
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const res = await handle(
+      new Request('http://localhost/api/github'),
+      { githubUser: 'cpalaka', activityAdapter: adapter, cache: new CacheLayer() },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { activity: Activity[]; stale: boolean; error: string };
+    expect(body.activity).toEqual([]);
+    expect(body.stale).toBe(true);
+    expect(body.error).toBeDefined();
+  });
+
+  it('caches: calls fetchActivity only once across two requests within TTL', async () => {
+    const adapter = makeActivityAdapter();
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const cache = new CacheLayer();
+
+    await handle(
+      new Request('http://localhost/api/github'),
+      { githubUser: 'cpalaka', activityAdapter: adapter, cache },
+    );
+    await handle(
+      new Request('http://localhost/api/github'),
+      { githubUser: 'cpalaka', activityAdapter: adapter, cache },
+    );
+
+    expect(adapter.fetchActivity).toHaveBeenCalledTimes(1);
   });
 });
