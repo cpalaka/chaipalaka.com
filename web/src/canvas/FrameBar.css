@@ -119,6 +119,13 @@
     color: var(--color-bg);
 }
 
+.frame-bar__mini-card-badge {
+    margin-left: 4px;
+    font-size: var(--font-size-xs);
+    opacity: 0.65;
+    flex-shrink: 0;
+}
+
 .frame-bar__settings {
     margin-left: auto;
     display: flex;

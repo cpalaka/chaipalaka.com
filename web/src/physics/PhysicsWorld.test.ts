@@ -47,11 +47,10 @@ describe('PhysicsWorld dynamics', () => {
         expect(pos.x).toBeGreaterThan(100)
         expect(Math.abs(pos.y - 100)).toBeLessThan(1)
     })
-
 })
 
 describe('PhysicsWorld gravity', () => {
-    test('setGravity(true) makes a card fall', () => {
+    test('gravity is on by default — a registered body falls downward', () => {
         const world = new PhysicsWorld({
             viewport: { width: 800, height: 600 },
         })
@@ -59,25 +58,90 @@ describe('PhysicsWorld gravity', () => {
             { x: 100, y: 100 },
             { width: 100, height: 50 },
         )
-        world.setGravity(true)
         for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
         const fellTo = world.getPosition(handle)
         expect(fellTo.y).toBeGreaterThan(100)
     })
 
-    test('with gravity on, the floor body catches a falling card (no escape)', () => {
+    test('floor catches a falling body', () => {
         const viewport = { width: 800, height: 400 }
         const world = new PhysicsWorld({ viewport })
         const handle = world.register(
             { x: 100, y: 50 },
             { width: 100, height: 50 },
         )
-
-        world.setGravity(true)
         for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
-
         const pos = world.getPosition(handle)
         expect(pos.y).toBeLessThanOrEqual(viewport.height)
+    })
+})
+
+describe('PhysicsWorld gravity direction', () => {
+    test('setGravityDirection("down") makes a body fall in positive y', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        world.setGravityDirection('down')
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        expect(world.getPosition(handle).y).toBeGreaterThan(200)
+    })
+
+    test('setGravityDirection("up") makes a body rise in negative y', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 400 }, { width: 80, height: 40 })
+        world.setGravityDirection('up')
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        expect(world.getPosition(handle).y).toBeLessThan(400)
+    })
+
+    test('setGravityDirection("left") makes a body drift in negative x', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 300 }, { width: 80, height: 40 })
+        world.setGravityDirection('left')
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        expect(world.getPosition(handle).x).toBeLessThan(400)
+    })
+
+    test('setGravityDirection("right") makes a body drift in positive x', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 300 }, { width: 80, height: 40 })
+        world.setGravityDirection('right')
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        expect(world.getPosition(handle).x).toBeGreaterThan(400)
+    })
+
+    test('getGravityVector returns direction and non-zero magnitude', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const down = world.getGravityVector()
+        expect(down.x).toBeCloseTo(0)
+        expect(down.y).toBeGreaterThan(0)
+        world.setGravityDirection('up')
+        const up = world.getGravityVector()
+        expect(up.y).toBeLessThan(0)
+        world.setGravityDirection('left')
+        const left = world.getGravityVector()
+        expect(left.x).toBeLessThan(0)
+    })
+
+    test('ceiling catches a body rising under upward gravity', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const handle = world.register({ x: 400, y: 400 }, { width: 80, height: 40 })
+        world.setGravityDirection('up')
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        // ceiling is near y=0; body should be stopped by it, not escaping to negative y
+        expect(pos.y).toBeGreaterThanOrEqual(0)
+    })
+})
+
+describe('PhysicsWorld setViewport', () => {
+    test('setViewport repositions floor so new floor catches a falling body', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.register({ x: 400, y: 50 }, { width: 80, height: 40 })
+        world.setViewport({ width: 800, height: 200 })
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(handle)
+        expect(pos.y).toBeLessThanOrEqual(200)
     })
 })
 
@@ -168,6 +232,52 @@ describe('PhysicsWorld dragging', () => {
     })
 })
 
+describe('PhysicsWorld registerById', () => {
+    test('registerById makes card retrievable by id', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerById('hero', { x: 100, y: 100 }, { width: 80, height: 40 })
+        expect(world.getHandleById('hero')).toBe(handle)
+    })
+
+    test('registerById with duplicate id throws', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        world.registerById('card-1', { x: 100, y: 100 }, { width: 80, height: 40 })
+        expect(() =>
+            world.registerById('card-1', { x: 200, y: 200 }, { width: 80, height: 40 })
+        ).toThrow()
+    })
+
+    test('unregister removes the id from the id map', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const handle = world.registerById('card-1', { x: 100, y: 100 }, { width: 80, height: 40 })
+        world.unregister(handle)
+        expect(world.getHandleById('card-1')).toBeUndefined()
+    })
+
+    test('getHandleById returns undefined for unknown id', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(world.getHandleById('missing')).toBeUndefined()
+    })
+})
+
+describe('PhysicsWorld setBuoyancy', () => {
+    test('balloon card is lifted against default downward gravity relative to heavy card', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const heavy = world.register({ x: 400, y: 300 }, { width: 80, height: 40 })
+        const balloon = world.register({ x: 400, y: 300 }, { width: 80, height: 40 })
+        world.setBuoyancy(balloon, 'balloon')
+        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+        const heavyPos = world.getPosition(heavy)
+        const balloonPos = world.getPosition(balloon)
+        expect(balloonPos.y).toBeLessThan(heavyPos.y)
+    })
+
+    test('setBuoyancy throws for unknown handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(() => world.setBuoyancy(999, 'balloon')).toThrow()
+    })
+})
+
 describe('PhysicsWorld setSize', () => {
     test('setSize throws for unknown handle', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
@@ -255,13 +365,12 @@ describe('PhysicsWorld static registration (gravity-exempt)', () => {
         expect(pos.y).toBeCloseTo(500, 5)
     })
 
-    test('a static body does not fall when gravity is on', () => {
+    test('a static body does not fall under downward gravity', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
         const handle = world.registerStatic(
             { x: 200, y: 200 },
             { width: 120, height: 60 },
         )
-        world.setGravity(true)
         for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
         const pos = world.getPosition(handle)
         expect(pos.y).toBeCloseTo(200, 1)
@@ -279,18 +388,71 @@ describe('PhysicsWorld static registration (gravity-exempt)', () => {
         expect(pos.y).toBeCloseTo(300, 5)
     })
 
-    test('a static body stays put after setPosition across many ticks with gravity', () => {
+    test('a static body stays put after setPosition with gravity active', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
         const handle = world.registerStatic(
             { x: 200, y: 500 },
             { width: 120, height: 60 },
         )
-        world.setGravity(true)
         world.setPosition(handle, { x: 400, y: 300 })
         for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
         const pos = world.getPosition(handle)
         expect(pos.x).toBeCloseTo(400, 1)
         expect(pos.y).toBeCloseTo(300, 1)
+    })
+})
+
+describe('PhysicsWorld tether', () => {
+    test('tether returns a numeric handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 0 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        const th = world.tether(parent, child, 200)
+        expect(th).toBeTypeOf('number')
+    })
+
+    test('body within tether length falls freely under gravity (not held)', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 0 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 50 }, { width: 80, height: 40 })
+        world.tether(parent, child, 300)  // child at distance 50, tether length 300 → slack
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        expect(world.getPosition(child).y).toBeGreaterThan(50)  // fell under gravity
+    })
+
+    test('body stretched past tether length is pulled back and settles near tether length', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 100 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 300 }, { width: 80, height: 40 })
+        world.tether(parent, child, 50)  // child at distance 200, tether length 50 → stretched
+        for (let i = 0; i < 300; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(child)
+        const dist = Math.hypot(pos.x - 400, pos.y - 100)
+        expect(dist).toBeLessThan(100)  // settled near tether length of 50
+    })
+
+    test('untether removes the pull-only force so body falls freely', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 50 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        const th = world.tether(parent, child, 50)
+        world.untether(th)
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(child)
+        const dist = Math.hypot(pos.x - 400, pos.y - 50)
+        expect(dist).toBeGreaterThan(200)  // fell away to floor
+    })
+
+    test('getTethers returns views with parent/child positions and length', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 0 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+        const th = world.tether(parent, child, 200)
+        const views = world.getTethers()
+        expect(views).toHaveLength(1)
+        expect(views[0]!.length).toBe(200)
+        world.untether(th)
+        expect(world.getTethers()).toHaveLength(0)
     })
 })
 
