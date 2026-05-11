@@ -86,6 +86,7 @@ export class PhysicsWorld {
     private links = new Map<LinkHandle, Matter.Constraint>()
     private tethers = new Map<TetherHandle, TetherRecord>()
     private tetherChangeListeners = new Set<() => void>()
+    private cachedTetherList: ReadonlyArray<TetherHandle> | null = null
 
     readonly floorHandle: PhysicsHandle
     readonly ceilingHandle: PhysicsHandle
@@ -391,6 +392,7 @@ export class PhysicsWorld {
         const lh = this.linkBodies(parent, child, { length, stiffness: 1e-9, damping: 0 })
         const th = this.nextId++
         this.tethers.set(th, { parent, child, length, linkHandle: lh })
+        this.cachedTetherList = null
         for (const cb of this.tetherChangeListeners) cb()
         return th
     }
@@ -400,6 +402,7 @@ export class PhysicsWorld {
         if (!rec) return
         this.unlinkBodies(rec.linkHandle)
         this.tethers.delete(th)
+        this.cachedTetherList = null
         for (const cb of this.tetherChangeListeners) cb()
     }
 
@@ -415,6 +418,15 @@ export class PhysicsWorld {
             views.push({ parentPos, childPos, length: rec.length, slack: d < rec.length * 0.98 })
         }
         return views
+    }
+
+    // Stable-identity snapshot for useSyncExternalStore consumers. Reference only changes
+    // when the tether set changes (mount/unmount), not on every call.
+    getTetherList(): ReadonlyArray<TetherHandle> {
+        if (!this.cachedTetherList) {
+            this.cachedTetherList = Object.freeze(Array.from(this.tethers.keys()))
+        }
+        return this.cachedTetherList
     }
 
     subscribeTetherSetChange(cb: () => void): () => void {

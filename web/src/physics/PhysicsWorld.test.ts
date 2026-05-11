@@ -454,6 +454,33 @@ describe('PhysicsWorld tether', () => {
         world.untether(th)
         expect(world.getTethers()).toHaveLength(0)
     })
+
+    test('getTetherList returns a stable reference until the tether set changes', () => {
+        // Required by useSyncExternalStore in StringLayer — a new reference on
+        // every call causes an infinite re-render loop ("Maximum update depth exceeded").
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.registerStatic({ x: 400, y: 0 }, { width: 40, height: 40 })
+        const child = world.register({ x: 400, y: 200 }, { width: 80, height: 40 })
+
+        const empty1 = world.getTetherList()
+        const empty2 = world.getTetherList()
+        expect(empty2).toBe(empty1)
+
+        const th = world.tether(parent, child, 200)
+        const withTether1 = world.getTetherList()
+        expect(withTether1).not.toBe(empty1)
+        expect(withTether1).toHaveLength(1)
+
+        // Stable across calls when the set hasn't changed — even after world.tick advances positions
+        for (let i = 0; i < 10; i++) world.tick(FIXED_DT_MS)
+        const withTether2 = world.getTetherList()
+        expect(withTether2).toBe(withTether1)
+
+        world.untether(th)
+        const afterUntether = world.getTetherList()
+        expect(afterUntether).not.toBe(withTether1)
+        expect(afterUntether).toHaveLength(0)
+    })
 })
 
 describe('PhysicsWorld linkBodies / unlinkBodies', () => {
