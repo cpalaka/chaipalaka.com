@@ -246,3 +246,100 @@
     color: var(--color-fg-faint);
     margin: 0;
 }
+
+/* Activity panel */
+
+.lifelog-activity {
+    padding: var(--space-2);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    overflow: hidden;
+}
+
+.lifelog-activity__heading {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.lifelog-activity__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.lifelog-activity__item {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+}
+
+.lifelog-activity__badge {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    border-radius: var(--radius-pill);
+    padding: 2px var(--space-2);
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--color-fg-faint) 20%, transparent);
+    color: var(--color-fg-muted);
+}
+
+.lifelog-activity__badge--push {
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    color: var(--color-accent);
+}
+
+.lifelog-activity__badge--pull_request {
+    background: color-mix(in srgb, var(--color-fg) 15%, transparent);
+    color: var(--color-fg);
+}
+
+.lifelog-activity__badge--release {
+    background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+    color: var(--color-accent);
+}
+
+.lifelog-activity__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.lifelog-activity__summary {
+    font-size: var(--font-size-xs);
+    color: var(--color-fg);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lifelog-activity__summary:hover {
+    text-decoration: underline;
+}
+
+.lifelog-activity__meta {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-fg-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lifelog-activity__empty {
+    color: var(--color-fg-faint);
+    margin: 0;
+}
