@@ -30,6 +30,13 @@ const CARD_SPECS: CardSpec[] = [
     },
 ]
 
+const CARD_LABELS: Record<string, string> = {
+    hero: 'Home',
+    about: 'About',
+    blog: 'Blog',
+    portfolio: 'Portfolio',
+}
+
 function computeAnchors(): CardAnchor[] {
     const vp = { width: window.innerWidth, height: window.innerHeight }
     return cardLayout(CARD_SPECS, vp, (text, fontKey, maxWidth) =>
@@ -61,6 +68,10 @@ export default function Home() {
                         fontKey={spec.fontKey}
                         maxWidth={anchor.maxWidth}
                         anchor={{ x: anchor.x, y: anchor.y }}
+                        minimizable
+                        id={`home-${anchor.id}`}
+                        label={CARD_LABELS[anchor.id] ?? anchor.id}
+                        kind="home"
                     />
                 )
             })}
