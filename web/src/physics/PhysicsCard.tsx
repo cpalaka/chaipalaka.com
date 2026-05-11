@@ -64,18 +64,27 @@ export function PhysicsCard({
         const w = width
         const h = height
 
+        // Spawn 20px in gravity direction so the card visibly settles to anchor on load.
+        const SPAWN_OFFSET = 20
+        const g = world.getGravityVector()
+        const gLen = Math.hypot(g.x, g.y)
+        const gx = gLen > 0 ? g.x / gLen : 0
+        const gy = gLen > 0 ? g.y / gLen : 1
+        const sx = x + gx * SPAWN_OFFSET
+        const sy = y + gy * SPAWN_OFFSET
+
         el.style.width = `${w}px`
         el.style.height = `${h}px`
-        el.style.transform = `translate(${x - w / 2}px, ${y - h / 2}px)`
+        el.style.transform = `translate(${sx - w / 2}px, ${sy - h / 2}px)`
 
         const handle = id
-            ? world.registerById(id, { x, y }, { width: w, height: h }, {
+            ? world.registerById(id, { x: sx, y: sy }, { width: w, height: h }, {
                 onTransform: ({ x: px, y: py, rotation }) => {
                     el.style.transform = `translate(${px - w / 2}px, ${py - h / 2}px) rotate(${rotation}rad)`
                 },
             })
             : world.register(
-                { x, y },
+                { x: sx, y: sy },
                 { width: w, height: h },
                 {
                     onTransform: ({ x: px, y: py, rotation }) => {

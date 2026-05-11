@@ -1,15 +1,15 @@
 import { describe, test, expect } from 'vitest'
-import { cardLayout, type CardSpec, type MeasureFn } from './CardLayout'
+import { cardLayout, type LayoutInput, type MeasureFn } from './CardLayout'
 
 const fixedMeasure: MeasureFn = (_text, _fontKey, maxWidth) => ({
     width: Math.min(200, maxWidth),
     height: 60,
 })
 
-const SPEC_A: CardSpec = { id: 'a', text: 'Card A', fontKey: 'body' }
-const SPEC_B: CardSpec = { id: 'b', text: 'Card B', fontKey: 'body' }
-const SPEC_C: CardSpec = { id: 'c', text: 'Card C', fontKey: 'body' }
-const SPEC_D: CardSpec = { id: 'd', text: 'Card D', fontKey: 'body' }
+const SPEC_A: LayoutInput = { id: 'a', text: 'Card A', fontKey: 'body' }
+const SPEC_B: LayoutInput = { id: 'b', text: 'Card B', fontKey: 'body' }
+const SPEC_C: LayoutInput = { id: 'c', text: 'Card C', fontKey: 'body' }
+const SPEC_D: LayoutInput = { id: 'd', text: 'Card D', fontKey: 'body' }
 
 describe('cardLayout — basic', () => {
     test('returns one anchor per spec with matching id', () => {
@@ -82,7 +82,7 @@ describe('cardLayout — pre-computed dims', () => {
         const spy: MeasureFn = () => {
             throw new Error('should not measure')
         }
-        const spec: CardSpec = {
+        const spec: LayoutInput = {
             id: 'x',
             text: 'X',
             fontKey: 'body',
@@ -100,7 +100,7 @@ describe('cardLayout — pre-computed dims', () => {
             called = true
             return { width: Math.min(200, mw), height: 60 }
         }
-        const spec: CardSpec = { id: 'x', text: 'X', fontKey: 'body' }
+        const spec: LayoutInput = { id: 'x', text: 'X', fontKey: 'body' }
         cardLayout([spec], { width: 1200, height: 800 }, spy)
         expect(called).toBe(true)
     })
