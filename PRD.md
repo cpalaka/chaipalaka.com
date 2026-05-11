@@ -59,7 +59,7 @@ Daily notes and lifelog annotations appear as first-class cards strung to their 
 28. As a portfolio visitor, I want each animation to play in-browser via Ruffle without me installing anything, so that I can actually watch the work.
 29. As a portfolio visitor, I want each piece to have a dedicated route with description, year, and any retrospective notes, so that I get context, not just the artifact.
 30. As a portfolio visitor, I want clicking a portfolio thumbnail to morph it into the hero of the detail page (shared-element transition), so that the navigation feels deliberate and elegant.
-31. As a portfolio visitor, I want the portfolio index cards to be free (draggable, throwable, no spring-back), so that the index itself reflects the playful subject matter.
+31. As a portfolio visitor, I want the portfolio index cards to be detached from any string (gravity acts, they fling and fall when dragged), so that the index itself reflects the playful subject matter.
 32. As a portfolio visitor, I want Ruffle's WASM payload only to load when I'm on a portfolio route, so that visitors never browsing portfolio pages don't pay its bundle cost.
 
 ### Lifelog visitor
@@ -67,9 +67,9 @@ Daily notes and lifelog annotations appear as first-class cards strung to their 
 33. As a lifelog visitor, I want to find a `/lifelog` page that surfaces five sources at once: now-playing music, currently-reading books, recently-watched films, recent GitHub activity, and a stream of free-form daily notes, so that I get a sense of what the site owner is up to.
 34. As a lifelog visitor, I want a dashboard-of-cards default view, so that each source has its own visual presence.
 35. As a lifelog visitor, I want a "feed view" toggle that merges everything chronologically, so that I can read the site like a journal when I want to.
-36. As a lifelog visitor, I want notes to appear as small floating cards spring-attached to their parent card via a visible curved bezier connector, so that I can see "this commentary belongs to that book."
-37. As a lifelog visitor, I want a soft cap of 5 visible notes per parent with the rest expandable inline, so that long-running threads don't blow up the layout.
-38. As a lifelog visitor, I want notes ordered with the newest closest to the parent, so that I read the most recent commentary first.
+36. As a lifelog visitor, I want notes to appear as small balloon cards strung to their parent lifelog card via a visible string (straight when taut, sagging when slack), so that I can see "this commentary belongs to that book."
+37. *(removed — superseded by the strings model; notes are first-class balloon cards in the standard physics world; no soft cap or inline-expand affordance. See ADR 0001.)*
+38. *(removed — note ordering is now determined by `CardLayout` for the route; no per-position recency rule. See ADR 0001.)*
 39. As a lifelog visitor, I want lifelog cards to keep showing their last-known value when an upstream source is broken or slow, so that the page never has gaping holes.
 40. As a lifelog visitor, I want to see a small "stale" hint when data is being served from cache after an upstream failure, so that I know the timing isn't necessarily live.
 
@@ -88,10 +88,10 @@ Daily notes and lifelog annotations appear as first-class cards strung to their 
 48. As a reduced-motion visitor, I want route transitions to become instant cross-fades rather than physics motions, so that I'm never thrown by an animation I didn't ask for.
 49. As a screen-reader user, I want the WebGL canvas marked `aria-hidden="true"`, so that decorative content doesn't pollute my reading.
 50. As a screen-reader user, I want every card's content to live in semantic DOM (`<article>`, `<a>`, `<h1>`, etc.) regardless of physics-driven visual position, so that reading order is determined by structure, not pixels.
-51. As a screen-reader user, I want notes-chain notes nested as an `<aside aria-label="notes">` inside their parent's `<article>`, so that the relationship is announced as a group.
+51. As a screen-reader user, I want note cards nested as an `<aside aria-label="notes">` inside their parent's `<article>`, so that the relationship is announced as a group.
 52. As a keyboard user, I want Tab order to follow the DOM order of cards, so that I navigate predictably regardless of physics positions.
 53. As a keyboard user, I want a high-contrast custom focus ring (the default browser ring is invisible against R3F backgrounds), so that I always know where focus is.
-54. As a keyboard user, I want `Esc` to collapse any expanded notes-chain, so that I can dismiss without mousing.
+54. *(removed — there is no expanded notes-chain to collapse; notes are regular balloon cards. `Esc` still closes the settings menu, declared in the Frame bar section.)*
 55. As a visitor on a browser without WebGL, I want the foreground physics to keep working and the background to swap to a static gradient, so that most of the experience survives.
 56. As a visitor whose WebGL context is lost mid-session, I want the background to fall back gracefully to a static gradient without a page reload, so that the site keeps working.
 
