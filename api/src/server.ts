@@ -5,6 +5,8 @@ import type { LastFmAdapter } from './adapters/LastFmAdapter';
 import { LastFmAdapter as LastFmAdapterImpl } from './adapters/LastFmAdapter';
 import type { LetterboxdAdapter } from './adapters/LetterboxdAdapter';
 import { LetterboxdAdapter as LetterboxdAdapterImpl } from './adapters/LetterboxdAdapter';
+import type { GitHubAdapter } from './adapters/GitHubAdapter';
+import { GitHubAdapter as GitHubAdapterImpl } from './adapters/GitHubAdapter';
 
 export type ServerConfig = {
   version?: string
@@ -15,6 +17,8 @@ export type ServerConfig = {
   lastfmAdapter?: Pick<LastFmAdapter, 'fetchRecentTracks'>
   letterboxdUser?: string
   filmsAdapter?: Pick<LetterboxdAdapter, 'fetchFilms'>
+  githubUser?: string
+  activityAdapter?: Pick<GitHubAdapter, 'fetchActivity'>
   cache?: CacheLayer
 };
 
@@ -24,6 +28,7 @@ const NOW_PLAYING_TTL_MS = 3 * 60_000;
 const RECENT_TRACKS_TTL_MS = 5 * 60_000;
 const RECENT_TRACKS_LIMIT = 10;
 const FILMS_TTL_MS = 24 * 60 * 60_000;
+const ACTIVITY_TTL_MS = 5 * 60_000;
 
 export async function handle(
   req: Request,
@@ -123,6 +128,28 @@ export async function handle(
     }
   }
 
+  if (url.pathname === '/api/github') {
+    if (!config.githubUser) {
+      return Response.json({ activity: [], stale: false });
+    }
+    const adapter =
+      config.activityAdapter ??
+      new GitHubAdapterImpl({ user: config.githubUser });
+    const cache = config.cache ?? sharedCache;
+    try {
+      const { value, stale } = await cache.get(
+        'activity',
+        () => adapter.fetchActivity(),
+        { ttl: ACTIVITY_TTL_MS },
+      );
+      return Response.json({ activity: value, stale });
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      console.error('[Server] failed to fetch github activity', e);
+      return Response.json({ activity: [], stale: true, error });
+    }
+  }
+
   return new Response('not found', { status: 404 });
 }
 
@@ -133,6 +160,7 @@ if (import.meta.main) {
     lastfmApiKey: process.env.LASTFM_API_KEY,
     lastfmUser: process.env.LASTFM_USER,
     letterboxdUser: process.env.LETTERBOXD_USER,
+    githubUser: process.env.GITHUB_USER,
   };
   Bun.serve({
     port: 3000,
