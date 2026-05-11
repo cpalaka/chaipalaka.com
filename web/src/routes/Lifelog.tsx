@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { PhysicsPage, type CardContent } from '../physics/PhysicsPage'
 import { listNotes } from '../lib/NotesReader'
 import type { PageDef } from '../physics/PageDef'
@@ -27,12 +28,70 @@ export function noteAnchor(i: number) {
     }
 }
 
-const booksChildren = (
-    <div className="lifelog-books">
-        <h2 className="lifelog-books__heading">Books</h2>
-        <p className="lifelog-books__empty">—</p>
-    </div>
-)
+type BookStatus = 'reading' | 'finished' | 'want-to-read'
+
+interface Book {
+    slug: string
+    title: string
+    author: string
+    status: BookStatus
+    started?: string
+    finished?: string
+    cover?: string
+    rating?: number
+}
+
+interface BooksApiResponse {
+    books: Book[]
+    stale: boolean
+}
+
+const STATUS_LABELS: Record<BookStatus, string> = {
+    reading: 'Reading',
+    finished: 'Finished',
+    'want-to-read': 'Want to Read',
+}
+
+function BooksPanel() {
+    const [data, setData] = useState<BooksApiResponse | null>(null)
+
+    useEffect(() => {
+        fetch('/api/books')
+            .then((r) => r.json() as Promise<BooksApiResponse>)
+            .then(setData)
+            .catch(() => setData(null))
+    }, [])
+
+    const books = data?.books ?? []
+
+    return (
+        <div className="lifelog-books">
+            <h2 className="lifelog-books__heading">
+                Books
+                {data?.stale ? (
+                    <span className="lifelog-books__stale">stale</span>
+                ) : null}
+            </h2>
+            {books.length > 0 ? (
+                <ul className="lifelog-books__list">
+                    {books.map((b) => (
+                        <li key={b.slug} className="lifelog-books__item">
+                            <span
+                                className={`lifelog-books__status lifelog-books__status--${b.status}`}
+                            >
+                                {STATUS_LABELS[b.status]}
+                            </span>
+                            <span className="lifelog-books__title">{b.title}</span>
+                            <span className="lifelog-books__author">{b.author}</span>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="lifelog-books__empty">—</p>
+            )}
+        </div>
+    )
+}
 
 const bookNotes = listNotes({ parent: 'lifelog:books' })
 
@@ -61,7 +120,7 @@ const cardContent: Record<string, CardContent> = {
         height: BOOKS_H,
         minimizable: true,
         label: 'Books',
-        children: booksChildren,
+        children: <BooksPanel />,
     },
     ...Object.fromEntries(
         bookNotes.map((n) => [
