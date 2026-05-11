@@ -39,5 +39,4 @@ api/coverage/
 web/.vitest-cache/
 
 # Planning docs — kept locally, not tracked
-grillmedoc.md
-PRD.md
+# (PRD.md and grillmedoc.md are now committed — they are the design record)
