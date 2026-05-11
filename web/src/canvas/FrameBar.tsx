@@ -44,16 +44,22 @@ function MinimizedChip({ entry, onRestore }: MinimizedChipProps) {
         onRestore(entry.id, chipRect)
     }
 
+    const badge = entry.subtreeSize > 1 ? `+${entry.subtreeSize - 1}` : null
+    const ariaLabel = badge
+        ? `Restore: ${entry.label} (${badge} more)`
+        : `Restore: ${entry.label}`
+
     return (
         <button
             ref={chipRef}
             type="button"
             className="frame-bar__mini-card"
-            aria-label={`Restore: ${entry.label}`}
-            title={`Restore: ${entry.label}`}
+            aria-label={ariaLabel}
+            title={ariaLabel}
             onClick={handleClick}
         >
             {entry.label}
+            {badge ? <span className="frame-bar__mini-card-badge">{badge}</span> : null}
         </button>
     )
 }
@@ -64,7 +70,6 @@ export function FrameBar() {
     const { active, setActive } = useGallery()
     const { theme, cycleTheme } = useTheme()
     const { edge, setEdge } = useFrameEdge()
-    const [gravityOn] = useState(false)
     const minimizedEntries = useMinimizedEntries()
     const registry = useMinimizedRegistry()
 
@@ -218,22 +223,6 @@ export function FrameBar() {
                             </select>
                         </div>
 
-                        <div
-                            role="group"
-                            aria-labelledby="fb-grav-label"
-                            className="frame-bar__menu-group"
-                        >
-                            <span id="fb-grav-label" className="frame-bar__menu-label">
-                                Gravity
-                            </span>
-                            <button
-                                type="button"
-                                className="frame-bar__menu-toggle"
-                                aria-pressed={gravityOn}
-                            >
-                                {gravityOn ? 'On' : 'Off'}
-                            </button>
-                        </div>
                     </div>
                 ) : null}
             </div>

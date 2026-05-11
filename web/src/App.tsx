@@ -117,6 +117,13 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        path: '/sandbox/strings',
+        lazy: async () => {
+            const { default: Strings } = await import('./routes/sandbox/Strings')
+            return { Component: Strings }
+        },
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =
