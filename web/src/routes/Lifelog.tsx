@@ -1,70 +1,56 @@
-// TODO: /portfolio cards will opt in to minimizable once issue #20 ships.
-import { useState, useEffect } from 'react'
-import { PhysicsCard } from '../physics/PhysicsCard'
-import { cardLayout, type CardAnchor } from '../physics/CardLayout'
+import { PhysicsPage, type CardContent } from '../physics/PhysicsPage'
+import { listNotes } from '../lib/NotesReader'
+import type { PageDef } from '../physics/PageDef'
 import './Lifelog.css'
 
-const BOOKS_CARD_HEIGHT = 200
-const BOOKS_CARD_MAX_WIDTH = 360
-const GUTTER = 16
+const BOOKS_W = 240
+const BOOKS_H = 160
+const NOTE_W = 200
+const NOTE_H = 100
 
-function computeBookAnchor(): CardAnchor {
-    const vp = { width: window.innerWidth, height: window.innerHeight }
-    const numCols = vp.width >= 1024 ? 3 : vp.width >= 480 ? 2 : 1
-    const colWidth = vp.width / numCols
-    const w = Math.min(BOOKS_CARD_MAX_WIDTH, colWidth - GUTTER * 2)
-    const anchors = cardLayout(
-        [
+const booksChildren = (
+    <div className="lifelog-books">
+        <h2 className="lifelog-books__heading">Books</h2>
+        <p className="lifelog-books__empty">—</p>
+    </div>
+)
+
+const bookNotes = listNotes({ parent: 'lifelog:books' })
+
+const pageDef: PageDef = {
+    gravity: 'down',
+    cards: [
+        { id: 'lifelog-books', kind: 'lifelog', parent: 'ceiling' },
+        ...bookNotes.map((n) => ({
+            id: `note-${n.slug}`,
+            kind: 'note' as const,
+            parent: 'lifelog-books',
+        })),
+    ],
+}
+
+const cardContent: Record<string, CardContent> = {
+    'lifelog-books': {
+        text: 'Books',
+        width: BOOKS_W,
+        height: BOOKS_H,
+        minimizable: true,
+        label: 'Books',
+        children: booksChildren,
+    },
+    ...Object.fromEntries(
+        bookNotes.map((n) => [
+            `note-${n.slug}`,
             {
-                id: 'books',
-                text: 'Books',
-                fontKey: 'body',
-                width: w,
-                height: BOOKS_CARD_HEIGHT,
-            },
-        ],
-        vp,
-        () => ({ width: 0, height: 0 }),
-    )
-    return (
-        anchors[0] ?? {
-            id: 'books',
-            x: vp.width / 2,
-            y: BOOKS_CARD_HEIGHT / 2 + 80,
-            width: w,
-            height: BOOKS_CARD_HEIGHT,
-            maxWidth: w,
-        }
-    )
+                text: n.frontmatter.date,
+                width: NOTE_W,
+                height: NOTE_H,
+                children: <p style={{ margin: 0, fontSize: '0.875rem' }}>{n.frontmatter.date}</p>,
+            } satisfies CardContent,
+        ]),
+    ),
 }
 
 export default function Lifelog() {
-    const [anchor, setAnchor] = useState<CardAnchor | null>(null)
-
-    useEffect(() => {
-        setAnchor(computeBookAnchor())
-        const onResize = () => setAnchor(computeBookAnchor())
-        window.addEventListener('resize', onResize, { passive: true })
-        return () => window.removeEventListener('resize', onResize)
-    }, [])
-
-    if (!anchor) return null
-
-    return (
-        <PhysicsCard
-            text="Books"
-            anchor={{ x: anchor.x, y: anchor.y }}
-            width={anchor.width}
-            height={anchor.height}
-            minimizable
-            id="lifelog-books"
-            label="Books"
-            kind="lifelog"
-        >
-            <div className="lifelog-books">
-                <h2 className="lifelog-books__heading">Books</h2>
-                <p className="lifelog-books__empty">—</p>
-            </div>
-        </PhysicsCard>
-    )
+    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
 }
