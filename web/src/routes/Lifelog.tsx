@@ -1,3 +1,4 @@
+// TODO: /portfolio cards will opt in to minimizable once issue #20 ships.
 import { useState, useEffect } from 'react'
 import { PhysicsCard } from '../physics/PhysicsCard'
 import { cardLayout, type CardAnchor } from '../physics/CardLayout'
@@ -52,11 +53,13 @@ export default function Lifelog() {
     return (
         <PhysicsCard
             text="Books"
-            fontKey="body"
-            maxWidth={anchor.maxWidth}
             anchor={{ x: anchor.x, y: anchor.y }}
             width={anchor.width}
             height={anchor.height}
+            minimizable
+            id="lifelog-books"
+            label="Books"
+            kind="lifelog"
         >
             <div className="lifelog-books">
                 <h2 className="lifelog-books__heading">Books</h2>
