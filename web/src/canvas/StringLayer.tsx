@@ -7,24 +7,28 @@ export function StringLayer() {
     const svgRef = useRef<SVGSVGElement | null>(null)
     const pathRefs = useRef<Map<string, SVGPathElement>>(new Map())
 
-    // Re-render only when the SET of tethers changes (mount/unmount of strung cards)
-    const tethers = useSyncExternalStore(
+    // Re-render only when the SET of tethers changes (mount/unmount of strung cards).
+    // Use getTetherList() (cached, stable reference) — getTethers() builds a fresh array
+    // each call and would cause an infinite useSyncExternalStore re-render loop.
+    const tetherList = useSyncExternalStore(
         (cb) => world.subscribeTetherSetChange(cb),
-        () => world.getTethers(),
-        () => world.getTethers(),
+        () => world.getTetherList(),
+        () => world.getTetherList(),
     )
 
     // Per-frame mutation of path `d` attributes — no React re-renders
     useEffect(() => {
         const svg = svgRef.current
         if (!svg) return
-        const g = world.getGravityVector()
-        const gLen = Math.hypot(g.x, g.y)
-        const gx = gLen > 0 ? g.x / gLen : 0
-        const gy = gLen > 0 ? g.y / gLen : 1
 
         let raf = 0
         const frame = () => {
+            // Re-read gravity every frame so direction changes are reflected immediately
+            const g = world.getGravityVector()
+            const gLen = Math.hypot(g.x, g.y)
+            const gx = gLen > 0 ? g.x / gLen : 0
+            const gy = gLen > 0 ? g.y / gLen : 1
+
             const views = world.getTethers()
             for (let i = 0; i < views.length; i++) {
                 const v = views[i]!
@@ -51,13 +55,13 @@ export function StringLayer() {
         }
         raf = requestAnimationFrame(frame)
         return () => cancelAnimationFrame(raf)
-    }, [world, tethers])
+    }, [world, tetherList])
 
     return (
         <svg ref={svgRef} className="string-layer" aria-hidden="true">
-            {tethers.map((_, i) => (
+            {tetherList.map((handle, i) => (
                 <path
-                    key={i}
+                    key={handle}
                     ref={(el) => {
                         if (el) pathRefs.current.set(String(i), el)
                         else pathRefs.current.delete(String(i))
