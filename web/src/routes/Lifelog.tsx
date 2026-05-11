@@ -149,6 +149,102 @@ function NowPlayingPanel() {
     )
 }
 
+// ─── Films card ──────────────────────────────────────────────────────────────
+
+const FILMS_W = 320
+const FILMS_H = 320
+
+export const filmsAnchor = (vp: Viewport): Vec2 => ({ x: vp.width / 2, y: 600 })
+
+interface Film {
+    letterboxdId: string
+    title: string
+    year?: number
+    watchedDate?: string
+    rating?: number
+    review?: string
+    posterUrl?: string
+    rewatch?: boolean
+    link: string
+}
+
+interface FilmsApiResponse {
+    films: Film[]
+    stale: boolean
+}
+
+const FILMS_DISPLAY_COUNT = 3
+
+function renderStars(rating: number): string {
+    const full = Math.floor(rating)
+    const half = rating % 1 >= 0.5
+    const empty = 5 - full - (half ? 1 : 0)
+    return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty)
+}
+
+function shortDate(iso: string): string {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function FilmsPanel() {
+    const [data, setData] = useState<FilmsApiResponse | null>(null)
+
+    useEffect(() => {
+        fetch('/api/films')
+            .then((r) => r.json() as Promise<FilmsApiResponse>)
+            .then(setData)
+            .catch(() => setData(null))
+    }, [])
+
+    const films = (data?.films ?? []).slice(0, FILMS_DISPLAY_COUNT)
+
+    return (
+        <div className="lifelog-films">
+            <h2 className="lifelog-films__heading">
+                Films
+                {data?.stale ? (
+                    <span className="lifelog-books__stale">stale</span>
+                ) : null}
+            </h2>
+            {films.length > 0 ? (
+                <ul className="lifelog-films__list">
+                    {films.map((f) => (
+                        <li key={f.letterboxdId} className="lifelog-films__item">
+                            {f.posterUrl ? (
+                                <img
+                                    className="lifelog-films__poster"
+                                    src={f.posterUrl}
+                                    alt={`${f.title} poster`}
+                                    loading="lazy"
+                                />
+                            ) : null}
+                            <div className="lifelog-films__meta">
+                                <span className="lifelog-films__title">
+                                    {f.title}
+                                    {f.year ? (
+                                        <span className="lifelog-films__year"> ({f.year})</span>
+                                    ) : null}
+                                </span>
+                                {f.rating !== undefined ? (
+                                    <span className="lifelog-films__stars" aria-label={`${f.rating} out of 5 stars`}>
+                                        {renderStars(f.rating)}
+                                    </span>
+                                ) : null}
+                                {f.watchedDate ? (
+                                    <span className="lifelog-films__date">{shortDate(f.watchedDate)}</span>
+                                ) : null}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="lifelog-films__empty">—</p>
+            )}
+        </div>
+    )
+}
+
 // ─── Page definition ──────────────────────────────────────────────────────────
 
 const pageDef: PageDef = {
@@ -165,6 +261,12 @@ const pageDef: PageDef = {
             kind: 'lifelog',
             parent: 'ceiling',
             anchor: nowPlayingAnchor,
+        },
+        {
+            id: 'lifelog-films',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: filmsAnchor,
         },
     ],
 }
@@ -185,6 +287,14 @@ const cardContent: Record<string, CardContent> = {
         minimizable: true,
         label: 'Music',
         children: <NowPlayingPanel />,
+    },
+    'lifelog-films': {
+        text: 'Films',
+        width: FILMS_W,
+        height: FILMS_H,
+        minimizable: true,
+        label: 'Films',
+        children: <FilmsPanel />,
     },
 }
 
