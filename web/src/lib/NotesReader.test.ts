@@ -1,10 +1,13 @@
 import { describe, test, expect } from 'vitest'
+import type { ComponentType } from 'react'
 import {
     deriveNoteSlug,
     validateNoteFrontmatter,
     filterAndSortNotes,
 } from './NotesReader'
 import type { Note } from './NotesReader'
+
+const Stub: ComponentType = () => null
 
 describe('deriveNoteSlug', () => {
     test('strips date prefix and returns slug from path', () => {
@@ -47,17 +50,17 @@ describe('filterAndSortNotes', () => {
         {
             slug: 'b',
             frontmatter: { date: '2026-03-01', parent: 'lifelog:books' },
-            body: 'b',
+            Component: Stub,
         },
         {
             slug: 'a',
             frontmatter: { date: '2026-05-08', parent: 'lifelog:books' },
-            body: 'a',
+            Component: Stub,
         },
         {
             slug: 'c',
             frontmatter: { date: '2026-04-10', parent: null },
-            body: 'c',
+            Component: Stub,
         },
     ]
 

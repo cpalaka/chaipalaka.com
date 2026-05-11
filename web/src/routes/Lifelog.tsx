@@ -45,7 +45,14 @@ const cardContent: Record<string, CardContent> = {
                 text: n.frontmatter.date,
                 width: NOTE_W,
                 height: NOTE_H,
-                children: <p style={{ margin: 0, fontSize: '0.875rem' }}>{n.frontmatter.date}</p>,
+                children: (
+                    <>
+                        <time style={{ display: 'block', fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.5rem' }}>
+                            {n.frontmatter.date}
+                        </time>
+                        <n.Component />
+                    </>
+                ),
             } satisfies CardContent,
         ]),
     ),
