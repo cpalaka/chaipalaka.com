@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import './BookCard.css'
 
-type BookStatus = 'reading' | 'finished' | 'favorites' | 'abandoned' | 'want-to-read'
+type BookShelf = 'currently-reading' | 'favorites'
 
 interface BookFromApi {
     slug: string
     title: string
     author: string
-    status: BookStatus
-    started: string
+    status: BookShelf
+    started?: string
     finished?: string
     cover?: string
     rating?: number
@@ -19,12 +19,9 @@ interface BooksApiResponse {
     stale: boolean
 }
 
-const STATUS_LABELS: Record<BookStatus, string> = {
-    reading: 'Reading',
-    finished: 'Finished',
+const STATUS_LABELS: Record<BookShelf, string> = {
+    'currently-reading': 'Reading',
     favorites: 'Favorite',
-    abandoned: 'Abandoned',
-    'want-to-read': 'Want to Read',
 }
 
 // Module-level promise: all <BookCard> instances on a page share one /api/books request.

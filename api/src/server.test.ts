@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Book } from './adapters/GoodreadsAdapter';
+import { GoodreadsShelf, type Book } from './adapters/GoodreadsAdapter';
 import { handle } from './server';
 
 const FIXTURE_BOOKS: Book[] = [
@@ -7,14 +7,14 @@ const FIXTURE_BOOKS: Book[] = [
     slug: '44767458',
     title: 'Dune',
     author: 'Frank Herbert',
-    status: 'reading',
+    status: GoodreadsShelf.CurrentlyReading,
     cover: 'https://images.gr-assets.com/books/1555447414m/44767458.jpg',
   },
   {
     slug: '29579',
     title: 'Foundation',
     author: 'Isaac Asimov',
-    status: 'finished',
+    status: GoodreadsShelf.Favorites,
     rating: 5,
   },
 ]

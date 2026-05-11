@@ -33,7 +33,7 @@ describe('GoodreadsAdapter', () => {
       expect(dune).toBeDefined();
       expect(dune?.title).toBe('Dune (Dune Chronicles, #1)');
       expect(dune?.author).toBe('Frank Herbert');
-      expect(dune?.status).toBe('reading');
+      expect(dune?.status).toBe('currently-reading');
       expect(dune?.cover).toBe('https://images.gr-assets.com/books/1555447414m/44767458.jpg');
     });
 
@@ -47,7 +47,7 @@ describe('GoodreadsAdapter', () => {
       const foundation = books.find((b) => b.slug === '29579');
 
       expect(foundation).toBeDefined();
-      expect(foundation?.status).toBe('favorites');
+      expect(foundation?.status).toBe('favorites'); // GoodreadsShelf.Favorites
       expect(foundation?.title).toBe('Foundation');
       expect(foundation?.author).toBe('Isaac Asimov');
     });
@@ -75,7 +75,7 @@ describe('GoodreadsAdapter', () => {
       });
 
       const books = await adapter.fetchBooks();
-      expect(books.every((b) => b.status === 'reading')).toBe(true);
+      expect(books.every((b) => b.status === 'currently-reading')).toBe(true);
     });
 
     it('maps favorites shelf to status "favorites"', async () => {
@@ -86,7 +86,7 @@ describe('GoodreadsAdapter', () => {
 
       const books = await adapter.fetchBooks();
       const favBooks = books.filter((b) => b.slug !== '');
-      expect(favBooks.every((b) => b.status === 'favorites')).toBe(true);
+      expect(favBooks.every((b) => b.status === 'favorites')).toBe(true); // GoodreadsShelf.Favorites
     });
   });
 

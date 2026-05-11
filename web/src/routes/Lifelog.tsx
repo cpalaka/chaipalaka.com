@@ -28,13 +28,13 @@ export function noteAnchor(i: number) {
     }
 }
 
-type BookStatus = 'reading' | 'finished' | 'favorites' | 'want-to-read'
+type BookShelf = 'currently-reading' | 'favorites'
 
 interface Book {
     slug: string
     title: string
     author: string
-    status: BookStatus
+    status: BookShelf
     started?: string
     finished?: string
     cover?: string
@@ -46,11 +46,9 @@ interface BooksApiResponse {
     stale: boolean
 }
 
-const STATUS_LABELS: Record<BookStatus, string> = {
-    reading: 'Reading',
-    finished: 'Finished',
+const STATUS_LABELS: Record<BookShelf, string> = {
+    'currently-reading': 'Reading',
     favorites: 'Favorite',
-    'want-to-read': 'Want to Read',
 }
 
 function BooksPanel() {
