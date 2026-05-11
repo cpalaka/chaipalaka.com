@@ -1,3 +1,5 @@
+import type { Vec2, Viewport } from './PhysicsWorld'
+
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
 export type Buoyancy = 'heavy' | 'balloon'
 export type ParentRef = 'ceiling' | 'floor' | string
@@ -7,6 +9,7 @@ export interface CardSpec {
     id: string
     kind: CardKind
     parent: ParentRef
+    anchor: (viewport: Viewport) => Vec2
 }
 
 export interface PageDef {

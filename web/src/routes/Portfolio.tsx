@@ -5,10 +5,30 @@ import type { CardContent } from '../physics/PhysicsPage'
 const pageDef: PageDef = {
     gravity: 'down',
     cards: [
-        { id: 'portfolio-stick', kind: 'portfolio', parent: 'ceiling' },
-        { id: 'portfolio-flash', kind: 'portfolio', parent: 'ceiling' },
-        { id: 'portfolio-anim', kind: 'portfolio', parent: 'ceiling' },
-        { id: 'portfolio-site', kind: 'portfolio', parent: 'ceiling' },
+        {
+            id: 'portfolio-stick',
+            kind: 'portfolio',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.25, y: 180 }),
+        },
+        {
+            id: 'portfolio-flash',
+            kind: 'portfolio',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.55, y: 180 }),
+        },
+        {
+            id: 'portfolio-anim',
+            kind: 'portfolio',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.75, y: 380 }),
+        },
+        {
+            id: 'portfolio-site',
+            kind: 'portfolio',
+            parent: 'ceiling',
+            anchor: (vp) => ({ x: vp.width * 0.35, y: 380 }),
+        },
     ],
 }
 

@@ -1,12 +1,31 @@
 import { PhysicsPage, type CardContent } from '../physics/PhysicsPage'
 import { listNotes } from '../lib/NotesReader'
 import type { PageDef } from '../physics/PageDef'
+import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'
 
 const BOOKS_W = 240
 const BOOKS_H = 160
 const NOTE_W = 200
 const NOTE_H = 240
+
+export const booksAnchor = (vp: Viewport): Vec2 => ({ x: vp.width / 2, y: 200 })
+
+export const NOTE_FAN_OFFSET_X = 200
+export const NOTE_BASE_OFFSET_Y = 280
+export const NOTE_ROW_STEP_Y = 260
+
+export function noteAnchor(i: number) {
+    return (vp: Viewport): Vec2 => {
+        const base = booksAnchor(vp)
+        const side = i % 2 === 0 ? -NOTE_FAN_OFFSET_X : NOTE_FAN_OFFSET_X
+        const row = Math.floor(i / 2)
+        return {
+            x: base.x + side,
+            y: base.y + NOTE_BASE_OFFSET_Y + row * NOTE_ROW_STEP_Y,
+        }
+    }
+}
 
 const booksChildren = (
     <div className="lifelog-books">
@@ -20,11 +39,17 @@ const bookNotes = listNotes({ parent: 'lifelog:books' })
 const pageDef: PageDef = {
     gravity: 'down',
     cards: [
-        { id: 'lifelog-books', kind: 'lifelog', parent: 'ceiling' },
-        ...bookNotes.map((n) => ({
+        {
+            id: 'lifelog-books',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: booksAnchor,
+        },
+        ...bookNotes.map((n, i) => ({
             id: `note-${n.slug}`,
             kind: 'note' as const,
             parent: 'lifelog-books',
+            anchor: noteAnchor(i),
         })),
     ],
 }
