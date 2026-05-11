@@ -162,3 +162,87 @@
     color: var(--color-fg-faint);
     margin: 0;
 }
+
+/* Films panel */
+
+.lifelog-films {
+    padding: var(--space-2);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    overflow: hidden;
+}
+
+.lifelog-films__heading {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.lifelog-films__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.lifelog-films__item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.lifelog-films__poster {
+    width: 48px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.lifelog-films__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.lifelog-films__title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lifelog-films__year {
+    font-weight: normal;
+    color: var(--color-fg-muted);
+}
+
+.lifelog-films__stars {
+    font-size: var(--font-size-xs);
+    color: var(--color-fg);
+    letter-spacing: 0.02em;
+}
+
+.lifelog-films__date {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-fg-faint);
+}
+
+.lifelog-films__empty {
+    color: var(--color-fg-faint);
+    margin: 0;
+}
