@@ -19,7 +19,7 @@ export interface Viewport {
 
 export interface PhysicsWorldOptions {
     viewport: Viewport
-    frameBarHeight?: number
+    insets?: { top: number; bottom: number }
 }
 
 export type PhysicsHandle = number
@@ -98,12 +98,14 @@ export class PhysicsWorld {
         this.engine.gravity.y = GRAVITY_Y  // always on, default down
 
         const { width, height } = opts.viewport
-        const frameBarHeight = opts.frameBarHeight ?? 0
+        const top = opts.insets?.top ?? 0
+        const bottom = opts.insets?.bottom ?? 0
+        const hw = FLOOR_THICKNESS / 2
 
         // Floor — dynamic cards fall onto it; balloon cards tether to it
         this._floor = Matter.Bodies.rectangle(
             width / 2,
-            height + FLOOR_THICKNESS / 2,
+            height - bottom + hw,
             width,
             FLOOR_THICKNESS,
             { isStatic: true },
@@ -112,7 +114,7 @@ export class PhysicsWorld {
         const floorId = this.nextId++
         this.registrations.set(floorId, {
             body: this._floor,
-            anchor: { x: width / 2, y: height },
+            anchor: { x: width / 2, y: height - bottom },
             isStatic: true,
             width,
             height: FLOOR_THICKNESS,
@@ -123,7 +125,7 @@ export class PhysicsWorld {
         // Ceiling — heavy cards hang from it; upward-gravity balloon cards fall to it
         this._ceiling = Matter.Bodies.rectangle(
             width / 2,
-            frameBarHeight - FLOOR_THICKNESS / 2,
+            top - hw,
             width,
             FLOOR_THICKNESS,
             { isStatic: true },
@@ -132,7 +134,7 @@ export class PhysicsWorld {
         const ceilingId = this.nextId++
         this.registrations.set(ceilingId, {
             body: this._ceiling,
-            anchor: { x: width / 2, y: frameBarHeight },
+            anchor: { x: width / 2, y: top },
             isStatic: true,
             width,
             height: FLOOR_THICKNESS,
@@ -292,10 +294,12 @@ export class PhysicsWorld {
         return { x: this.engine.gravity.x, y: this.engine.gravity.y }
     }
 
-    setViewport(vp: Viewport): void {
+    setViewport(vp: Viewport, insets?: { top: number; bottom: number }): void {
         const hw = FLOOR_THICKNESS / 2
-        Matter.Body.setPosition(this._floor, { x: vp.width / 2, y: vp.height + hw })
-        Matter.Body.setPosition(this._ceiling, { x: vp.width / 2, y: -hw })
+        const top = insets?.top ?? 0
+        const bottom = insets?.bottom ?? 0
+        Matter.Body.setPosition(this._floor, { x: vp.width / 2, y: vp.height - bottom + hw })
+        Matter.Body.setPosition(this._ceiling, { x: vp.width / 2, y: top - hw })
         Matter.Body.setPosition(this._leftWall, { x: -hw, y: vp.height / 2 })
         Matter.Body.setPosition(this._rightWall, { x: vp.width + hw, y: vp.height / 2 })
     }

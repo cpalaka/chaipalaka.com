@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { ComponentType } from 'react'
 
 const NoteSchema = z.object({
     date: z.string().date(),
@@ -13,7 +14,7 @@ export interface NoteFrontmatter {
 export interface Note {
     slug: string
     frontmatter: NoteFrontmatter
-    body: string
+    Component: ComponentType
 }
 
 export function deriveNoteSlug(globKey: string): string {
@@ -42,7 +43,7 @@ export function filterAndSortNotes(
 
 type NoteModule = {
     frontmatter: unknown
-    default?: unknown
+    default: ComponentType
 }
 
 export function listNotes(filter?: { parent?: string | null }): Note[] {
@@ -53,7 +54,7 @@ export function listNotes(filter?: { parent?: string | null }): Note[] {
     const all: Note[] = Object.entries(modules).map(([path, mod]) => ({
         slug: deriveNoteSlug(path),
         frontmatter: validateNoteFrontmatter(mod.frontmatter),
-        body: '',
+        Component: mod.default,
     }))
     return filterAndSortNotes(all, filter)
 }
