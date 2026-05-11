@@ -1,0 +1,64 @@
+.now-playing {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    align-items: flex-start;
+}
+
+.now-playing--placeholder {
+    color: var(--color-fg-faint);
+}
+
+.now-playing__art {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.now-playing__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.now-playing__live {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+}
+
+.now-playing__dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    animation: now-playing-pulse 2s ease-in-out infinite;
+}
+
+@keyframes now-playing-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.now-playing__title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.now-playing__artist {
+    font-size: var(--font-size-xs);
+    color: var(--color-fg-muted);
+    margin: 0;
+}
