@@ -4,11 +4,12 @@ import type { PageDef } from '../physics/PageDef'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'
 
+// ─── Books card ──────────────────────────────────────────────────────────────
+
 const BOOKS_W = 320
 const BOOKS_H = 280
 
 export const booksAnchor = (vp: Viewport): Vec2 => ({ x: vp.width / 2, y: 200 })
-
 
 type BookShelf = 'currently-reading'
 
@@ -73,6 +74,83 @@ function BooksPanel() {
     )
 }
 
+// ─── Now-playing card ─────────────────────────────────────────────────────────
+
+const NOW_PLAYING_W = 280
+const NOW_PLAYING_H = 180
+
+export const nowPlayingAnchor = (vp: Viewport): Vec2 => ({ x: vp.width - 200, y: 80 })
+
+interface Track {
+    artist: string
+    title: string
+    album?: string
+    albumArt?: string
+    isNowPlaying: boolean
+}
+
+interface NowPlayingApiResponse {
+    track: Track | null
+    stale: boolean
+}
+
+const NOW_PLAYING_POLL_MS = 60_000
+
+function NowPlayingPanel() {
+    const [data, setData] = useState<NowPlayingApiResponse | null>(null)
+
+    useEffect(() => {
+        const poll = () => {
+            fetch('/api/now-playing')
+                .then((r) => r.json() as Promise<NowPlayingApiResponse>)
+                .then(setData)
+                .catch(() => {})
+        }
+        poll()
+        const id = setInterval(poll, NOW_PLAYING_POLL_MS)
+        return () => clearInterval(id)
+    }, [])
+
+    const track = data?.track ?? null
+
+    return (
+        <div className="lifelog-now-playing">
+            <h2 className="lifelog-now-playing__heading">
+                Music
+                {data?.stale ? (
+                    <span className="lifelog-books__stale">stale</span>
+                ) : null}
+            </h2>
+            {track ? (
+                <div className="lifelog-now-playing__track">
+                    {track.albumArt ? (
+                        <img
+                            className="lifelog-now-playing__art"
+                            src={track.albumArt}
+                            alt={track.album ? `${track.album} cover` : `${track.title} cover`}
+                            loading="lazy"
+                        />
+                    ) : null}
+                    <div className="lifelog-now-playing__info">
+                        {track.isNowPlaying ? (
+                            <span className="lifelog-now-playing__live">
+                                <span className="lifelog-now-playing__dot" aria-hidden="true" />
+                                now playing
+                            </span>
+                        ) : null}
+                        <p className="lifelog-now-playing__title">{track.title}</p>
+                        <p className="lifelog-now-playing__artist">{track.artist}</p>
+                    </div>
+                </div>
+            ) : (
+                <p className="lifelog-now-playing__empty">—</p>
+            )}
+        </div>
+    )
+}
+
+// ─── Page definition ──────────────────────────────────────────────────────────
+
 const pageDef: PageDef = {
     gravity: 'down',
     cards: [
@@ -81,6 +159,12 @@ const pageDef: PageDef = {
             kind: 'lifelog',
             parent: 'ceiling',
             anchor: booksAnchor,
+        },
+        {
+            id: 'lifelog-now-playing',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: nowPlayingAnchor,
         },
     ],
 }
@@ -93,6 +177,14 @@ const cardContent: Record<string, CardContent> = {
         minimizable: true,
         label: 'Books',
         children: <BooksPanel />,
+    },
+    'lifelog-now-playing': {
+        text: 'Music',
+        width: NOW_PLAYING_W,
+        height: NOW_PLAYING_H,
+        minimizable: true,
+        label: 'Music',
+        children: <NowPlayingPanel />,
     },
 }
 
