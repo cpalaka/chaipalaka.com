@@ -7,6 +7,7 @@
     gap: var(--card-gap);
     padding: var(--card-padding);
     margin: 0;
+    overflow: hidden;
     background: var(--color-bg-raised);
     color: var(--color-fg);
     border: var(--card-border-width) solid var(--color-fg);
