@@ -44,8 +44,6 @@ export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) 
     return (
         <PhysicsCard
             text={LOREM}
-            fontKey="body"
-            maxWidth={cardSize.width - 48}
             anchor={anchor}
             width={cardSize.width}
             height={cardSize.height}

@@ -53,8 +53,6 @@ export default function Lifelog() {
     return (
         <PhysicsCard
             text="Books"
-            fontKey="body"
-            maxWidth={anchor.maxWidth}
             anchor={{ x: anchor.x, y: anchor.y }}
             width={anchor.width}
             height={anchor.height}

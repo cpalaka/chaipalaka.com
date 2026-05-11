@@ -41,8 +41,6 @@ export default function BlogPost() {
     return (
         <PhysicsCard
             text={post.frontmatter.title}
-            fontKey="body"
-            maxWidth={CARD_MAX_WIDTH}
             anchor={dims.anchor}
             width={dims.w}
             height={dims.h}
