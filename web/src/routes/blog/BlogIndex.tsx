@@ -69,8 +69,6 @@ export default function BlogIndex() {
                     <PhysicsCard
                         key={anchor.id}
                         text={post.frontmatter.title}
-                        fontKey="body"
-                        maxWidth={anchor.maxWidth}
                         anchor={{ x: anchor.x, y: anchor.y }}
                         width={anchor.width}
                         height={anchor.height}

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from './PhysicsContext'
-import { registry as pretextRegistry } from '../text/registry'
 import { useIsMinimized, useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
 import { flipMorph } from '../canvas/flip'
 import type { PhysicsHandle } from './PhysicsWorld'
@@ -10,40 +9,30 @@ export type CardInteractionMode = 'locked' | 'free'
 
 export interface PhysicsCardProps {
     text: string
-    fontKey: string
-    maxWidth: number
+    width: number
+    height: number
     anchor: { x: number; y: number }
     children?: React.ReactNode
     header?: React.ReactNode
-    width?: number
-    height?: number
     variant?: string
     className?: string
     style?: React.CSSProperties
     physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
     cardRef?: React.MutableRefObject<HTMLElement | null>
     interactionMode?: CardInteractionMode
-    // minimize support
     minimizable?: boolean
     id?: string
     label?: string
     kind?: string
 }
 
-const CARD_PADDING_PX = 24
-// Header bar net extra height when shown: min-height(32) - absorbed top padding(24) + card-gap(24) = 32.
-// Must match [data-card-header] min-height and --card-padding / --card-gap tokens.
-const HEADER_EXTRA_PX = 32
-
 export function PhysicsCard({
     text,
-    fontKey,
-    maxWidth,
+    width,
+    height,
     anchor,
     children,
     header,
-    width: explicitW,
-    height: explicitH,
     variant,
     className,
     style,
@@ -70,29 +59,17 @@ export function PhysicsCard({
 
     const registry = useMinimizedRegistry()
     const isMinimized = useIsMinimized(minimizable ? id : undefined)
-    // Stable boolean — used in size calculation and as an effect dep so the
-    // physics body re-registers with the correct height if the header appears.
-    const hasHeader = minimizable || header != null
 
-    // Registration: only re-runs when text content, font, minimize state, or
-    // header presence changes. Including isMinimized ensures the physics body
-    // is unregistered while minimized.
+    // Registration: re-runs when dimensions or minimize state change.
+    // Including isMinimized ensures the physics body is unregistered while minimized.
     useEffect(() => {
         if (isMinimized) return
         const el = elRef.current
         if (!el) return
 
         const { x, y } = anchorRef.current
-        let w: number
-        let h: number
-        if (explicitW !== undefined && explicitH !== undefined) {
-            w = explicitW
-            h = explicitH
-        } else {
-            const measured = pretextRegistry.measure(text, fontKey, maxWidth)
-            w = measured.width + CARD_PADDING_PX * 2
-            h = measured.height + CARD_PADDING_PX * 2 + (hasHeader ? HEADER_EXTRA_PX : 0)
-        }
+        const w = width
+        const h = height
 
         el.style.width = `${w}px`
         el.style.height = `${h}px`
@@ -175,7 +152,7 @@ export function PhysicsCard({
             window.removeEventListener('pointermove', onPointerMove)
             window.removeEventListener('pointerup', onPointerUp)
         }
-    }, [world, text, fontKey, maxWidth, isMinimized, hasHeader])
+    }, [world, width, height, isMinimized])
 
     // Anchor update: moves the spring target when the grid re-flows (e.g. resize).
     useEffect(() => {
@@ -228,7 +205,7 @@ export function PhysicsCard({
             data-interaction-mode={interactionMode}
             style={style}
         >
-            {showHeader && (
+            {showHeader ? (
                 <div data-card-header>
                     {minimizable ? (
                         <button
@@ -243,7 +220,7 @@ export function PhysicsCard({
                     ) : null}
                     {header}
                 </div>
-            )}
+            ) : null}
             {children ?? text}
         </article>
     )
