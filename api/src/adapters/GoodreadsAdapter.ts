@@ -1,10 +1,13 @@
-export type BookStatus = 'reading' | 'finished' | 'favorites' | 'want-to-read'
+export enum GoodreadsShelf {
+  CurrentlyReading = 'currently-reading',
+  Favorites = 'favorites',
+}
 
 export interface Book {
   slug: string
   title: string
   author: string
-  status: BookStatus
+  status: GoodreadsShelf
   started?: string
   finished?: string
   cover?: string
@@ -31,7 +34,7 @@ function toIso(dateStr: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
-function parseItems(xml: string, status: BookStatus): Book[] {
+function parseItems(xml: string, shelf: GoodreadsShelf): Book[] {
   const books: Book[] = []
   const blocks = xml.split('</item>')
   for (const block of blocks) {
@@ -58,7 +61,7 @@ function parseItems(xml: string, status: BookStatus): Book[] {
     const started = toIso(field(item, 'user_date_added'))
     const finished = toIso(field(item, 'user_read_at'))
 
-    books.push({ slug, title, author, status, started, finished, cover, rating })
+    books.push({ slug, title, author, status: shelf, started, finished, cover, rating })
   }
   return books
 }
@@ -74,17 +77,17 @@ export class GoodreadsAdapter {
 
   async fetchBooks(): Promise<Book[]> {
     const [reading, favorites] = await Promise.all([
-      this.fetchShelf('currently-reading', 'reading'),
-      this.fetchShelf('favorites', 'favorites'),
+      this.fetchShelf(GoodreadsShelf.CurrentlyReading),
+      this.fetchShelf(GoodreadsShelf.Favorites),
     ])
     return [...reading, ...favorites]
   }
 
-  private async fetchShelf(shelf: string, status: BookStatus): Promise<Book[]> {
+  private async fetchShelf(shelf: GoodreadsShelf): Promise<Book[]> {
     const url = `https://www.goodreads.com/review/list_rss/${this.userId}?shelf=${shelf}`
     const res = await this.fetchFn(url)
     if (!res.ok) throw new Error(`Goodreads ${shelf} returned ${res.status}`)
     const xml = await res.text()
-    return parseItems(xml, status)
+    return parseItems(xml, shelf)
   }
 }
