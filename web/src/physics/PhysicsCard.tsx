@@ -31,6 +31,9 @@ export interface PhysicsCardProps {
 }
 
 const CARD_PADDING_PX = 24
+// Header bar net extra height when shown: min-height(32) - absorbed top padding(24) + card-gap(24) = 32.
+// Must match [data-card-header] min-height and --card-padding / --card-gap tokens.
+const HEADER_EXTRA_PX = 32
 
 export function PhysicsCard({
     text,
@@ -67,9 +70,13 @@ export function PhysicsCard({
 
     const registry = useMinimizedRegistry()
     const isMinimized = useIsMinimized(minimizable ? id : undefined)
+    // Stable boolean — used in size calculation and as an effect dep so the
+    // physics body re-registers with the correct height if the header appears.
+    const hasHeader = minimizable || header != null
 
-    // Registration: only re-runs when text content, font, or minimize state changes.
-    // Including isMinimized ensures the physics body is unregistered while minimized.
+    // Registration: only re-runs when text content, font, minimize state, or
+    // header presence changes. Including isMinimized ensures the physics body
+    // is unregistered while minimized.
     useEffect(() => {
         if (isMinimized) return
         const el = elRef.current
@@ -84,7 +91,7 @@ export function PhysicsCard({
         } else {
             const measured = pretextRegistry.measure(text, fontKey, maxWidth)
             w = measured.width + CARD_PADDING_PX * 2
-            h = measured.height + CARD_PADDING_PX * 2
+            h = measured.height + CARD_PADDING_PX * 2 + (hasHeader ? HEADER_EXTRA_PX : 0)
         }
 
         el.style.width = `${w}px`
@@ -168,7 +175,7 @@ export function PhysicsCard({
             window.removeEventListener('pointermove', onPointerMove)
             window.removeEventListener('pointerup', onPointerUp)
         }
-    }, [world, text, fontKey, maxWidth, isMinimized])
+    }, [world, text, fontKey, maxWidth, isMinimized, hasHeader])
 
     // Anchor update: moves the spring target when the grid re-flows (e.g. resize).
     useEffect(() => {
