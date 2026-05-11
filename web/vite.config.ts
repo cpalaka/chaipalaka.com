@@ -37,6 +37,9 @@ async function getBlogSlugs(): Promise<string[]> {
 }
 
 export default defineConfig({
+    build: {
+        assetsDir: '_app',
+    },
     plugins: [
         {
             enforce: 'pre',
