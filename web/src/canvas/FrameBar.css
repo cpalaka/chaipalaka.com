@@ -87,32 +87,36 @@
 
 .frame-bar__minimized-strip {
     display: flex;
-    gap: var(--space-2);
-    padding: 0 var(--space-3);
     flex: 1;
     overflow: hidden;
-    align-items: center;
+    align-items: stretch;
 }
 
 .frame-bar__mini-card {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border: 1px solid var(--color-fg);
-    background: var(--color-bg-raised);
+    justify-content: center;
+    flex: 0 0 120px;
+    overflow: hidden;
+    border: none;
+    border-right: 1px solid var(--color-rule);
+    background: transparent;
     color: var(--color-fg);
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
     cursor: pointer;
     white-space: nowrap;
+    text-overflow: ellipsis;
     pointer-events: auto;
+}
+
+.frame-bar__mini-card:last-child {
+    border-right: none;
 }
 
 .frame-bar__mini-card:hover {
     background: var(--color-accent);
-    color: var(--color-bg-raised);
-    border-color: var(--color-accent);
+    color: var(--color-bg);
 }
 
 .frame-bar__settings {
