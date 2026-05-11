@@ -1,0 +1,58 @@
+{
+  "recenttracks": {
+    "track": [
+      {
+        "artist": { "mbid": "f59c5520-5f46-4d2c-b2c4-822eabf53419", "#text": "Radiohead" },
+        "streamable": "0",
+        "image": [
+          { "size": "small", "#text": "https://lastfm.freetls.fastly.net/i/u/34s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "medium", "#text": "https://lastfm.freetls.fastly.net/i/u/64s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "large", "#text": "https://lastfm.freetls.fastly.net/i/u/174s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "extralarge", "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" }
+        ],
+        "mbid": "9c1cc072-a88a-43a3-ab49-6c5c5a0dd8bc",
+        "album": { "mbid": "bdea4e1f-e276-3d5d-b1dc-8e8dc9c0db5e", "#text": "OK Computer" },
+        "name": "Paranoid Android",
+        "@attr": { "nowplaying": "true" },
+        "url": "https://www.last.fm/music/Radiohead/_/Paranoid+Android"
+      },
+      {
+        "artist": { "mbid": "f59c5520-5f46-4d2c-b2c4-822eabf53419", "#text": "Radiohead" },
+        "streamable": "0",
+        "image": [
+          { "size": "small", "#text": "https://lastfm.freetls.fastly.net/i/u/34s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "medium", "#text": "https://lastfm.freetls.fastly.net/i/u/64s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "large", "#text": "https://lastfm.freetls.fastly.net/i/u/174s/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" },
+          { "size": "extralarge", "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/3b54d9c5-d035-4c89-8fa0-cf9cb3a6e5c9.png" }
+        ],
+        "mbid": "69b0f20c-ba3a-4997-b913-b16abb3ab2b0",
+        "album": { "mbid": "bdea4e1f-e276-3d5d-b1dc-8e8dc9c0db5e", "#text": "OK Computer" },
+        "name": "Exit Music (For a Film)",
+        "url": "https://www.last.fm/music/Radiohead/_/Exit+Music+(For+a+Film)",
+        "date": { "uts": "1715256000", "#text": "09 May 2024, 12:00" }
+      },
+      {
+        "artist": { "mbid": "", "#text": "Aphex Twin" },
+        "streamable": "0",
+        "image": [
+          { "size": "small", "#text": "" },
+          { "size": "medium", "#text": "" },
+          { "size": "large", "#text": "" },
+          { "size": "extralarge", "#text": "" }
+        ],
+        "mbid": "",
+        "album": { "mbid": "", "#text": "Selected Ambient Works Volume II" },
+        "name": "Rhubarb",
+        "url": "https://www.last.fm/music/Aphex+Twin/_/Rhubarb",
+        "date": { "uts": "1715252400", "#text": "09 May 2024, 11:00" }
+      }
+    ],
+    "@attr": {
+      "user": "chaipalaka",
+      "totalPages": "517",
+      "page": "1",
+      "perPage": "3",
+      "total": "12345"
+    }
+  }
+}
