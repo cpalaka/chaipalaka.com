@@ -94,13 +94,12 @@ describe('FrameBar', () => {
         expect(screen.getByRole('navigation', { name: 'Section nav' })).toBeInTheDocument()
     })
 
-    test('settings menu shows all four control groups when open', async () => {
+    test('settings menu shows three control groups when open', async () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
         expect(screen.getByText('Background')).toBeInTheDocument()
         expect(screen.getByText('Color mode')).toBeInTheDocument()
         expect(screen.getByText('Frame edge')).toBeInTheDocument()
-        expect(screen.getByText('Gravity')).toBeInTheDocument()
     })
 
     test('background select has all four scene options', async () => {
@@ -154,11 +153,10 @@ describe('FrameBar', () => {
         await userEvent.selectOptions(select, original)
     })
 
-    test('gravity button renders as placeholder with aria-pressed="false"', async () => {
+    test('gravity toggle is absent (gravity is always on per ADR 0001)', async () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
-        const gravBtn = screen.getByRole('button', { name: /off/i })
-        expect(gravBtn).toHaveAttribute('aria-pressed', 'false')
+        expect(screen.queryByText('Gravity')).not.toBeInTheDocument()
     })
 
     describe('minimized strip', () => {
