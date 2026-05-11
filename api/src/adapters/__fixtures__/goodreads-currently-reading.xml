@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title><![CDATA[Goodreads – shelf: currently-reading]]></title>
+    <link>https://www.goodreads.com/review/list_rss/12345678?shelf=currently-reading</link>
+    <description>Goodreads: book reviews and recommendations</description>
+    <item>
+      <guid><![CDATA[https://www.goodreads.com/review/show/9000000001]]></guid>
+      <pubDate>Mon, 05 May 2026 00:00:00 -0700</pubDate>
+      <title><![CDATA[Dune (Dune Chronicles, #1)]]></title>
+      <link><![CDATA[https://www.goodreads.com/book/show/44767458-dune]]></link>
+      <book_id>44767458</book_id>
+      <book_image_url><![CDATA[https://images.gr-assets.com/books/1555447414m/44767458.jpg]]></book_image_url>
+      <author_name><![CDATA[Frank Herbert]]></author_name>
+      <user_rating>0</user_rating>
+      <user_read_at></user_read_at>
+      <user_date_added><![CDATA[Mon May 05 00:00:00 -0700 2026]]></user_date_added>
+      <average_rating>4.26</average_rating>
+    </item>
+  </channel>
+</rss>

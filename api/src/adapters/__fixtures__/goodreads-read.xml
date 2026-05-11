@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title><![CDATA[Goodreads – shelf: read]]></title>
+    <link>https://www.goodreads.com/review/list_rss/12345678?shelf=read</link>
+    <description>Goodreads: book reviews and recommendations</description>
+    <item>
+      <guid><![CDATA[https://www.goodreads.com/review/show/9000000002]]></guid>
+      <pubDate>Tue, 01 Apr 2026 00:00:00 -0700</pubDate>
+      <title><![CDATA[Foundation]]></title>
+      <link><![CDATA[https://www.goodreads.com/book/show/29579-foundation]]></link>
+      <book_id>29579</book_id>
+      <book_image_url><![CDATA[https://images.gr-assets.com/books/1417900846m/29579.jpg]]></book_image_url>
+      <author_name><![CDATA[Isaac Asimov]]></author_name>
+      <user_rating>5</user_rating>
+      <user_read_at><![CDATA[Tue Apr 01 00:00:00 -0700 2026]]></user_read_at>
+      <user_date_added><![CDATA[Mon Mar 01 00:00:00 -0800 2026]]></user_date_added>
+      <average_rating>4.36</average_rating>
+    </item>
+    <item>
+      <guid><![CDATA[https://www.goodreads.com/review/show/9000000003]]></guid>
+      <pubDate>Sat, 01 Feb 2026 00:00:00 -0800</pubDate>
+      <title><![CDATA[1984]]></title>
+      <link><![CDATA[https://www.goodreads.com/book/show/40961427-1984]]></link>
+      <book_id>40961427</book_id>
+      <book_image_url><![CDATA[https://images.gr-assets.com/books/1532714506m/40961427.jpg]]></book_image_url>
+      <author_name><![CDATA[George Orwell]]></author_name>
+      <user_rating>0</user_rating>
+      <user_read_at><![CDATA[Sat Feb 01 00:00:00 -0800 2026]]></user_read_at>
+      <user_date_added><![CDATA[Mon Jan 05 00:00:00 -0800 2026]]></user_date_added>
+      <average_rating>4.19</average_rating>
+    </item>
+    <item>
+      <guid><![CDATA[https://www.goodreads.com/review/show/9000000004]]></guid>
+      <pubDate>Sat, 01 Jan 2026 00:00:00 -0800</pubDate>
+      <title><![CDATA[Malformed No ID Book]]></title>
+      <link><![CDATA[https://www.goodreads.com/book/show/]]></link>
+      <book_id></book_id>
+      <book_image_url></book_image_url>
+      <author_name><![CDATA[Unknown Author]]></author_name>
+      <user_rating>3</user_rating>
+      <user_read_at><![CDATA[Thu Jan 01 00:00:00 -0800 2026]]></user_read_at>
+      <user_date_added><![CDATA[Wed Dec 01 00:00:00 -0800 2025]]></user_date_added>
+      <average_rating>3.00</average_rating>
+    </item>
+  </channel>
+</rss>
