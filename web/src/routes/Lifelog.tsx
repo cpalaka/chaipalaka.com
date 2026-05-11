@@ -245,6 +245,97 @@ function FilmsPanel() {
     )
 }
 
+// ─── Activity card ────────────────────────────────────────────────────────────
+
+const ACTIVITY_W = 280
+const ACTIVITY_H = 360
+
+export const activityAnchor = (vp: Viewport): Vec2 => ({ x: 200, y: vp.height / 2 })
+
+type ActivityType = 'push' | 'pull_request' | 'issue' | 'release' | 'star'
+
+interface Activity {
+    type: ActivityType
+    repo: string
+    summary: string
+    url: string
+    ts: string
+}
+
+interface ActivityApiResponse {
+    activity: Activity[]
+    stale: boolean
+}
+
+const ACTIVITY_BADGE_LABELS: Record<ActivityType, string> = {
+    push: 'push',
+    pull_request: 'PR',
+    issue: 'issue',
+    release: 'release',
+    star: 'star',
+}
+
+function relTime(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime()
+    const min = Math.floor(diff / 60_000)
+    if (min < 60) return `${min}m ago`
+    const hrs = Math.floor(min / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    if (days < 30) return `${days}d ago`
+    return `${Math.floor(days / 7)}wk ago`
+}
+
+function ActivityPanel() {
+    const [data, setData] = useState<ActivityApiResponse | null>(null)
+
+    useEffect(() => {
+        fetch('/api/github')
+            .then((r) => r.json() as Promise<ActivityApiResponse>)
+            .then(setData)
+            .catch(() => setData(null))
+    }, [])
+
+    const items = data?.activity ?? []
+
+    return (
+        <div className="lifelog-activity">
+            <h2 className="lifelog-activity__heading">
+                GitHub
+                {data?.stale ? (
+                    <span className="lifelog-books__stale">stale</span>
+                ) : null}
+            </h2>
+            {items.length > 0 ? (
+                <ul className="lifelog-activity__list">
+                    {items.map((a, i) => (
+                        <li key={`${a.ts}-${i}`} className="lifelog-activity__item">
+                            <span className={`lifelog-activity__badge lifelog-activity__badge--${a.type}`}>
+                                {ACTIVITY_BADGE_LABELS[a.type]}
+                            </span>
+                            <div className="lifelog-activity__body">
+                                <a
+                                    className="lifelog-activity__summary"
+                                    href={a.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    {a.summary}
+                                </a>
+                                <span className="lifelog-activity__meta">
+                                    {a.repo} · {relTime(a.ts)}
+                                </span>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="lifelog-activity__empty">—</p>
+            )}
+        </div>
+    )
+}
+
 // ─── Page definition ──────────────────────────────────────────────────────────
 
 const pageDef: PageDef = {
@@ -267,6 +358,12 @@ const pageDef: PageDef = {
             kind: 'lifelog',
             parent: 'ceiling',
             anchor: filmsAnchor,
+        },
+        {
+            id: 'lifelog-activity',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: activityAnchor,
         },
     ],
 }
@@ -295,6 +392,14 @@ const cardContent: Record<string, CardContent> = {
         minimizable: true,
         label: 'Films',
         children: <FilmsPanel />,
+    },
+    'lifelog-activity': {
+        text: 'GitHub',
+        width: ACTIVITY_W,
+        height: ACTIVITY_H,
+        minimizable: true,
+        label: 'GitHub',
+        children: <ActivityPanel />,
     },
 }
 
