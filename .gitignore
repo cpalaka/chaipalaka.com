@@ -40,3 +40,6 @@ web/.vitest-cache/
 
 # Planning docs — kept locally, not tracked
 # (PRD.md and grillmedoc.md are now committed — they are the design record)
+
+# Personal notes
+NOTES.md
