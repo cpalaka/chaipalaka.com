@@ -1,4 +1,4 @@
-export type BookStatus = 'reading' | 'finished' | 'want-to-read'
+export type BookStatus = 'reading' | 'finished' | 'favorites' | 'want-to-read'
 
 export interface Book {
   slug: string
@@ -73,11 +73,11 @@ export class GoodreadsAdapter {
   }
 
   async fetchBooks(): Promise<Book[]> {
-    const [reading, read] = await Promise.all([
+    const [reading, favorites] = await Promise.all([
       this.fetchShelf('currently-reading', 'reading'),
-      this.fetchShelf('read', 'finished'),
+      this.fetchShelf('favorites', 'favorites'),
     ])
-    return [...reading, ...read]
+    return [...reading, ...favorites]
   }
 
   private async fetchShelf(shelf: string, status: BookStatus): Promise<Book[]> {

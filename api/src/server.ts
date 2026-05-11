@@ -37,8 +37,10 @@ export async function handle(
         { ttl: BOOKS_TTL_MS },
       );
       return Response.json({ books: value, stale });
-    } catch {
-      return Response.json({ books: [], stale: true });
+    } catch(e) {
+      const error = e instanceof Error ? e.message : String(e);
+      console.error('[Server] failed to fetch books', e);
+      return Response.json({ books: [], stale: true, error });
     }
   }
 

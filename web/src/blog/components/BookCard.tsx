@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './BookCard.css'
 
-type BookStatus = 'reading' | 'finished' | 'abandoned' | 'want-to-read'
+type BookStatus = 'reading' | 'finished' | 'favorites' | 'abandoned' | 'want-to-read'
 
 interface BookFromApi {
     slug: string
@@ -22,6 +22,7 @@ interface BooksApiResponse {
 const STATUS_LABELS: Record<BookStatus, string> = {
     reading: 'Reading',
     finished: 'Finished',
+    favorites: 'Favorite',
     abandoned: 'Abandoned',
     'want-to-read': 'Want to Read',
 }

@@ -28,7 +28,7 @@ export function noteAnchor(i: number) {
     }
 }
 
-type BookStatus = 'reading' | 'finished' | 'want-to-read'
+type BookStatus = 'reading' | 'finished' | 'favorites' | 'want-to-read'
 
 interface Book {
     slug: string
@@ -49,6 +49,7 @@ interface BooksApiResponse {
 const STATUS_LABELS: Record<BookStatus, string> = {
     reading: 'Reading',
     finished: 'Finished',
+    favorites: 'Favorite',
     'want-to-read': 'Want to Read',
 }
 
