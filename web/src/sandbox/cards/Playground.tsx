@@ -31,7 +31,6 @@ export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) 
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
     const [cardSize] = useState({ width: DEFAULT_W, height: DEFAULT_H })
-    const [locked, setLocked] = useState(false)
 
     useEffect(() => {
         const onResize = () => setAnchor(computeAnchor())
@@ -50,8 +49,7 @@ export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) 
             variant="playground"
             physicsHandleRef={handleRef}
             cardRef={cardRef}
-            interactionMode={locked ? 'locked' : 'free'}
-            header={<CardHeader locked={locked} onChange={setLocked} onMinimize={onMinimize} />}
+            header={<CardHeader onMinimize={onMinimize} />}
         >
             <div
                 style={{

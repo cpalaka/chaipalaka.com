@@ -2,10 +2,9 @@ import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from './PhysicsContext'
 import { useIsMinimized, useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
 import { flipMorph } from '../canvas/flip'
-import type { PhysicsHandle } from './PhysicsWorld'
+import type { PhysicsHandle, TetherHandle } from './PhysicsWorld'
+import type { Buoyancy, ParentRef } from './PageDef'
 import './PhysicsCard.css'
-
-export type CardInteractionMode = 'locked' | 'free'
 
 export interface PhysicsCardProps {
     text: string
@@ -19,11 +18,12 @@ export interface PhysicsCardProps {
     style?: React.CSSProperties
     physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
     cardRef?: React.MutableRefObject<HTMLElement | null>
-    interactionMode?: CardInteractionMode
     minimizable?: boolean
     id?: string
     label?: string
     kind?: string
+    parent?: ParentRef
+    buoyancy?: Buoyancy
 }
 
 export function PhysicsCard({
@@ -38,30 +38,23 @@ export function PhysicsCard({
     style,
     physicsHandleRef,
     cardRef,
-    interactionMode = 'free',
     minimizable = false,
     id,
     label,
     kind = 'card',
+    parent,
+    buoyancy,
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
     const handleRef = useRef<PhysicsHandle | null>(null)
-    // Keep a ref to the current anchor so the registration effect can read the
-    // latest value without taking it as a dependency (avoids re-registering on
-    // every resize tick while the spring update is handled separately).
     const anchorRef = useRef(anchor)
     anchorRef.current = anchor
-    // Ref so pointer handlers always read the current interactionMode without
-    // being re-registered on every toggle (rerender-use-ref-transient-values).
-    const interactionModeRef = useRef(interactionMode)
-    interactionModeRef.current = interactionMode
+    const tetherHandleRef = useRef<TetherHandle | null>(null)
 
     const registry = useMinimizedRegistry()
     const isMinimized = useIsMinimized(minimizable ? id : undefined)
 
-    // Registration: re-runs when dimensions or minimize state change.
-    // Including isMinimized ensures the physics body is unregistered while minimized.
     useEffect(() => {
         if (isMinimized) return
         const el = elRef.current
@@ -75,17 +68,52 @@ export function PhysicsCard({
         el.style.height = `${h}px`
         el.style.transform = `translate(${x - w / 2}px, ${y - h / 2}px)`
 
-        const handle = world.register(
-            { x, y },
-            { width: w, height: h },
-            {
+        const handle = id
+            ? world.registerById(id, { x, y }, { width: w, height: h }, {
                 onTransform: ({ x: px, y: py, rotation }) => {
                     el.style.transform = `translate(${px - w / 2}px, ${py - h / 2}px) rotate(${rotation}rad)`
                 },
-            },
-        )
+            })
+            : world.register(
+                { x, y },
+                { width: w, height: h },
+                {
+                    onTransform: ({ x: px, y: py, rotation }) => {
+                        el.style.transform = `translate(${px - w / 2}px, ${py - h / 2}px) rotate(${rotation}rad)`
+                    },
+                },
+            )
         handleRef.current = handle
         if (physicsHandleRef) physicsHandleRef.current = handle
+
+        if (buoyancy) world.setBuoyancy(handle, buoyancy)
+
+        // Wire tether if parent declared
+        let rafId = 0
+        const wireTether = (parentHandle: number) => {
+            const parentPos = world.getPosition(parentHandle)
+            const ca = anchorRef.current
+            const length = Math.hypot(ca.x - parentPos.x, ca.y - parentPos.y)
+            tetherHandleRef.current = world.tether(parentHandle, handle, length)
+        }
+        if (parent) {
+            const parentHandle =
+                parent === 'ceiling' ? world.ceilingHandle
+                : parent === 'floor' ? world.floorHandle
+                : world.getHandleById(parent)
+            if (parentHandle != null) {
+                wireTether(parentHandle)
+            } else {
+                rafId = requestAnimationFrame(() => {
+                    const ph = world.getHandleById(parent)
+                    if (ph == null) {
+                        console.warn(`PhysicsCard: parent "${parent}" not found after one frame; tether skipped`)
+                        return
+                    }
+                    wireTether(ph)
+                })
+            }
+        }
 
         let dragging = false
         let lastX = 0
@@ -97,7 +125,6 @@ export function PhysicsCard({
         const FLING_PAUSE_MS = 50
 
         const onPointerDown = (e: PointerEvent) => {
-            if (interactionModeRef.current !== 'free') return
             if ((e.target as Element | null)?.closest('[data-card-header], a, button')) return
             e.preventDefault()
             dragging = true
@@ -145,6 +172,11 @@ export function PhysicsCard({
         window.addEventListener('pointerup', onPointerUp)
 
         return () => {
+            cancelAnimationFrame(rafId)
+            if (tetherHandleRef.current !== null) {
+                world.untether(tetherHandleRef.current)
+                tetherHandleRef.current = null
+            }
             world.unregister(handle)
             handleRef.current = null
             if (physicsHandleRef) physicsHandleRef.current = null
@@ -154,28 +186,17 @@ export function PhysicsCard({
         }
     }, [world, width, height, isMinimized])
 
-    // Anchor update: moves the spring target when the grid re-flows (e.g. resize).
     useEffect(() => {
         if (handleRef.current === null) return
         world.setAnchor(handleRef.current, anchor)
     }, [world, anchor.x, anchor.y])
 
-    // Interaction mode change: pin/unpin and sensor-toggle when lock state changes.
-    useEffect(() => {
-        if (handleRef.current === null) return
-        const locked = interactionMode === 'locked'
-        world.setStatic(handleRef.current, locked)
-        world.setSensor(handleRef.current, locked)
-    }, [world, interactionMode])
-
-    // Restore FLIP: when a minimized card re-mounts, animate it in from the chip position.
     useEffect(() => {
         if (isMinimized || !id || !minimizable) return
         const el = elRef.current
         if (!el) return
         const fromChipRect = registry.consumeRestoreRect(id)
         if (!fromChipRect) return
-        // Capture the physics-set transform before the next RAF so we animate TO the anchor.
         const endTransform = el.style.transform
         requestAnimationFrame(() => {
             flipMorph(fromChipRect, el, { opacityFrom: 0.5, endTransform })
@@ -202,7 +223,6 @@ export function PhysicsCard({
             }}
             className={cls}
             data-variant={variant}
-            data-interaction-mode={interactionMode}
             style={style}
         >
             {showHeader ? (

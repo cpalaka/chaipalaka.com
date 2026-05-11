@@ -47,7 +47,15 @@ export function PhysicsProvider({ children }: PhysicsProviderProps) {
             raf = requestAnimationFrame(frame)
         }
         raf = requestAnimationFrame(frame)
-        return () => cancelAnimationFrame(raf)
+
+        const onResize = () =>
+            world.setViewport({ width: window.innerWidth, height: window.innerHeight })
+        window.addEventListener('resize', onResize)
+
+        return () => {
+            cancelAnimationFrame(raf)
+            window.removeEventListener('resize', onResize)
+        }
     }, [world])
 
     return (

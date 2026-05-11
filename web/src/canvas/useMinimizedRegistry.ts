@@ -26,13 +26,13 @@ export function useMinimizedEntries(): MinimizedEntry[] {
 export function useIsMinimized(id: string | undefined): boolean {
     const reg = getInstance()
     const [minimized, setMinimized] = useState(() =>
-        id !== undefined ? reg.list().some((e) => e.id === id) : false,
+        id !== undefined ? reg.list().some((e) => e.members.includes(id)) : false,
     )
 
     useEffect(() => {
         if (!id) return
         return reg.subscribe((entries) => {
-            setMinimized(entries.some((e) => e.id === id))
+            setMinimized(entries.some((e) => e.members.includes(id)))
         })
     }, [reg, id])
 
