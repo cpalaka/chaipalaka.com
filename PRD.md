@@ -217,7 +217,7 @@ The frame bar is the persistent app-shell chrome. It replaces the original "cont
 - **Endpoints:**
   - `/api/now-playing` — last.fm now-playing — cache 30s
   - `/api/recent-tracks` — last.fm recent tracks — cache 5m
-  - `/api/books` — sourced from `content/books/*.mdx` — cache 1h
+  - `/api/books` — Goodreads RSS (`currently-reading` + `read` shelves, `GOODREADS_USER_ID` env var) — cache 30m
   - `/api/films` — Letterboxd RSS for the user — cache 1h, parsed server-side
   - `/api/github` — GitHub events API — cache 5m (TBD)
   - `/api/notes?parent=<id>|standalone=1` — sourced from `content/notes/*.md` — cache 1h
@@ -349,7 +349,7 @@ There is no prior art in this repo (it's empty). Tests should be set up with:
 - **Full image processing pipeline** (sharp, AVIF/WebP variants, LQIP). Author pre-compresses for v1.
 - **Side-project subdomains.** Deferred — pattern is decided (each its own repo, own Caddy block at `<project>.chaipalaka.com`) but no infrastructure built.
 - **Authentication / private content.** Public-only; if anything sensitive surfaces, keep it out via authoring (not via auth).
-- **Goodreads / Storygraph integration** for books. Manual MDX is the source of truth.
+- **Storygraph integration** as an alternative to Goodreads. Goodreads RSS is the live source in v1.
 - **Spotify integration** (in lieu of last.fm). Spotify requires user-OAuth refresh tokens which can't be browser-side; last.fm covers the use case.
 - **Audio-reactive shader's full ambition** (BPM analysis, Spotify track-feature analysis). v1 audio-reactive uses last.fm now-playing + album-art palette extraction only; deeper audio-feature analysis later.
 - **Comments / annotations from visitors** on the lifelog. Notes are owner-authored only.
