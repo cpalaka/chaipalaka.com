@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:letterboxd="https://letterboxd.com" xmlns:tmdb="https://themoviedb.org">
+	<channel>
+		<title>Letterboxd - Chai Palaka</title>
+		<link>https://letterboxd.com/cpalaka/</link>
+		<description>Letterboxd - Chai Palaka</description>
+
+		<!-- Full entry: 5-star rewatch, no written review -->
+		<item>
+			<title>The Lord of the Rings: The Fellowship of the Ring, 2001 - ★★★★★</title>
+			<link>https://letterboxd.com/cpalaka/film/the-lord-of-the-rings-the-fellowship-of-the-ring/1/</link>
+			<guid isPermaLink="false">letterboxd-watch-1278965807</guid>
+			<pubDate>Mon, 13 Apr 2026 17:55:40 +1200</pubDate>
+			<letterboxd:watchedDate>2026-04-12</letterboxd:watchedDate>
+			<letterboxd:rewatch>Yes</letterboxd:rewatch>
+			<letterboxd:filmTitle>The Lord of the Rings: The Fellowship of the Ring</letterboxd:filmTitle>
+			<letterboxd:filmYear>2001</letterboxd:filmYear>
+			<letterboxd:memberRating>5.0</letterboxd:memberRating>
+			<tmdb:movieId>120</tmdb:movieId>
+			<description><![CDATA[ <p><img src="https://a.ltrbxd.com/resized/sm/upload/3t/vq/0u/m6/poster.jpg?v=abc"/></p> <p>Watched on Sunday April 12, 2026.</p> ]]></description>
+			<dc:creator>Chai Palaka</dc:creator>
+		</item>
+
+		<!-- 3.5-star (half-star rating), with a written review, HTML entity in title -->
+		<item>
+			<title>There&#039;s Something About Mary, 1998 - ★★★</title>
+			<link>https://letterboxd.com/cpalaka/film/theres-something-about-mary/</link>
+			<guid isPermaLink="false">letterboxd-review-1268084157</guid>
+			<pubDate>Sun, 5 Apr 2026 21:02:26 +1200</pubDate>
+			<letterboxd:watchedDate>2026-04-05</letterboxd:watchedDate>
+			<letterboxd:rewatch>Yes</letterboxd:rewatch>
+			<letterboxd:filmTitle>There&#039;s Something About Mary</letterboxd:filmTitle>
+			<letterboxd:filmYear>1998</letterboxd:filmYear>
+			<letterboxd:memberRating>3.5</letterboxd:memberRating>
+			<tmdb:movieId>544</tmdb:movieId>
+			<description><![CDATA[ <p><img src="https://a.ltrbxd.com/resized/film-poster/51573-theres-something-about-mary.jpg?v=x"/></p> <p>They really don&#039;t make em like they used to - dumb, contrived and hilarious</p> ]]></description>
+			<dc:creator>Chai Palaka</dc:creator>
+		</item>
+
+		<!-- No rewatch, no review -->
+		<item>
+			<title>Sinners, 2025 - ★★★½</title>
+			<link>https://letterboxd.com/cpalaka/film/sinners-2025/</link>
+			<guid isPermaLink="false">letterboxd-watch-1256248485</guid>
+			<pubDate>Sat, 28 Mar 2026 18:17:54 +1300</pubDate>
+			<letterboxd:watchedDate>2026-03-27</letterboxd:watchedDate>
+			<letterboxd:rewatch>No</letterboxd:rewatch>
+			<letterboxd:filmTitle>Sinners</letterboxd:filmTitle>
+			<letterboxd:filmYear>2025</letterboxd:filmYear>
+			<letterboxd:memberRating>3.5</letterboxd:memberRating>
+			<tmdb:movieId>1233413</tmdb:movieId>
+			<description><![CDATA[ <p><img src="https://a.ltrbxd.com/resized/film-poster/sinners.jpg"/></p> <p>Watched on Friday March 27, 2026.</p> ]]></description>
+			<dc:creator>Chai Palaka</dc:creator>
+		</item>
+
+		<!-- Malformed: missing guid — should be skipped -->
+		<item>
+			<title>Malformed No ID Film, 2024</title>
+			<link>https://letterboxd.com/cpalaka/film/malformed/</link>
+			<letterboxd:watchedDate>2026-01-01</letterboxd:watchedDate>
+			<letterboxd:filmTitle>Malformed No ID Film</letterboxd:filmTitle>
+			<letterboxd:filmYear>2024</letterboxd:filmYear>
+			<letterboxd:memberRating>3.0</letterboxd:memberRating>
+			<description><![CDATA[ <p><img src="https://example.com/poster.jpg"/></p> ]]></description>
+			<dc:creator>Chai Palaka</dc:creator>
+		</item>
+
+		<!-- Malformed: missing letterboxd:filmTitle and title is blank — should be skipped -->
+		<item>
+			<title></title>
+			<link>https://letterboxd.com/cpalaka/film/notitle/</link>
+			<guid isPermaLink="false">letterboxd-watch-9999999</guid>
+			<letterboxd:watchedDate>2026-01-02</letterboxd:watchedDate>
+			<letterboxd:filmYear>2023</letterboxd:filmYear>
+			<letterboxd:memberRating>2.0</letterboxd:memberRating>
+			<description><![CDATA[ <p><img src="https://example.com/poster.jpg"/></p> ]]></description>
+			<dc:creator>Chai Palaka</dc:creator>
+		</item>
+
+	</channel>
+</rss>
