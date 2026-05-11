@@ -74,3 +74,91 @@
     color: var(--color-fg-faint);
     margin: 0;
 }
+
+/* Now-playing panel */
+
+.lifelog-now-playing {
+    padding: var(--space-2);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    overflow: hidden;
+}
+
+.lifelog-now-playing__heading {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.lifelog-now-playing__track {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+}
+
+.lifelog-now-playing__art {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.lifelog-now-playing__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.lifelog-now-playing__live {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+}
+
+.lifelog-now-playing__dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    animation: now-playing-pulse 2s ease-in-out infinite;
+}
+
+@keyframes now-playing-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.lifelog-now-playing__title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semi);
+    color: var(--color-fg);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lifelog-now-playing__artist {
+    font-size: var(--font-size-xs);
+    color: var(--color-fg-muted);
+    margin: 0;
+}
+
+.lifelog-now-playing__empty {
+    color: var(--color-fg-faint);
+    margin: 0;
+}

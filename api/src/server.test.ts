@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GoodreadsShelf, type Book } from './adapters/GoodreadsAdapter';
+import type { Track } from './adapters/LastFmAdapter';
 import { handle } from './server';
 
 const FIXTURE_BOOKS: Book[] = [
@@ -108,4 +109,128 @@ describe('/api/books', () => {
 
     expect(adapter.fetchBooks).toHaveBeenCalledTimes(1)
   })
+});
+
+const FIXTURE_TRACKS: Track[] = [
+  {
+    artist: 'Radiohead',
+    title: 'Paranoid Android',
+    album: 'OK Computer',
+    mbid: '9c1cc072-a88a-43a3-ab49-6c5c5a0dd8bc',
+    albumArt: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+    isNowPlaying: true,
+  },
+  {
+    artist: 'Radiohead',
+    title: 'Exit Music (For a Film)',
+    album: 'OK Computer',
+    isNowPlaying: false,
+    ts: new Date(1715256000 * 1000).toISOString(),
+  },
+];
+
+function makeLastFmAdapter(tracks: Track[] = FIXTURE_TRACKS, fail = false) {
+  return {
+    fetchRecentTracks: vi.fn(async (_limit: number) => {
+      if (fail) throw new Error('upstream lastfm');
+      return tracks;
+    }),
+  };
+}
+
+describe('/api/now-playing', () => {
+  it('returns { track, stale: false } with the first track from the adapter', async () => {
+    const adapter = makeLastFmAdapter();
+    const res = await handle(
+      new Request('http://localhost/api/now-playing'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { track: Track; stale: boolean };
+    expect(body.stale).toBe(false);
+    expect(body.track?.title).toBe('Paranoid Android');
+    expect(body.track?.isNowPlaying).toBe(true);
+  });
+
+  it('returns { track: null, stale: false } when lastfmApiKey is absent', async () => {
+    const res = await handle(new Request('http://localhost/api/now-playing'), {});
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { track: null; stale: boolean };
+    expect(body.track).toBeNull();
+    expect(body.stale).toBe(false);
+  });
+
+  it('returns { track: null, stale: true, error } when adapter throws and cache is cold', async () => {
+    const adapter = makeLastFmAdapter([], true);
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const res = await handle(
+      new Request('http://localhost/api/now-playing'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache: new CacheLayer() },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { track: null; stale: boolean; error: string };
+    expect(body.track).toBeNull();
+    expect(body.stale).toBe(true);
+    expect(body.error).toBeDefined();
+  });
+});
+
+describe('/api/recent-tracks', () => {
+  it('returns { tracks, stale: false } with all adapter results', async () => {
+    const adapter = makeLastFmAdapter();
+    const res = await handle(
+      new Request('http://localhost/api/recent-tracks'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { tracks: Track[]; stale: boolean };
+    expect(body.stale).toBe(false);
+    expect(body.tracks).toHaveLength(2);
+    expect(body.tracks[0]?.title).toBe('Paranoid Android');
+  });
+
+  it('returns empty tracks (not stale) when lastfmApiKey is absent', async () => {
+    const res = await handle(new Request('http://localhost/api/recent-tracks'), {});
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { tracks: Track[]; stale: boolean };
+    expect(body.tracks).toEqual([]);
+    expect(body.stale).toBe(false);
+  });
+
+  it('returns { tracks: [], stale: true, error } when adapter throws and cache is cold', async () => {
+    const adapter = makeLastFmAdapter([], true);
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const res = await handle(
+      new Request('http://localhost/api/recent-tracks'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache: new CacheLayer() },
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { tracks: Track[]; stale: boolean; error: string };
+    expect(body.tracks).toEqual([]);
+    expect(body.stale).toBe(true);
+    expect(body.error).toBeDefined();
+  });
+
+  it('caches: calls fetchRecentTracks once across two requests within TTL', async () => {
+    const adapter = makeLastFmAdapter();
+    const { CacheLayer } = await import('./cache/CacheLayer');
+    const cache = new CacheLayer();
+
+    await handle(
+      new Request('http://localhost/api/recent-tracks'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache },
+    );
+    await handle(
+      new Request('http://localhost/api/recent-tracks'),
+      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache },
+    );
+
+    expect(adapter.fetchRecentTracks).toHaveBeenCalledTimes(1);
+  });
 });
