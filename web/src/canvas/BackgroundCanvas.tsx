@@ -10,6 +10,7 @@ const sceneLoaders: Record<string, () => Promise<unknown>> = {
     'flow-shader': () => import('./scenes/flow-shader'),
     particles: () => import('./scenes/particles'),
     'particles-starfield': () => import('./scenes/particles-starfield'),
+    'particles-cursor': () => import('./scenes/particles-cursor'),
     geometric: () => import('./scenes/geometric'),
     'audio-reactive': () => import('./scenes/audio-reactive'),
 }
