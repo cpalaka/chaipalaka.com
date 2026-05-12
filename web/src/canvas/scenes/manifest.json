@@ -49,8 +49,8 @@
     },
     {
         "id": "geometric-subdivision",
-        "accentColor": "#c0ccd8",
-        "fallbackColors": ["#0a0d14", "#c0ccd8"],
+        "accentColor": "#700000",
+        "fallbackColors": ["#700000", "#000000"],
         "fallbackPng": "/fallbacks/geometric-subdivision.png"
     },
     {

@@ -26,13 +26,13 @@ export interface SubdivisionParams {
 }
 
 export const DEFAULT_PARAMS: SubdivisionParams = {
-    minDepth: 2,
-    maxDepth: 5,
-    noiseScale: 2.5,
-    evolutionSpeed: 0.04,
-    lineWidth: 0.05,
-    colorA: '#0a0d14',
-    colorB: '#b8c8d8',
+    minDepth: 5,
+    maxDepth: 30,
+    noiseScale: 3.2,
+    evolutionSpeed: 0.075,
+    lineWidth: 0.015,
+    colorA: '#700000',
+    colorB: '#000000',
 }
 
 const VERTEX_SHADER = /* glsl */ `
