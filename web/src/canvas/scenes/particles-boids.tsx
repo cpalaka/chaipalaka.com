@@ -37,16 +37,16 @@ export interface BoidsParams {
 }
 
 export const DEFAULT_PARAMS: BoidsParams = {
-    count: 3000,
-    pointSize: 0.003,
-    perceptionRadius: 0.08,
-    separationWeight: 1.6,
-    alignmentWeight: 1.0,
-    cohesionWeight: 0.8,
-    maxSpeed: 0.35,
-    maxForce: 0.6,
-    colorA: '#181010',
-    colorB: '#ff8c5a',
+    count: 5500,
+    pointSize: 0.0025,
+    perceptionRadius: 0.11,
+    separationWeight: 1.1,
+    alignmentWeight: 0.2,
+    cohesionWeight: 0.1,
+    maxSpeed: 0.1,
+    maxForce: 1.3,
+    colorA: '#0c2036',
+    colorB: '#ddba92',
 }
 
 // ---- Spatial hash grid for O(N) boid neighbourhood queries ----
