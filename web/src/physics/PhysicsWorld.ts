@@ -54,6 +54,7 @@ interface TetherRecord {
     child: PhysicsHandle
     length: number
     linkHandle: LinkHandle
+    anchorA?: Vec2
 }
 
 interface Registration {
@@ -332,6 +333,12 @@ export class PhysicsWorld {
         if (!reg.isStatic) Matter.Body.setVelocity(reg.body, { x: 0, y: 0 })
     }
 
+    getAnchor(handle: PhysicsHandle): Vec2 {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return { ...reg.anchor }
+    }
+
     getSize(handle: PhysicsHandle): CardSize {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
@@ -387,15 +394,32 @@ export class PhysicsWorld {
         this.links.delete(link)
     }
 
-    tether(parent: PhysicsHandle, child: PhysicsHandle, length: number): TetherHandle {
+    tether(parent: PhysicsHandle, child: PhysicsHandle, length: number, anchorA?: Vec2): TetherHandle {
         const regP = this.registrations.get(parent)
         if (!regP) throw new Error(`PhysicsWorld: unknown handle ${parent}`)
         const regC = this.registrations.get(child)
         if (!regC) throw new Error(`PhysicsWorld: unknown handle ${child}`)
-        // linkBodies creates a matter.js Constraint record for cleanup; stiffness ~0 so no spring force
-        const lh = this.linkBodies(parent, child, { length, stiffness: 1e-9, damping: 0 })
+        // Construct the constraint directly so we can pass body-local pointA when supplied.
+        // stiffness ~0 because the pull-only rope force is applied in tick(), not by matter.js.
+        const constraint = Matter.Constraint.create({
+            bodyA: regP.body,
+            bodyB: regC.body,
+            length,
+            stiffness: 1e-9,
+            damping: 0,
+            ...(anchorA ? { pointA: { ...anchorA } } : {}),
+        })
+        Matter.Composite.add(this.world, constraint)
+        const lh = this.nextId++
+        this.links.set(lh, constraint)
         const th = this.nextId++
-        this.tethers.set(th, { parent, child, length, linkHandle: lh })
+        this.tethers.set(th, {
+            parent,
+            child,
+            length,
+            linkHandle: lh,
+            ...(anchorA ? { anchorA: { ...anchorA } } : {}),
+        })
         this.cachedTetherList = null
         for (const cb of this.tetherChangeListeners) cb()
         return th
@@ -416,7 +440,12 @@ export class PhysicsWorld {
             const regP = this.registrations.get(rec.parent)
             const regC = this.registrations.get(rec.child)
             if (!regP || !regC) continue
-            const parentPos = { x: regP.body.position.x, y: regP.body.position.y }
+            // World-space rope origin is the constraint's pointA. For static ceiling/floor (angle = 0)
+            // and dynamic parents with zero rotation, this is parentBodyCentre + anchorA.
+            const bodyPos = regP.body.position
+            const parentPos: Vec2 = rec.anchorA
+                ? { x: bodyPos.x + rec.anchorA.x, y: bodyPos.y + rec.anchorA.y }
+                : { x: bodyPos.x, y: bodyPos.y }
             const childPos = { x: regC.body.position.x, y: regC.body.position.y }
             const d = Math.hypot(childPos.x - parentPos.x, childPos.y - parentPos.y)
             views.push({ parentPos, childPos, length: rec.length, slack: d < rec.length * 0.98 })
@@ -463,13 +492,18 @@ export class PhysicsWorld {
             })
         }
 
-        // 2. Apply pull-only tether forces (rope semantics)
+        // 2. Apply pull-only tether forces (rope semantics).
+        // Force is measured from the world-space rope origin (parent body centre + anchorA),
+        // not the parent body centre alone — otherwise a string anchored above a card's x
+        // would let the card drift to the parent body centre's x before the rope catches.
         for (const rec of this.tethers.values()) {
             const regP = this.registrations.get(rec.parent)
             const regC = this.registrations.get(rec.child)
             if (!regP || !regC) continue
-            const dx = regP.body.position.x - regC.body.position.x
-            const dy = regP.body.position.y - regC.body.position.y
+            const parentX = regP.body.position.x + (rec.anchorA?.x ?? 0)
+            const parentY = regP.body.position.y + (rec.anchorA?.y ?? 0)
+            const dx = parentX - regC.body.position.x
+            const dy = parentY - regC.body.position.y
             const d = Math.hypot(dx, dy)
             if (d <= rec.length || d === 0) continue
             const overshoot = d - rec.length
