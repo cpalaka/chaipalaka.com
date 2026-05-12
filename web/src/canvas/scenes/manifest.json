@@ -13,8 +13,8 @@
     },
     {
         "id": "particles-cursor",
-        "accentColor": "#d04ba6",
-        "fallbackColors": ["#0e0816", "#d04ba6"],
+        "accentColor": "#25db00",
+        "fallbackColors": ["#0e0816", "#25db00"],
         "fallbackPng": "/fallbacks/particles-cursor.png"
     },
     {

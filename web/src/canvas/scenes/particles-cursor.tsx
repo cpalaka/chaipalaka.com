@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
     AdditiveBlending,
     BufferGeometry,
@@ -31,19 +31,23 @@ export interface CursorParams {
     repelRadius: number
     repelStrength: number
     returnSpeed: number
+    restBrightness: number  // colorB multiplier at rest [0,1]
+    restAlpha: number       // point alpha at rest [0,1]
     colorA: string
     colorB: string
 }
 
 export const DEFAULT_PARAMS: CursorParams = {
-    cols: 120,
-    rows: 80,
-    pointSize: 0.003,
-    repelRadius: 0.18,
-    repelStrength: 0.06,
-    returnSpeed: 4.0,
+    cols: 120,   // gallery overrides with window.innerWidth / 10
+    rows: 80,    // gallery overrides with window.innerHeight / 10
+    pointSize: 0.004,
+    repelRadius: 0.22,
+    repelStrength: 0.01,
+    returnSpeed: 0.5,
+    restBrightness: 0.4,
+    restAlpha: 0.65,
     colorA: '#0e0816',
-    colorB: '#d04ba6',
+    colorB: '#25db00',
 }
 
 const VERTEX_SHADER = /* glsl */ `
@@ -71,8 +75,9 @@ const VERTEX_SHADER = /* glsl */ `
 const FRAGMENT_SHADER = /* glsl */ `
   precision mediump float;
 
-  uniform vec3 uColorA;
   uniform vec3 uColorB;
+  uniform float uRestBrightness;
+  uniform float uRestAlpha;
 
   varying float vT;
 
@@ -82,8 +87,8 @@ const FRAGMENT_SHADER = /* glsl */ `
     if (d > 1.0) discard;
 
     float soft = 1.0 - smoothstep(0.3, 1.0, d);
-    vec3 color = mix(uColorA, uColorB, vT);
-    gl_FragColor = vec4(color, soft * mix(0.5, 1.0, vT));
+    vec3 color = mix(uColorB * uRestBrightness, uColorB, vT);
+    gl_FragColor = vec4(color, soft * mix(uRestAlpha, 1.0, vT));
   }
 `
 
@@ -126,8 +131,9 @@ export function CursorScene({ params }: { params?: Partial<CursorParams> }) {
             uRepelRadius: { value: resolved.repelRadius },
             uPixelHeight: { value: 720 },
             uPointSize: { value: resolved.pointSize },
-            uColorA: { value: new Color(resolved.colorA) },
             uColorB: { value: new Color(resolved.colorB) },
+            uRestBrightness: { value: resolved.restBrightness },
+            uRestAlpha: { value: resolved.restAlpha },
         }),
         [],
     )
@@ -161,14 +167,15 @@ export function CursorScene({ params }: { params?: Partial<CursorParams> }) {
         if (!mat) return
         if (mat.uniforms.uRepelRadius) mat.uniforms.uRepelRadius.value = resolved.repelRadius
         if (mat.uniforms.uPointSize) mat.uniforms.uPointSize.value = resolved.pointSize
-    }, [resolved.repelRadius, resolved.pointSize])
+        if (mat.uniforms.uRestBrightness) mat.uniforms.uRestBrightness.value = resolved.restBrightness
+        if (mat.uniforms.uRestAlpha) mat.uniforms.uRestAlpha.value = resolved.restAlpha
+    }, [resolved.repelRadius, resolved.pointSize, resolved.restBrightness, resolved.restAlpha])
 
     useEffect(() => {
         const mat = matRef.current
         if (!mat) return
-        if (mat.uniforms.uColorA) mat.uniforms.uColorA.value.set(resolved.colorA)
         if (mat.uniforms.uColorB) mat.uniforms.uColorB.value.set(resolved.colorB)
-    }, [resolved.colorA, resolved.colorB])
+    }, [resolved.colorB])
 
     useEffect(() => {
         const prev = scene.background
@@ -241,15 +248,26 @@ const isDegraded =
     typeof window !== 'undefined' &&
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
 
-const DEGRADED_COLS = Math.round(DEFAULT_PARAMS.cols * 0.6)
-const DEGRADED_ROWS = Math.round(DEFAULT_PARAMS.rows * 0.6)
+function calcDims(scale = 1) {
+    if (typeof window === 'undefined') return { cols: 120, rows: 80 }
+    return {
+        cols: Math.round(window.innerWidth / 10 * scale),
+        rows: Math.round(window.innerHeight / 10 * scale),
+    }
+}
 
 function CursorGallery() {
-    return (
-        <CursorScene
-            params={isDegraded ? { cols: DEGRADED_COLS, rows: DEGRADED_ROWS } : undefined}
-        />
-    )
+    const [dims, setDims] = useState(() => calcDims(isDegraded ? 0.6 : 1))
+
+    useEffect(() => {
+        function onResize() {
+            setDims(calcDims(isDegraded ? 0.6 : 1))
+        }
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
+
+    return <CursorScene params={dims} />
 }
 
 export const particlesCursorScene: BackgroundScene = {
