@@ -16,6 +16,11 @@ const NOTES_H = 200
 const BACK_ANCHOR_Y = 120
 const SPAWN_GAP = 24
 const SWF_SCALE = 1.5
+// .physics-card has box-sizing: border-box, padding: 24px, border: 4px,
+// so each axis loses 56px to chrome. Add 16px of breathing room on each
+// side of the player for visual margin.
+const CARD_CHROME = 56
+const SWF_PAD = 16
 
 interface SpawnOffsets {
     back: number
@@ -45,8 +50,8 @@ function buildPage(
 ): { pageDef: PageDef; cardContent: Record<string, CardContent> } {
     const playerW = Math.round(piece.frontmatter.swf_width * SWF_SCALE)
     const playerH = Math.round(piece.frontmatter.swf_height * SWF_SCALE)
-    const swfW = playerW + 32
-    const swfH = playerH + 64
+    const swfW = playerW + CARD_CHROME + 2 * SWF_PAD
+    const swfH = playerH + CARD_CHROME + 2 * SWF_PAD
 
     // Back card hangs from the ceiling at a fixed y; the other 3 are detached
     // and spawn stacked beneath it (edge-to-edge), then fall under gravity.
@@ -124,11 +129,13 @@ function buildPage(
             height: swfH,
             draggable: false,
             children: (
-                <RuffleEmbed
-                    swfUrl={`/assets/${piece.frontmatter.swf}`}
-                    width={playerW}
-                    height={playerH}
-                />
+                <div style={{ margin: 'auto' }}>
+                    <RuffleEmbed
+                        swfUrl={`/assets/${piece.frontmatter.swf}`}
+                        width={playerW}
+                        height={playerH}
+                    />
+                </div>
             ),
         },
         'flash-notes': {
