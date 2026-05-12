@@ -4,13 +4,17 @@ export interface CategoryMeta {
 }
 
 export const categories: Record<string, CategoryMeta> = {
-    'stick-figures': {
-        label: 'Stick Figures',
-        description: 'Stick-figure shorts — 2004–2008.',
-    },
     'shorts': {
-        label: 'Flash Shorts',
-        description: 'Loose micro-animations and gag pieces.',
+        label: 'Shorts',
+        description: 'Finished short animations.',
+    },
+    'tests': {
+        label: 'Tests',
+        description: 'Animation tests and exercises.',
+    },
+    'unfinished': {
+        label: 'Unfinished',
+        description: 'Pieces I never finished.',
     },
 }
 

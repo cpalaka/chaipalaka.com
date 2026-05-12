@@ -26,12 +26,12 @@ describe('derivePieceSlug', () => {
 
 describe('validatePieceFrontmatter', () => {
     const valid = {
-        title: 'Stick Fight',
-        description: 'Two stickmen, one room.',
-        category: 'stick-figures',
+        title: 'Bouncy Ball',
+        description: 'A ball bouncing.',
+        category: 'tests',
         quality: 7,
-        thumbnail: 'stuff/flash/stick-fight.png',
-        swf: 'stuff/flash/stick-fight.swf',
+        thumbnail: 'stuff/flash/bouncy-ball.png',
+        swf: 'stuff/flash/bouncy-ball.swf',
         swf_width: 550,
         swf_height: 400,
     }
@@ -119,15 +119,15 @@ describe('filterAndGroup', () => {
         const pieces = [
             makePiece('low', 'shorts', 3),
             makePiece('high', 'shorts', 9),
-            makePiece('stick-1', 'stick-figures', 5),
+            makePiece('test-1', 'tests', 5),
         ]
         const groups = filterAndGroup(pieces, false)
         expect(groups.get('shorts')?.map((p) => p.slug)).toEqual([
             'high',
             'low',
         ])
-        expect(groups.get('stick-figures')?.map((p) => p.slug)).toEqual([
-            'stick-1',
+        expect(groups.get('tests')?.map((p) => p.slug)).toEqual([
+            'test-1',
         ])
     })
 
