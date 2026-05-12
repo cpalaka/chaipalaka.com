@@ -111,7 +111,7 @@ describe('FrameBar', () => {
         )
         expect(options).toContain('flow-shader')
         expect(options).toContain('particles-starfield')
-        expect(options).toContain('geometric')
+        expect(options).toContain('geometric-reaction-diffusion')
         expect(options).toContain('audio-reactive')
     })
 

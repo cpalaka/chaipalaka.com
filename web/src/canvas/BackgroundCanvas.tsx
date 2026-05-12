@@ -12,7 +12,6 @@ const sceneLoaders: Record<string, () => Promise<unknown>> = {
     'particles-cursor': () => import('./scenes/particles-cursor'),
     'particles-flow': () => import('./scenes/particles-flow'),
     'particles-boids': () => import('./scenes/particles-boids'),
-    geometric: () => import('./scenes/geometric'),
     'geometric-reaction-diffusion': () => import('./scenes/geometric-reaction-diffusion'),
     'geometric-voronoi': () => import('./scenes/geometric-voronoi'),
     'geometric-subdivision': () => import('./scenes/geometric-subdivision'),
