@@ -12,9 +12,9 @@ const BACK_W = 220
 const BACK_H = 56
 const TITLE_W = 280
 const TITLE_H = 96
-const NOTES_W = 600
-const NOTES_H = 300
-const SPAWN_TOP = 30
+const NOTES_W = 700
+const NOTES_H = 200
+const BACK_ANCHOR_Y = 120
 const SPAWN_GAP = 24
 
 interface SpawnOffsets {
@@ -28,10 +28,10 @@ function randomOffset(): number {
     return (Math.random() * 2 - 1) * 50
 }
 
-// Stack card centers from top, edge-to-edge with SPAWN_GAP between them.
-function stackCenters(heights: number[]): number[] {
+// Stack card centers from `startY` downward, edge-to-edge with SPAWN_GAP between them.
+function stackCenters(heights: number[], startY: number): number[] {
     const centers: number[] = []
-    let cursor = SPAWN_TOP
+    let cursor = startY
     for (const h of heights) {
         centers.push(cursor + h / 2)
         cursor += h + SPAWN_GAP
@@ -47,9 +47,15 @@ function buildPage(
     const swfH = piece.frontmatter.swf_height + 64
     const meta = getCategoryMeta(piece.frontmatter.category)
 
-    const [backY, titleY, swfYy, notesY] = stackCenters([BACK_H, TITLE_H, swfH, NOTES_H])
+    // Back card hangs from the ceiling at a fixed y; the other 3 are detached
+    // and spawn stacked beneath it (edge-to-edge), then fall under gravity.
+    const detachedStartY = BACK_ANCHOR_Y + BACK_H / 2 + SPAWN_GAP
+    const [titleY, swfYy, notesY] = stackCenters(
+        [TITLE_H, swfH, NOTES_H],
+        detachedStartY,
+    )
 
-    const backAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.back, y: backY! })
+    const backAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.back, y: BACK_ANCHOR_Y })
     const titleAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.title, y: titleY! })
     const swfAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.swf, y: swfYy! })
     const notesAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.notes, y: notesY! })
@@ -57,7 +63,7 @@ function buildPage(
     const pageDef: PageDef = {
         gravity: 'down',
         cards: [
-            { id: 'flash-back', kind: 'link', parent: null, anchor: backAnchor },
+            { id: 'flash-back', kind: 'link', parent: 'ceiling', anchor: backAnchor },
             { id: 'flash-title', kind: 'headline', parent: null, anchor: titleAnchor },
             { id: 'flash-swf', kind: 'portfolio', parent: null, anchor: swfAnchor },
             { id: 'flash-notes', kind: 'note', parent: null, anchor: notesAnchor },
