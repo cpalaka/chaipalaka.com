@@ -105,7 +105,12 @@ function buildPage(
             height: TITLE_H,
             draggable: false,
             children: (
-                <>
+                <div
+                    style={{
+                        margin: 'auto',
+                        textAlign: 'center',
+                    }}
+                >
                     <h1 style={{ margin: 0, fontSize: '1.125rem' }}>
                         {piece.frontmatter.title}
                     </h1>
@@ -120,7 +125,7 @@ function buildPage(
                             {piece.frontmatter.tags.join(' · ')}
                         </p>
                     )}
-                </>
+                </div>
             ),
         },
         'flash-swf': {
