@@ -8,13 +8,17 @@ import type { PageDef } from '../../physics/PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
 import type { Viewport } from '../../physics/PhysicsWorld'
 
+const BACK_W = 220
+const BACK_H = 56
 const TITLE_W = 280
-const TITLE_H = 120
-const NOTES_W = 400
-const NOTES_H = 360
-const STACK_Y_OFFSET = 100
+const TITLE_H = 96
+const NOTES_W = 600
+const NOTES_H = 300
+const SPAWN_TOP = 30
+const SPAWN_GAP = 24
 
 interface SpawnOffsets {
+    back: number
     title: number
     swf: number
     notes: number
@@ -22,6 +26,17 @@ interface SpawnOffsets {
 
 function randomOffset(): number {
     return (Math.random() * 2 - 1) * 50
+}
+
+// Stack card centers from top, edge-to-edge with SPAWN_GAP between them.
+function stackCenters(heights: number[]): number[] {
+    const centers: number[] = []
+    let cursor = SPAWN_TOP
+    for (const h of heights) {
+        centers.push(cursor + h / 2)
+        cursor += h + SPAWN_GAP
+    }
+    return centers
 }
 
 function buildPage(
@@ -32,22 +47,17 @@ function buildPage(
     const swfH = piece.frontmatter.swf_height + 64
     const meta = getCategoryMeta(piece.frontmatter.category)
 
-    const titleAnchor = (vp: Viewport) => ({
-        x: vp.width / 2 + offsets.title,
-        y: vp.height * 0.2,
-    })
-    const swfAnchor = (vp: Viewport) => ({
-        x: vp.width / 2 + offsets.swf,
-        y: vp.height * 0.2 + STACK_Y_OFFSET,
-    })
-    const notesAnchor = (vp: Viewport) => ({
-        x: vp.width / 2 + offsets.notes,
-        y: vp.height * 0.2 + STACK_Y_OFFSET * 2,
-    })
+    const [backY, titleY, swfYy, notesY] = stackCenters([BACK_H, TITLE_H, swfH, NOTES_H])
+
+    const backAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.back, y: backY! })
+    const titleAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.title, y: titleY! })
+    const swfAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.swf, y: swfYy! })
+    const notesAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.notes, y: notesY! })
 
     const pageDef: PageDef = {
         gravity: 'down',
         cards: [
+            { id: 'flash-back', kind: 'link', parent: null, anchor: backAnchor },
             { id: 'flash-title', kind: 'headline', parent: null, anchor: titleAnchor },
             { id: 'flash-swf', kind: 'portfolio', parent: null, anchor: swfAnchor },
             { id: 'flash-notes', kind: 'note', parent: null, anchor: notesAnchor },
@@ -56,6 +66,27 @@ function buildPage(
 
     const Notes = piece.Component
     const cardContent: Record<string, CardContent> = {
+        'flash-back': {
+            text: `← ${meta.label}`,
+            width: BACK_W,
+            height: BACK_H,
+            draggable: false,
+            children: (
+                <Link
+                    to="/stuff/flash"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '100%',
+                        color: 'inherit',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                    }}
+                >
+                    ← {meta.label}
+                </Link>
+            ),
+        },
         'flash-title': {
             text: piece.frontmatter.title,
             width: TITLE_W,
@@ -66,9 +97,6 @@ function buildPage(
                     <h1 style={{ margin: 0, fontSize: '1.125rem' }}>
                         {piece.frontmatter.title}
                     </h1>
-                    <Link to="/stuff/flash" style={{ fontSize: '0.875rem' }}>
-                        ← {meta.label}
-                    </Link>
                     {piece.frontmatter.tags.length > 0 && (
                         <p
                             style={{
@@ -124,6 +152,7 @@ export default function FlashDetail() {
 
     const offsets = useMemo<SpawnOffsets>(
         () => ({
+            back: randomOffset(),
             title: randomOffset(),
             swf: randomOffset(),
             notes: randomOffset(),
