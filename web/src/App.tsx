@@ -170,6 +170,24 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        path: '/sandbox/particles-flow',
+        lazy: async () => {
+            const { default: ParticlesFlow } = await import(
+                './routes/sandbox/ParticlesFlow'
+            )
+            return { Component: ParticlesFlow }
+        },
+    },
+    {
+        path: '/sandbox/particles-boids',
+        lazy: async () => {
+            const { default: ParticlesBoids } = await import(
+                './routes/sandbox/ParticlesBoids'
+            )
+            return { Component: ParticlesBoids }
+        },
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =

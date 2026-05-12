@@ -24,6 +24,18 @@
         "fallbackPng": "/fallbacks/particles-cursor.png"
     },
     {
+        "id": "particles-flow",
+        "accentColor": "#2cd9c4",
+        "fallbackColors": ["#0a1614", "#2cd9c4"],
+        "fallbackPng": "/fallbacks/particles-flow.png"
+    },
+    {
+        "id": "particles-boids",
+        "accentColor": "#ff8c5a",
+        "fallbackColors": ["#181010", "#ff8c5a"],
+        "fallbackPng": "/fallbacks/particles-boids.png"
+    },
+    {
         "id": "geometric",
         "accentColor": "#a47bd0",
         "fallbackColors": ["#1a0e1f", "#a47bd0"],
