@@ -10,6 +10,8 @@ const FIELDS: FieldDef[] = [
     { key: 'repelRadius', label: 'Repel radius', type: 'range', min: 0.05, max: 0.5, step: 0.01 },
     { key: 'repelStrength', label: 'Repel strength', type: 'range', min: 0.01, max: 0.2, step: 0.005 },
     { key: 'returnSpeed', label: 'Return speed', type: 'range', min: 0.5, max: 15, step: 0.5 },
+    { key: 'restBrightness', label: 'Rest brightness', type: 'range', min: 0, max: 1, step: 0.05 },
+    { key: 'restAlpha', label: 'Rest alpha', type: 'range', min: 0, max: 1, step: 0.05 },
     { key: 'colorA', label: 'Background color', type: 'color' },
     { key: 'colorB', label: 'Accent color', type: 'color' },
 ]
