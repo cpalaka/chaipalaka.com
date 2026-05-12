@@ -39,11 +39,18 @@ const cardContent: Record<string, CardContent> = {
         width: 260,
         height: 160,
         children: (
-            <>
+            <Link
+                to="/stuff/flash"
+                style={{
+                    display: 'block',
+                    color: 'inherit',
+                    textDecoration: 'none',
+                }}
+            >
                 <h2>Flash</h2>
                 <p>Old Flash animations, restored with Ruffle.</p>
-                <Link to="/stuff/flash" className="read-post-link">Browse →</Link>
-            </>
+                <span className="read-post-link">Browse →</span>
+            </Link>
         ),
     },
     'stuff-digital-art': {
