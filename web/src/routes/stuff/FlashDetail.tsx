@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
-import { getCategoryMeta } from '../../stuff/flash/categories'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
 import type { PageDef } from '../../physics/PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
@@ -16,6 +15,7 @@ const NOTES_W = 700
 const NOTES_H = 200
 const BACK_ANCHOR_Y = 120
 const SPAWN_GAP = 24
+const SWF_SCALE = 1.5
 
 interface SpawnOffsets {
     back: number
@@ -43,9 +43,10 @@ function buildPage(
     piece: Piece,
     offsets: SpawnOffsets,
 ): { pageDef: PageDef; cardContent: Record<string, CardContent> } {
-    const swfW = piece.frontmatter.swf_width + 32
-    const swfH = piece.frontmatter.swf_height + 64
-    const meta = getCategoryMeta(piece.frontmatter.category)
+    const playerW = Math.round(piece.frontmatter.swf_width * SWF_SCALE)
+    const playerH = Math.round(piece.frontmatter.swf_height * SWF_SCALE)
+    const swfW = playerW + 32
+    const swfH = playerH + 64
 
     // Back card hangs from the ceiling at a fixed y; the other 3 are detached
     // and spawn stacked beneath it (edge-to-edge), then fall under gravity.
@@ -66,14 +67,14 @@ function buildPage(
             { id: 'flash-back', kind: 'link', parent: 'ceiling', anchor: backAnchor },
             { id: 'flash-title', kind: 'headline', parent: null, anchor: titleAnchor },
             { id: 'flash-swf', kind: 'portfolio', parent: null, anchor: swfAnchor },
-            { id: 'flash-notes', kind: 'note', parent: null, anchor: notesAnchor },
+            { id: 'flash-notes', kind: 'portfolio', parent: null, anchor: notesAnchor },
         ],
     }
 
     const Notes = piece.Component
     const cardContent: Record<string, CardContent> = {
         'flash-back': {
-            text: `← ${meta.label}`,
+            text: '← Flash',
             width: BACK_W,
             height: BACK_H,
             draggable: false,
@@ -89,7 +90,7 @@ function buildPage(
                         fontSize: '0.875rem',
                     }}
                 >
-                    ← {meta.label}
+                    ← Flash
                 </Link>
             ),
         },
@@ -125,8 +126,8 @@ function buildPage(
             children: (
                 <RuffleEmbed
                     swfUrl={`/assets/${piece.frontmatter.swf}`}
-                    width={piece.frontmatter.swf_width}
-                    height={piece.frontmatter.swf_height}
+                    width={playerW}
+                    height={playerH}
                 />
             ),
         },
