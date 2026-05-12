@@ -24,6 +24,7 @@ export interface PhysicsCardProps {
     kind?: string
     parent?: ParentRef
     buoyancy?: Buoyancy
+    draggable?: boolean
 }
 
 export function PhysicsCard({
@@ -44,6 +45,7 @@ export function PhysicsCard({
     kind = 'card',
     parent,
     buoyancy,
+    draggable = true,
 }: PhysicsCardProps) {
     const world = usePhysicsWorld()
     const elRef = useRef<HTMLElement | null>(null)
@@ -176,9 +178,11 @@ export function PhysicsCard({
             el.style.cursor = 'grab'
         }
 
-        el.addEventListener('pointerdown', onPointerDown)
-        window.addEventListener('pointermove', onPointerMove)
-        window.addEventListener('pointerup', onPointerUp)
+        if (draggable) {
+            el.addEventListener('pointerdown', onPointerDown)
+            window.addEventListener('pointermove', onPointerMove)
+            window.addEventListener('pointerup', onPointerUp)
+        }
 
         return () => {
             cancelAnimationFrame(rafId)
@@ -189,11 +193,13 @@ export function PhysicsCard({
             world.unregister(handle)
             handleRef.current = null
             if (physicsHandleRef) physicsHandleRef.current = null
-            el.removeEventListener('pointerdown', onPointerDown)
-            window.removeEventListener('pointermove', onPointerMove)
-            window.removeEventListener('pointerup', onPointerUp)
+            if (draggable) {
+                el.removeEventListener('pointerdown', onPointerDown)
+                window.removeEventListener('pointermove', onPointerMove)
+                window.removeEventListener('pointerup', onPointerUp)
+            }
         }
-    }, [world, width, height, isMinimized])
+    }, [world, width, height, isMinimized, draggable])
 
     useEffect(() => {
         if (handleRef.current === null) return

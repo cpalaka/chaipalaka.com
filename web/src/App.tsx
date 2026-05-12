@@ -89,7 +89,7 @@ export const routes: RouteRecord[] = [
         ],
     },
     {
-        path: '/portfolio',
+        path: '/stuff',
         lazy: async () => {
             const { default: CanvasLayout } =
                 await import('./layouts/CanvasLayout')
@@ -100,11 +100,29 @@ export const routes: RouteRecord[] = [
             {
                 index: true,
                 lazy: async () => {
-                    const { default: Portfolio } =
-                        await import('./routes/Portfolio')
-                    return { Component: Portfolio }
+                    const { default: Stuff } =
+                        await import('./routes/Stuff')
+                    return { Component: Stuff }
                 },
-                entry: 'src/routes/Portfolio.tsx',
+                entry: 'src/routes/Stuff.tsx',
+            },
+            {
+                path: 'flash',
+                lazy: async () => {
+                    const { default: Flash } =
+                        await import('./routes/stuff/Flash')
+                    return { Component: Flash }
+                },
+                entry: 'src/routes/stuff/Flash.tsx',
+            },
+            {
+                path: 'flash/:slug',
+                lazy: async () => {
+                    const { default: FlashDetail } =
+                        await import('./routes/stuff/FlashDetail')
+                    return { Component: FlashDetail }
+                },
+                entry: 'src/routes/stuff/FlashDetail.tsx',
             },
         ],
     },
