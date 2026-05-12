@@ -4,7 +4,7 @@ export interface PieceFrontmatter {
     title: string
     description: string
     category: string
-    order: number
+    quality: number
     thumbnail: string
     swf: string
     swf_width: number
@@ -25,7 +25,7 @@ const PieceSchema = z.object({
     title: z.string(),
     description: z.string(),
     category: z.string(),
-    order: z.number().int(),
+    quality: z.number().int().min(1).max(10),
     thumbnail: z.string(),
     swf: z.string(),
     swf_width: z.number().int().positive(),
@@ -55,8 +55,8 @@ export function filterAndGroup(
     }
     for (const list of groups.values()) {
         list.sort((a, b) => {
-            const da = a.frontmatter.order - b.frontmatter.order
-            return da !== 0 ? da : a.slug.localeCompare(b.slug)
+            const dq = b.frontmatter.quality - a.frontmatter.quality
+            return dq !== 0 ? dq : a.slug.localeCompare(b.slug)
         })
     }
     return groups

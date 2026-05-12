@@ -29,7 +29,7 @@ describe('validatePieceFrontmatter', () => {
         title: 'Stick Fight',
         description: 'Two stickmen, one room.',
         category: 'stick-figures',
-        order: 1,
+        quality: 7,
         thumbnail: 'stuff/flash/stick-fight.png',
         swf: 'stuff/flash/stick-fight.swf',
         swf_width: 550,
@@ -62,9 +62,21 @@ describe('validatePieceFrontmatter', () => {
         expect(() => validatePieceFrontmatter(noCat)).toThrow()
     })
 
-    it('rejects non-integer order', () => {
+    it('rejects non-integer quality', () => {
         expect(() =>
-            validatePieceFrontmatter({ ...valid, order: 1.5 }),
+            validatePieceFrontmatter({ ...valid, quality: 5.5 }),
+        ).toThrow()
+    })
+
+    it('rejects quality below 1', () => {
+        expect(() =>
+            validatePieceFrontmatter({ ...valid, quality: 0 }),
+        ).toThrow()
+    })
+
+    it('rejects quality above 10', () => {
+        expect(() =>
+            validatePieceFrontmatter({ ...valid, quality: 11 }),
         ).toThrow()
     })
 
@@ -84,7 +96,7 @@ describe('filterAndGroup', () => {
     const makePiece = (
         slug: string,
         category: string,
-        order: number,
+        quality: number,
         draft = false,
     ): Piece => ({
         slug,
@@ -92,7 +104,7 @@ describe('filterAndGroup', () => {
             title: slug,
             description: '',
             category,
-            order,
+            quality,
             thumbnail: `stuff/flash/${slug}.png`,
             swf: `stuff/flash/${slug}.swf`,
             swf_width: 550,
@@ -103,27 +115,27 @@ describe('filterAndGroup', () => {
         Component: () => null,
     })
 
-    it('groups pieces by category and sorts by order asc', () => {
+    it('groups pieces by category and sorts by quality desc', () => {
         const pieces = [
-            makePiece('b-piece', 'shorts', 2),
-            makePiece('a-piece', 'shorts', 1),
-            makePiece('stick-1', 'stick-figures', 1),
+            makePiece('low', 'shorts', 3),
+            makePiece('high', 'shorts', 9),
+            makePiece('stick-1', 'stick-figures', 5),
         ]
         const groups = filterAndGroup(pieces, false)
         expect(groups.get('shorts')?.map((p) => p.slug)).toEqual([
-            'a-piece',
-            'b-piece',
+            'high',
+            'low',
         ])
         expect(groups.get('stick-figures')?.map((p) => p.slug)).toEqual([
             'stick-1',
         ])
     })
 
-    it('breaks order ties by slug ascending', () => {
+    it('breaks quality ties by slug ascending', () => {
         const pieces = [
-            makePiece('zeta', 'shorts', 1),
-            makePiece('alpha', 'shorts', 1),
-            makePiece('mu', 'shorts', 1),
+            makePiece('zeta', 'shorts', 7),
+            makePiece('alpha', 'shorts', 7),
+            makePiece('mu', 'shorts', 7),
         ]
         const groups = filterAndGroup(pieces, false)
         expect(groups.get('shorts')?.map((p) => p.slug)).toEqual([
@@ -135,8 +147,8 @@ describe('filterAndGroup', () => {
 
     it('filters drafts in production', () => {
         const pieces = [
-            makePiece('pub', 'shorts', 1),
-            makePiece('wip', 'shorts', 2, true),
+            makePiece('pub', 'shorts', 8),
+            makePiece('wip', 'shorts', 9, true),
         ]
         const groups = filterAndGroup(pieces, true)
         expect(groups.get('shorts')?.map((p) => p.slug)).toEqual(['pub'])
@@ -144,8 +156,8 @@ describe('filterAndGroup', () => {
 
     it('keeps drafts outside production', () => {
         const pieces = [
-            makePiece('pub', 'shorts', 1),
-            makePiece('wip', 'shorts', 2, true),
+            makePiece('pub', 'shorts', 8),
+            makePiece('wip', 'shorts', 9, true),
         ]
         const groups = filterAndGroup(pieces, false)
         expect(groups.get('shorts')?.length).toBe(2)
