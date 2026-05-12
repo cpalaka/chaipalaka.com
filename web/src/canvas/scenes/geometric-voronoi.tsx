@@ -27,12 +27,12 @@ export interface VoronoiParams {
 }
 
 export const DEFAULT_PARAMS: VoronoiParams = {
-    count: 24,
-    driftSpeed: 0.04,
-    edgeWidth: 0.006,
-    colorA: '#0d1520',
-    colorBorder: '#4ab0cc',
-    colorB: '#1a2a38',
+    count: 12,
+    driftSpeed: 0.02,
+    edgeWidth: 0.002,
+    colorA: '#485f8e',
+    colorBorder: '#ffffff',
+    colorB: '#ffffff',
 }
 
 const VERTEX_SHADER = /* glsl */ `
