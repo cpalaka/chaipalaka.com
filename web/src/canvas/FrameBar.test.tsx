@@ -102,7 +102,7 @@ describe('FrameBar', () => {
         expect(screen.getByText('Frame edge')).toBeInTheDocument()
     })
 
-    test('background select has all four scene options', async () => {
+    test('background select has scene options', async () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
         const select = screen.getByRole('combobox', { name: 'Background' })
@@ -110,8 +110,8 @@ describe('FrameBar', () => {
             (o) => (o as HTMLOptionElement).value,
         )
         expect(options).toContain('flow-shader')
-        expect(options).toContain('particles')
-        expect(options).toContain('geometric')
+        expect(options).toContain('particles-starfield')
+        expect(options).toContain('geometric-reaction-diffusion')
         expect(options).toContain('audio-reactive')
     })
 
@@ -119,8 +119,8 @@ describe('FrameBar', () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
         const select = screen.getByRole('combobox', { name: 'Background' }) as HTMLSelectElement
-        await userEvent.selectOptions(select, 'particles')
-        expect(select.value).toBe('particles')
+        await userEvent.selectOptions(select, 'particles-starfield')
+        expect(select.value).toBe('particles-starfield')
         // restore
         await userEvent.selectOptions(select, 'flow-shader')
     })

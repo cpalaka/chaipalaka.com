@@ -30,10 +30,22 @@
         "fallbackPng": "/fallbacks/particles-boids.png"
     },
     {
-        "id": "geometric",
-        "accentColor": "#a47bd0",
-        "fallbackColors": ["#1a0e1f", "#a47bd0"],
-        "fallbackPng": "/fallbacks/geometric.png"
+        "id": "geometric-reaction-diffusion",
+        "accentColor": "#d0b9df",
+        "fallbackColors": ["#ffd6d6", "#d0b9df"],
+        "fallbackPng": "/fallbacks/geometric-reaction-diffusion.png"
+    },
+    {
+        "id": "geometric-voronoi",
+        "accentColor": "#ffffff",
+        "fallbackColors": ["#485f8e", "#ffffff"],
+        "fallbackPng": "/fallbacks/geometric-voronoi.png"
+    },
+    {
+        "id": "geometric-subdivision",
+        "accentColor": "#700000",
+        "fallbackColors": ["#700000", "#000000"],
+        "fallbackPng": "/fallbacks/geometric-subdivision.png"
     },
     {
         "id": "audio-reactive",
