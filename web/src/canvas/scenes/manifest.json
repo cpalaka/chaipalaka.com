@@ -43,8 +43,8 @@
     },
     {
         "id": "geometric-voronoi",
-        "accentColor": "#7dc4e8",
-        "fallbackColors": ["#0d1520", "#7dc4e8"],
+        "accentColor": "#ffffff",
+        "fallbackColors": ["#485f8e", "#ffffff"],
         "fallbackPng": "/fallbacks/geometric-voronoi.png"
     },
     {
