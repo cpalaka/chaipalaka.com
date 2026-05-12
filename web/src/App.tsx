@@ -152,6 +152,15 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        path: '/sandbox/particles-starfield',
+        lazy: async () => {
+            const { default: ParticlesStarfield } = await import(
+                './routes/sandbox/ParticlesStarfield'
+            )
+            return { Component: ParticlesStarfield }
+        },
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =

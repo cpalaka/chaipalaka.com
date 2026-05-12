@@ -9,6 +9,7 @@ import './BackgroundCanvas.css'
 const sceneLoaders: Record<string, () => Promise<unknown>> = {
     'flow-shader': () => import('./scenes/flow-shader'),
     particles: () => import('./scenes/particles'),
+    'particles-starfield': () => import('./scenes/particles-starfield'),
     geometric: () => import('./scenes/geometric'),
     'audio-reactive': () => import('./scenes/audio-reactive'),
 }

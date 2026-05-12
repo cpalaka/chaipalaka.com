@@ -12,6 +12,12 @@
         "fallbackPng": "/fallbacks/particles.png"
     },
     {
+        "id": "particles-starfield",
+        "accentColor": "#5fb6c4",
+        "fallbackColors": ["#070a18", "#5fb6c4"],
+        "fallbackPng": "/fallbacks/particles-starfield.png"
+    },
+    {
         "id": "geometric",
         "accentColor": "#a47bd0",
         "fallbackColors": ["#1a0e1f", "#a47bd0"],
