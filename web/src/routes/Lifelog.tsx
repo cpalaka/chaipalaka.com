@@ -338,7 +338,7 @@ function ActivityPanel() {
 
 // ─── Page definition ──────────────────────────────────────────────────────────
 
-const pageDef: PageDef = {
+export const pageDef: PageDef = {
     gravity: 'down',
     cards: [
         {

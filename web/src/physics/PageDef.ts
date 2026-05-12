@@ -5,6 +5,12 @@ export type Buoyancy = 'heavy' | 'balloon'
 export type ParentRef = 'ceiling' | 'floor' | string | null
 export type CardKind = 'lifelog' | 'blog' | 'portfolio' | 'note' | 'link' | 'headline'
 
+export type TransitionId =
+    | 'string-cut-drop'
+    | 'pour-in-drop'
+    | 'anchor-slide'
+    | 'cross-fade'
+
 export interface CardSpec {
     id: string
     kind: CardKind
@@ -15,6 +21,11 @@ export interface CardSpec {
 export interface PageDef {
     gravity: Cardinal
     cards: CardSpec[]
+    transitions?: {
+        exit?: TransitionId
+        enter?: TransitionId
+    }
+    siblingOrder?: 'left' | 'right'
 }
 
 export function buoyancyForKind(kind: CardKind): Buoyancy {

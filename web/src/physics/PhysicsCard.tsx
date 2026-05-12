@@ -1,20 +1,14 @@
-import { useEffect, useRef } from 'react'
-import { usePhysicsWorld } from './PhysicsContext'
-import { useIsMinimized, useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
-import { flipMorph } from '../canvas/flip'
-import type { PhysicsHandle, PhysicsWorld, TetherHandle, Vec2 } from './PhysicsWorld'
+import { useEffect, useId, useMemo } from 'react'
+import { useCardRegistry } from '../transitions/CardRegistry'
+import type {
+    PhysicsHandle,
+    PhysicsWorld,
+    TetherHandle,
+    Vec2,
+} from './PhysicsWorld'
 import type { Buoyancy, ParentRef } from './PageDef'
-import './PhysicsCard.css'
 
 type ParentKind = 'ceiling' | 'floor' | 'card'
-
-function resolveParent(world: PhysicsWorld, p: ParentRef): { handle: PhysicsHandle | null; kind: ParentKind } {
-    if (p === 'ceiling') return { handle: world.ceilingHandle, kind: 'ceiling' }
-    if (p === 'floor') return { handle: world.floorHandle, kind: 'floor' }
-    if (p == null) return { handle: null, kind: 'card' }
-    const h = world.getHandleById(p)
-    return { handle: h ?? null, kind: 'card' }
-}
 
 export function wireTetherFor(
     world: PhysicsWorld,
@@ -25,10 +19,12 @@ export function wireTetherFor(
 ): TetherHandle {
     const parentBodyPos = world.getPosition(parentHandle)
     if (parentKind === 'card') {
-        const length = Math.hypot(childAnchor.x - parentBodyPos.x, childAnchor.y - parentBodyPos.y)
+        const length = Math.hypot(
+            childAnchor.x - parentBodyPos.x,
+            childAnchor.y - parentBodyPos.y,
+        )
         return world.tether(parentHandle, childHandle, length)
     }
-    // ceiling | floor: rope hangs straight from the surface directly above/below the child anchor.
     const parentAnchor = world.getAnchor(parentHandle)
     const anchorA = {
         x: childAnchor.x - parentBodyPos.x,
@@ -48,8 +44,6 @@ export interface PhysicsCardProps {
     variant?: string
     className?: string
     style?: React.CSSProperties
-    physicsHandleRef?: React.MutableRefObject<PhysicsHandle | null>
-    cardRef?: React.MutableRefObject<HTMLElement | null>
     minimizable?: boolean
     id?: string
     label?: string
@@ -59,236 +53,62 @@ export interface PhysicsCardProps {
     draggable?: boolean
 }
 
-export function PhysicsCard({
-    text,
-    width,
-    height,
-    anchor,
-    children,
-    header,
-    variant,
-    className,
-    style,
-    physicsHandleRef,
-    cardRef,
-    minimizable = false,
-    id,
-    label,
-    kind = 'card',
-    parent,
-    buoyancy,
-    draggable = true,
-}: PhysicsCardProps) {
-    const world = usePhysicsWorld()
-    const elRef = useRef<HTMLElement | null>(null)
-    const handleRef = useRef<PhysicsHandle | null>(null)
-    const anchorRef = useRef(anchor)
-    anchorRef.current = anchor
-    const tetherHandleRef = useRef<TetherHandle | null>(null)
+export function PhysicsCard(props: PhysicsCardProps) {
+    const generatedId = useId()
+    const id = props.id ?? generatedId
+    const registry = useCardRegistry()
 
-    const registry = useMinimizedRegistry()
-    const isMinimized = useIsMinimized(minimizable ? id : undefined)
-
-    useEffect(() => {
-        if (isMinimized) return
-        const el = elRef.current
-        if (!el) return
-
-        const { x, y } = anchorRef.current
-        const w = width
-        const h = height
-
-        // Spawn 20px in gravity direction so the card visibly settles to anchor on load.
-        const SPAWN_OFFSET = 20
-        const g = world.getGravityVector()
-        const gLen = Math.hypot(g.x, g.y)
-        const gx = gLen > 0 ? g.x / gLen : 0
-        const gy = gLen > 0 ? g.y / gLen : 1
-        const sx = x + gx * SPAWN_OFFSET
-        const sy = y + gy * SPAWN_OFFSET
-
-        el.style.width = `${w}px`
-        el.style.height = `${h}px`
-        el.style.transform = `translate(${sx - w / 2}px, ${sy - h / 2}px)`
-
-        const handle = id
-            ? world.registerById(id, { x: sx, y: sy }, { width: w, height: h }, {
-                onTransform: ({ x: px, y: py, rotation }) => {
-                    el.style.transform = `translate(${px - w / 2}px, ${py - h / 2}px) rotate(${rotation}rad)`
-                },
-            })
-            : world.register(
-                { x: sx, y: sy },
-                { width: w, height: h },
-                {
-                    onTransform: ({ x: px, y: py, rotation }) => {
-                        el.style.transform = `translate(${px - w / 2}px, ${py - h / 2}px) rotate(${rotation}rad)`
-                    },
-                },
-            )
-        handleRef.current = handle
-        if (physicsHandleRef) physicsHandleRef.current = handle
-
-        if (buoyancy) world.setBuoyancy(handle, buoyancy)
-
-        // Wire tether if parent declared.
-        let rafId = 0
-        if (parent) {
-            const { handle: ph, kind } = resolveParent(world, parent)
-            if (ph != null) {
-                tetherHandleRef.current = wireTetherFor(world, ph, kind, handle, anchorRef.current)
-            } else {
-                rafId = requestAnimationFrame(() => {
-                    const retried = resolveParent(world, parent)
-                    if (retried.handle == null) {
-                        console.warn(`PhysicsCard: parent "${parent}" not found after one frame; tether skipped`)
-                        return
-                    }
-                    tetherHandleRef.current = wireTetherFor(world, retried.handle, retried.kind, handle, anchorRef.current)
-                })
-            }
-        }
-
-        let dragging = false
-        let lastX = 0
-        let lastY = 0
-        let lastT = 0
-        let velX = 0
-        let velY = 0
-        const FLING_VELOCITY_SCALE = 16
-        const FLING_PAUSE_MS = 50
-
-        const onPointerDown = (e: PointerEvent) => {
-            if ((e.target as Element | null)?.closest('[data-card-header], a, button')) return
-            e.preventDefault()
-            dragging = true
-            lastX = e.clientX
-            lastY = e.clientY
-            lastT = e.timeStamp
-            velX = 0
-            velY = 0
-            world.setDragging(handle, true)
-            el.setPointerCapture(e.pointerId)
-            el.style.cursor = 'grabbing'
-        }
-        const onPointerMove = (e: PointerEvent) => {
-            if (!dragging) return
-            const dx = e.clientX - lastX
-            const dy = e.clientY - lastY
-            const dt = Math.max(e.timeStamp - lastT, 1)
-            velX = dx / dt
-            velY = dy / dt
-            const cur = world.getPosition(handle)
-            world.setPosition(handle, { x: cur.x + dx, y: cur.y + dy })
-            lastX = e.clientX
-            lastY = e.clientY
-            lastT = e.timeStamp
-        }
-        const onPointerUp = (e: PointerEvent) => {
-            if (!dragging) return
-            dragging = false
-            world.setDragging(handle, false)
-            const sinceLastMove = e.timeStamp - lastT
-            if (sinceLastMove > FLING_PAUSE_MS) {
-                velX = 0
-                velY = 0
-            }
-            world.setVelocity(handle, {
-                x: velX * FLING_VELOCITY_SCALE,
-                y: velY * FLING_VELOCITY_SCALE,
-            })
-            el.releasePointerCapture(e.pointerId)
-            el.style.cursor = 'grab'
-        }
-
-        if (draggable) {
-            el.addEventListener('pointerdown', onPointerDown)
-            window.addEventListener('pointermove', onPointerMove)
-            window.addEventListener('pointerup', onPointerUp)
-        }
-
-        return () => {
-            cancelAnimationFrame(rafId)
-            if (tetherHandleRef.current !== null) {
-                world.untether(tetherHandleRef.current)
-                tetherHandleRef.current = null
-            }
-            world.unregister(handle)
-            handleRef.current = null
-            if (physicsHandleRef) physicsHandleRef.current = null
-            if (draggable) {
-                el.removeEventListener('pointerdown', onPointerDown)
-                window.removeEventListener('pointermove', onPointerMove)
-                window.removeEventListener('pointerup', onPointerUp)
-            }
-        }
-    }, [world, width, height, isMinimized, draggable])
-
-    useEffect(() => {
-        if (handleRef.current === null) return
-        world.setAnchor(handleRef.current, anchor)
-        // Body-local pointA depends on anchor.x for ceiling/floor parents — re-wire on resize.
-        if (tetherHandleRef.current !== null && parent) {
-            world.untether(tetherHandleRef.current)
-            tetherHandleRef.current = null
-            const { handle: ph, kind } = resolveParent(world, parent)
-            if (ph != null) {
-                tetherHandleRef.current = wireTetherFor(world, ph, kind, handleRef.current, anchor)
-            }
-        }
-    }, [world, anchor.x, anchor.y, parent])
-
-    useEffect(() => {
-        if (isMinimized || !id || !minimizable) return
-        const el = elRef.current
-        if (!el) return
-        const fromChipRect = registry.consumeRestoreRect(id)
-        if (!fromChipRect) return
-        const endTransform = el.style.transform
-        requestAnimationFrame(() => {
-            flipMorph(fromChipRect, el, { opacityFrom: 0.5, endTransform })
-        })
-    }, [isMinimized, id, minimizable, registry])
-
-    if (isMinimized) return null
-
-    function handleMinimize() {
-        const el = elRef.current
-        if (!el || !id) return
-        const fromRect = el.getBoundingClientRect()
-        registry.minimize(id, { label: label ?? text, kind, fromRect })
-    }
-
-    const showHeader = header != null || minimizable
-    const cls = ['physics-card', className].filter(Boolean).join(' ')
-
-    return (
-        <article
-            ref={(el) => {
-                elRef.current = el
-                if (cardRef) cardRef.current = el
-            }}
-            className={cls}
-            data-variant={variant}
-            style={style}
-        >
-            {showHeader ? (
-                <div data-card-header>
-                    {minimizable ? (
-                        <button
-                            type="button"
-                            title="Minimize"
-                            className="physics-card__minimize-btn"
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={handleMinimize}
-                        >
-                            −
-                        </button>
-                    ) : null}
-                    {header}
-                </div>
-            ) : null}
-            {children ?? text}
-        </article>
+    const entry = useMemo(
+        () => ({
+            id,
+            parent: props.parent ?? null,
+            kind: props.kind ?? 'card',
+            buoyancy: props.buoyancy ?? 'heavy',
+            anchor: props.anchor,
+            content: {
+                text: props.text,
+                width: props.width,
+                height: props.height,
+                children: props.children,
+                header: props.header,
+                minimizable: props.minimizable,
+                label: props.label,
+                draggable: props.draggable,
+                variant: props.variant,
+                className: props.className,
+                style: props.style,
+            },
+        }),
+        [
+            id,
+            props.parent,
+            props.kind,
+            props.buoyancy,
+            props.anchor.x,
+            props.anchor.y,
+            props.text,
+            props.width,
+            props.height,
+            props.children,
+            props.header,
+            props.minimizable,
+            props.label,
+            props.draggable,
+            props.variant,
+            props.className,
+            props.style,
+        ],
     )
+
+    useEffect(() => {
+        registry.register(entry)
+    }, [registry, entry])
+
+    useEffect(() => {
+        return () => {
+            registry.requestUnregister(id)
+        }
+    }, [registry, id])
+
+    return null
 }
