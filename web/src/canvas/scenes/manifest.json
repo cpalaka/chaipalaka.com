@@ -25,8 +25,8 @@
     },
     {
         "id": "particles-boids",
-        "accentColor": "#ff8c5a",
-        "fallbackColors": ["#181010", "#ff8c5a"],
+        "accentColor": "#ddba92",
+        "fallbackColors": ["#0c2036", "#ddba92"],
         "fallbackPng": "/fallbacks/particles-boids.png"
     },
     {
