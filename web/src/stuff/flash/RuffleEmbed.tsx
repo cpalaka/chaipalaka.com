@@ -93,6 +93,13 @@ export function RuffleEmbed({ swfUrl, width, height }: RuffleEmbedProps) {
                     player.style.width = `${width}px`
                     player.style.height = `${height}px`
                 }
+                if (import.meta.env.DEV) {
+                    const el = player as unknown as HTMLElement
+                    el.addEventListener('loadedmetadata', () => {
+                        // eslint-disable-next-line no-console
+                        console.log(`[Ruffle] ${swfUrl}`, (player as unknown as { metadata?: unknown }).metadata)
+                    })
+                }
                 setStatus('ready')
             })
             .catch(() => {
