@@ -37,8 +37,8 @@
     },
     {
         "id": "geometric-reaction-diffusion",
-        "accentColor": "#e8c97d",
-        "fallbackColors": ["#0d1a0d", "#e8c97d"],
+        "accentColor": "#d0b9df",
+        "fallbackColors": ["#ffd6d6", "#d0b9df"],
         "fallbackPng": "/fallbacks/geometric-reaction-diffusion.png"
     },
     {
