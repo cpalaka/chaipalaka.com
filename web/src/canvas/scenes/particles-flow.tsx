@@ -34,13 +34,13 @@ export interface FlowParams {
 }
 
 export const DEFAULT_PARAMS: FlowParams = {
-    count: 20000,
-    pointSize: 0.0015,
-    fieldScale: 1.8,
-    fieldSpeed: 0.04,
-    particleSpeed: 0.004,
-    colorA: '#0a1614',
-    colorB: '#2cd9c4',
+    count: 10000,
+    pointSize: 0.0034,
+    fieldScale: 1.4,
+    fieldSpeed: 0.2,
+    particleSpeed: 0.001,
+    colorA: '#08608c',
+    colorB: '#ffffff',
 }
 
 // Fast integer-based value noise. Avoids Math.sin for hot-loop performance.

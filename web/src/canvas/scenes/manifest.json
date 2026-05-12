@@ -19,8 +19,8 @@
     },
     {
         "id": "particles-flow",
-        "accentColor": "#2cd9c4",
-        "fallbackColors": ["#0a1614", "#2cd9c4"],
+        "accentColor": "#ffffff",
+        "fallbackColors": ["#08608c", "#ffffff"],
         "fallbackPng": "/fallbacks/particles-flow.png"
     },
     {
