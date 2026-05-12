@@ -36,6 +36,24 @@
         "fallbackPng": "/fallbacks/geometric.png"
     },
     {
+        "id": "geometric-reaction-diffusion",
+        "accentColor": "#e8c97d",
+        "fallbackColors": ["#0d1a0d", "#e8c97d"],
+        "fallbackPng": "/fallbacks/geometric-reaction-diffusion.png"
+    },
+    {
+        "id": "geometric-voronoi",
+        "accentColor": "#7dc4e8",
+        "fallbackColors": ["#0d1520", "#7dc4e8"],
+        "fallbackPng": "/fallbacks/geometric-voronoi.png"
+    },
+    {
+        "id": "geometric-subdivision",
+        "accentColor": "#c0ccd8",
+        "fallbackColors": ["#0a0d14", "#c0ccd8"],
+        "fallbackPng": "/fallbacks/geometric-subdivision.png"
+    },
+    {
         "id": "audio-reactive",
         "accentColor": "#d97a5b",
         "fallbackColors": ["#1f0e0e", "#d97a5b"],

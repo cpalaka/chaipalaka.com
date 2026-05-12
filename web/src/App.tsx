@@ -188,6 +188,33 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        path: '/sandbox/geometric-reaction-diffusion',
+        lazy: async () => {
+            const { default: GeometricReactionDiffusion } = await import(
+                './routes/sandbox/GeometricReactionDiffusion'
+            )
+            return { Component: GeometricReactionDiffusion }
+        },
+    },
+    {
+        path: '/sandbox/geometric-voronoi',
+        lazy: async () => {
+            const { default: GeometricVoronoi } = await import(
+                './routes/sandbox/GeometricVoronoi'
+            )
+            return { Component: GeometricVoronoi }
+        },
+    },
+    {
+        path: '/sandbox/geometric-subdivision',
+        lazy: async () => {
+            const { default: GeometricSubdivision } = await import(
+                './routes/sandbox/GeometricSubdivision'
+            )
+            return { Component: GeometricSubdivision }
+        },
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =
