@@ -12,6 +12,7 @@ export interface CardContent {
     children?: ReactNode
     minimizable?: boolean
     label?: string
+    draggable?: boolean
 }
 
 function getViewport(): Viewport {
@@ -57,6 +58,7 @@ export function PhysicsPage({
                         buoyancy={buoyancyForKind(spec.kind)}
                         minimizable={c?.minimizable ?? false}
                         label={c?.label}
+                        draggable={c?.draggable ?? true}
                     >
                         {c?.children}
                     </PhysicsCard>

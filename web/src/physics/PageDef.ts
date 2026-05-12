@@ -2,7 +2,7 @@ import type { Vec2, Viewport } from './PhysicsWorld'
 
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
 export type Buoyancy = 'heavy' | 'balloon'
-export type ParentRef = 'ceiling' | 'floor' | string
+export type ParentRef = 'ceiling' | 'floor' | string | null
 export type CardKind = 'lifelog' | 'blog' | 'portfolio' | 'note' | 'link' | 'headline'
 
 export interface CardSpec {
