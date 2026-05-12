@@ -8,7 +8,6 @@ import './BackgroundCanvas.css'
 // Static import() paths are required for Vite chunk analysis — one chunk per scene.
 const sceneLoaders: Record<string, () => Promise<unknown>> = {
     'flow-shader': () => import('./scenes/flow-shader'),
-    particles: () => import('./scenes/particles'),
     'particles-starfield': () => import('./scenes/particles-starfield'),
     'particles-cursor': () => import('./scenes/particles-cursor'),
     'particles-flow': () => import('./scenes/particles-flow'),

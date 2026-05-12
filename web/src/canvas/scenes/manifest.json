@@ -6,12 +6,6 @@
         "fallbackPng": "/fallbacks/flow-shader.png"
     },
     {
-        "id": "particles",
-        "accentColor": "#5fb6c4",
-        "fallbackColors": ["#0a0e1a", "#5fb6c4"],
-        "fallbackPng": "/fallbacks/particles.png"
-    },
-    {
         "id": "particles-starfield",
         "accentColor": "#5fb6c4",
         "fallbackColors": ["#070a18", "#5fb6c4"],
