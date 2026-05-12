@@ -6,10 +6,28 @@
         "fallbackPng": "/fallbacks/flow-shader.png"
     },
     {
-        "id": "particles",
+        "id": "particles-starfield",
         "accentColor": "#5fb6c4",
-        "fallbackColors": ["#0a0e1a", "#5fb6c4"],
-        "fallbackPng": "/fallbacks/particles.png"
+        "fallbackColors": ["#070a18", "#5fb6c4"],
+        "fallbackPng": "/fallbacks/particles-starfield.png"
+    },
+    {
+        "id": "particles-cursor",
+        "accentColor": "#25db00",
+        "fallbackColors": ["#0e0816", "#25db00"],
+        "fallbackPng": "/fallbacks/particles-cursor.png"
+    },
+    {
+        "id": "particles-flow",
+        "accentColor": "#ffffff",
+        "fallbackColors": ["#08608c", "#ffffff"],
+        "fallbackPng": "/fallbacks/particles-flow.png"
+    },
+    {
+        "id": "particles-boids",
+        "accentColor": "#ddba92",
+        "fallbackColors": ["#0c2036", "#ddba92"],
+        "fallbackPng": "/fallbacks/particles-boids.png"
     },
     {
         "id": "geometric",

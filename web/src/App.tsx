@@ -152,6 +152,42 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        path: '/sandbox/particles-starfield',
+        lazy: async () => {
+            const { default: ParticlesStarfield } = await import(
+                './routes/sandbox/ParticlesStarfield'
+            )
+            return { Component: ParticlesStarfield }
+        },
+    },
+    {
+        path: '/sandbox/particles-cursor',
+        lazy: async () => {
+            const { default: ParticlesCursor } = await import(
+                './routes/sandbox/ParticlesCursor'
+            )
+            return { Component: ParticlesCursor }
+        },
+    },
+    {
+        path: '/sandbox/particles-flow',
+        lazy: async () => {
+            const { default: ParticlesFlow } = await import(
+                './routes/sandbox/ParticlesFlow'
+            )
+            return { Component: ParticlesFlow }
+        },
+    },
+    {
+        path: '/sandbox/particles-boids',
+        lazy: async () => {
+            const { default: ParticlesBoids } = await import(
+                './routes/sandbox/ParticlesBoids'
+            )
+            return { Component: ParticlesBoids }
+        },
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =
