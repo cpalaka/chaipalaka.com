@@ -2,9 +2,41 @@ import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from './PhysicsContext'
 import { useIsMinimized, useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
 import { flipMorph } from '../canvas/flip'
-import type { PhysicsHandle, TetherHandle } from './PhysicsWorld'
+import type { PhysicsHandle, PhysicsWorld, TetherHandle, Vec2 } from './PhysicsWorld'
 import type { Buoyancy, ParentRef } from './PageDef'
 import './PhysicsCard.css'
+
+type ParentKind = 'ceiling' | 'floor' | 'card'
+
+function resolveParent(world: PhysicsWorld, p: ParentRef): { handle: PhysicsHandle | null; kind: ParentKind } {
+    if (p === 'ceiling') return { handle: world.ceilingHandle, kind: 'ceiling' }
+    if (p === 'floor') return { handle: world.floorHandle, kind: 'floor' }
+    if (p == null) return { handle: null, kind: 'card' }
+    const h = world.getHandleById(p)
+    return { handle: h ?? null, kind: 'card' }
+}
+
+export function wireTetherFor(
+    world: PhysicsWorld,
+    parentHandle: PhysicsHandle,
+    parentKind: ParentKind,
+    childHandle: PhysicsHandle,
+    childAnchor: Vec2,
+): TetherHandle {
+    const parentBodyPos = world.getPosition(parentHandle)
+    if (parentKind === 'card') {
+        const length = Math.hypot(childAnchor.x - parentBodyPos.x, childAnchor.y - parentBodyPos.y)
+        return world.tether(parentHandle, childHandle, length)
+    }
+    // ceiling | floor: rope hangs straight from the surface directly above/below the child anchor.
+    const parentAnchor = world.getAnchor(parentHandle)
+    const anchorA = {
+        x: childAnchor.x - parentBodyPos.x,
+        y: parentAnchor.y - parentBodyPos.y,
+    }
+    const length = Math.abs(childAnchor.y - parentAnchor.y)
+    return world.tether(parentHandle, childHandle, length, anchorA)
+}
 
 export interface PhysicsCardProps {
     text: string
@@ -99,29 +131,20 @@ export function PhysicsCard({
 
         if (buoyancy) world.setBuoyancy(handle, buoyancy)
 
-        // Wire tether if parent declared
+        // Wire tether if parent declared.
         let rafId = 0
-        const wireTether = (parentHandle: number) => {
-            const parentPos = world.getPosition(parentHandle)
-            const ca = anchorRef.current
-            const length = Math.hypot(ca.x - parentPos.x, ca.y - parentPos.y)
-            tetherHandleRef.current = world.tether(parentHandle, handle, length)
-        }
         if (parent) {
-            const parentHandle =
-                parent === 'ceiling' ? world.ceilingHandle
-                : parent === 'floor' ? world.floorHandle
-                : world.getHandleById(parent)
-            if (parentHandle != null) {
-                wireTether(parentHandle)
+            const { handle: ph, kind } = resolveParent(world, parent)
+            if (ph != null) {
+                tetherHandleRef.current = wireTetherFor(world, ph, kind, handle, anchorRef.current)
             } else {
                 rafId = requestAnimationFrame(() => {
-                    const ph = world.getHandleById(parent)
-                    if (ph == null) {
+                    const retried = resolveParent(world, parent)
+                    if (retried.handle == null) {
                         console.warn(`PhysicsCard: parent "${parent}" not found after one frame; tether skipped`)
                         return
                     }
-                    wireTether(ph)
+                    tetherHandleRef.current = wireTetherFor(world, retried.handle, retried.kind, handle, anchorRef.current)
                 })
             }
         }
@@ -204,7 +227,16 @@ export function PhysicsCard({
     useEffect(() => {
         if (handleRef.current === null) return
         world.setAnchor(handleRef.current, anchor)
-    }, [world, anchor.x, anchor.y])
+        // Body-local pointA depends on anchor.x for ceiling/floor parents — re-wire on resize.
+        if (tetherHandleRef.current !== null && parent) {
+            world.untether(tetherHandleRef.current)
+            tetherHandleRef.current = null
+            const { handle: ph, kind } = resolveParent(world, parent)
+            if (ph != null) {
+                tetherHandleRef.current = wireTetherFor(world, ph, kind, handleRef.current, anchor)
+            }
+        }
+    }, [world, anchor.x, anchor.y, parent])
 
     useEffect(() => {
         if (isMinimized || !id || !minimizable) return
