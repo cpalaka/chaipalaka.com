@@ -15,9 +15,32 @@ function renderInRouter(initialPath = '/') {
 }
 
 describe('FrameBar', () => {
-    test('renders site name "chaipalaka"', () => {
+    test('renders site name "chaipalaka" as a link to /', () => {
         renderInRouter()
-        expect(screen.getByText('chaipalaka')).toBeInTheDocument()
+        const link = screen.getByRole('link', { name: 'chaipalaka' })
+        expect(link).toBeInTheDocument()
+        expect(link).toHaveAttribute('href', '/')
+    })
+
+    test('site-name link is active when at /', () => {
+        renderInRouter('/')
+        expect(screen.getByRole('link', { name: 'chaipalaka' })).toHaveAttribute(
+            'data-active',
+            'true',
+        )
+    })
+
+    test('site-name link is NOT active when at /blog', () => {
+        renderInRouter('/blog')
+        expect(screen.getByRole('link', { name: 'chaipalaka' })).toHaveAttribute(
+            'data-active',
+            'false',
+        )
+    })
+
+    test('home nav link is not rendered (site name handles home navigation)', () => {
+        renderInRouter()
+        expect(screen.queryByRole('link', { name: 'home' })).not.toBeInTheDocument()
     })
 
     test('shows current pathname in the current-page indicator', () => {
@@ -34,24 +57,6 @@ describe('FrameBar', () => {
         renderInRouter('/blog')
         const link = screen.getByRole('link', { name: 'blog' })
         expect(link).toHaveAttribute('data-active', 'true')
-    })
-
-    test('home nav link is active when at /', () => {
-        renderInRouter('/')
-        const link = screen.getByRole('link', { name: 'home' })
-        expect(link).toHaveAttribute('data-active', 'true')
-    })
-
-    test('home nav link is NOT active when at /blog', () => {
-        renderInRouter('/blog')
-        const link = screen.getByRole('link', { name: 'home' })
-        expect(link).toHaveAttribute('data-active', 'false')
-    })
-
-    test('home nav link is NOT active when at /blog/foo (prefix not root)', () => {
-        renderInRouter('/blog/foo')
-        const link = screen.getByRole('link', { name: 'home' })
-        expect(link).toHaveAttribute('data-active', 'false')
     })
 
     test('settings menu is absent on initial render', () => {

@@ -10,7 +10,6 @@ import manifest from './scenes/manifest.json'
 import './FrameBar.css'
 
 const SECTIONS = [
-    { path: '/', label: 'home' },
     { path: '/blog', label: 'blog' },
     { path: '/lifelog', label: 'lifelog' },
     { path: '/stuff', label: 'stuff' },
@@ -107,7 +106,13 @@ export function FrameBar() {
     return (
         <header role="banner" className="frame-bar">
             <div className="frame-bar__title">
-                <span className="frame-bar__site-name">chaipalaka</span>
+                <Link
+                    to="/"
+                    className="frame-bar__site-name"
+                    data-active={pathname === '/' ? 'true' : 'false'}
+                >
+                    chaipalaka
+                </Link>
                 {pathname !== '/' ? (
                     <span className="frame-bar__current-page">{pathname}</span>
                 ) : null}
