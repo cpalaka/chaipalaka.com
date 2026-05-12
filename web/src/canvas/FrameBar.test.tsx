@@ -89,6 +89,16 @@ describe('FrameBar', () => {
         expect(screen.queryByRole('link', { name: 'portfolio' })).not.toBeInTheDocument()
     })
 
+    test('/stuff nav link is rendered', () => {
+        renderInRouter()
+        expect(screen.getByRole('link', { name: 'stuff' })).toBeInTheDocument()
+    })
+
+    test('stuff nav link is active when at /stuff/flash', () => {
+        renderInRouter('/stuff/flash')
+        expect(screen.getByRole('link', { name: 'stuff' })).toHaveAttribute('data-active', 'true')
+    })
+
     test('section nav has accessible label', () => {
         renderInRouter()
         expect(screen.getByRole('navigation', { name: 'Section nav' })).toBeInTheDocument()

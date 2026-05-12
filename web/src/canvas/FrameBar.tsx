@@ -13,6 +13,7 @@ const SECTIONS = [
     { path: '/', label: 'home' },
     { path: '/blog', label: 'blog' },
     { path: '/lifelog', label: 'lifelog' },
+    { path: '/stuff', label: 'stuff' },
 ] as const
 
 export function isActiveRoute(pathname: string, target: string): boolean {
