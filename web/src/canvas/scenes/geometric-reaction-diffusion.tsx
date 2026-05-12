@@ -40,15 +40,15 @@ export interface ReactionDiffusionParams {
 }
 
 export const DEFAULT_PARAMS: ReactionDiffusionParams = {
-    simRes: 256,
-    feed: 0.037,
-    kill: 0.060,
-    diffA: 1.0,
-    diffB: 0.5,
+    simRes: 128,
+    feed: 0.026,
+    kill: 0.058,
+    diffA: 0.55,
+    diffB: 0.25,
     stepsPerFrame: 4,
-    seedCount: 20,
-    colorA: '#0d1a0d',
-    colorB: '#e8e0c0',
+    seedCount: 10,
+    colorA: '#ffd6d6',
+    colorB: '#d0b9df',
 }
 
 const VERTEX_SHADER = /* glsl */ `
@@ -292,7 +292,7 @@ const isDegraded =
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
 
 function ReactionDiffusionGallery() {
-    return <ReactionDiffusionScene params={isDegraded ? { simRes: 128, stepsPerFrame: 2 } : undefined} />
+    return <ReactionDiffusionScene params={isDegraded ? { stepsPerFrame: 2 } : undefined} />
 }
 
 export const geometricReactionDiffusionScene: BackgroundScene = {
