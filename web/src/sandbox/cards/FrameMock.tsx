@@ -2,7 +2,7 @@ import { useState, type RefObject } from 'react'
 import type { SandboxConfig } from './state'
 import { MinimizedStrip } from './MinimizedStrip'
 
-const SECTION_OPTIONS = ['/', '/blog', '/lifelog', '/portfolio'] as const
+const SECTION_OPTIONS = ['/', '/blog', '/lifelog', '/stuff'] as const
 
 interface FrameMockProps {
     config: SandboxConfig

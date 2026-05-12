@@ -10,9 +10,51 @@ import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import { remarkExtractToc } from './src/blog/remark-extract-toc'
 import { vitePluginFeeds } from './src/blog/vite-plugin-feeds'
-import { readdir, readFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
+import { join, resolve, extname } from 'node:path'
 import matter from 'gray-matter'
+import type { Plugin } from 'vite'
+
+const MIME: Record<string, string> = {
+    '.js': 'application/javascript',
+    '.mjs': 'application/javascript',
+    '.wasm': 'application/wasm',
+    '.json': 'application/json',
+    '.map': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
+    '.swf': 'application/x-shockwave-flash',
+    '.css': 'text/css',
+}
+
+function serveLocalAssets(): Plugin {
+    return {
+        name: 'serve-local-assets',
+        configureServer(server) {
+            const assetsRoot = resolve(process.cwd(), '..', 'assets')
+            server.middlewares.use('/assets', async (req, res, next) => {
+                if (!req.url) return next()
+                const rel = decodeURIComponent(req.url.split('?')[0]!)
+                const full = join(assetsRoot, rel)
+                if (!full.startsWith(assetsRoot)) return next()
+                try {
+                    const st = await stat(full)
+                    if (!st.isFile()) return next()
+                    res.setHeader('Content-Type', MIME[extname(full)] ?? 'application/octet-stream')
+                    res.setHeader('Content-Length', String(st.size))
+                    createReadStream(full).pipe(res)
+                } catch {
+                    next()
+                }
+            })
+        },
+    }
+}
 
 async function getBlogSlugs(): Promise<string[]> {
     try {
@@ -59,6 +101,7 @@ export default defineConfig({
         },
         react(),
         vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
+        serveLocalAssets(),
     ],
     server: {
         fs: {

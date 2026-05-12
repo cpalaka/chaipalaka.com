@@ -74,14 +74,14 @@ const cardContent: Record<string, CardContent> = {
         ]),
     ),
     'notfound-portfolio': {
-        text: 'Portfolio',
+        text: 'Stuff',
         width: 200,
         height: 120,
         children: (
             <>
-                <h2 style={{ margin: 0, fontSize: '1rem' }}>Portfolio</h2>
-                <Link to="/portfolio" style={{ fontSize: '0.875rem' }}>
-                    Browse work →
+                <h2 style={{ margin: 0, fontSize: '1rem' }}>Stuff</h2>
+                <Link to="/stuff" style={{ fontSize: '0.875rem' }}>
+                    Browse →
                 </Link>
             </>
         ),
