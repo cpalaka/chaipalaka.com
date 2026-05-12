@@ -9,8 +9,9 @@ specific issue and `PRD.md` for design context.
 - GitHub: `https://github.com/cpalaka/chaipalaka.com`
 - Default branch: `main`
 - Issues are tracked on GitHub. View with `gh issue view <N> --repo cpalaka/chaipalaka.com`.
-- `PRD.md` and `grillmedoc.md` are gitignored — they live locally only and
-  carry the design rationale; consult them for context but never commit them.
+- `PRD.md` and `grillmedoc.md` are committed to the repo and are the
+  authoritative design record. When a slice's design changes during a
+  session, update the relevant `PRD.md` section in the same PR.
 
 ## Session defaults — sandbox + auto-accept edits
 
