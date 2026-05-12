@@ -508,6 +508,64 @@ describe('PhysicsWorld tether', () => {
         expect(afterUntether).not.toBe(withTether1)
         expect(afterUntether).toHaveLength(0)
     })
+
+    test('getAnchor returns the registered surface point for ceiling and floor', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        // ceiling registered anchor is the top surface (y = 0 with no insets); floor is bottom surface
+        const ceiling = world.getAnchor(world.ceilingHandle)
+        expect(ceiling).toEqual({ x: 400, y: 0 })
+        const floor = world.getAnchor(world.floorHandle)
+        expect(floor).toEqual({ x: 400, y: 600 })
+    })
+
+    test('tether(..., anchorA) makes getTethers().parentPos reflect bodyPos + anchorA', () => {
+        // The bug fixed by #72: without anchorA, every ceiling tether's parentPos
+        // collapses to the ceiling's body centre. With anchorA, each rope originates
+        // above its own card's x — what StringLayer renders.
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const cardA = world.register({ x: 200, y: 150 }, { width: 80, height: 40 })
+        const cardB = world.register({ x: 600, y: 100 }, { width: 80, height: 40 })
+        // Each card's rope hangs straight from (ca.x, 0) — that's anchorA = (ca.x - ceilingBody.x, 0 - ceilingBody.y)
+        world.tether(world.ceilingHandle, cardA, 150, { x: 200 - ceilingPos.x, y: 0 - ceilingPos.y })
+        world.tether(world.ceilingHandle, cardB, 100, { x: 600 - ceilingPos.x, y: 0 - ceilingPos.y })
+        const views = world.getTethers()
+        expect(views).toHaveLength(2)
+        // World-space rope origins are distinct, not collapsed to ceiling centre
+        expect(views[0]!.parentPos.x).toBeCloseTo(200, 5)
+        expect(views[0]!.parentPos.y).toBeCloseTo(0, 5)
+        expect(views[1]!.parentPos.x).toBeCloseTo(600, 5)
+        expect(views[1]!.parentPos.y).toBeCloseTo(0, 5)
+    })
+
+    test('tether without anchorA keeps parentPos at parent body centre (card-to-card behaviour)', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const parent = world.register({ x: 300, y: 200 }, { width: 80, height: 40 })
+        const child = world.register({ x: 300, y: 400 }, { width: 80, height: 40 })
+        world.tether(parent, child, 200)
+        const view = world.getTethers()[0]!
+        expect(view.parentPos.x).toBeCloseTo(300, 5)
+        expect(view.parentPos.y).toBeCloseTo(200, 5)
+    })
+
+    test('tether with anchorA holds the child near the offset world point under gravity', () => {
+        // Pull-only rope: child at (200, 150), pointA at (200, 0), length = 150.
+        // Soft TETHER_STIFFNESS means equilibrium sits at length + small overshoot from gravity.
+        // Without anchorA, the rope would anchor at the ceiling body centre (400, -30) instead —
+        // the child would drift far right toward ~x=400 before the rope caught. This test pins x.
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const child = world.register({ x: 200, y: 150 }, { width: 80, height: 40 })
+        world.tether(world.ceilingHandle, child, 150, { x: 200 - ceilingPos.x, y: 0 - ceilingPos.y })
+        for (let i = 0; i < 300; i++) world.tick(FIXED_DT_MS)
+        const pos = world.getPosition(child)
+        // Without anchorA, horizontal drift would be ~200 (child pulled toward ceiling centre).
+        // With anchorA, rope hangs straight, drift should stay small.
+        expect(Math.abs(pos.x - 200)).toBeLessThan(20)
+        // Y settles below 150 due to gravity overshoot; rope keeps it bounded.
+        expect(pos.y).toBeGreaterThan(150)
+        expect(pos.y).toBeLessThan(220)
+    })
 })
 
 describe('PhysicsWorld linkBodies / unlinkBodies', () => {
