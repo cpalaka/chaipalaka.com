@@ -201,15 +201,32 @@ The frame bar is the persistent app-shell chrome. It replaces the original "cont
 
 ### Route transitions — `TransitionDirector`
 
-- **Hybrid model.** Not a single transition mechanism — the right tool per case:
-  - **Canvas → canvas:** physics-driven. Outgoing cards receive an exit impulse based on **navigation direction** (forward = up/back; back = down/forward; sibling = sideways). Incoming cards spawn offscreen and settle into anchors.
-  - **Shared-element morph (e.g., portfolio thumbnail → portfolio detail hero):** React 19 `<ViewTransition name>` matched across routes. The thumbnail "becomes" the hero; rest of the foreground does the standard physics exit/enter in parallel.
-  - **Card minimize ↔ restore (chip ↔ card):** FLIP morph driven by the Web Animations API. Capture source rect → set destination state → animate the inverse transform back to identity, ~340ms `cubic-bezier(0.4, 0, 0.2, 1)`. Drives both directions (card-to-chip on minimize, chip-to-card on restore).
+Designed 2026-05-12. Slice 21 ships T1/T2/T3 (cross-route); slice 21b ships T4 (within-page sections); slice 22 ships `shared-element-morph`.
+
+- **Hybrid mechanism per case.** Not a single transition system:
+  - **Canvas → canvas (route-level):** physics-driven via three primitives composed by `TransitionDirector`:
+    - `string-cut-drop` (decoupled exit, T1) — direct ceiling tethers are cut; chains fall as units under always-on gravity; balloons mirror by rising via buoyancy; phantom floor at `viewport.height + maxCardHeight + 100`; per-card cleanup at viewport-bottom with 1200ms ceiling.
+    - `pour-in-drop` (decoupled enter, T2) — cards spawn at `(layoutX, -cardHeight - stagger)` with downward impulse + slack tether already attached; chain-order stagger (~80ms per child) reads as "the chain is being lowered"; balloons enter from below; settle via tether tautness with intentional chain-ripple.
+    - `anchor-slide` (coupled, T3 horizontal in slice 21, T4 vertical in slice 21b) — each strung card's parent anchor is tween'd along `axis × sign` via existing `PhysicsWorld.setAnchor`; tether enforcement drags the card; one PhysicsWorld holds both card sets briefly during the ~700ms tween; destination-side wall removed for the duration.
+  - **Within-page section pagination (canvas):** the vertical presentation of `anchor-slide` (slice 21b). Hash-fragment routing (`#sN`); per-route opt-in via PageDef `sections` field; ceiling collision in sensor mode during T4 so cards pass through the visible top edge. Next/back are `kind: 'nav'` PhysicsCards strung with very short floor tethers.
+  - **Shared-element morph (slice 22, e.g., portfolio thumbnail → detail hero):** React 19 `<ViewTransition name>` as a fourth primitive (`shared-element-morph`) declared on an edge. Director implicitly composes it with default T1+T2 around it, auto-excluding the morphing pair. Browsers without `document.startViewTransition` fall back to plain T1+T2.
+  - **Card minimize ↔ restore (chip ↔ card):** FLIP morph via Web Animations API. Capture source rect → set destination state → animate the inverse transform back to identity, ~340ms `cubic-bezier(0.4, 0, 0.2, 1)`. (Shipped, slice 28.)
   - **Canvas ↔ plain mode:** instant (real document navigation via `<a>`).
   - **Plain ↔ plain:** instant.
-- **Direction tracking.** React Router doesn't expose nav direction; `TransitionDirector` compares history index across navigations. ~30 lines.
-- Public interface: `transition(from, to, direction)` orchestrates outgoing impulses, incoming spawns, and ViewTransition dispatch.
-- **Reduced-motion:** all transitions become ~150ms instant cross-fades; no impulses, no morphs.
+
+- **Dispatch is route-pair-keyed, not direction-keyed.** Each `PageDef` declares its own *decoupled* `exit` / `enter`; *coupled* transitions (single coordinated motion involving both old and new card sets) are declared in a separate edge table. Resolution order on route change: (1) edge match → coupled, (2) else `from.exit + to.enter` (decoupled, 200ms overlap), (3) else history-direction default (forward/back → T1+T2; sibling → `anchor-slide` horizontal).
+
+- **History-direction is a parameter, not the dispatch key.** Forward / back / sibling is computed from history index via `useNavigationType()` (~30 lines). Some transitions consume it (`anchor-slide` reads it for sign); others ignore it (T1/T2/T4 don't care).
+
+- **Card lifecycle is PhysicsWorld-mediated.** PhysicsWorld is the source of truth for card presence; route components register/unregister on mount/unmount. The director defers `unregister()` calls during a transition until exit motion completes. A `<PhysicsLayer>` mounted at app root holds rendered card DOM via React portal, so route subtree unmount does not destroy the visual until the handle is unregistered.
+
+- **Public interface.** `useTransitionDirector({ pageDefs, edges })` mounted at app root auto-wires on `useLocation`; `useTransitionContext().runTransition({ from, to })` as an escape hatch (mainly nav-card buttons in slice 21b).
+
+- **PageDef extensions:** `transitions?: { exit?, enter? }` (decoupled overrides), `siblingOrder?: 'left' | 'right'` (anchor-slide sibling fallback), and `sections?` (slice 21b — `mode: 'author' | 'auto-chain'`).
+
+- **Reduced-motion:** all transitions become ~150ms instant cross-fade; no impulses, no morphs, no `startViewTransition`. Live `matchMedia('(prefers-reduced-motion: reduce)')` listener flips behavior on toggle.
+
+- **Failure handling:** production gracefully aborts the transition and falls back to instant route-swap; dev (`import.meta.env.DEV`) throws so error boundaries surface broken transitions loudly during authoring.
 
 ### Backend — `APIServer`, `CacheLayer`, adapters
 
@@ -319,7 +336,7 @@ The bolded deep modules from the design pass — these are the ones where regres
 - **`PhysicsWorld`** — register/unregister round-trips; `setGravityDirection` correctly sets the gravity vector for all four cardinal directions; a body without a tether falls toward gravity and is caught by the floor/ceiling wall; `linkBodies` / `unlinkBodies` round-trips; impulse and velocity setters move the body in the expected direction; cascade-minimize subtree enumeration is correct.
 - **`CardLayout`** — pure function over content + viewport size + measurement input; assert grid positions for various breakpoints, content lengths, and card counts; assert that anchor positions are stable across re-renders with the same input.
 - **`Tether` / `StringLayer`** — tether is slack when card distance < string length and taut when at length; pull-only force applied correctly (no push force when slack); balloon buoyancy force magnitude matches heavy gravity magnitude at steady state; `StringLayer` bezier control points produce correct sag direction for slack tethers; cascade-minimize enumerates the full subtree.
-- **`TransitionDirector`** — given a from/to route pair and a direction, dispatches the correct sequence of impulses (forward → up; back → down; sibling → sideways); ViewTransition is dispatched only when both routes declare matching `name` props.
+- **`TransitionDirector`** — dispatch resolution order (edge table → PageDef `exit`/`enter` → history-direction default); history-direction classification (forward/back/sibling) from history index; `string-cut-drop` cuts only direct ceiling tethers and balloons rise symmetrically; `pour-in-drop` chain-order stagger; `anchor-slide` parent-anchor tween produces the expected position curve for both `axis: 'horizontal'` and `axis: 'vertical'`; reduced-motion path bypasses physics; orphaned-card portal survives route unmount; `shared-element-morph` dispatches `startViewTransition` only when both routes declare matching `<ViewTransition name>` and auto-excludes the morphing pair from T1/T2.
 - **`PretextRegistry`** — registered fonts are queryable; `measure()` returns dimensions consistent with what the same text would actually take in the DOM (verified once via a snapshot test, then trusted).
 
 **Backend:**
