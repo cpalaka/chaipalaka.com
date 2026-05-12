@@ -30,12 +30,6 @@
         "fallbackPng": "/fallbacks/particles-boids.png"
     },
     {
-        "id": "geometric",
-        "accentColor": "#a47bd0",
-        "fallbackColors": ["#1a0e1f", "#a47bd0"],
-        "fallbackPng": "/fallbacks/geometric.png"
-    },
-    {
         "id": "geometric-reaction-diffusion",
         "accentColor": "#d0b9df",
         "fallbackColors": ["#ffd6d6", "#d0b9df"],

@@ -26,11 +26,12 @@ function getGallery(): BackgroundGallery {
               }
             : undefined
 
-    // One-shot migration: 'particles' was the old placeholder id from slice 14.
-    // Redirect returning visitors to the new starfield scene rather than
-    // falling back silently to flow-shader.
-    if (storage?.getItem(STORAGE_KEY) === 'particles') {
-        storage.setItem(STORAGE_KEY, 'particles-starfield')
+    // One-shot migrations: redirect retired placeholder ids to their replacements.
+    const persisted = storage?.getItem(STORAGE_KEY)
+    if (persisted === 'particles') {
+        storage!.setItem(STORAGE_KEY, 'particles-starfield')
+    } else if (persisted === 'geometric') {
+        storage!.setItem(STORAGE_KEY, 'geometric-reaction-diffusion')
     }
 
     const root =
