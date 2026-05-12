@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest'
 import { render, cleanup, screen } from '@testing-library/react'
 import { PhysicsProvider } from './PhysicsContext'
 import { PhysicsPage } from './PhysicsPage'
+import { PhysicsLayer } from '../transitions/PhysicsLayer'
 import type { PageDef } from './PageDef'
 
 const pageDef: PageDef = {
@@ -21,6 +22,7 @@ describe('PhysicsPage', () => {
     test('renders one DOM card per spec', () => {
         render(
             <PhysicsProvider>
+                <PhysicsLayer />
                 <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
             </PhysicsProvider>,
         )

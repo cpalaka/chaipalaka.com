@@ -254,6 +254,12 @@ export class PhysicsWorld {
         }
     }
 
+    getVelocity(handle: PhysicsHandle): Vec2 {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return { x: reg.body.velocity.x, y: reg.body.velocity.y }
+    }
+
     applyImpulse(handle: PhysicsHandle, impulse: Vec2): void {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
@@ -465,6 +471,29 @@ export class PhysicsWorld {
     subscribeTetherSetChange(cb: () => void): () => void {
         this.tetherChangeListeners.add(cb)
         return () => this.tetherChangeListeners.delete(cb)
+    }
+
+    listTetherRecords(): Array<{
+        handle: TetherHandle
+        parent: PhysicsHandle
+        child: PhysicsHandle
+        length: number
+    }> {
+        const out: Array<{
+            handle: TetherHandle
+            parent: PhysicsHandle
+            child: PhysicsHandle
+            length: number
+        }> = []
+        for (const [handle, rec] of this.tethers) {
+            out.push({
+                handle,
+                parent: rec.parent,
+                child: rec.child,
+                length: rec.length,
+            })
+        }
+        return out
     }
 
     setSensor(handle: PhysicsHandle, isSensor: boolean): void {
