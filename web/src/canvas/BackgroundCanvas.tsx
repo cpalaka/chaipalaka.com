@@ -11,6 +11,8 @@ const sceneLoaders: Record<string, () => Promise<unknown>> = {
     particles: () => import('./scenes/particles'),
     'particles-starfield': () => import('./scenes/particles-starfield'),
     'particles-cursor': () => import('./scenes/particles-cursor'),
+    'particles-flow': () => import('./scenes/particles-flow'),
+    'particles-boids': () => import('./scenes/particles-boids'),
     geometric: () => import('./scenes/geometric'),
     'audio-reactive': () => import('./scenes/audio-reactive'),
 }
