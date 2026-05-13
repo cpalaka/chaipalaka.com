@@ -11,8 +11,10 @@ afterEach(() => {
 })
 
 function fireRealPointerDown(el: Element) {
-    const ev = new Event('pointerdown', { bubbles: true, cancelable: true }) as Event &
-        { clientX: number; clientY: number; pointerId: number }
+    const ev = new Event('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+    }) as Event & { clientX: number; clientY: number; pointerId: number }
     ev.clientX = 50
     ev.clientY = 50
     ev.pointerId = 1
@@ -41,7 +43,9 @@ describe('PhysicsCard — draggable prop', () => {
                 anchor={{ x: 100, y: 100 }}
             />,
         )
-        const article = container.querySelector('article.physics-card') as HTMLElement
+        const article = container.querySelector(
+            'article.physics-card',
+        ) as HTMLElement
         expect(article).toBeTruthy()
         article.setPointerCapture = () => {}
         fireRealPointerDown(article)
@@ -76,14 +80,12 @@ describe('PhysicsCard — draggable prop', () => {
             await new Promise((r) => requestAnimationFrame(() => r(null)))
         })
         const world = captured! as PhysicsWorld
-        const records = world.listTetherRecords()
+        const records = world.tether.records()
         // One tether to ceiling, one to floor — both share the same child
         // body but use different parents.
         expect(records).toHaveLength(2)
         const parents = records.map((r) => r.parent).sort()
-        expect(parents).toEqual(
-            [world.ceilingHandle, world.floorHandle].sort(),
-        )
+        expect(parents).toEqual([world.ceilingHandle, world.floorHandle].sort())
     })
 
     test('draggable={false} does NOT set cursor to grabbing on pointerdown', () => {
@@ -97,7 +99,9 @@ describe('PhysicsCard — draggable prop', () => {
                 draggable={false}
             />,
         )
-        const article = container.querySelector('article.physics-card') as HTMLElement
+        const article = container.querySelector(
+            'article.physics-card',
+        ) as HTMLElement
         expect(article).toBeTruthy()
         article.setPointerCapture = () => {}
         fireRealPointerDown(article)

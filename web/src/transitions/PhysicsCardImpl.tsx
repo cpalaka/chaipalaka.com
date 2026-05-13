@@ -6,10 +6,8 @@ import {
 } from '../canvas/useMinimizedRegistry'
 import { flipMorph } from '../canvas/flip'
 import { wireTetherFor } from '../physics/PhysicsCard'
-import type {
-    PhysicsHandle,
-    TetherHandle,
-} from '../physics/PhysicsWorld'
+import type { PhysicsHandle } from '../physics/PhysicsWorld'
+import type { TetherHandle } from '../physics/Tether'
 import type { PhysicsCardEntry } from './CardRegistry'
 import '../physics/PhysicsCard.css'
 
@@ -230,11 +228,11 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
             cancelAnimationFrame(rafId)
             cancelAnimationFrame(trailRafId)
             if (tetherHandleRef.current !== null) {
-                world.untether(tetherHandleRef.current)
+                world.tether.remove(tetherHandleRef.current)
                 tetherHandleRef.current = null
             }
             if (trailTetherHandleRef.current !== null) {
-                world.untether(trailTetherHandleRef.current)
+                world.tether.remove(trailTetherHandleRef.current)
                 trailTetherHandleRef.current = null
             }
             world.unregister(handle)
@@ -245,13 +243,23 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                 window.removeEventListener('pointerup', onPointerUp)
             }
         }
-    }, [world, id, width, height, isMinimized, draggable, parent, trail, buoyancy])
+    }, [
+        world,
+        id,
+        width,
+        height,
+        isMinimized,
+        draggable,
+        parent,
+        trail,
+        buoyancy,
+    ])
 
     useEffect(() => {
         if (handleRef.current === null) return
         world.setAnchor(handleRef.current, anchor)
         if (tetherHandleRef.current !== null && parent) {
-            world.untether(tetherHandleRef.current)
+            world.tether.remove(tetherHandleRef.current)
             tetherHandleRef.current = null
             const resolved = resolveParent(world, parent)
             if (resolved.handle != null) {
@@ -265,7 +273,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
             }
         }
         if (trailTetherHandleRef.current !== null && trail) {
-            world.untether(trailTetherHandleRef.current)
+            world.tether.remove(trailTetherHandleRef.current)
             trailTetherHandleRef.current = null
             const resolved = resolveParent(world, trail)
             if (resolved.handle != null) {

@@ -24,8 +24,18 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         const step = pourInDrop(
             world,
             [
-                { id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 0 },
-                { id: 'b', layoutAnchor: { x: 500, y: 300 }, height: 120, staggerMs: 1000 },
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 0,
+                },
+                {
+                    id: 'b',
+                    layoutAnchor: { x: 500, y: 300 },
+                    height: 120,
+                    staggerMs: 1000,
+                },
             ],
             { viewport, hardCeilingMs: 5000 },
         )
@@ -54,8 +64,18 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         const step = pourInDrop(
             world,
             [
-                { id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 0 },
-                { id: 'b', layoutAnchor: { x: 500, y: 300 }, height: 120, staggerMs: 200 },
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 0,
+                },
+                {
+                    id: 'b',
+                    layoutAnchor: { x: 500, y: 300 },
+                    height: 120,
+                    staggerMs: 200,
+                },
             ],
             { viewport, hardCeilingMs: 5000 },
         )
@@ -85,7 +105,14 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         const tweenDurationMs = 600
         const step = pourInDrop(
             world,
-            [{ id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 0 }],
+            [
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 0,
+                },
+            ],
             { viewport, tweenDurationMs, hardCeilingMs: 5000 },
         )
 
@@ -116,24 +143,31 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
             { x: 200, y: 200 },
             { width: 240, height: 120 },
         )
-        world.tether(world.ceilingHandle, a, 200, { x: 200, y: 0 })
-        expect(world.listTetherRecords()).toHaveLength(1)
+        world.tether.add(world.ceilingHandle, a, 200, { x: 200, y: 0 })
+        expect(world.tether.records()).toHaveLength(1)
 
         const tweenDurationMs = 200
         const step = pourInDrop(
             world,
-            [{ id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 0 }],
+            [
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 0,
+                },
+            ],
             { viewport, tweenDurationMs, hardCeilingMs: 5000 },
         )
 
         // Start: tether is untethered for the duration of the tween.
         step(0)
-        expect(world.listTetherRecords()).toHaveLength(0)
+        expect(world.tether.records()).toHaveLength(0)
 
         // Finish the tween.
         step(tweenDurationMs)
         // Body is at its anchor, velocity zero, tether re-wired with same params.
-        const after = world.listTetherRecords()
+        const after = world.tether.records()
         expect(after).toHaveLength(1)
         expect(after[0]?.parent).toBe(world.ceilingHandle)
         expect(after[0]?.child).toBe(a)
@@ -149,7 +183,14 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
 
         const step = pourInDrop(
             world,
-            [{ id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 0 }],
+            [
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 0,
+                },
+            ],
             { viewport, hardCeilingMs: 100 },
         )
 
@@ -171,14 +212,21 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
             { x: 200, y: 200 },
             { width: 240, height: 120 },
         )
-        world.tether(world.ceilingHandle, a, 200, { x: 200, y: 0 })
+        world.tether.add(world.ceilingHandle, a, 200, { x: 200, y: 0 })
 
         // staggerMs is past the hard ceiling — the entry should never start
         // its tween, but the primitive must still leave the world in a valid
         // state (tether intact, body unstuck).
         const step = pourInDrop(
             world,
-            [{ id: 'a', layoutAnchor: { x: 200, y: 200 }, height: 120, staggerMs: 500 }],
+            [
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 200, y: 200 },
+                    height: 120,
+                    staggerMs: 500,
+                },
+            ],
             { viewport, hardCeilingMs: 100 },
         )
 
@@ -190,6 +238,6 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         }
         expect(done).toBe(true)
         // Tether should still be there (or have been re-wired).
-        expect(world.listTetherRecords()).toHaveLength(1)
+        expect(world.tether.records()).toHaveLength(1)
     })
 })

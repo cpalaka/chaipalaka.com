@@ -1,5 +1,10 @@
 import { describe, test, expect } from 'vitest'
-import { booksAnchor, nowPlayingAnchor, filmsAnchor, activityAnchor } from './Lifelog'
+import {
+    booksAnchor,
+    nowPlayingAnchor,
+    filmsAnchor,
+    activityAnchor,
+} from './Lifelog'
 import { PhysicsWorld } from '../physics/PhysicsWorld'
 import { wireTetherFor } from '../physics/PhysicsCard'
 
@@ -24,16 +29,28 @@ describe('Lifelog ceiling tethers — issue #72 regression', () => {
     test('each ceiling-strung card has a distinct rope origin matching its own anchor.x', () => {
         const world = new PhysicsWorld({ viewport })
         const cards = [
-            { anchor: booksAnchor(viewport), size: { width: 320, height: 280 } },
-            { anchor: nowPlayingAnchor(viewport), size: { width: 280, height: 180 } },
-            { anchor: filmsAnchor(viewport), size: { width: 320, height: 320 } },
-            { anchor: activityAnchor(viewport), size: { width: 280, height: 360 } },
+            {
+                anchor: booksAnchor(viewport),
+                size: { width: 320, height: 280 },
+            },
+            {
+                anchor: nowPlayingAnchor(viewport),
+                size: { width: 280, height: 180 },
+            },
+            {
+                anchor: filmsAnchor(viewport),
+                size: { width: 320, height: 320 },
+            },
+            {
+                anchor: activityAnchor(viewport),
+                size: { width: 280, height: 360 },
+            },
         ]
-        for (const c of cards) {
-            const h = world.register(c.anchor, c.size)
+        cards.forEach((c, i) => {
+            const h = world.registerById(`card-${i}`, c.anchor, c.size)
             wireTetherFor(world, world.ceilingHandle, 'ceiling', h, c.anchor)
-        }
-        const views = world.getTethers()
+        })
+        const views = world.tether.list()
         expect(views).toHaveLength(4)
         // Each rope origin sits at (cardAnchor.x, 0) — distinct x per card, all at the ceiling surface.
         for (let i = 0; i < views.length; i++) {

@@ -24,14 +24,14 @@ describe('stringCutDrop (T1)', () => {
             { x: 400, y: 200 },
             { width: 200, height: 100 },
         )
-        world.tether(world.ceilingHandle, card, 150, { x: 0, y: 0 })
-        expect(world.listTetherRecords()).toHaveLength(1)
+        world.tether.add(world.ceilingHandle, card, 150, { x: 0, y: 0 })
+        expect(world.tether.records()).toHaveLength(1)
 
         const step = stringCutDrop(world, ['a'], { viewport })
 
         // First step performs setup (cuts tether)
         step(0)
-        expect(world.listTetherRecords()).toHaveLength(0)
+        expect(world.tether.records()).toHaveLength(0)
 
         const { done } = runUntil(step, world)
         expect(done).toBe(true)
@@ -52,13 +52,13 @@ describe('stringCutDrop (T1)', () => {
             { x: 400, y: 360 },
             { width: 200, height: 100 },
         )
-        world.tether(world.ceilingHandle, parent, 150, { x: 0, y: 0 })
-        world.tether(parent, child, 160)
-        expect(world.listTetherRecords()).toHaveLength(2)
+        world.tether.add(world.ceilingHandle, parent, 150, { x: 0, y: 0 })
+        world.tether.add(parent, child, 160)
+        expect(world.tether.records()).toHaveLength(2)
 
         const step = stringCutDrop(world, ['p', 'c'], { viewport })
         step(0)
-        const remaining = world.listTetherRecords()
+        const remaining = world.tether.records()
         expect(remaining).toHaveLength(1)
         expect(remaining[0]?.parent).toBe(parent)
         expect(remaining[0]?.child).toBe(child)
@@ -73,12 +73,15 @@ describe('stringCutDrop (T1)', () => {
             { width: 200, height: 100 },
         )
         world.setBuoyancy(balloon, 'balloon')
-        world.tether(world.floorHandle, balloon, 150, { x: 0, y: 0 })
+        world.tether.add(world.floorHandle, balloon, 150, { x: 0, y: 0 })
         const startY = world.getPosition(balloon).y
 
-        const step = stringCutDrop(world, ['b'], { viewport, hardCeilingMs: 5000 })
+        const step = stringCutDrop(world, ['b'], {
+            viewport,
+            hardCeilingMs: 5000,
+        })
         step(0)
-        expect(world.listTetherRecords()).toHaveLength(0)
+        expect(world.tether.records()).toHaveLength(0)
 
         const { done } = runUntil(step, world)
         expect(done).toBe(true)
@@ -142,13 +145,13 @@ describe('stringCutDrop (T1)', () => {
             { x: 600, y: 200 },
             { width: 200, height: 100 },
         )
-        world.tether(world.ceilingHandle, exiting, 150, { x: 0, y: 0 })
-        world.tether(world.ceilingHandle, incoming, 150, { x: 0, y: 0 })
+        world.tether.add(world.ceilingHandle, exiting, 150, { x: 0, y: 0 })
+        world.tether.add(world.ceilingHandle, incoming, 150, { x: 0, y: 0 })
 
         const step = stringCutDrop(world, ['old'], { viewport })
         step(0)
 
-        const remaining = world.listTetherRecords()
+        const remaining = world.tether.records()
         expect(remaining).toHaveLength(1)
         expect(remaining[0]?.child).toBe(incoming)
     })
@@ -167,8 +170,8 @@ describe('stringCutDrop (T1)', () => {
             { width: 200, height: 100 },
         )
         world.setBuoyancy(balloon, 'balloon')
-        world.tether(world.ceilingHandle, heavy, 150, { x: 0, y: 0 })
-        world.tether(world.floorHandle, balloon, 150, { x: 0, y: 0 })
+        world.tether.add(world.ceilingHandle, heavy, 150, { x: 0, y: 0 })
+        world.tether.add(world.floorHandle, balloon, 150, { x: 0, y: 0 })
 
         const step = stringCutDrop(world, ['h', 'b'], { viewport })
         step(0)

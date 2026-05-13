@@ -89,14 +89,14 @@ export function pourInDrop(
             if (handle === undefined) continue
 
             let captured: CapturedTether | undefined
-            for (const t of world.listTetherRecords()) {
+            for (const t of world.tether.records()) {
                 if (t.child !== handle) continue
                 captured = {
                     parent: t.parent,
                     length: t.length,
                     ...(t.anchorA ? { anchorA: { ...t.anchorA } } : {}),
                 }
-                world.untether(t.handle)
+                world.tether.remove(t.handle)
                 break
             }
 
@@ -127,7 +127,7 @@ export function pourInDrop(
         world.setDragging(s.handle, false)
         world.setVelocity(s.handle, { x: 0, y: 0 })
         if (s.captured) {
-            world.tether(
+            world.tether.add(
                 s.captured.parent,
                 s.handle,
                 s.captured.length,
@@ -151,10 +151,7 @@ export function pourInDrop(
             if (elapsedMs < entry.staggerMs) return
             s.tweenStartMs = entry.staggerMs
         }
-        const t = Math.min(
-            (elapsedMs - s.tweenStartMs) / tweenDurationMs,
-            1,
-        )
+        const t = Math.min((elapsedMs - s.tweenStartMs) / tweenDurationMs, 1)
         if (t >= 1) {
             finalize(entry, s)
             return

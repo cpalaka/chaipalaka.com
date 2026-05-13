@@ -16,7 +16,9 @@ vi.mock('../canvas/flip', () => ({
 import { flipMorph } from '../canvas/flip'
 
 // Helper: build a PhysicsCardEntry with sensible defaults.
-function makeEntry(overrides: Partial<PhysicsCardEntry> = {}): PhysicsCardEntry {
+function makeEntry(
+    overrides: Partial<PhysicsCardEntry> = {},
+): PhysicsCardEntry {
     return {
         id: overrides.id ?? 'card-1',
         parent: overrides.parent ?? null,
@@ -35,8 +37,14 @@ function makeEntry(overrides: Partial<PhysicsCardEntry> = {}): PhysicsCardEntry 
     }
 }
 
-function fireRealPointerDown(el: Element, opts: { onCardHeader?: boolean } = {}) {
-    const ev = new Event('pointerdown', { bubbles: true, cancelable: true }) as Event & {
+function fireRealPointerDown(
+    el: Element,
+    opts: { onCardHeader?: boolean } = {},
+) {
+    const ev = new Event('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+    }) as Event & {
         clientX: number
         clientY: number
         pointerId: number
@@ -271,8 +279,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('tether-ceil')!
-        const records = world
-            .listTetherRecords()
+        const records = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(records).toHaveLength(1)
         expect(records[0]!.parent).toBe(world.ceilingHandle)
@@ -284,8 +292,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('tether-floor')!
-        const records = world
-            .listTetherRecords()
+        const records = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(records).toHaveLength(1)
         expect(records[0]!.parent).toBe(world.floorHandle)
@@ -308,8 +316,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         const world = getWorld()
         const parentHandle = world.getHandleById('parent-card')!
         const childHandle = world.getHandleById('child-card')!
-        const childRecords = world
-            .listTetherRecords()
+        const childRecords = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(childRecords).toHaveLength(1)
         expect(childRecords[0]!.parent).toBe(parentHandle)
@@ -327,8 +335,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('lonely-child')!
-        const childRecords = world
-            .listTetherRecords()
+        const childRecords = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(childRecords).toHaveLength(0)
         expect(warnSpy).toHaveBeenCalled()
@@ -345,8 +353,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('dual-tether')!
-        const records = world
-            .listTetherRecords()
+        const records = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(records).toHaveLength(2)
         const parents = records.map((r) => r.parent).sort()
@@ -383,16 +391,14 @@ describe('PhysicsCardImpl — anchor changes', () => {
         const world = getWorld()
         const setAnchorSpy = vi.spyOn(world, 'setAnchor')
         const childHandle = world.getHandleById('anchor-card')!
-        const recordsBefore = world
-            .listTetherRecords()
+        const recordsBefore = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         expect(recordsBefore).toHaveLength(1)
         const oldTetherHandle = recordsBefore[0]!.handle
 
         await act(async () => {
-            fireEvent.click(
-                container.querySelector('[data-testid="bump"]')!,
-            )
+            fireEvent.click(container.querySelector('[data-testid="bump"]')!)
         })
         await flushRaf()
 
@@ -400,8 +406,8 @@ describe('PhysicsCardImpl — anchor changes', () => {
             x: 250,
             y: 250,
         })
-        const recordsAfter = world
-            .listTetherRecords()
+        const recordsAfter = world.tether
+            .records()
             .filter((r) => r.child === childHandle)
         // Still exactly one tether to the ceiling, but a new handle (old one
         // was untethered + a fresh one wired).
@@ -436,8 +442,8 @@ describe('PhysicsCardImpl — unmount cleanup', () => {
         await flushRaf()
         expect(world!.getHandleById('unmount-me')).toBeTruthy()
         expect(
-            world!
-                .listTetherRecords()
+            world!.tether
+                .records()
                 .some((r) => r.child === world!.getHandleById('unmount-me')!),
         ).toBe(true)
 
@@ -451,7 +457,7 @@ describe('PhysicsCardImpl — unmount cleanup', () => {
         )
         await flushRaf()
         expect(world!.getHandleById('unmount-me')).toBeUndefined()
-        expect(world!.listTetherRecords()).toHaveLength(0)
+        expect(world!.tether.records()).toHaveLength(0)
     })
 })
 
@@ -516,8 +522,8 @@ describe('PhysicsCardImpl — restore from chip', () => {
         // consumed — advance one frame.
         await flushRaf()
         expect(flipMorph).toHaveBeenCalledTimes(1)
-        const callArgs = (flipMorph as unknown as ReturnType<typeof vi.fn>)
-            .mock.calls[0]!
+        const callArgs = (flipMorph as unknown as ReturnType<typeof vi.fn>).mock
+            .calls[0]!
         expect(callArgs[0]).toBe(fromChipRect)
         expect(callArgs[1]).toBe(article)
         expect(callArgs[2]).toEqual(
