@@ -126,6 +126,66 @@ describe('dispatch', () => {
         }
     })
 
+    test('hash-section: same path with sections → coupled anchor-slide vertical w/ ceiling sensor', () => {
+        const resolve = resolverOf({
+            '/blog': { ...blogDef, sections: { mode: 'auto-chain' } },
+        })
+
+        const plan = dispatch('/blog', '/blog#s2', resolve, {}, 'forward')
+
+        expect(plan.kind).toBe('coupled')
+        if (plan.kind === 'coupled') {
+            expect(plan.config.primitive).toBe('anchor-slide')
+            expect(plan.config.axis).toBe('vertical')
+            expect(plan.config.sign).toBe(1)
+            expect(plan.config.sensorEdges).toBe('ceiling')
+        }
+    })
+
+    test('hash-section: back direction yields sign=-1 and floor sensor', () => {
+        const resolve = resolverOf({
+            '/blog': { ...blogDef, sections: { mode: 'auto-chain' } },
+        })
+
+        const plan = dispatch('/blog#s3', '/blog#s2', resolve, {}, 'back')
+
+        expect(plan.kind).toBe('coupled')
+        if (plan.kind === 'coupled') {
+            expect(plan.config.axis).toBe('vertical')
+            expect(plan.config.sign).toBe(-1)
+            expect(plan.config.sensorEdges).toBe('floor')
+        }
+    })
+
+    test('hash-section: pageDef without sections falls through to default', () => {
+        const resolve = resolverOf({ '/blog': blogDef })
+
+        // Same pathname, but no sections declared → not a section transition.
+        // Falls through to history-direction default.
+        const plan = dispatch('/blog', '/blog#s2', resolve, {}, 'forward')
+
+        // With no sections, same-path transitions are unusual; the safest
+        // fallback is the default decoupled T1+T2 (or whatever the regular
+        // dispatch would produce). Just assert it's NOT a vertical anchor-slide
+        // — the section branch did not fire.
+        if (plan.kind === 'coupled') {
+            expect(plan.config.axis).not.toBe('vertical')
+        }
+    })
+
+    test('hash-section: different pathnames bypass the section branch', () => {
+        const resolve = resolverOf({
+            '/blog': { ...blogDef, sections: { mode: 'auto-chain' } },
+            '/a': homeDef,
+        })
+
+        const plan = dispatch('/a', '/blog#s2', resolve, {}, 'forward')
+
+        // Cross-route nav, even with a hash on the target, should not invoke
+        // the section branch.
+        expect(plan.kind).toBe('decoupled')
+    })
+
     test('resolver is consulted by path (not a pre-built map snapshot)', () => {
         // Simulates runtime registration: the resolver returns a PageDef that
         // wasn't known at director-construction time.
