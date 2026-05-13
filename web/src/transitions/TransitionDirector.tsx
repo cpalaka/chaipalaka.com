@@ -11,7 +11,13 @@ import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
 import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
-import { dispatch, type EdgeTransitions, type TransitionPlan } from './dispatch'
+import {
+    dispatch,
+    type EdgeTransitions,
+    type PageDefResolver,
+    type TransitionPlan,
+} from './dispatch'
+import { usePageDefRegistry } from './PageDefRegistry'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import { stringCutDrop } from './primitives/stringCutDrop'
 import { pourInDrop, type PourInDropEntry } from './primitives/pourInDrop'
@@ -87,7 +93,16 @@ export function TransitionDirector({
     const navType = useNavigationType() as NavigationType
     const reduced = usePrefersReducedMotion()
     const registry = useCardRegistry()
+    const pageDefRegistry = usePageDefRegistry()
     const world = usePhysicsWorld()
+
+    // Runtime registrations (via useRegisterPageDef) take precedence over the
+    // static map. This is how dynamic routes (/blog/:slug, /stuff/flash/:slug)
+    // participate in dispatch.
+    const resolvePageDef: PageDefResolver = useCallback(
+        (path: string) => pageDefRegistry.resolve(path) ?? pageDefs[path],
+        [pageDefRegistry, pageDefs],
+    )
 
     const prevLocationRef = useRef<Location | null>(null)
     const reducedRef = useRef(reduced)
@@ -156,7 +171,7 @@ export function TransitionDirector({
 
     const dispatchTransition = useCallback(
         (fromPath: string, toPath: string, direction: ReturnType<typeof classifyDirection>) => {
-            const plan = dispatch(fromPath, toPath, pageDefs, edges, direction)
+            const plan = dispatch(fromPath, toPath, resolvePageDef, edges, direction)
             return executeTransition(fromPath, toPath, plan).catch((err) => {
                 if (import.meta.env.DEV) throw err
                 console.warn(
@@ -168,7 +183,7 @@ export function TransitionDirector({
                 }
             })
         },
-        [pageDefs, edges, executeTransition, registry],
+        [resolvePageDef, edges, executeTransition, registry],
     )
 
     // Phase 1: BEFORE old route's cleanups, mark every currently-active card

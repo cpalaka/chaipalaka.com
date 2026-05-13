@@ -5,6 +5,7 @@ import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { TransitionDirector } from './TransitionDirector'
 import { PhysicsLayer } from './PhysicsLayer'
+import { PageDefRegistryProvider } from './PageDefRegistry'
 import { PhysicsCard } from '../physics/PhysicsCard'
 import type { PageDef } from '../physics/PageDef'
 
@@ -80,15 +81,17 @@ function Harness() {
     return (
         <MemoryRouter initialEntries={['/a']}>
             <PhysicsProvider>
-                <TransitionDirector pageDefs={pageDefs}>
-                    <PhysicsLayer />
-                    <NavigateButton to="/a" label="go-a" />
-                    <NavigateButton to="/b" label="go-b" />
-                    <Routes>
-                        <Route path="/a" element={<RouteA />} />
-                        <Route path="/b" element={<RouteB />} />
-                    </Routes>
-                </TransitionDirector>
+                <PageDefRegistryProvider>
+                    <TransitionDirector pageDefs={pageDefs}>
+                        <PhysicsLayer />
+                        <NavigateButton to="/a" label="go-a" />
+                        <NavigateButton to="/b" label="go-b" />
+                        <Routes>
+                            <Route path="/a" element={<RouteA />} />
+                            <Route path="/b" element={<RouteB />} />
+                        </Routes>
+                    </TransitionDirector>
+                </PageDefRegistryProvider>
             </PhysicsProvider>
         </MemoryRouter>
     )
@@ -123,13 +126,15 @@ describe('TransitionDirector — provider mount', () => {
             return (
                 <MemoryRouter initialEntries={[path]} key={path}>
                     <PhysicsProvider>
-                        <TransitionDirector pageDefs={pageDefs}>
-                            <PhysicsLayer />
-                            <Routes>
-                                <Route path="/a" element={<RouteA />} />
-                                <Route path="/b" element={<RouteB />} />
-                            </Routes>
-                        </TransitionDirector>
+                        <PageDefRegistryProvider>
+                            <TransitionDirector pageDefs={pageDefs}>
+                                <PhysicsLayer />
+                                <Routes>
+                                    <Route path="/a" element={<RouteA />} />
+                                    <Route path="/b" element={<RouteB />} />
+                                </Routes>
+                            </TransitionDirector>
+                        </PageDefRegistryProvider>
                     </PhysicsProvider>
                 </MemoryRouter>
             )

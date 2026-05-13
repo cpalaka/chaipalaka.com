@@ -28,6 +28,8 @@ export interface EdgeConfig {
 
 export type EdgeTransitions = Record<string, EdgeConfig>
 
+export type PageDefResolver = (path: string) => PageDef | undefined
+
 const DEFAULT_DECOUPLED_OVERLAP_MS = 200
 const DEFAULT_ANCHOR_SLIDE_DURATION_MS = 700
 
@@ -38,7 +40,7 @@ function signFromDirection(direction: Direction): 1 | -1 {
 export function dispatch(
     from: string,
     to: string,
-    pageDefs: Record<string, PageDef>,
+    resolvePageDef: PageDefResolver,
     edges: EdgeTransitions,
     direction: Direction,
 ): TransitionPlan {
@@ -56,8 +58,10 @@ export function dispatch(
         }
     }
 
-    const fromExit = pageDefs[from]?.transitions?.exit
-    const toEnter = pageDefs[to]?.transitions?.enter
+    const fromDef = resolvePageDef(from)
+    const toDef = resolvePageDef(to)
+    const fromExit = fromDef?.transitions?.exit
+    const toEnter = toDef?.transitions?.enter
     if (fromExit || toEnter) {
         return {
             kind: 'decoupled',
@@ -68,7 +72,7 @@ export function dispatch(
     }
 
     if (direction === 'sibling') {
-        const siblingOrder = pageDefs[to]?.siblingOrder
+        const siblingOrder = toDef?.siblingOrder
         const sign: 1 | -1 = siblingOrder === 'left' ? -1 : 1
         return {
             kind: 'coupled',
