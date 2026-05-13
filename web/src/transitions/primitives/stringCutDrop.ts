@@ -1,4 +1,9 @@
-import type { PhysicsHandle, PhysicsWorld, Vec2, Viewport } from '../../physics/PhysicsWorld'
+import type {
+    PhysicsHandle,
+    PhysicsWorld,
+    Vec2,
+    Viewport,
+} from '../../physics/PhysicsWorld'
 import type { PrimitiveStep } from './types'
 
 export interface StringCutDropOpts {
@@ -49,13 +54,13 @@ export function stringCutDrop(
             // Cut only tethers belonging to *exiting* cards whose parent is the
             // ceiling or floor. Leaves new (incoming) cards' tethers intact so
             // they remain strung during the transition.
-            for (const t of world.listTetherRecords()) {
+            for (const t of world.tether.records()) {
                 if (
                     (t.parent === world.ceilingHandle ||
                         t.parent === world.floorHandle) &&
                     exitingHandles.has(t.child)
                 ) {
-                    world.untether(t.handle)
+                    world.tether.remove(t.handle)
                 }
             }
             // Phantom floor: push beyond viewport so exiting cards can fall
