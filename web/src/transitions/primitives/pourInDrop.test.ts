@@ -1,6 +1,9 @@
 import { describe, test, expect } from 'vitest'
 import { PhysicsWorld } from '../../physics/PhysicsWorld'
 import { pourInDrop } from './pourInDrop'
+import type { CardActivator } from '../CardRegistry'
+
+const noopActivator: CardActivator = { activate: () => {} }
 
 const FIXED_DT_MS = 1000 / 60
 
@@ -23,6 +26,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
 
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',
@@ -63,6 +67,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
 
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',
@@ -105,6 +110,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         const tweenDurationMs = 600
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',
@@ -149,6 +155,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         const tweenDurationMs = 200
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',
@@ -183,6 +190,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
 
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',
@@ -204,6 +212,64 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         expect(elapsed).toBeGreaterThanOrEqual(100)
     })
 
+    test('lifecycle: activate(id) is called after setPosition for each entry (I-1)', () => {
+        const calls: string[] = []
+        const handles: Record<string, { id: string }> = {
+            a: { id: 'a' },
+            b: { id: 'b' },
+        }
+        const idOf = (h: { id: string } | undefined) => h?.id ?? '?'
+        const stubWorld = {
+            getHandleById: (id: string) => handles[id],
+            tether: {
+                records: () => [],
+                remove: () => {},
+                add: () => {},
+            },
+            setDragging: () => {},
+            setPosition: (h: { id: string }) => {
+                calls.push(`setPosition:${idOf(h)}`)
+            },
+            setVelocity: () => {},
+            has: () => true,
+        }
+        const activator: CardActivator = {
+            activate: (id: string) => {
+                calls.push(`activate:${id}`)
+            },
+        }
+        const step = pourInDrop(
+            stubWorld as unknown as Parameters<typeof pourInDrop>[0],
+            activator,
+            [
+                {
+                    id: 'a',
+                    layoutAnchor: { x: 100, y: 200 },
+                    height: 80,
+                    staggerMs: 0,
+                },
+                {
+                    id: 'b',
+                    layoutAnchor: { x: 300, y: 200 },
+                    height: 80,
+                    staggerMs: 0,
+                },
+            ],
+            { viewport: { width: 800, height: 600 }, hardCeilingMs: 5000 },
+        )
+        step(0)
+
+        // I-1: activate must come AFTER setPosition for each entry — the body
+        // is at its authoritative pre-spawn position by the time the article
+        // becomes visible.
+        for (const id of ['a', 'b']) {
+            const setPosIdx = calls.indexOf(`setPosition:${id}`)
+            const activateIdx = calls.indexOf(`activate:${id}`)
+            expect(setPosIdx).toBeGreaterThanOrEqual(0)
+            expect(activateIdx).toBeGreaterThan(setPosIdx)
+        }
+    })
+
     test('hard-ceiling fallback restores tethers for entries that never started', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
@@ -219,6 +285,7 @@ describe('pourInDrop (T2 — kinematic tween)', () => {
         // state (tether intact, body unstuck).
         const step = pourInDrop(
             world,
+            noopActivator,
             [
                 {
                     id: 'a',

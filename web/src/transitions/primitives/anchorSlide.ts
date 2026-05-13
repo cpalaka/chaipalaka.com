@@ -4,6 +4,7 @@ import type {
     Vec2,
     Viewport,
 } from '../../physics/PhysicsWorld'
+import type { CardActivator } from '../CardRegistry'
 import type { PrimitiveStep } from './types'
 
 export interface AnchorSlideTargets {
@@ -62,6 +63,7 @@ function captureAndUntether(
 
 export function anchorSlide(
     world: PhysicsWorld,
+    activator: CardActivator,
     targets: AnchorSlideTargets,
     opts: AnchorSlideOpts,
 ): PrimitiveStep {
@@ -137,6 +139,7 @@ export function anchorSlide(
                 toInitial.set(id, start)
                 world.setDragging(handle, true)
                 world.setPosition(handle, start)
+                activator.activate(id)
             }
             initialized = true
         }

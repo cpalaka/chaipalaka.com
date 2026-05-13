@@ -9,7 +9,11 @@ import {
 } from 'react'
 import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
+import {
+    useCardRegistry,
+    type CardActivator,
+    type PhysicsCardEntry,
+} from './CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
 import {
     dispatch,
@@ -111,27 +115,38 @@ export function TransitionDirector({
     const executeTransition = useCallback(
         async (_fromPath: string, _toPath: string, plan: TransitionPlan) => {
             // Source of truth is the registry: cards marked `exiting` belong
-            // to the outgoing route; cards still `active` are the incoming
-            // ones registered by the newly-mounted route's <PhysicsCard>s.
+            // to the outgoing route; cards still `spawning` are the incoming
+            // ones registered by the newly-mounted route's <PhysicsCard>s
+            // (Director Armed before they registered, so default-policy
+            // auto-activate is suppressed and the primitive owns activation).
             // This lets routes that aren't listed in `pageDefs` (e.g. /blog,
             // dynamic slug pages) participate in the standard transition.
             const snapshot = registry.snapshot()
             const exitingEntries = snapshot.filter((e) => e.state === 'exiting')
-            const activeEntries = snapshot.filter((e) => e.state === 'active')
+            const enteringEntries = snapshot.filter(
+                (e) => e.state === 'spawning',
+            )
             const fromIds = exitingEntries.map((e) => e.id)
-            const toIds = activeEntries.map((e) => e.id)
-            const pourEntries = activeEntries.map((e, i) => makePourEntry(e, i))
+            const toIds = enteringEntries.map((e) => e.id)
+            const pourEntries = enteringEntries.map((e, i) =>
+                makePourEntry(e, i),
+            )
             const viewport = getViewport()
 
             const releaseFromIds = () => {
                 for (const id of fromIds) registry.release(id)
+                registry.disarm()
             }
 
             if (reducedRef.current) {
                 releaseFromIds()
                 const layerEl = findPhysicsLayerElement()
                 if (layerEl) {
-                    await runStep(crossFade(layerEl, { durationMs: REDUCED_MOTION_MS }))
+                    await runStep(
+                        crossFade(layerEl, registry, toIds, {
+                            durationMs: REDUCED_MOTION_MS,
+                        }),
+                    )
                 }
                 return
             }
@@ -139,6 +154,7 @@ export function TransitionDirector({
             if (plan.kind === 'coupled') {
                 const step = anchorSlide(
                     world,
+                    registry,
                     { fromIds, toIds },
                     { ...plan.config, viewport },
                 )
@@ -151,6 +167,7 @@ export function TransitionDirector({
             const exitStep = buildPrimitive(
                 plan.exit,
                 world,
+                registry,
                 viewport,
                 fromIds,
                 pourEntries,
@@ -158,6 +175,7 @@ export function TransitionDirector({
             const enterStep = buildPrimitive(
                 plan.enter,
                 world,
+                registry,
                 viewport,
                 fromIds,
                 pourEntries,
@@ -181,6 +199,7 @@ export function TransitionDirector({
                 for (const entry of registry.snapshot()) {
                     if (entry.state === 'exiting') registry.release(entry.id)
                 }
+                registry.disarm()
             })
         },
         [resolvePageDef, edges, executeTransition, registry],
@@ -227,8 +246,9 @@ export function TransitionDirector({
         if (!prev) return
         const { trigger } = isTransitionTrigger(prev, location)
         if (!trigger) return
+        registry.arm()
         for (const entry of registry.snapshot()) {
-            if (entry.state === 'active') registry.markExiting(entry.id)
+            if (entry.state !== 'exiting') registry.markExiting(entry.id)
         }
     }, [location, registry, isTransitionTrigger])
 
@@ -268,22 +288,22 @@ export function TransitionDirector({
 function buildPrimitive(
     id: TransitionId,
     world: ReturnType<typeof usePhysicsWorld>,
+    activator: CardActivator,
     viewport: Viewport,
     fromIds: readonly string[],
     toEntries: readonly PourInDropEntry[],
 ): PrimitiveStep {
+    const toIds = toEntries.map((e) => e.id)
     switch (id) {
         case 'string-cut-drop':
             return stringCutDrop(world, fromIds, { viewport })
         case 'pour-in-drop':
-            return pourInDrop(world, toEntries, { viewport })
+            return pourInDrop(world, activator, toEntries, { viewport })
         case 'anchor-slide':
             return anchorSlide(
                 world,
-                {
-                    fromIds,
-                    toIds: toEntries.map((e) => e.id),
-                },
+                activator,
+                { fromIds, toIds },
                 {
                     axis: 'horizontal',
                     sign: 1,
@@ -294,7 +314,9 @@ function buildPrimitive(
         case 'cross-fade': {
             const el = findPhysicsLayerElement()
             if (!el) return () => true
-            return crossFade(el, { durationMs: REDUCED_MOTION_MS })
+            return crossFade(el, activator, toIds, {
+                durationMs: REDUCED_MOTION_MS,
+            })
         }
     }
 }
