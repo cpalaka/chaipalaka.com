@@ -119,32 +119,36 @@ describe('TransitionDirector — orphan card survival', () => {
     })
 })
 
-describe('TransitionDirector — lifecycle arming', () => {
-    test('newly-registered cards remain spawning across a microtask flush during a transition', async () => {
-        const { container, getByTestId } = render(<Harness />)
+async function flushRafs(count: number) {
+    for (let i = 0; i < count; i++) {
+        await act(async () => {
+            await new Promise<void>((r) =>
+                requestAnimationFrame(() => r(undefined)),
+            )
+        })
+    }
+}
 
-        // Let card-a's initial auto-activate microtask settle.
+describe('TransitionDirector — lifecycle arming', () => {
+    test('after the transition primitive runs, entering cards are no longer hidden', async () => {
+        const { container, getByTestId } = render(<Harness />)
         await act(async () => {
             await Promise.resolve()
         })
 
-        act(() => {
+        await act(async () => {
             getByTestId('go-b').click()
         })
-
-        // Flush microtasks — without arm(), card-b's default-policy
-        // auto-activate would fire here and the article would become
-        // visible. With arm() in the director's Phase-1 effect, the
-        // registry suppresses the microtask and card-b stays spawning.
-        await act(async () => {
-            await Promise.resolve()
-        })
+        // Drive enough RAFs for the transition primitive to step through
+        // its activate path. anchorSlide / pourInDrop call activate on
+        // first tick; the run-loop wraps each step in a RAF.
+        await flushRafs(4)
 
         const cardB = container.querySelector(
             '[data-card-id="card-b"]',
         ) as HTMLElement
         expect(cardB).toBeTruthy()
-        expect(cardB.style.visibility).toBe('hidden')
+        expect(cardB.style.visibility).not.toBe('hidden')
     })
 })
 

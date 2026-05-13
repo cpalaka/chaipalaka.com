@@ -115,16 +115,22 @@ export function TransitionDirector({
     const executeTransition = useCallback(
         async (_fromPath: string, _toPath: string, plan: TransitionPlan) => {
             // Source of truth is the registry: cards marked `exiting` belong
-            // to the outgoing route; cards still `active` are the incoming
-            // ones registered by the newly-mounted route's <PhysicsCard>s.
+            // to the outgoing route; cards still `spawning` are the incoming
+            // ones registered by the newly-mounted route's <PhysicsCard>s
+            // (Director Armed before they registered, so default-policy
+            // auto-activate is suppressed and the primitive owns activation).
             // This lets routes that aren't listed in `pageDefs` (e.g. /blog,
             // dynamic slug pages) participate in the standard transition.
             const snapshot = registry.snapshot()
             const exitingEntries = snapshot.filter((e) => e.state === 'exiting')
-            const activeEntries = snapshot.filter((e) => e.state === 'active')
+            const enteringEntries = snapshot.filter(
+                (e) => e.state === 'spawning',
+            )
             const fromIds = exitingEntries.map((e) => e.id)
-            const toIds = activeEntries.map((e) => e.id)
-            const pourEntries = activeEntries.map((e, i) => makePourEntry(e, i))
+            const toIds = enteringEntries.map((e) => e.id)
+            const pourEntries = enteringEntries.map((e, i) =>
+                makePourEntry(e, i),
+            )
             const viewport = getViewport()
 
             const releaseFromIds = () => {
