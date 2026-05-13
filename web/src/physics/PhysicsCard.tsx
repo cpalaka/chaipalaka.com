@@ -1,11 +1,7 @@
 import { useEffect, useId, useMemo } from 'react'
 import { useCardRegistry } from '../transitions/CardRegistry'
-import type {
-    PhysicsHandle,
-    PhysicsWorld,
-    TetherHandle,
-    Vec2,
-} from './PhysicsWorld'
+import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
+import type { TetherHandle } from './Tether'
 import type { Buoyancy, ParentRef } from './PageDef'
 
 type ParentKind = 'ceiling' | 'floor' | 'card'
@@ -23,7 +19,7 @@ export function wireTetherFor(
             childAnchor.x - parentBodyPos.x,
             childAnchor.y - parentBodyPos.y,
         )
-        return world.tether(parentHandle, childHandle, length)
+        return world.tether.add(parentHandle, childHandle, length)
     }
     const parentAnchor = world.getAnchor(parentHandle)
     const anchorA = {
@@ -31,7 +27,7 @@ export function wireTetherFor(
         y: parentAnchor.y - parentBodyPos.y,
     }
     const length = Math.abs(childAnchor.y - parentAnchor.y)
-    return world.tether(parentHandle, childHandle, length, anchorA)
+    return world.tether.add(parentHandle, childHandle, length, anchorA)
 }
 
 export interface PhysicsCardProps {

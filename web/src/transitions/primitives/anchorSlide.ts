@@ -47,14 +47,14 @@ function captureAndUntether(
     world: PhysicsWorld,
     handle: PhysicsHandle,
 ): CapturedTether | undefined {
-    for (const t of world.listTetherRecords()) {
+    for (const t of world.tether.records()) {
         if (t.child !== handle) continue
         const captured: CapturedTether = {
             parent: t.parent,
             length: t.length,
             ...(t.anchorA ? { anchorA: { ...t.anchorA } } : {}),
         }
-        world.untether(t.handle)
+        world.tether.remove(t.handle)
         return captured
     }
     return undefined
@@ -109,7 +109,7 @@ export function anchorSlide(
                 const start = { x: pos.x, y: pos.y }
                 fromInitial.set(id, start)
                 // From-card exits in axis × -sign direction
-                const exitOffset = offsetFor((-sign) as -1 | 1)
+                const exitOffset = offsetFor(-sign as -1 | 1)
                 fromFinal.set(id, {
                     x: start.x + exitOffset.x,
                     y: start.y + exitOffset.y,
@@ -181,7 +181,7 @@ export function anchorSlide(
                 world.setVelocity(handle, { x: 0, y: 0 })
                 const captured = toCaptured.get(id)
                 if (captured) {
-                    world.tether(
+                    world.tether.add(
                         captured.parent,
                         handle,
                         captured.length,
