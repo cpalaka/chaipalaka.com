@@ -31,4 +31,12 @@ describe('detectWebGL', () => {
         }
         expect(detectWebGL(doc)).toBe(false)
     })
+
+    test('returns false under the ambient happy-dom document (no real GPU)', () => {
+        // happy-dom's HTMLCanvasElement.getContext returns null for webgl /
+        // webgl2, so the fallback path is exercised by our default test env.
+        // If happy-dom ever ships a WebGL shim this will fail loudly so we
+        // can revisit the fallback strategy.
+        expect(detectWebGL(document)).toBe(false)
+    })
 })
