@@ -99,6 +99,27 @@ describe('CardRegistryStore state machine', () => {
         expect(store.snapshot()).toHaveLength(0)
     })
 
+    test('disarm() activates EVERY card left spawning (chain coverage)', () => {
+        const store = new CardRegistryStore()
+        store.arm()
+        const idsList = ['a', 'b', 'c', 'd', 'e'] as const
+        for (const id of idsList) {
+            store.register({ ...entryA, id })
+        }
+        // All armed → all spawning.
+        for (const id of idsList) {
+            expect(
+                store.snapshot().find((e) => e.id === id)?.state,
+            ).toBe('spawning')
+        }
+        store.disarm()
+        for (const id of idsList) {
+            expect(
+                store.snapshot().find((e) => e.id === id)?.state,
+            ).toBe('active')
+        }
+    })
+
     test('disarm() activates any cards left spawning by the primitive', () => {
         // Covers the case where a card registers WHILE armed (transition in
         // flight) but the primitive that owns activation never sees it —
