@@ -1,4 +1,6 @@
 import Matter from 'matter-js'
+import { Tether } from './Tether'
+import type { BodyForceSource } from './BodyForceSource'
 
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
 
@@ -23,8 +25,6 @@ export interface PhysicsWorldOptions {
 }
 
 export type PhysicsHandle = number
-export type LinkHandle = number
-export type TetherHandle = number
 
 export interface BodyState {
     x: number
@@ -34,27 +34,6 @@ export interface BodyState {
 
 export interface RegisterOptions {
     onTransform?: (state: BodyState) => void
-}
-
-export interface LinkOptions {
-    length?: number
-    stiffness?: number
-    damping?: number
-}
-
-export interface TetherView {
-    parentPos: Vec2
-    childPos: Vec2
-    length: number
-    slack: boolean
-}
-
-interface TetherRecord {
-    parent: PhysicsHandle
-    child: PhysicsHandle
-    length: number
-    linkHandle: LinkHandle
-    anchorA?: Vec2
 }
 
 interface Registration {
@@ -71,10 +50,9 @@ interface Registration {
 const GRAVITY_Y = 0.7
 const BODY_FRICTION_AIR = 0.005
 const FLOOR_THICKNESS = 60
-const TETHER_STIFFNESS = 1.75e-5
 const BUOYANCY_GAIN = 1.5
 
-export class PhysicsWorld {
+export class PhysicsWorld implements BodyForceSource {
     private engine: Matter.Engine
     private world: Matter.World
     private _floor: Matter.Body
@@ -84,19 +62,16 @@ export class PhysicsWorld {
     private nextId: PhysicsHandle = 1
     private registrations = new Map<PhysicsHandle, Registration>()
     private byId = new Map<string, PhysicsHandle>()
-    private links = new Map<LinkHandle, Matter.Constraint>()
-    private tethers = new Map<TetherHandle, TetherRecord>()
-    private tetherChangeListeners = new Set<() => void>()
-    private cachedTetherList: ReadonlyArray<TetherHandle> | null = null
 
     readonly floorHandle: PhysicsHandle
     readonly ceilingHandle: PhysicsHandle
+    readonly tether: Tether
 
     constructor(opts: PhysicsWorldOptions) {
         this.engine = Matter.Engine.create()
         this.world = this.engine.world
         this.engine.gravity.x = 0
-        this.engine.gravity.y = GRAVITY_Y  // always on, default down
+        this.engine.gravity.y = GRAVITY_Y // always on, default down
 
         const { width, height } = opts.viewport
         const top = opts.insets?.top ?? 0
@@ -159,9 +134,11 @@ export class PhysicsWorld {
             { isStatic: true },
         )
         Matter.Composite.add(this.world, [this._leftWall, this._rightWall])
+
+        this.tether = new Tether(this)
     }
 
-    register(
+    private register(
         anchor: Vec2,
         size: CardSize,
         opts: RegisterOptions = {},
@@ -206,32 +183,6 @@ export class PhysicsWorld {
         return this.byId.get(cardId)
     }
 
-    registerStatic(
-        position: Vec2,
-        size: CardSize,
-        opts: RegisterOptions = {},
-    ): PhysicsHandle {
-        const body = Matter.Bodies.rectangle(
-            position.x,
-            position.y,
-            size.width,
-            size.height,
-            { isStatic: true },
-        )
-        Matter.Composite.add(this.world, body)
-        const id = this.nextId++
-        this.registrations.set(id, {
-            body,
-            anchor: { ...position },
-            isStatic: true,
-            onTransform: opts.onTransform,
-            width: size.width,
-            height: size.height,
-            buoyancy: 'heavy',
-        })
-        return id
-    }
-
     unregister(handle: PhysicsHandle): void {
         const reg = this.registrations.get(handle)
         if (!reg) return
@@ -258,15 +209,6 @@ export class PhysicsWorld {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
         return { x: reg.body.velocity.x, y: reg.body.velocity.y }
-    }
-
-    applyImpulse(handle: PhysicsHandle, impulse: Vec2): void {
-        const reg = this.registrations.get(handle)
-        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        Matter.Body.setVelocity(reg.body, {
-            x: reg.body.velocity.x + impulse.x / reg.body.mass,
-            y: reg.body.velocity.y + impulse.y / reg.body.mass,
-        })
     }
 
     setPosition(handle: PhysicsHandle, position: Vec2): void {
@@ -305,10 +247,16 @@ export class PhysicsWorld {
         const hw = FLOOR_THICKNESS / 2
         const top = insets?.top ?? 0
         const bottom = insets?.bottom ?? 0
-        Matter.Body.setPosition(this._floor, { x: vp.width / 2, y: vp.height - bottom + hw })
+        Matter.Body.setPosition(this._floor, {
+            x: vp.width / 2,
+            y: vp.height - bottom + hw,
+        })
         Matter.Body.setPosition(this._ceiling, { x: vp.width / 2, y: top - hw })
         Matter.Body.setPosition(this._leftWall, { x: -hw, y: vp.height / 2 })
-        Matter.Body.setPosition(this._rightWall, { x: vp.width + hw, y: vp.height / 2 })
+        Matter.Body.setPosition(this._rightWall, {
+            x: vp.width + hw,
+            y: vp.height / 2,
+        })
     }
 
     setBuoyancy(handle: PhysicsHandle, b: 'heavy' | 'balloon'): void {
@@ -357,152 +305,26 @@ export class PhysicsWorld {
         return { width: reg.width, height: reg.height }
     }
 
-    setSize(handle: PhysicsHandle, size: CardSize): void {
+    getMass(handle: PhysicsHandle): number {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        const sx = size.width / reg.width
-        const sy = size.height / reg.height
-        Matter.Body.scale(reg.body, sx, sy)
-        reg.width = size.width
-        reg.height = size.height
+        return reg.body.mass
     }
 
-    setAngle(handle: PhysicsHandle, angle: number): void {
+    isStatic(handle: PhysicsHandle): boolean {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        Matter.Body.setAngle(reg.body, angle)
-        Matter.Body.setAngularVelocity(reg.body, 0)
+        // The matter.js body's live isStatic flag — true for persistent static bodies
+        // (ceiling/floor/walls) AND for cards currently being dragged. Tether's rope
+        // force uses this to skip force application on bodies that won't integrate,
+        // matching the pre-extraction tick() behaviour exactly.
+        return reg.body.isStatic
     }
 
-    linkBodies(
-        a: PhysicsHandle,
-        b: PhysicsHandle,
-        opts: LinkOptions = {},
-    ): LinkHandle {
-        const regA = this.registrations.get(a)
-        if (!regA) throw new Error(`PhysicsWorld: unknown handle ${a}`)
-        const regB = this.registrations.get(b)
-        if (!regB) throw new Error(`PhysicsWorld: unknown handle ${b}`)
-        const dx = regB.body.position.x - regA.body.position.x
-        const dy = regB.body.position.y - regA.body.position.y
-        const defaultLength = Math.sqrt(dx * dx + dy * dy)
-        const constraint = Matter.Constraint.create({
-            bodyA: regA.body,
-            bodyB: regB.body,
-            length: opts.length ?? defaultLength,
-            stiffness: opts.stiffness ?? 0.05,
-            damping: opts.damping ?? 0.1,
-        })
-        Matter.Composite.add(this.world, constraint)
-        const id = this.nextId++
-        this.links.set(id, constraint)
-        return id
-    }
-
-    unlinkBodies(link: LinkHandle): void {
-        const constraint = this.links.get(link)
-        if (!constraint) return
-        Matter.Composite.remove(this.world, constraint)
-        this.links.delete(link)
-    }
-
-    tether(parent: PhysicsHandle, child: PhysicsHandle, length: number, anchorA?: Vec2): TetherHandle {
-        const regP = this.registrations.get(parent)
-        if (!regP) throw new Error(`PhysicsWorld: unknown handle ${parent}`)
-        const regC = this.registrations.get(child)
-        if (!regC) throw new Error(`PhysicsWorld: unknown handle ${child}`)
-        // Construct the constraint directly so we can pass body-local pointA when supplied.
-        // stiffness ~0 because the pull-only rope force is applied in tick(), not by matter.js.
-        const constraint = Matter.Constraint.create({
-            bodyA: regP.body,
-            bodyB: regC.body,
-            length,
-            stiffness: 1e-9,
-            damping: 0,
-            ...(anchorA ? { pointA: { ...anchorA } } : {}),
-        })
-        Matter.Composite.add(this.world, constraint)
-        const lh = this.nextId++
-        this.links.set(lh, constraint)
-        const th = this.nextId++
-        this.tethers.set(th, {
-            parent,
-            child,
-            length,
-            linkHandle: lh,
-            ...(anchorA ? { anchorA: { ...anchorA } } : {}),
-        })
-        this.cachedTetherList = null
-        for (const cb of this.tetherChangeListeners) cb()
-        return th
-    }
-
-    untether(th: TetherHandle): void {
-        const rec = this.tethers.get(th)
-        if (!rec) return
-        this.unlinkBodies(rec.linkHandle)
-        this.tethers.delete(th)
-        this.cachedTetherList = null
-        for (const cb of this.tetherChangeListeners) cb()
-    }
-
-    getTethers(): TetherView[] {
-        const views: TetherView[] = []
-        for (const rec of this.tethers.values()) {
-            const regP = this.registrations.get(rec.parent)
-            const regC = this.registrations.get(rec.child)
-            if (!regP || !regC) continue
-            // World-space rope origin is the constraint's pointA. For static ceiling/floor (angle = 0)
-            // and dynamic parents with zero rotation, this is parentBodyCentre + anchorA.
-            const bodyPos = regP.body.position
-            const parentPos: Vec2 = rec.anchorA
-                ? { x: bodyPos.x + rec.anchorA.x, y: bodyPos.y + rec.anchorA.y }
-                : { x: bodyPos.x, y: bodyPos.y }
-            const childPos = { x: regC.body.position.x, y: regC.body.position.y }
-            const d = Math.hypot(childPos.x - parentPos.x, childPos.y - parentPos.y)
-            views.push({ parentPos, childPos, length: rec.length, slack: d < rec.length * 0.98 })
-        }
-        return views
-    }
-
-    // Stable-identity snapshot for useSyncExternalStore consumers. Reference only changes
-    // when the tether set changes (mount/unmount), not on every call.
-    getTetherList(): ReadonlyArray<TetherHandle> {
-        if (!this.cachedTetherList) {
-            this.cachedTetherList = Object.freeze(Array.from(this.tethers.keys()))
-        }
-        return this.cachedTetherList
-    }
-
-    subscribeTetherSetChange(cb: () => void): () => void {
-        this.tetherChangeListeners.add(cb)
-        return () => this.tetherChangeListeners.delete(cb)
-    }
-
-    listTetherRecords(): Array<{
-        handle: TetherHandle
-        parent: PhysicsHandle
-        child: PhysicsHandle
-        length: number
-        anchorA?: Vec2
-    }> {
-        const out: Array<{
-            handle: TetherHandle
-            parent: PhysicsHandle
-            child: PhysicsHandle
-            length: number
-            anchorA?: Vec2
-        }> = []
-        for (const [handle, rec] of this.tethers) {
-            out.push({
-                handle,
-                parent: rec.parent,
-                child: rec.child,
-                length: rec.length,
-                ...(rec.anchorA ? { anchorA: { ...rec.anchorA } } : {}),
-            })
-        }
-        return out
+    applyForce(handle: PhysicsHandle, force: Vec2): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        Matter.Body.applyForce(reg.body, reg.body.position, force)
     }
 
     setSensor(handle: PhysicsHandle, isSensor: boolean): void {
@@ -517,17 +339,11 @@ export class PhysicsWorld {
         return reg.body.isSensor
     }
 
-    setStatic(handle: PhysicsHandle, isStatic: boolean): void {
-        const reg = this.registrations.get(handle)
-        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
-        if (reg.isStatic) return
-        Matter.Body.setStatic(reg.body, isStatic)
-    }
-
     tick(dtMs: number): void {
         // 1. Apply balloon buoyancy — per-tick force opposing gravity, scaled to match gravity force units
         const g = this.getGravityVector()
-        const gravScale: number = (this.engine.gravity as { scale?: number }).scale ?? 0.001
+        const gravScale: number =
+            (this.engine.gravity as { scale?: number }).scale ?? 0.001
         for (const reg of this.registrations.values()) {
             if (reg.isStatic || reg.buoyancy !== 'balloon') continue
             Matter.Body.applyForce(reg.body, reg.body.position, {
@@ -536,31 +352,8 @@ export class PhysicsWorld {
             })
         }
 
-        // 2. Apply pull-only tether forces (rope semantics).
-        // Force is measured from the world-space rope origin (parent body centre + anchorA),
-        // not the parent body centre alone — otherwise a string anchored above a card's x
-        // would let the card drift to the parent body centre's x before the rope catches.
-        for (const rec of this.tethers.values()) {
-            const regP = this.registrations.get(rec.parent)
-            const regC = this.registrations.get(rec.child)
-            if (!regP || !regC) continue
-            const parentX = regP.body.position.x + (rec.anchorA?.x ?? 0)
-            const parentY = regP.body.position.y + (rec.anchorA?.y ?? 0)
-            const dx = parentX - regC.body.position.x
-            const dy = parentY - regC.body.position.y
-            const d = Math.hypot(dx, dy)
-            if (d <= rec.length || d === 0) continue
-            const overshoot = d - rec.length
-            const nx = dx / d
-            const ny = dy / d
-            const a = overshoot * TETHER_STIFFNESS  // acceleration-scale; multiply by mass → force
-            if (!regC.body.isStatic) {
-                Matter.Body.applyForce(regC.body, regC.body.position, { x: nx * a * regC.body.mass, y: ny * a * regC.body.mass })
-            }
-            if (!regP.body.isStatic) {
-                Matter.Body.applyForce(regP.body, regP.body.position, { x: -nx * a * regP.body.mass, y: -ny * a * regP.body.mass })
-            }
-        }
+        // 2. Apply pull-only tether forces (rope semantics) via the Tether module.
+        this.tether.applyRopeForces()
 
         // 3. Advance the physics engine
         Matter.Engine.update(this.engine, dtMs)

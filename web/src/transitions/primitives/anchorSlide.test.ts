@@ -167,9 +167,9 @@ describe('anchorSlide (T3) — horizontal', () => {
             { width: 200, height: 100 },
         )
         const TETHER_LEN = 250
-        world.tether(world.ceilingHandle, b, TETHER_LEN)
+        world.tether.add(world.ceilingHandle, b, TETHER_LEN)
         expect(
-            world.listTetherRecords().filter((t) => t.child === b),
+            world.tether.records().filter((t) => t.child === b),
         ).toHaveLength(1)
 
         const step = anchorSlide(
@@ -187,15 +187,13 @@ describe('anchorSlide (T3) — horizontal', () => {
         // doesn't draw a long diagonal string while the card slides in.
         step(0)
         expect(
-            world.listTetherRecords().filter((t) => t.child === b),
+            world.tether.records().filter((t) => t.child === b),
         ).toHaveLength(0)
 
         // After completion, the tether should be re-attached with the
         // original length so the card resumes hanging at its layout anchor.
         step(700)
-        const restored = world
-            .listTetherRecords()
-            .filter((t) => t.child === b)
+        const restored = world.tether.records().filter((t) => t.child === b)
         expect(restored).toHaveLength(1)
         expect(restored[0]!.length).toBe(TETHER_LEN)
         expect(restored[0]!.parent).toBe(world.ceilingHandle)
@@ -287,11 +285,7 @@ describe('anchorSlide (T3) — horizontal', () => {
     test('sensorEdges: ceiling — toggles ceiling sensor on init, restores at end', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
 
         expect(world.isSensor(world.ceilingHandle)).toBe(false)
 
@@ -317,11 +311,7 @@ describe('anchorSlide (T3) — horizontal', () => {
     test('sensorEdges: floor — toggles floor sensor (back/T4-back direction)', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
 
         const step = anchorSlide(
             world,
@@ -346,11 +336,7 @@ describe('anchorSlide (T3) — horizontal', () => {
     test('sensorEdges omitted — neither edge is toggled', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
 
         const step = anchorSlide(
             world,
@@ -379,9 +365,9 @@ describe('anchorSlide (T3) — horizontal', () => {
             { x: 400, y: 300 },
             { width: 200, height: 100 },
         )
-        world.tether(world.ceilingHandle, a, 250)
+        world.tether.add(world.ceilingHandle, a, 250)
         expect(
-            world.listTetherRecords().filter((t) => t.child === a),
+            world.tether.records().filter((t) => t.child === a),
         ).toHaveLength(1)
 
         const step = anchorSlide(
@@ -397,13 +383,13 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         step(0)
         expect(
-            world.listTetherRecords().filter((t) => t.child === a),
+            world.tether.records().filter((t) => t.child === a),
         ).toHaveLength(0)
 
         step(700)
         // From-card stays untethered — TransitionDirector releases it next.
         expect(
-            world.listTetherRecords().filter((t) => t.child === a),
+            world.tether.records().filter((t) => t.child === a),
         ).toHaveLength(0)
     })
 })

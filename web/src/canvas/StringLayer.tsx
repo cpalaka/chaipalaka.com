@@ -8,12 +8,13 @@ export function StringLayer() {
     const pathRefs = useRef<Map<string, SVGPathElement>>(new Map())
 
     // Re-render only when the SET of tethers changes (mount/unmount of strung cards).
-    // Use getTetherList() (cached, stable reference) — getTethers() builds a fresh array
-    // each call and would cause an infinite useSyncExternalStore re-render loop.
-    const tetherList = useSyncExternalStore(
-        (cb) => world.subscribeTetherSetChange(cb),
-        () => world.getTetherList(),
-        () => world.getTetherList(),
+    // records() returns a cached frozen array — stable reference until add/remove,
+    // safe for useSyncExternalStore. list() (called per-RAF below) returns fresh
+    // positions and would cause an infinite re-render loop here.
+    const records = useSyncExternalStore(
+        (cb) => world.tether.subscribeChange(cb),
+        () => world.tether.records(),
+        () => world.tether.records(),
     )
 
     // Per-frame mutation of path `d` attributes — no React re-renders
@@ -29,7 +30,7 @@ export function StringLayer() {
             const gx = gLen > 0 ? g.x / gLen : 0
             const gy = gLen > 0 ? g.y / gLen : 1
 
-            const views = world.getTethers()
+            const views = world.tether.list()
             for (let i = 0; i < views.length; i++) {
                 const v = views[i]!
                 const key = String(i)
@@ -55,13 +56,13 @@ export function StringLayer() {
         }
         raf = requestAnimationFrame(frame)
         return () => cancelAnimationFrame(raf)
-    }, [world, tetherList])
+    }, [world, records])
 
     return (
         <svg ref={svgRef} className="string-layer" aria-hidden="true">
-            {tetherList.map((handle, i) => (
+            {records.map((rec, i) => (
                 <path
-                    key={handle}
+                    key={rec.handle}
                     ref={(el) => {
                         if (el) pathRefs.current.set(String(i), el)
                         else pathRefs.current.delete(String(i))
