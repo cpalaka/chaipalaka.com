@@ -1,22 +1,26 @@
 import { describe, test, expect } from 'vitest'
 import { dispatch } from './dispatch'
 import type { PageDef } from '../physics/PageDef'
-import type { EdgeTransitions } from './dispatch'
+import type { EdgeTransitions, PageDefResolver } from './dispatch'
 
 const homeDef: PageDef = { gravity: 'down', cards: [] }
 const blogDef: PageDef = { gravity: 'down', cards: [] }
 
+function resolverOf(map: Record<string, PageDef>): PageDefResolver {
+    return (path: string) => map[path]
+}
+
 describe('dispatch', () => {
     test('edge-table match wins over PageDef transitions', () => {
-        const pageDefs: Record<string, PageDef> = {
+        const resolve = resolverOf({
             '/a': { ...homeDef, transitions: { exit: 'string-cut-drop' } },
             '/b': { ...blogDef, transitions: { enter: 'pour-in-drop' } },
-        }
+        })
         const edges: EdgeTransitions = {
             '/a→/b': { primitive: 'anchor-slide', axis: 'horizontal' },
         }
 
-        const plan = dispatch('/a', '/b', pageDefs, edges, 'forward')
+        const plan = dispatch('/a', '/b', resolve, edges, 'forward')
 
         expect(plan.kind).toBe('coupled')
         if (plan.kind === 'coupled') {
@@ -26,28 +30,25 @@ describe('dispatch', () => {
     })
 
     test('PageDef decoupled pair wins over history-direction default', () => {
-        const pageDefs: Record<string, PageDef> = {
+        const resolve = resolverOf({
             '/a': { ...homeDef, transitions: { exit: 'cross-fade' } },
             '/b': blogDef,
-        }
+        })
 
-        const plan = dispatch('/a', '/b', pageDefs, {}, 'forward')
+        const plan = dispatch('/a', '/b', resolve, {}, 'forward')
 
         expect(plan.kind).toBe('decoupled')
         if (plan.kind === 'decoupled') {
             expect(plan.exit).toBe('cross-fade')
-            expect(plan.enter).toBe('pour-in-drop') // falls back to default enter
+            expect(plan.enter).toBe('pour-in-drop')
             expect(plan.overlapMs).toBe(200)
         }
     })
 
     test('forward with no overrides → string-cut-drop + pour-in-drop decoupled', () => {
-        const pageDefs: Record<string, PageDef> = {
-            '/a': homeDef,
-            '/b': blogDef,
-        }
+        const resolve = resolverOf({ '/a': homeDef, '/b': blogDef })
 
-        const plan = dispatch('/a', '/b', pageDefs, {}, 'forward')
+        const plan = dispatch('/a', '/b', resolve, {}, 'forward')
 
         expect(plan).toEqual({
             kind: 'decoupled',
@@ -58,12 +59,9 @@ describe('dispatch', () => {
     })
 
     test('back with no overrides → same T1+T2 decoupled pair', () => {
-        const pageDefs: Record<string, PageDef> = {
-            '/a': homeDef,
-            '/b': blogDef,
-        }
+        const resolve = resolverOf({ '/a': homeDef, '/b': blogDef })
 
-        const plan = dispatch('/a', '/b', pageDefs, {}, 'back')
+        const plan = dispatch('/a', '/b', resolve, {}, 'back')
 
         expect(plan.kind).toBe('decoupled')
         if (plan.kind === 'decoupled') {
@@ -73,12 +71,9 @@ describe('dispatch', () => {
     })
 
     test('sibling with no overrides → anchor-slide horizontal coupled, sign=+1', () => {
-        const pageDefs: Record<string, PageDef> = {
-            '/a': homeDef,
-            '/b': blogDef,
-        }
+        const resolve = resolverOf({ '/a': homeDef, '/b': blogDef })
 
-        const plan = dispatch('/a', '/b', pageDefs, {}, 'sibling')
+        const plan = dispatch('/a', '/b', resolve, {}, 'sibling')
 
         expect(plan.kind).toBe('coupled')
         if (plan.kind === 'coupled') {
@@ -90,12 +85,12 @@ describe('dispatch', () => {
     })
 
     test('sibling with destination siblingOrder=left flips sign to -1', () => {
-        const pageDefs: Record<string, PageDef> = {
+        const resolve = resolverOf({
             '/a': homeDef,
             '/b': { ...blogDef, siblingOrder: 'left' },
-        }
+        })
 
-        const plan = dispatch('/a', '/b', pageDefs, {}, 'sibling')
+        const plan = dispatch('/a', '/b', resolve, {}, 'sibling')
 
         expect(plan.kind).toBe('coupled')
         if (plan.kind === 'coupled') {
@@ -104,12 +99,12 @@ describe('dispatch', () => {
     })
 
     test('edge with omitted sign uses direction (back → -1)', () => {
-        const pageDefs: Record<string, PageDef> = { '/a': homeDef, '/b': blogDef }
+        const resolve = resolverOf({ '/a': homeDef, '/b': blogDef })
         const edges: EdgeTransitions = {
             '/a→/b': { primitive: 'anchor-slide', axis: 'horizontal' },
         }
 
-        const plan = dispatch('/a', '/b', pageDefs, edges, 'back')
+        const plan = dispatch('/a', '/b', resolve, edges, 'back')
 
         expect(plan.kind).toBe('coupled')
         if (plan.kind === 'coupled') {
@@ -118,16 +113,35 @@ describe('dispatch', () => {
     })
 
     test('edge with explicit sign overrides direction', () => {
-        const pageDefs: Record<string, PageDef> = { '/a': homeDef, '/b': blogDef }
+        const resolve = resolverOf({ '/a': homeDef, '/b': blogDef })
         const edges: EdgeTransitions = {
             '/a→/b': { primitive: 'anchor-slide', axis: 'horizontal', sign: 1 },
         }
 
-        const plan = dispatch('/a', '/b', pageDefs, edges, 'back')
+        const plan = dispatch('/a', '/b', resolve, edges, 'back')
 
         expect(plan.kind).toBe('coupled')
         if (plan.kind === 'coupled') {
             expect(plan.config.sign).toBe(1)
+        }
+    })
+
+    test('resolver is consulted by path (not a pre-built map snapshot)', () => {
+        // Simulates runtime registration: the resolver returns a PageDef that
+        // wasn't known at director-construction time.
+        const runtime = new Map<string, PageDef>()
+        const resolve: PageDefResolver = (p) => runtime.get(p)
+
+        runtime.set('/blog/abc', {
+            ...blogDef,
+            transitions: { enter: 'cross-fade' },
+        })
+
+        const plan = dispatch('/a', '/blog/abc', resolve, {}, 'forward')
+
+        expect(plan.kind).toBe('decoupled')
+        if (plan.kind === 'decoupled') {
+            expect(plan.enter).toBe('cross-fade')
         }
     })
 })
