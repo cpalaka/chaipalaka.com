@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
-import type { PhysicsHandle } from '../../physics/PhysicsWorld'
 import { HiddenScroll } from './HiddenScroll'
 import { CardHeader } from './CardHeader'
 
 interface PlaygroundProps {
     minimized: boolean
     onMinimize: () => void
-    cardRef?: import('react').MutableRefObject<HTMLElement | null>
 }
 
 const DEFAULT_W = 320
@@ -25,8 +23,7 @@ function computeAnchor(): { x: number; y: number } {
 const LOREM =
     'Type specimen — the quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow. Now is the time for bold decisions.'
 
-export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) {
-    const handleRef = useRef<PhysicsHandle | null>(null)
+export function Playground({ minimized, onMinimize }: PlaygroundProps) {
     const [anchor, setAnchor] = useState<{ x: number; y: number }>(() =>
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
@@ -42,13 +39,12 @@ export function Playground({ minimized, onMinimize, cardRef }: PlaygroundProps) 
 
     return (
         <PhysicsCard
+            id="playground-card"
             text={LOREM}
             anchor={anchor}
             width={cardSize.width}
             height={cardSize.height}
             variant="playground"
-            physicsHandleRef={handleRef}
-            cardRef={cardRef}
             header={<CardHeader onMinimize={onMinimize} />}
         >
             <div

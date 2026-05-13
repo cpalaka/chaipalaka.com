@@ -1,0 +1,263 @@
+import {
+    createContext,
+    use,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    type ReactNode,
+} from 'react'
+import { useLocation, useNavigationType, type Location } from 'react-router-dom'
+import { usePhysicsWorld } from '../physics/PhysicsContext'
+import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
+import { classifyDirection, type NavigationType } from './classifyDirection'
+import { dispatch, type EdgeTransitions, type TransitionPlan } from './dispatch'
+import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
+import { stringCutDrop } from './primitives/stringCutDrop'
+import { pourInDrop, type PourInDropEntry } from './primitives/pourInDrop'
+import { anchorSlide } from './primitives/anchorSlide'
+import { crossFade } from './primitives/crossFade'
+import type { PrimitiveStep } from './primitives/types'
+import type { PageDef, TransitionId } from '../physics/PageDef'
+import type { Viewport } from '../physics/PhysicsWorld'
+
+const REDUCED_MOTION_MS = 150
+// Wait this long after the exit primitive starts before any incoming card
+// begins its drop-in. Gives the outgoing cards visible time to clear the
+// viewport before the new ones arrive.
+const POUR_IN_BASE_DELAY_MS = 1000
+
+export interface RunTransitionArgs {
+    from: string
+    to: string
+}
+
+export interface TransitionContextValue {
+    runTransition: (args: RunTransitionArgs) => void
+}
+
+const TransitionContext = createContext<TransitionContextValue | null>(null)
+
+export function useTransitionContext(): TransitionContextValue {
+    const ctx = use(TransitionContext)
+    if (!ctx)
+        throw new Error(
+            'useTransitionContext: must be used inside <TransitionDirector>',
+        )
+    return ctx
+}
+
+export interface TransitionDirectorProps {
+    pageDefs: Record<string, PageDef>
+    edges?: EdgeTransitions
+    children?: ReactNode
+}
+
+function getViewport(): Viewport {
+    return typeof window !== 'undefined'
+        ? { width: window.innerWidth, height: window.innerHeight }
+        : { width: 1024, height: 768 }
+}
+
+function runStep(step: PrimitiveStep): Promise<void> {
+    return new Promise((resolve) => {
+        let last = performance.now()
+        const tick = () => {
+            const now = performance.now()
+            const dt = now - last
+            last = now
+            if (step(dt)) resolve()
+            else requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+    })
+}
+
+function findPhysicsLayerElement(): HTMLElement | null {
+    if (typeof document === 'undefined') return null
+    return document.querySelector('[data-physics-layer]') as HTMLElement | null
+}
+
+export function TransitionDirector({
+    pageDefs,
+    edges = {},
+    children,
+}: TransitionDirectorProps) {
+    const location = useLocation()
+    const navType = useNavigationType() as NavigationType
+    const reduced = usePrefersReducedMotion()
+    const registry = useCardRegistry()
+    const world = usePhysicsWorld()
+
+    const prevLocationRef = useRef<Location | null>(null)
+    const reducedRef = useRef(reduced)
+    reducedRef.current = reduced
+
+    const executeTransition = useCallback(
+        async (_fromPath: string, _toPath: string, plan: TransitionPlan) => {
+            // Source of truth is the registry: cards marked `exiting` belong
+            // to the outgoing route; cards still `active` are the incoming
+            // ones registered by the newly-mounted route's <PhysicsCard>s.
+            // This lets routes that aren't listed in `pageDefs` (e.g. /blog,
+            // dynamic slug pages) participate in the standard transition.
+            const snapshot = registry.snapshot()
+            const exitingEntries = snapshot.filter((e) => e.state === 'exiting')
+            const activeEntries = snapshot.filter((e) => e.state === 'active')
+            const fromIds = exitingEntries.map((e) => e.id)
+            const toIds = activeEntries.map((e) => e.id)
+            const pourEntries = activeEntries.map((e, i) => makePourEntry(e, i))
+            const viewport = getViewport()
+
+            const releaseFromIds = () => {
+                for (const id of fromIds) registry.release(id)
+            }
+
+            if (reducedRef.current) {
+                releaseFromIds()
+                const layerEl = findPhysicsLayerElement()
+                if (layerEl) {
+                    await runStep(crossFade(layerEl, { durationMs: REDUCED_MOTION_MS }))
+                }
+                return
+            }
+
+            if (plan.kind === 'coupled') {
+                const step = anchorSlide(
+                    world,
+                    { fromIds, toIds },
+                    { ...plan.config, viewport },
+                )
+                await runStep(step)
+                releaseFromIds()
+                return
+            }
+
+            // decoupled
+            const exitStep = buildPrimitive(
+                plan.exit,
+                world,
+                viewport,
+                fromIds,
+                pourEntries,
+            )
+            const enterStep = buildPrimitive(
+                plan.enter,
+                world,
+                viewport,
+                fromIds,
+                pourEntries,
+            )
+
+            await Promise.all([runStep(exitStep), runStep(enterStep)])
+            releaseFromIds()
+        },
+        [registry, world],
+    )
+
+    const dispatchTransition = useCallback(
+        (fromPath: string, toPath: string, direction: ReturnType<typeof classifyDirection>) => {
+            const plan = dispatch(fromPath, toPath, pageDefs, edges, direction)
+            return executeTransition(fromPath, toPath, plan).catch((err) => {
+                if (import.meta.env.DEV) throw err
+                console.warn(
+                    'TransitionDirector: transition failed; falling back to instant swap.',
+                    err,
+                )
+                for (const entry of registry.snapshot()) {
+                    if (entry.state === 'exiting') registry.release(entry.id)
+                }
+            })
+        },
+        [pageDefs, edges, executeTransition, registry],
+    )
+
+    // Phase 1: BEFORE old route's cleanups, mark every currently-active card
+    // as exiting so the registry preserves them across the unmount. Sourcing
+    // from the registry (instead of pageDefs[prev]) covers routes that are
+    // not declared in `pageDefs` — e.g. /blog or dynamic slug pages — whose
+    // cards would otherwise pop out instantly when the route unmounts.
+    useLayoutEffect(() => {
+        const prev = prevLocationRef.current
+        if (!prev || prev.pathname === location.pathname) return
+        for (const entry of registry.snapshot()) {
+            if (entry.state === 'active') registry.markExiting(entry.id)
+        }
+    }, [location, registry])
+
+    // Phase 2: AFTER children's effects (new cards now registered in PhysicsWorld),
+    // dispatch and execute the transition primitives.
+    useEffect(() => {
+        const prev = prevLocationRef.current
+        if (!prev) {
+            prevLocationRef.current = location
+            return
+        }
+        if (prev.pathname === location.pathname) {
+            prevLocationRef.current = location
+            return
+        }
+        const direction = classifyDirection(navType)
+        dispatchTransition(prev.pathname, location.pathname, direction)
+        prevLocationRef.current = location
+    }, [location, navType, dispatchTransition])
+
+    const runTransition = useCallback(
+        ({ from, to }: RunTransitionArgs) => {
+            const direction = classifyDirection(navType)
+            dispatchTransition(from, to, direction)
+        },
+        [navType, dispatchTransition],
+    )
+
+    return (
+        <TransitionContext.Provider value={{ runTransition }}>
+            {children}
+        </TransitionContext.Provider>
+    )
+}
+
+function buildPrimitive(
+    id: TransitionId,
+    world: ReturnType<typeof usePhysicsWorld>,
+    viewport: Viewport,
+    fromIds: readonly string[],
+    toEntries: readonly PourInDropEntry[],
+): PrimitiveStep {
+    switch (id) {
+        case 'string-cut-drop':
+            return stringCutDrop(world, fromIds, { viewport })
+        case 'pour-in-drop':
+            return pourInDrop(world, toEntries, { viewport })
+        case 'anchor-slide':
+            return anchorSlide(
+                world,
+                {
+                    fromIds,
+                    toIds: toEntries.map((e) => e.id),
+                },
+                {
+                    axis: 'horizontal',
+                    sign: 1,
+                    durationMs: 700,
+                    viewport,
+                },
+            )
+        case 'cross-fade': {
+            const el = findPhysicsLayerElement()
+            if (!el) return () => true
+            return crossFade(el, { durationMs: REDUCED_MOTION_MS })
+        }
+    }
+}
+
+function makePourEntry(
+    entry: PhysicsCardEntry,
+    index: number,
+): PourInDropEntry {
+    return {
+        id: entry.id,
+        layoutAnchor: entry.anchor,
+        height: entry.content.height,
+        staggerMs: POUR_IN_BASE_DELAY_MS + index * 80,
+    }
+}

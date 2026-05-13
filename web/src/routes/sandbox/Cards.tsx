@@ -15,11 +15,10 @@ export default function Cards() {
     )
     const [playgroundMinimized, setPlaygroundMinimized] = useState(false)
 
-    const playgroundCardRef = useRef<HTMLElement | null>(null)
     const playgroundChipRef = useRef<HTMLButtonElement | null>(null)
 
     function flipMinimize() {
-        const cardEl = playgroundCardRef.current
+        const cardEl = (document.querySelector('[data-card-id="playground-card"]') as HTMLElement | null)
         const fromRect = cardEl?.getBoundingClientRect() ?? null
         setPlaygroundMinimized(true)
         if (!fromRect) return
@@ -55,7 +54,7 @@ export default function Cards() {
         setPlaygroundMinimized(false)
         if (!fromRect) return
         requestAnimationFrame(() => {
-            const cardEl = playgroundCardRef.current
+            const cardEl = (document.querySelector('[data-card-id="playground-card"]') as HTMLElement | null)
             if (!cardEl) return
             const toRect = cardEl.getBoundingClientRect()
             const scaleX = fromRect.width / toRect.width
@@ -114,7 +113,6 @@ export default function Cards() {
                         <Playground
                             minimized={playgroundMinimized}
                             onMinimize={handleMinimize}
-                            cardRef={playgroundCardRef}
                         />
                     </div>
                 </div>

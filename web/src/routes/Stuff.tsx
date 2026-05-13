@@ -3,7 +3,7 @@ import { PhysicsPage } from '../physics/PhysicsPage'
 import type { PageDef } from '../physics/PageDef'
 import type { CardContent } from '../physics/PhysicsPage'
 
-const pageDef: PageDef = {
+export const pageDef: PageDef = {
     gravity: 'down',
     cards: [
         {
