@@ -25,7 +25,8 @@ const sceneLazyCache = new Map<
     React.LazyExoticComponent<() => React.ReactElement | null>
 >()
 
-function getLazyScene(scene: BackgroundScene) {
+/** @internal — exported for tests; not part of the public API. */
+export function getLazyScene(scene: BackgroundScene) {
     if (!sceneLazyCache.has(scene.id)) {
         const loader = sceneLoaders[scene.id]
         if (!loader) throw new Error(`No loader for scene: ${scene.id}`)
