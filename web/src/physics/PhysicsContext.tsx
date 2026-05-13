@@ -10,9 +10,9 @@ import { useFrameEdge, getFrameEdgeController } from '../canvas/useFrameEdge'
 import { CardRegistryProvider } from '../transitions/CardRegistry'
 import type { FrameEdge } from '../canvas/useFrameEdge'
 
-const FRAME_BAR_HEIGHT = 40
+export const FRAME_BAR_HEIGHT = 40
 
-function edgeToInsets(edge: FrameEdge) {
+export function edgeToInsets(edge: FrameEdge) {
     return edge === 'top'
         ? { top: FRAME_BAR_HEIGHT, bottom: 0 }
         : { top: 0, bottom: FRAME_BAR_HEIGHT }

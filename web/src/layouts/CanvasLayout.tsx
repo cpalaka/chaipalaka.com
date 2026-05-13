@@ -8,6 +8,7 @@ import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
 import { TransitionDirector } from '../transitions/TransitionDirector'
 import { PhysicsLayer } from '../transitions/PhysicsLayer'
+import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../transitions/pageDefs'
 import { edges } from '../transitions/edges'
 import './CanvasLayout.css'
@@ -23,19 +24,21 @@ export default function CanvasLayout() {
 
     return (
         <PhysicsProvider>
-            <TransitionDirector pageDefs={pageDefs} edges={edges}>
-                <div
-                    data-layout="canvas"
-                    data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
-                    data-frame-edge={edge}
-                >
-                    <BackgroundCanvas />
-                    <PhysicsLayer />
-                    <StringLayer />
-                    <FrameBar />
-                    <Outlet />
-                </div>
-            </TransitionDirector>
+            <PageDefRegistryProvider>
+                <TransitionDirector pageDefs={pageDefs} edges={edges}>
+                    <div
+                        data-layout="canvas"
+                        data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
+                        data-frame-edge={edge}
+                    >
+                        <BackgroundCanvas />
+                        <PhysicsLayer />
+                        <StringLayer />
+                        <FrameBar />
+                        <Outlet />
+                    </div>
+                </TransitionDirector>
+            </PageDefRegistryProvider>
         </PhysicsProvider>
     )
 }

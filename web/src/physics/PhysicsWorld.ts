@@ -511,6 +511,12 @@ export class PhysicsWorld {
         Matter.Body.set(reg.body, 'isSensor', isSensor)
     }
 
+    isSensor(handle: PhysicsHandle): boolean {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return reg.body.isSensor
+    }
+
     setStatic(handle: PhysicsHandle, isStatic: boolean): void {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
