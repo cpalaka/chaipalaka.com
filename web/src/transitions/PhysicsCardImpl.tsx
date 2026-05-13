@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
 import {
     useIsMinimized,
@@ -48,22 +48,6 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
 
     const registry = useMinimizedRegistry()
     const isMinimized = useIsMinimized(minimizable ? id : undefined)
-
-    // Hide the article for the first frame after mount. If this card is the
-    // incoming side of a pour-in transition, the pour-in primitive's RAF
-    // (scheduled in TransitionDirector's useEffect *before* this impl mounts
-    // in the deferred PhysicsLayer re-render) fires first and teleports the
-    // body above the viewport. By the time we flip `revealed` true on the
-    // next frame, the body is already in its pre-spawn position and the
-    // user never sees a paint at the layout anchor. For non-transition
-    // mounts (initial page load, post-resize) the cost is one frame of
-    // invisibility — imperceptible.
-    const [revealed, setRevealed] = useState(false)
-    useEffect(() => {
-        if (revealed) return
-        const raf = requestAnimationFrame(() => setRevealed(true))
-        return () => cancelAnimationFrame(raf)
-    }, [revealed])
 
     useEffect(() => {
         if (isMinimized) return
@@ -294,9 +278,6 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
         if (!el) return
         const fromChipRect = registry.consumeRestoreRect(id)
         if (!fromChipRect) return
-        // Restore-from-chip needs the article visible so flipMorph animates
-        // an actual painted element. Bypass the first-frame reveal gate.
-        setRevealed(true)
         const endTransform = el.style.transform
         requestAnimationFrame(() => {
             flipMorph(fromChipRect, el, { opacityFrom: 0.5, endTransform })
@@ -323,7 +304,11 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
             className={cls}
             data-variant={variant}
             data-card-id={id}
-            style={revealed ? style : { ...style, visibility: 'hidden' }}
+            style={
+                entry.state === 'spawning'
+                    ? { ...style, visibility: 'hidden' }
+                    : style
+            }
         >
             {showHeader ? (
                 <div data-card-header>
