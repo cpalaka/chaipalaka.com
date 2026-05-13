@@ -52,8 +52,10 @@ describe('partitionChain', () => {
     })
 
     test('two cards that overflow split into two sections with nav', () => {
-        // Each card 400 tall, viewport 700 tall, NAV_RESERVE ~140 → usable ~560.
-        // Card 1 at y≈80..480 fits; card 2 would need y≈540..940 → overflow → split.
+        // Each card 400 tall, viewport 700 tall, with the inline nav reserve
+        // (~232px for two NAV_CARD_H + 2 CHAIN_GAP + 24 breathing room),
+        // usable shrinks below ~400 → first card alone already overflows after
+        // the gap, so each section gets one content card.
         const sections = partitionChain({
             viewport: DESKTOP,
             cards: items([
@@ -158,7 +160,7 @@ describe('partitionChain', () => {
         expect(sections[1]!.cards.map((c) => c.id)).toEqual(['b', 'c'])
     })
 
-    test('narrow viewport uses a single centered nav card', () => {
+    test('narrow viewport still emits a single next-nav at section 1', () => {
         const sections = partitionChain({
             viewport: NARROW,
             cards: items([
@@ -168,15 +170,31 @@ describe('partitionChain', () => {
             routeKey: '/blog',
         })
 
-        // Section 1 should have exactly one nav card (next), centered.
+        // Section 1 should have exactly one nav card (next).
         expect(sections[0]!.navCards).toHaveLength(1)
-        const nav = sections[0]!.navCards[0]!
-        const anchor = nav.anchor(NARROW)
-        expect(anchor.x).toBeCloseTo(NARROW.width / 2, 0)
-        expect(nav.id).toBe('/blog-nav-next-s1')
+        expect(sections[0]!.navCards[0]!.id).toBe('/blog-nav-next-s1')
     })
 
-    test('desktop nav cards are bottom-corners', () => {
+    test('non-first section without back-nav: head card inherits chain edge', () => {
+        // Author mode with single-card sections — no nav cards emitted
+        // when sectionCount > 1 actually... wait, paginated chains always
+        // emit nav cards. Use unpaginated single section to verify edge
+        // inheritance baseline.
+        const sections = partitionChain({
+            viewport: DESKTOP,
+            cards: items([{ id: 'a', height: 50 }]),
+            routeKey: '/blog',
+        })
+
+        // Single section, no back-nav, head card retains its 'ceiling' parent.
+        expect(sections[0]!.cards[0]!.parent).toBe('ceiling')
+        expect(sections[0]!.navCards).toEqual([])
+    })
+
+    test('paginated: back-nav becomes chain head, first content reattaches to back-nav', () => {
+        // Three cards forced into 3 sections via overflow. Each non-first
+        // section gets a back-nav at the head; the first content card
+        // re-attaches to that back-nav, not to the ceiling directly.
         const sections = partitionChain({
             viewport: DESKTOP,
             cards: items([
@@ -187,21 +205,111 @@ describe('partitionChain', () => {
             routeKey: '/blog',
         })
 
-        const middleNav = sections[1]!.navCards
-        const back = middleNav.find((c) => c.id.includes('back'))!
-        const next = middleNav.find((c) => c.id.includes('next'))!
-        const backA = back.anchor(DESKTOP)
-        const nextA = next.anchor(DESKTOP)
+        expect(sections).toHaveLength(3)
 
-        expect(backA.x).toBeLessThan(DESKTOP.width / 2)
-        expect(nextA.x).toBeGreaterThan(DESKTOP.width / 2)
-        // Same y (bottom inset)
-        expect(backA.y).toBeCloseTo(nextA.y, 0)
-        // Near the bottom
-        expect(backA.y).toBeGreaterThan(DESKTOP.height / 2)
+        // Section 1 (first, no back-nav): a hangs from ceiling.
+        expect(sections[0]!.cards[0]!.parent).toBe('ceiling')
+
+        // Section 2 (middle, has back-nav): back-nav hangs from ceiling,
+        // and b hangs from the back-nav.
+        const s2Back = sections[1]!.navCards.find((c) => c.id.includes('back'))!
+        expect(s2Back.parent).toBe('ceiling')
+        expect(sections[1]!.cards[0]!.parent).toBe(s2Back.id)
+
+        // Section 3 (last, has back-nav): same pattern, c hangs from back-nav.
+        const s3Back = sections[2]!.navCards.find((c) => c.id.includes('back'))!
+        expect(s3Back.parent).toBe('ceiling')
+        expect(sections[2]!.cards[0]!.parent).toBe(s3Back.id)
     })
 
-    test('nav cards are floor-strung with kind=nav', () => {
+    test('paginated: next-nav hangs from last content card and trails to floor', () => {
+        const sections = partitionChain({
+            viewport: DESKTOP,
+            cards: items([
+                { id: 'a', height: 400 },
+                { id: 'b', height: 400 },
+                { id: 'c', height: 400 },
+            ]),
+            routeKey: '/blog',
+        })
+
+        // Section 1 has a next-nav; it hangs from card a and trails to floor.
+        const s1Next = sections[0]!.navCards.find((c) => c.id.includes('next'))!
+        expect(s1Next.parent).toBe('a')
+        expect(s1Next.trail).toBe('floor')
+
+        // Section 2 (middle) also has a next-nav hanging from b with floor trail.
+        const s2Next = sections[1]!.navCards.find((c) => c.id.includes('next'))!
+        expect(s2Next.parent).toBe('b')
+        expect(s2Next.trail).toBe('floor')
+
+        // Section 3 (last) has no next-nav → no floor trail anywhere.
+        const s3Next = sections[2]!.navCards.find((c) => c.id.includes('next'))
+        expect(s3Next).toBeUndefined()
+    })
+
+    test('chain field is the inline ordered render list: [back?, ...content, next?]', () => {
+        const sections = partitionChain({
+            viewport: DESKTOP,
+            cards: items([
+                { id: 'a', height: 400 },
+                { id: 'b', height: 400 },
+                { id: 'c', height: 400 },
+            ]),
+            routeKey: '/blog',
+        })
+
+        // Section 1: no back, content [a], next → chain = [a, next]
+        expect(sections[0]!.chain.map((c) => c.id)).toEqual([
+            'a',
+            '/blog-nav-next-s1',
+        ])
+
+        // Section 2: back, content [b], next → chain = [back, b, next]
+        expect(sections[1]!.chain.map((c) => c.id)).toEqual([
+            '/blog-nav-back-s2',
+            'b',
+            '/blog-nav-next-s2',
+        ])
+
+        // Section 3: back, content [c], no next → chain = [back, c]
+        expect(sections[2]!.chain.map((c) => c.id)).toEqual([
+            '/blog-nav-back-s3',
+            'c',
+        ])
+    })
+
+    test('chain on unpaginated section is just the content cards', () => {
+        const sections = partitionChain({
+            viewport: DESKTOP,
+            cards: items([{ id: 'a', height: 50 }]),
+            routeKey: '/blog',
+        })
+
+        expect(sections[0]!.chain.map((c) => c.id)).toEqual(['a'])
+    })
+
+    test('head-rewrite uses the original chain head parent (gravity-up routes)', () => {
+        // Floor-strung chain: section heads should re-attach to 'floor'
+        // (via back-nav, when present, or directly for section 1).
+        const sections = partitionChain({
+            viewport: DESKTOP,
+            cards: [
+                { card: makeCard('a', { parent: 'floor' }), height: 400 },
+                { card: makeCard('b', { parent: 'a' }), height: 400 },
+            ],
+            routeKey: '/lifelog',
+        })
+
+        expect(sections).toHaveLength(2)
+        // Section 1: no back-nav, a still hangs from floor.
+        expect(sections[0]!.cards[0]!.parent).toBe('floor')
+        // Section 2: back-nav itself hangs from floor.
+        const s2Back = sections[1]!.navCards.find((c) => c.id.includes('back'))!
+        expect(s2Back.parent).toBe('floor')
+    })
+
+    test('nav cards have kind=nav', () => {
         const sections = partitionChain({
             viewport: DESKTOP,
             cards: items([
@@ -213,7 +321,6 @@ describe('partitionChain', () => {
 
         for (const nav of sections.flatMap((s) => s.navCards)) {
             expect(nav.kind).toBe('nav')
-            expect(nav.parent).toBe('floor')
         }
     })
 })

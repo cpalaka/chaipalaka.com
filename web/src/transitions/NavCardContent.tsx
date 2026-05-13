@@ -33,7 +33,7 @@ export function NavCardContent({
         target === 'prev'
             ? `Previous section, ${targetSectionIndex} of ${sectionCount}`
             : `Next section, ${targetSectionIndex} of ${sectionCount}`
-    const glyph = target === 'prev' ? '← back' : 'next →'
+    const glyph = target === 'prev' ? '↑ back' : 'next ↓'
 
     return (
         <button
