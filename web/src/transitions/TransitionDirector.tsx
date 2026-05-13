@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import { useCardRegistry } from './CardRegistry'
+import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
 import { dispatch, type EdgeTransitions, type TransitionPlan } from './dispatch'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
@@ -22,6 +22,10 @@ import type { PageDef, TransitionId } from '../physics/PageDef'
 import type { Viewport } from '../physics/PhysicsWorld'
 
 const REDUCED_MOTION_MS = 150
+// Wait this long after the exit primitive starts before any incoming card
+// begins its drop-in. Gives the outgoing cards visible time to clear the
+// viewport before the new ones arrive.
+const POUR_IN_BASE_DELAY_MS = 1000
 
 export interface RunTransitionArgs {
     from: string
@@ -90,11 +94,18 @@ export function TransitionDirector({
     reducedRef.current = reduced
 
     const executeTransition = useCallback(
-        async (fromPath: string, toPath: string, plan: TransitionPlan) => {
-            const fromCards = pageDefs[fromPath]?.cards ?? []
-            const toCards = pageDefs[toPath]?.cards ?? []
-            const fromIds = fromCards.map((c) => c.id)
-            const toIds = toCards.map((c) => c.id)
+        async (_fromPath: string, _toPath: string, plan: TransitionPlan) => {
+            // Source of truth is the registry: cards marked `exiting` belong
+            // to the outgoing route; cards still `active` are the incoming
+            // ones registered by the newly-mounted route's <PhysicsCard>s.
+            // This lets routes that aren't listed in `pageDefs` (e.g. /blog,
+            // dynamic slug pages) participate in the standard transition.
+            const snapshot = registry.snapshot()
+            const exitingEntries = snapshot.filter((e) => e.state === 'exiting')
+            const activeEntries = snapshot.filter((e) => e.state === 'active')
+            const fromIds = exitingEntries.map((e) => e.id)
+            const toIds = activeEntries.map((e) => e.id)
+            const pourEntries = activeEntries.map((e, i) => makePourEntry(e, i))
             const viewport = getViewport()
 
             const releaseFromIds = () => {
@@ -127,24 +138,20 @@ export function TransitionDirector({
                 world,
                 viewport,
                 fromIds,
-                toCards
-                    .map((c, i) => makePourEntry(c, i, registry))
-                    .filter((x): x is PourInDropEntry => x !== null),
+                pourEntries,
             )
             const enterStep = buildPrimitive(
                 plan.enter,
                 world,
                 viewport,
                 fromIds,
-                toCards
-                    .map((c, i) => makePourEntry(c, i, registry))
-                    .filter((x): x is PourInDropEntry => x !== null),
+                pourEntries,
             )
 
             await Promise.all([runStep(exitStep), runStep(enterStep)])
             releaseFromIds()
         },
-        [pageDefs, registry, world],
+        [registry, world],
     )
 
     const dispatchTransition = useCallback(
@@ -164,17 +171,18 @@ export function TransitionDirector({
         [pageDefs, edges, executeTransition, registry],
     )
 
-    // Phase 1: BEFORE old route's cleanups, mark its cards as exiting so the
-    // registry preserves them across the unmount.
+    // Phase 1: BEFORE old route's cleanups, mark every currently-active card
+    // as exiting so the registry preserves them across the unmount. Sourcing
+    // from the registry (instead of pageDefs[prev]) covers routes that are
+    // not declared in `pageDefs` — e.g. /blog or dynamic slug pages — whose
+    // cards would otherwise pop out instantly when the route unmounts.
     useLayoutEffect(() => {
         const prev = prevLocationRef.current
         if (!prev || prev.pathname === location.pathname) return
-        const oldPageDef = pageDefs[prev.pathname]
-        if (!oldPageDef) return
-        for (const card of oldPageDef.cards) {
-            registry.markExiting(card.id)
+        for (const entry of registry.snapshot()) {
+            if (entry.state === 'active') registry.markExiting(entry.id)
         }
-    }, [location, registry, pageDefs])
+    }, [location, registry])
 
     // Phase 2: AFTER children's effects (new cards now registered in PhysicsWorld),
     // dispatch and execute the transition primitives.
@@ -243,16 +251,13 @@ function buildPrimitive(
 }
 
 function makePourEntry(
-    card: { id: string },
+    entry: PhysicsCardEntry,
     index: number,
-    registry: ReturnType<typeof useCardRegistry>,
-): PourInDropEntry | null {
-    const entry = registry.snapshot().find((e) => e.id === card.id)
-    if (!entry) return null
+): PourInDropEntry {
     return {
-        id: card.id,
+        id: entry.id,
         layoutAnchor: entry.anchor,
         height: entry.content.height,
-        staggerMs: index * 80,
+        staggerMs: POUR_IN_BASE_DELAY_MS + index * 80,
     }
 }

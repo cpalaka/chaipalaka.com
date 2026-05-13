@@ -114,11 +114,92 @@ describe('stringCutDrop (T1)', () => {
     test('translates floor to phantom position so cards can fall past viewport', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
+        // Register an uncleared card so the primitive stays mid-flight (and
+        // therefore keeps the phantom floor in place) at the time we observe.
+        world.registerById(
+            'in-flight',
+            { x: 400, y: 200 },
+            { width: 200, height: 100 },
+        )
         const floorBefore = world.getPosition(world.floorHandle).y
-        const step = stringCutDrop(world, [], { viewport })
+        const step = stringCutDrop(world, ['in-flight'], { viewport })
         step(0)
         const floorAfter = world.getPosition(world.floorHandle).y
         expect(floorAfter).toBeGreaterThan(floorBefore)
         expect(floorAfter).toBeGreaterThan(viewport.height)
+    })
+
+    test('only cuts tethers belonging to exiting cards (incoming card stays strung)', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const exiting = world.registerById(
+            'old',
+            { x: 200, y: 200 },
+            { width: 200, height: 100 },
+        )
+        const incoming = world.registerById(
+            'new',
+            { x: 600, y: 200 },
+            { width: 200, height: 100 },
+        )
+        world.tether(world.ceilingHandle, exiting, 150, { x: 0, y: 0 })
+        world.tether(world.ceilingHandle, incoming, 150, { x: 0, y: 0 })
+
+        const step = stringCutDrop(world, ['old'], { viewport })
+        step(0)
+
+        const remaining = world.listTetherRecords()
+        expect(remaining).toHaveLength(1)
+        expect(remaining[0]?.child).toBe(incoming)
+    })
+
+    test('kicks exiting cards along the buoyancy axis on init', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const heavy = world.registerById(
+            'h',
+            { x: 200, y: 200 },
+            { width: 200, height: 100 },
+        )
+        const balloon = world.registerById(
+            'b',
+            { x: 600, y: 400 },
+            { width: 200, height: 100 },
+        )
+        world.setBuoyancy(balloon, 'balloon')
+        world.tether(world.ceilingHandle, heavy, 150, { x: 0, y: 0 })
+        world.tether(world.floorHandle, balloon, 150, { x: 0, y: 0 })
+
+        const step = stringCutDrop(world, ['h', 'b'], { viewport })
+        step(0)
+
+        // Heavy gets downward kick (gravity direction).
+        const vh = world.getVelocity(heavy)
+        expect(vh.y).toBeGreaterThan(0)
+        // Balloon gets upward kick (opposite gravity).
+        const vb = world.getVelocity(balloon)
+        expect(vb.y).toBeLessThan(0)
+    })
+
+    test('restores the original floor anchor on completion', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const floorBefore = world.getAnchor(world.floorHandle)
+
+        const step = stringCutDrop(world, [], {
+            viewport,
+            hardCeilingMs: 50,
+        })
+        // Tick until the primitive returns true (hits hard ceiling with no cards).
+        let elapsed = 0
+        let done = false
+        while (!done && elapsed < 200) {
+            done = step(FIXED_DT_MS)
+            elapsed += FIXED_DT_MS
+        }
+        expect(done).toBe(true)
+        const floorAfter = world.getAnchor(world.floorHandle)
+        expect(floorAfter.x).toBeCloseTo(floorBefore.x, 1)
+        expect(floorAfter.y).toBeCloseTo(floorBefore.y, 1)
     })
 })
