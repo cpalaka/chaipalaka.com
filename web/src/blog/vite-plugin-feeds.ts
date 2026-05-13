@@ -15,7 +15,7 @@ interface PostMeta {
     body: string
 }
 
-function escapeXml(s: string): string {
+export function escapeXml(s: string): string {
     return s
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -50,7 +50,7 @@ async function collectPosts(
     )
 }
 
-function buildRss(posts: PostMeta[], baseUrl: string): string {
+export function buildRss(posts: PostMeta[], baseUrl: string): string {
     const items = posts
         .map((p) => {
             const link = `${baseUrl}/blog/${p.slug}`
@@ -80,7 +80,7 @@ ${items}
 </rss>`
 }
 
-function buildSitemap(posts: PostMeta[], baseUrl: string): string {
+export function buildSitemap(posts: PostMeta[], baseUrl: string): string {
     const staticRoutes = ['/', '/blog']
     const dynamicRoutes = posts.flatMap((p) => [
         `/blog/${p.slug}`,
