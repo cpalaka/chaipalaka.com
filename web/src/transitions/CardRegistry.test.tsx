@@ -27,11 +27,12 @@ const entryB: RegisterArgs = {
 }
 
 describe('CardRegistry', () => {
-    test('register adds an entry visible in snapshot', () => {
+    test('register adds an entry visible in snapshot', async () => {
         const { result } = renderHook(() => useCardRegistry(), { wrapper })
 
-        act(() => {
+        await act(async () => {
             result.current.register(entryA)
+            await Promise.resolve()
         })
 
         const entries = result.current.snapshot()
