@@ -16,6 +16,12 @@ export interface AnchorSlideOpts {
     sign: 1 | -1
     durationMs: number
     viewport: Viewport
+    /**
+     * Temporarily toggle a viewport edge to sensor mode for the duration of the
+     * slide. Used by T4 (within-page section pagination) so chains can pass
+     * through the ceiling (forward) or floor (back) edge. Restored at the end.
+     */
+    sensorEdges?: 'ceiling' | 'floor' | 'none'
 }
 
 const OFFSCREEN_PAD = 100
@@ -59,9 +65,16 @@ export function anchorSlide(
     targets: AnchorSlideTargets,
     opts: AnchorSlideOpts,
 ): PrimitiveStep {
-    const { axis, sign, durationMs, viewport } = opts
+    const { axis, sign, durationMs, viewport, sensorEdges } = opts
     let elapsedMs = 0
     let initialized = false
+
+    const sensorEdgeHandle =
+        sensorEdges === 'ceiling'
+            ? world.ceilingHandle
+            : sensorEdges === 'floor'
+              ? world.floorHandle
+              : undefined
 
     const fromInitial = new Map<string, Vec2>()
     const fromFinal = new Map<string, Vec2>()
@@ -85,6 +98,9 @@ export function anchorSlide(
 
     return (dtMs) => {
         if (!initialized) {
+            if (sensorEdgeHandle !== undefined) {
+                world.setSensor(sensorEdgeHandle, true)
+            }
             for (const id of targets.fromIds) {
                 const handle = world.getHandleById(id)
                 if (handle === undefined) continue
@@ -168,6 +184,9 @@ export function anchorSlide(
                         captured.anchorA,
                     )
                 }
+            }
+            if (sensorEdgeHandle !== undefined) {
+                world.setSensor(sensorEdgeHandle, false)
             }
             return true
         }
