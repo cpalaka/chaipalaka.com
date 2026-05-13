@@ -3,9 +3,6 @@
 **Status:** Draft. None of these are committed; this is raw material for the
 `/improve-codebase-architecture` skill's grilling loop.
 **Created:** 2026-05-12, merged 2026-05-13.
-**Supersedes:** `architecture-deepening-candidates.md` and
-`architecture-deepening-second-pass.md` — both are predecessor working notes
-that can be removed once this file is reviewed.
 **Scope:** `web/src/` primarily; `api/src/` is largely empty so backend
 candidates from the PRD ("LastFmAdapter", "CacheLayer", etc.) are intentionally
 out of scope until those modules exist.
