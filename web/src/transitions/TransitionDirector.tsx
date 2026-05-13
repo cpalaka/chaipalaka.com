@@ -228,7 +228,7 @@ export function TransitionDirector({
         const { trigger } = isTransitionTrigger(prev, location)
         if (!trigger) return
         for (const entry of registry.snapshot()) {
-            if (entry.state === 'active') registry.markExiting(entry.id)
+            if (entry.state !== 'exiting') registry.markExiting(entry.id)
         }
     }, [location, registry, isTransitionTrigger])
 

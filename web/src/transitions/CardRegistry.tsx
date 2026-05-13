@@ -8,7 +8,7 @@ import {
 import type { Buoyancy, ParentRef } from '../physics/PageDef'
 import type { CardContent } from '../physics/PhysicsPage'
 
-export type CardLifecycle = 'active' | 'exiting'
+export type CardLifecycle = 'spawning' | 'active' | 'exiting'
 
 export interface PhysicsCardEntry {
     id: string
@@ -27,15 +27,19 @@ export interface CardRegistryAPI {
     register(entry: RegisterArgs): void
     requestUnregister(id: string): void
     markExiting(id: string): void
+    activate(id: string): void
+    arm(): void
+    disarm(): void
     release(id: string): void
     snapshot(): readonly PhysicsCardEntry[]
     subscribe(cb: () => void): () => void
 }
 
-class CardRegistryStore {
+export class CardRegistryStore {
     private entries = new Map<string, PhysicsCardEntry>()
     private listeners = new Set<() => void>()
     private cachedSnapshot: readonly PhysicsCardEntry[] | null = null
+    private armed = false
 
     subscribe = (cb: () => void): (() => void) => {
         this.listeners.add(cb)
@@ -53,8 +57,38 @@ class CardRegistryStore {
 
     register = (args: RegisterArgs): void => {
         const existing = this.entries.get(args.id)
-        const state: CardLifecycle = existing?.state ?? 'active'
+        const state: CardLifecycle = existing?.state ?? 'spawning'
         this.entries.set(args.id, { ...args, state })
+        this.invalidate()
+        if (!existing && !this.armed) {
+            queueMicrotask(() => {
+                const e = this.entries.get(args.id)
+                if (e?.state === 'spawning') this.activate(args.id)
+            })
+        }
+    }
+
+    arm = (): void => {
+        this.armed = true
+    }
+
+    disarm = (): void => {
+        this.armed = false
+    }
+
+    activate = (id: string): void => {
+        const e = this.entries.get(id)
+        if (!e) {
+            throw new Error(
+                `CardRegistry.activate: no entry for id "${id}"`,
+            )
+        }
+        if (e.state !== 'spawning') {
+            throw new Error(
+                `CardRegistry.activate: illegal transition ${e.state} → active for id "${id}"`,
+            )
+        }
+        this.entries.set(id, { ...e, state: 'active' })
         this.invalidate()
     }
 
