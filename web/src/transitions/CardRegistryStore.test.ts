@@ -98,4 +98,19 @@ describe('CardRegistryStore state machine', () => {
         store.release('a')
         expect(store.snapshot()).toHaveLength(0)
     })
+
+    test('disarm() activates any cards left spawning by the primitive', () => {
+        // Covers the case where a card registers WHILE armed (transition in
+        // flight) but the primitive that owns activation never sees it —
+        // e.g. routes whose card set materialises asynchronously after the
+        // Director has already snapshotted the registry. On disarm, these
+        // orphans must be promoted so they don't render visibility:hidden
+        // forever.
+        const store = new CardRegistryStore()
+        store.arm()
+        store.register(entryA)
+        expect(store.snapshot()[0]?.state).toBe('spawning')
+        store.disarm()
+        expect(store.snapshot()[0]?.state).toBe('active')
+    })
 })
