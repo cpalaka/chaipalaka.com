@@ -11,10 +11,13 @@ import {
 } from './BlogIndex.measure'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { useHashSection } from '../../transitions/useHashSection'
+import { edgeToInsets } from '../../physics/PhysicsContext'
+import { useFrameEdge } from '../../canvas/useFrameEdge'
 import {
     partitionPageDef,
     NAV_CARD_W,
     NAV_CARD_H,
+    NAV_TOP_INSET,
 } from '../../layout/sectionLayout'
 import { NavCardContent } from '../../transitions/NavCardContent'
 import type { PageDef, CardSpec } from '../../physics/PageDef'
@@ -36,6 +39,55 @@ interface BuiltChain {
     pageDef: PageDef
     cardContent: Record<string, CardContent>
     heights: Record<string, number>
+}
+
+/**
+ * Lays out a section's cards top-to-bottom in chain order.
+ *   - back-nav (head): pinned at NAV_TOP_INSET below the physics ceiling
+ *   - content cards: stack with CHAIN_GAP starting just below back-nav
+ *     (or at CHAIN_TOP relative to the ceiling if no back-nav)
+ *   - next-nav (tail): hangs from the last content card with CHAIN_GAP
+ *     — its trail tether to the floor provides the long "chain continues
+ *     below" string, which lengthens or shortens with the chain.
+ *
+ * `insets` are the physics inset (FrameBar). Anchoring relative to the
+ * actual edges (not the window) keeps tether lengths sane.
+ */
+export function layoutSection(
+    cards: readonly CardSpec[],
+    heights: Record<string, number>,
+    _viewport: Viewport,
+    insets: { top: number; bottom: number } = { top: 0, bottom: 0 },
+): CardSpec[] {
+    const isBackNav = (card: CardSpec, i: number) =>
+        i === 0 && card.kind === 'nav'
+
+    const ceilingY = insets.top
+
+    const startsWithBackNav = cards.length > 0 && isBackNav(cards[0]!, 0)
+    let y = startsWithBackNav
+        ? ceilingY + NAV_TOP_INSET + NAV_CARD_H + CHAIN_GAP
+        : ceilingY + CHAIN_TOP
+
+    return cards.map((card, i) => {
+        let capturedY: number
+        if (isBackNav(card, i)) {
+            capturedY = ceilingY + NAV_TOP_INSET + NAV_CARD_H / 2
+            y = ceilingY + NAV_TOP_INSET + NAV_CARD_H + CHAIN_GAP
+        } else {
+            const h =
+                heights[card.id] ?? (card.kind === 'nav' ? NAV_CARD_H : 0)
+            capturedY = y + h / 2
+            y += h + CHAIN_GAP
+        }
+        return {
+            ...card,
+            anchor: (vp: Viewport) => ({
+                x: vp.width * CHAIN_X_FRACTION,
+                y: capturedY,
+            }),
+        }
+    })
 }
 
 export function buildChain(
@@ -127,6 +179,8 @@ export default function BlogIndex() {
     const [chain, setChain] = useState<BuiltChain>(EMPTY_CHAIN)
     const [viewport, setViewport] = useState<Viewport>(getViewport)
     const { sectionIndex, goToSection } = useHashSection()
+    const { edge } = useFrameEdge()
+    const insets = useMemo(() => edgeToInsets(edge), [edge])
 
     useRegisterPageDef(chain.pageDef)
 
@@ -161,12 +215,14 @@ export default function BlogIndex() {
     const sectionPageDef = useMemo<PageDef>(
         () => ({
             gravity: 'down',
-            cards: [
-                ...(current?.cards ?? []),
-                ...(current?.navCards ?? []),
-            ],
+            cards: layoutSection(
+                current?.chain ?? [],
+                chain.heights,
+                viewport,
+                insets,
+            ),
         }),
-        [current],
+        [current, chain.heights, viewport, insets],
     )
 
     const sectionContent = useMemo<Record<string, CardContent>>(() => {
@@ -180,7 +236,7 @@ export default function BlogIndex() {
             // 1-indexed target — back targets currentIdx, next targets currentIdx+2.
             const targetSectionIndex = isBack ? currentIdx : currentIdx + 2
             out[nav.id] = {
-                text: isBack ? '← back' : 'next →',
+                text: isBack ? '↑ back' : 'next ↓',
                 width: NAV_CARD_W,
                 height: NAV_CARD_H,
                 draggable: false,

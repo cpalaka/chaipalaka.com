@@ -49,6 +49,7 @@ export interface PhysicsCardProps {
     label?: string
     kind?: string
     parent?: ParentRef
+    trail?: ParentRef
     buoyancy?: Buoyancy
     draggable?: boolean
 }
@@ -62,6 +63,7 @@ export function PhysicsCard(props: PhysicsCardProps) {
         () => ({
             id,
             parent: props.parent ?? null,
+            trail: props.trail,
             kind: props.kind ?? 'card',
             buoyancy: props.buoyancy ?? 'heavy',
             anchor: props.anchor,
@@ -82,6 +84,7 @@ export function PhysicsCard(props: PhysicsCardProps) {
         [
             id,
             props.parent,
+            props.trail,
             props.kind,
             props.buoyancy,
             props.anchor.x,

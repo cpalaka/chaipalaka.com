@@ -26,6 +26,10 @@ export interface CardSpec {
     parent: ParentRef
     anchor: (viewport: Viewport) => Vec2
     sectionBreak?: 'before' | 'after'
+    // Secondary tether — e.g. a paginated section's terminal nav card uses
+    // `trail: 'floor'` so a string visibly continues from the card to the
+    // floor, implying the chain extends below the screen.
+    trail?: ParentRef
 }
 
 export interface AuthorSectionDef {

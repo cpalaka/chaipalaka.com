@@ -124,8 +124,12 @@ export function anchorSlide(
                 const pos = world.getPosition(handle)
                 const layout = { x: pos.x, y: pos.y }
                 toLayout.set(id, layout)
-                // To-card enters from axis × -sign direction (origin side)
-                const enterOffset = offsetFor((-sign) as -1 | 1)
+                // To-card enters from the OPPOSITE side of the from-card's
+                // exit (sign direction) so the two move as a unified strip:
+                // e.g. forward vertical (sign=+1) → from exits up, to enters
+                // from below. Without this the cards would pass through
+                // each other in opposite directions.
+                const enterOffset = offsetFor(sign)
                 const start = {
                     x: layout.x + enterOffset.x,
                     y: layout.y + enterOffset.y,
