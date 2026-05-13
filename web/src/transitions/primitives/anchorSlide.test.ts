@@ -1,139 +1,133 @@
 import { describe, test, expect } from 'vitest'
-import { PhysicsWorld } from '../../physics/PhysicsWorld'
+import { PhysicsWorld, type PhysicsHandle } from '../../physics/PhysicsWorld'
 import { anchorSlide } from './anchorSlide'
 
-describe('anchorSlide (T3) — horizontal', () => {
-    test('translates from-card horizontally off-viewport over duration', () => {
+const FIXED_DT_MS = 1000 / 60
+const DURATION_MS = 700
+
+/**
+ * Drive the slide step to completion using fixed-dt physics ticks between
+ * frames. Real TransitionDirector uses requestAnimationFrame, but for the
+ * test we step both the primitive and the world at a constant cadence so
+ * the physics body has a chance to respond to tether-origin tweens.
+ */
+function runToCompletion(
+    world: PhysicsWorld,
+    step: ReturnType<typeof anchorSlide>,
+    durationMs = DURATION_MS,
+) {
+    const frames = Math.ceil((durationMs * 1.05) / FIXED_DT_MS)
+    let done = false
+    for (let i = 0; i < frames; i++) {
+        done = step(FIXED_DT_MS)
+        world.tick(FIXED_DT_MS)
+        if (done) break
+    }
+    return done
+}
+
+function stringCard(
+    world: PhysicsWorld,
+    id: string,
+    layoutAnchor: { x: number; y: number },
+    tetherLen = 150,
+): PhysicsHandle {
+    const ceilingPos = world.getPosition(world.ceilingHandle)
+    const handle = world.registerById(id, layoutAnchor, {
+        width: 200,
+        height: 100,
+    })
+    world.tether(world.ceilingHandle, handle, tetherLen, {
+        x: layoutAnchor.x - ceilingPos.x,
+        y: layoutAnchor.y - tetherLen - ceilingPos.y,
+    })
+    return handle
+}
+
+describe('anchorSlide (T3) — horizontal, tether-driven', () => {
+    test('from-card with stiff tether translates toward off-viewport on -sign side', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const handle = stringCard(world, 'a', { x: 400, y: 200 })
+        const start = world.getPosition(handle)
 
         const step = anchorSlide(
             world,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
 
-        step(0) // captures initial positions
-        const start = world.getPosition(a)
-        expect(start.x).toBeCloseTo(400, 1)
-
-        // Halfway through duration
-        step(350)
-        const mid = world.getPosition(a)
-        // sign=+1, fromCard exits in axis × -sign direction = leftward (negative x)
-        expect(mid.x).toBeLessThan(start.x)
-
-        // After full duration
-        const done = step(350)
+        const done = runToCompletion(world, step)
         expect(done).toBe(true)
-        const final = world.getPosition(a)
-        // Final position is off-viewport on the leftward side
-        expect(final.x).toBeLessThanOrEqual(-100)
+        const final = world.getPosition(handle)
+        // sign=+1, from-card exits in -sign direction (leftward) — should clear viewport
+        expect(final.x).toBeLessThan(0)
+        expect(final.x).toBeLessThan(start.x)
     })
 
     test('sign=-1 flips direction (from-card exits to the right)', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const handle = stringCard(world, 'a', { x: 400, y: 200 })
 
         const step = anchorSlide(
             world,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: -1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: -1, durationMs: DURATION_MS, viewport },
         )
 
-        step(0)
-        step(700)
-        const final = world.getPosition(a)
-        // With sign=-1, fromCard exits in axis × -sign = rightward (positive x)
+        runToCompletion(world, step)
+        const final = world.getPosition(handle)
         expect(final.x).toBeGreaterThan(viewport.width)
     })
 
-    test('to-card enters from origin side toward its layout position', () => {
+    test('to-card enters from origin side and arrives near layout', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const handle = stringCard(world, 'b', { x: 400, y: 200 })
 
         const step = anchorSlide(
             world,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
 
+        // After init, the tether origin should be off-screen on the origin
+        // side (left), so the card gets yanked leftward immediately.
         step(0)
-        // toCard with sign=+1: enters from origin side (left) — initial position pushed off-screen left
-        const initialPos = world.getPosition(b)
-        expect(initialPos.x).toBeLessThanOrEqual(-100)
+        world.tick(FIXED_DT_MS)
+        expect(world.getPosition(handle).x).toBeLessThan(400)
 
-        // At end, reaches its layout position
-        step(700)
-        const final = world.getPosition(b)
-        expect(final.x).toBeCloseTo(400, 1)
+        runToCompletion(world, step)
+        // After the slide ends, the body keeps pendulum-settling toward
+        // the rope origin under continued physics. Real app behaviour —
+        // TransitionDirector returns, but the physics loop ticks on.
+        for (let i = 0; i < 600; i++) world.tick(FIXED_DT_MS)
+        const final = world.getPosition(handle)
+        // Pendulum landing — within a tether length of the layout anchor x
+        expect(Math.abs(final.x - 400)).toBeLessThan(150)
     })
 
-    test('follows ease-out-cubic curve (front-loaded motion)', () => {
+    test('detached (untethered) cards are skipped without throwing', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
+        const handle = world.registerById(
             'a',
             { x: 400, y: 300 },
             { width: 200, height: 100 },
         )
+        const start = world.getPosition(handle)
 
         const step = anchorSlide(
             world,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 1000,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
 
-        step(0)
-        const start = world.getPosition(a).x
-        step(250) // t=0.25
-        const at25 = world.getPosition(a).x
-        step(250) // t=0.50
-        const at50 = world.getPosition(a).x
-
-        // Distance from start at t=0.5 — eased value at 0.5 is 1 - (1-0.5)^3 = 1 - 0.125 = 0.875
-        const totalDistance = Math.abs(start - (start - (viewport.width + 200)))
-        const distance25 = Math.abs(start - at25)
-        const distance50 = Math.abs(start - at50)
-        // Eased at t=0.25 → 1 - (0.75)^3 ≈ 0.578 — more than half of 0.875
-        expect(distance25 / distance50).toBeGreaterThan(0.5)
-        // And the 0.25-progress is much more than linear 0.25 (which would give 0.25/0.5 = 0.5)
-        expect(distance25 / totalDistance).toBeGreaterThan(0.4)
+        expect(() => runToCompletion(world, step)).not.toThrow()
+        // Untethered card is left to gravity; horizontal position roughly unchanged
+        const final = world.getPosition(handle)
+        expect(Math.abs(final.x - start.x)).toBeLessThan(50)
     })
 
     test('handles empty from/to lists without error', () => {
@@ -143,12 +137,7 @@ describe('anchorSlide (T3) — horizontal', () => {
         const step = anchorSlide(
             world,
             { fromIds: [], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 100,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 100, viewport },
         )
 
         step(0)
@@ -156,82 +145,138 @@ describe('anchorSlide (T3) — horizontal', () => {
         expect(done).toBe(true)
     })
 
-    test('to-card tether is captured on init and restored on completion', () => {
+    test('pendulum signature: from-card swings on the y-axis as it slides', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
+        const handle = stringCard(world, 'a', { x: 400, y: 250 }, 150)
+        // Let the rope settle to its hanging equilibrium before the slide.
+        for (let i = 0; i < 60; i++) world.tick(FIXED_DT_MS)
+        const y0 = world.getPosition(handle).y
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
-        const TETHER_LEN = 250
-        world.tether(world.ceilingHandle, b, TETHER_LEN)
-        expect(
-            world.listTetherRecords().filter((t) => t.child === b),
-        ).toHaveLength(1)
+
+        let maxYDelta = 0
+        const frames = Math.ceil((DURATION_MS * 1.05) / FIXED_DT_MS)
+        for (let i = 0; i < frames; i++) {
+            const done = step(FIXED_DT_MS)
+            world.tick(FIXED_DT_MS)
+            const y = world.getPosition(handle).y
+            maxYDelta = Math.max(maxYDelta, Math.abs(y - y0))
+            if (done) break
+        }
+        // A dynamic body lagging behind a fast-moving rope origin does not
+        // travel in a perfectly straight horizontal line; it pendulums.
+        // Threshold is conservative; observed deltas in practice are larger.
+        expect(maxYDelta).toBeGreaterThan(2)
+    })
+
+    test('destination-side wall is sensor during the slide and restored after', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        stringCard(world, 'a', { x: 400, y: 200 })
+
+        expect(world.isWallSensor('left')).toBe(false)
+        expect(world.isWallSensor('right')).toBe(false)
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
+        )
+
+        step(0)
+        // sign=+1 → from-card exits leftward → left wall becomes sensor
+        expect(world.isWallSensor('left')).toBe(true)
+        expect(world.isWallSensor('right')).toBe(false)
+
+        runToCompletion(world, step)
+        expect(world.isWallSensor('left')).toBe(false)
+        expect(world.isWallSensor('right')).toBe(false)
+    })
+
+    test('sign=-1 makes the right wall the sensor', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        stringCard(world, 'a', { x: 400, y: 200 })
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            { axis: 'horizontal', sign: -1, durationMs: DURATION_MS, viewport },
+        )
+
+        step(0)
+        expect(world.isWallSensor('right')).toBe(true)
+        expect(world.isWallSensor('left')).toBe(false)
+
+        runToCompletion(world, step)
+        expect(world.isWallSensor('right')).toBe(false)
+    })
+
+    test("to-card's tether stays continuously attached and ends at original anchor", () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const handle = stringCard(world, 'b', { x: 400, y: 200 }, 150)
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const originalAnchor = { x: 400 - ceilingPos.x, y: 50 - ceilingPos.y }
+
+        // Sanity: anchorA recorded matches what we wired
+        const recBefore = world
+            .listTetherRecords()
+            .find((r) => r.child === handle)!
+        expect(recBefore.anchorA?.x).toBeCloseTo(originalAnchor.x, 5)
+        expect(recBefore.anchorA?.y).toBeCloseTo(originalAnchor.y, 5)
 
         const step = anchorSlide(
             world,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
 
-        // After step(0), the tether should be detached so StringLayer
-        // doesn't draw a long diagonal string while the card slides in.
-        step(0)
-        expect(
-            world.listTetherRecords().filter((t) => t.child === b),
-        ).toHaveLength(0)
+        // Walk through the slide and confirm the tether is never removed.
+        const frames = Math.ceil((DURATION_MS * 1.05) / FIXED_DT_MS)
+        for (let i = 0; i < frames; i++) {
+            const done = step(FIXED_DT_MS)
+            world.tick(FIXED_DT_MS)
+            expect(
+                world
+                    .listTetherRecords()
+                    .filter((r) => r.child === handle).length,
+            ).toBe(1)
+            if (done) break
+        }
 
-        // After completion, the tether should be re-attached with the
-        // original length so the card resumes hanging at its layout anchor.
-        step(700)
-        const restored = world
+        // At completion, anchorA is restored exactly.
+        const recAfter = world
             .listTetherRecords()
-            .filter((t) => t.child === b)
-        expect(restored).toHaveLength(1)
-        expect(restored[0]!.length).toBe(TETHER_LEN)
-        expect(restored[0]!.parent).toBe(world.ceilingHandle)
+            .find((r) => r.child === handle)!
+        expect(recAfter.anchorA?.x).toBeCloseTo(originalAnchor.x, 5)
+        expect(recAfter.anchorA?.y).toBeCloseTo(originalAnchor.y, 5)
     })
 
-    test('from-card tether is captured on init and NOT restored (card is dying)', () => {
+    test('from-card tether is left intact for TransitionDirector to release', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
-        world.tether(world.ceilingHandle, a, 250)
+        const handle = stringCard(world, 'a', { x: 400, y: 200 })
         expect(
-            world.listTetherRecords().filter((t) => t.child === a),
+            world.listTetherRecords().filter((r) => r.child === handle),
         ).toHaveLength(1)
 
         const step = anchorSlide(
             world,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: DURATION_MS, viewport },
         )
 
-        step(0)
+        runToCompletion(world, step)
+        // Tether is NOT cut by anchorSlide; TransitionDirector calls
+        // registry.release next, which unregisters the body (tether goes with it).
         expect(
-            world.listTetherRecords().filter((t) => t.child === a),
-        ).toHaveLength(0)
-
-        step(700)
-        // From-card stays untethered — TransitionDirector releases it next.
-        expect(
-            world.listTetherRecords().filter((t) => t.child === a),
-        ).toHaveLength(0)
+            world.listTetherRecords().filter((r) => r.child === handle),
+        ).toHaveLength(1)
     })
 })

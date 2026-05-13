@@ -631,6 +631,91 @@ describe('PhysicsWorld setSensor', () => {
     })
 })
 
+describe('PhysicsWorld setWallSensor', () => {
+    test('isWallSensor defaults to false for both walls', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(world.isWallSensor('left')).toBe(false)
+        expect(world.isWallSensor('right')).toBe(false)
+    })
+
+    test('setWallSensor("left", true) flips only the left wall', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        world.setWallSensor('left', true)
+        expect(world.isWallSensor('left')).toBe(true)
+        expect(world.isWallSensor('right')).toBe(false)
+    })
+
+    test('setWallSensor("right", true) flips only the right wall', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        world.setWallSensor('right', true)
+        expect(world.isWallSensor('left')).toBe(false)
+        expect(world.isWallSensor('right')).toBe(true)
+    })
+
+    test('setWallSensor restores collision when toggled back to false', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        world.setWallSensor('left', true)
+        world.setWallSensor('left', false)
+        expect(world.isWallSensor('left')).toBe(false)
+    })
+})
+
+describe('PhysicsWorld setTetherAnchorA', () => {
+    test('updates the stored anchorA in listTetherRecords', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const child = world.register({ x: 200, y: 150 }, { width: 80, height: 40 })
+        const th = world.tether(world.ceilingHandle, child, 150, {
+            x: 200 - ceilingPos.x,
+            y: 0 - ceilingPos.y,
+        })
+        const newAnchor = { x: -300 - ceilingPos.x, y: 0 - ceilingPos.y }
+        world.setTetherAnchorA(th, newAnchor)
+        const rec = world.listTetherRecords().find((r) => r.handle === th)
+        expect(rec).toBeDefined()
+        expect(rec!.anchorA).toEqual(newAnchor)
+    })
+
+    test('shifts the rope origin reported by getTethers', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const child = world.register({ x: 200, y: 150 }, { width: 80, height: 40 })
+        const th = world.tether(world.ceilingHandle, child, 150, {
+            x: 200 - ceilingPos.x,
+            y: 0 - ceilingPos.y,
+        })
+        // Move rope origin to x=600 in world space (relative to ceiling centre)
+        world.setTetherAnchorA(th, { x: 600 - ceilingPos.x, y: 0 - ceilingPos.y })
+        const view = world.getTethers()[0]!
+        expect(view.parentPos.x).toBeCloseTo(600, 5)
+        expect(view.parentPos.y).toBeCloseTo(0, 5)
+    })
+
+    test('rope force pulls the child toward the new origin after a tick', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        const ceilingPos = world.getPosition(world.ceilingHandle)
+        const child = world.register({ x: 200, y: 200 }, { width: 80, height: 40 })
+        const th = world.tether(world.ceilingHandle, child, 50, {
+            x: 200 - ceilingPos.x,
+            y: 0 - ceilingPos.y,
+        })
+        // Settle near (200, ~50 below 0)
+        for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
+        const before = world.getPosition(child)
+        expect(Math.abs(before.x - 200)).toBeLessThan(20)
+        // Now move the rope origin to x=600. Child should drift rightward over time.
+        world.setTetherAnchorA(th, { x: 600 - ceilingPos.x, y: 0 - ceilingPos.y })
+        for (let i = 0; i < 200; i++) world.tick(FIXED_DT_MS)
+        const after = world.getPosition(child)
+        expect(after.x).toBeGreaterThan(before.x + 100)
+    })
+
+    test('throws for an unknown tether handle', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        expect(() => world.setTetherAnchorA(999, { x: 0, y: 0 })).toThrow()
+    })
+})
+
 describe('PhysicsWorld setStatic', () => {
     test('setStatic throws for an unknown handle', () => {
         const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })

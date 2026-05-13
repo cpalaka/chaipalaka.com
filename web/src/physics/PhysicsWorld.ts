@@ -511,6 +511,26 @@ export class PhysicsWorld {
         Matter.Body.set(reg.body, 'isSensor', isSensor)
     }
 
+    setWallSensor(side: 'left' | 'right', sensor: boolean): void {
+        const body = side === 'left' ? this._leftWall : this._rightWall
+        Matter.Body.set(body, 'isSensor', sensor)
+    }
+
+    isWallSensor(side: 'left' | 'right'): boolean {
+        const body = side === 'left' ? this._leftWall : this._rightWall
+        return body.isSensor === true
+    }
+
+    setTetherAnchorA(th: TetherHandle, anchorA: Vec2): void {
+        const rec = this.tethers.get(th)
+        if (!rec) throw new Error(`PhysicsWorld: unknown tether handle ${th}`)
+        const constraint = this.links.get(rec.linkHandle)
+        if (!constraint) throw new Error(`PhysicsWorld: tether ${th} has no constraint`)
+        const next = { x: anchorA.x, y: anchorA.y }
+        rec.anchorA = next
+        constraint.pointA = { x: next.x, y: next.y }
+    }
+
     setStatic(handle: PhysicsHandle, isStatic: boolean): void {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
