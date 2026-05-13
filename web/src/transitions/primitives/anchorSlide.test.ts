@@ -155,4 +155,83 @@ describe('anchorSlide (T3) — horizontal', () => {
         const done = step(100)
         expect(done).toBe(true)
     })
+
+    test('to-card tether is captured on init and restored on completion', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const b = world.registerById(
+            'b',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+        const TETHER_LEN = 250
+        world.tether(world.ceilingHandle, b, TETHER_LEN)
+        expect(
+            world.listTetherRecords().filter((t) => t.child === b),
+        ).toHaveLength(1)
+
+        const step = anchorSlide(
+            world,
+            { fromIds: [], toIds: ['b'] },
+            {
+                axis: 'horizontal',
+                sign: 1,
+                durationMs: 700,
+                viewport,
+            },
+        )
+
+        // After step(0), the tether should be detached so StringLayer
+        // doesn't draw a long diagonal string while the card slides in.
+        step(0)
+        expect(
+            world.listTetherRecords().filter((t) => t.child === b),
+        ).toHaveLength(0)
+
+        // After completion, the tether should be re-attached with the
+        // original length so the card resumes hanging at its layout anchor.
+        step(700)
+        const restored = world
+            .listTetherRecords()
+            .filter((t) => t.child === b)
+        expect(restored).toHaveLength(1)
+        expect(restored[0]!.length).toBe(TETHER_LEN)
+        expect(restored[0]!.parent).toBe(world.ceilingHandle)
+    })
+
+    test('from-card tether is captured on init and NOT restored (card is dying)', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const a = world.registerById(
+            'a',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+        world.tether(world.ceilingHandle, a, 250)
+        expect(
+            world.listTetherRecords().filter((t) => t.child === a),
+        ).toHaveLength(1)
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            {
+                axis: 'horizontal',
+                sign: 1,
+                durationMs: 700,
+                viewport,
+            },
+        )
+
+        step(0)
+        expect(
+            world.listTetherRecords().filter((t) => t.child === a),
+        ).toHaveLength(0)
+
+        step(700)
+        // From-card stays untethered — TransitionDirector releases it next.
+        expect(
+            world.listTetherRecords().filter((t) => t.child === a),
+        ).toHaveLength(0)
+    })
 })
