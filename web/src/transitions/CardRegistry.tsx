@@ -77,6 +77,13 @@ export class CardRegistryStore {
 
     disarm = (): void => {
         this.armed = false
+        // Sweep any cards left in 'spawning' that the active transition's
+        // primitive didn't activate (typical for routes whose card set
+        // materialises asynchronously after the Director has already
+        // dispatched). Without this, they render visibility:hidden forever.
+        for (const [id, e] of this.entries) {
+            if (e.state === 'spawning') this.activate(id)
+        }
     }
 
     activate = (id: string): void => {
