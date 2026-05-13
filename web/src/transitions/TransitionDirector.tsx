@@ -129,6 +129,7 @@ export function TransitionDirector({
 
             const releaseFromIds = () => {
                 for (const id of fromIds) registry.release(id)
+                registry.disarm()
             }
 
             if (reducedRef.current) {
@@ -192,6 +193,7 @@ export function TransitionDirector({
                 for (const entry of registry.snapshot()) {
                     if (entry.state === 'exiting') registry.release(entry.id)
                 }
+                registry.disarm()
             })
         },
         [resolvePageDef, edges, executeTransition, registry],
@@ -238,6 +240,7 @@ export function TransitionDirector({
         if (!prev) return
         const { trigger } = isTransitionTrigger(prev, location)
         if (!trigger) return
+        registry.arm()
         for (const entry of registry.snapshot()) {
             if (entry.state !== 'exiting') registry.markExiting(entry.id)
         }
