@@ -33,7 +33,7 @@ function makeEntry(
             variant: 'default',
             ...(overrides.content ?? {}),
         },
-        state: 'active',
+        state: overrides.state ?? 'active',
     }
 }
 
@@ -115,9 +115,9 @@ describe('PhysicsCardImpl — article shape & data attrs', () => {
     })
 })
 
-describe('PhysicsCardImpl — first-paint reveal gate', () => {
-    test('article is rendered with visibility: hidden inline before the first RAF', () => {
-        const entry = makeEntry({ id: 'reveal-1' })
+describe('PhysicsCardImpl — lifecycle visibility (I-1)', () => {
+    test('article has visibility: hidden while entry.state === "spawning"', () => {
+        const entry = makeEntry({ id: 'spawning-1', state: 'spawning' })
         const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
         const article = container.querySelector(
             'article.physics-card',
@@ -126,10 +126,9 @@ describe('PhysicsCardImpl — first-paint reveal gate', () => {
         expect(article.style.visibility).toBe('hidden')
     })
 
-    test('after one RAF the visibility override is cleared', async () => {
-        const entry = makeEntry({ id: 'reveal-2' })
+    test('article visibility is not hidden when entry.state === "active"', () => {
+        const entry = makeEntry({ id: 'active-1', state: 'active' })
         const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
-        await flushRaf()
         const article = container.querySelector(
             'article.physics-card',
         ) as HTMLElement
