@@ -317,6 +317,12 @@ export class PhysicsWorld {
         reg.buoyancy = b
     }
 
+    getBuoyancy(handle: PhysicsHandle): 'heavy' | 'balloon' {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return reg.buoyancy
+    }
+
     setVelocity(handle: PhysicsHandle, velocity: Vec2): void {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
@@ -478,12 +484,14 @@ export class PhysicsWorld {
         parent: PhysicsHandle
         child: PhysicsHandle
         length: number
+        anchorA?: Vec2
     }> {
         const out: Array<{
             handle: TetherHandle
             parent: PhysicsHandle
             child: PhysicsHandle
             length: number
+            anchorA?: Vec2
         }> = []
         for (const [handle, rec] of this.tethers) {
             out.push({
@@ -491,6 +499,7 @@ export class PhysicsWorld {
                 parent: rec.parent,
                 child: rec.child,
                 length: rec.length,
+                ...(rec.anchorA ? { anchorA: { ...rec.anchorA } } : {}),
             })
         }
         return out
