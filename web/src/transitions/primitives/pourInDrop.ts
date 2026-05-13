@@ -4,6 +4,7 @@ import type {
     Vec2,
     Viewport,
 } from '../../physics/PhysicsWorld'
+import type { CardActivator } from '../CardRegistry'
 import type { PrimitiveStep } from './types'
 
 export interface PourInDropEntry {
@@ -69,6 +70,7 @@ function easeOutCubic(t: number): number {
  */
 export function pourInDrop(
     world: PhysicsWorld,
+    activator: CardActivator,
     entries: readonly PourInDropEntry[],
     opts: PourInDropOpts,
 ): PrimitiveStep {
@@ -106,6 +108,7 @@ export function pourInDrop(
             }
             world.setDragging(handle, true)
             world.setPosition(handle, startPos)
+            activator.activate(entry.id)
 
             state.set(entry.id, {
                 handle,

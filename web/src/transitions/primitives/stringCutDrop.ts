@@ -1,7 +1,6 @@
 import type {
     PhysicsHandle,
     PhysicsWorld,
-    Vec2,
     Viewport,
 } from '../../physics/PhysicsWorld'
 import type { PrimitiveStep } from './types'
@@ -12,7 +11,6 @@ export interface StringCutDropOpts {
 }
 
 const DEFAULT_HARD_CEILING_MS = 2000
-const PHANTOM_FLOOR_OFFSET = 1000
 // Pad past the viewport edge before a card is considered "cleared". Without
 // this, cards are released the instant their top edge dips below the viewport
 // bottom and the disappear looks abrupt.
@@ -32,7 +30,6 @@ export function stringCutDrop(
 
     let elapsedMs = 0
     let initialized = false
-    let savedFloorAnchor: Vec2 | null = null
     let finalized = false
 
     const exitingHandles = new Set<PhysicsHandle>()
@@ -40,9 +37,7 @@ export function stringCutDrop(
     const finalize = () => {
         if (finalized) return
         finalized = true
-        if (savedFloorAnchor) {
-            world.setAnchor(world.floorHandle, savedFloorAnchor)
-        }
+        world.setSensor(world.floorHandle, false)
     }
 
     return (dtMs) => {
@@ -63,14 +58,14 @@ export function stringCutDrop(
                     world.tether.remove(t.handle)
                 }
             }
-            // Phantom floor: push beyond viewport so exiting cards can fall
-            // past the visible area. Saved so we can restore on completion —
-            // without this, every subsequent navigation runs with a lowered floor.
-            savedFloorAnchor = world.getAnchor(world.floorHandle)
-            world.setAnchor(world.floorHandle, {
-                x: savedFloorAnchor.x,
-                y: viewport.height + PHANTOM_FLOOR_OFFSET,
-            })
+            // Switch the floor to a sensor: exiting cards fall straight through
+            // without collision, while incoming cards' floor-anchored tethers
+            // (e.g. next-nav trail) keep their existing length. Earlier the
+            // floor body was teleported below the viewport, but that
+            // body-relative repositioning made any tether whose anchorA was
+            // body-relative overshoot massively for the duration of the
+            // transition, dragging the entire incoming chain downward.
+            world.setSensor(world.floorHandle, true)
             // Snap-kick: launch each exiting card along its buoyancy axis so
             // the drop feels deliberate rather than lethargic.
             const g = world.getGravityVector()
