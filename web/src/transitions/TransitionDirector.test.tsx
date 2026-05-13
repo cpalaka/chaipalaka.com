@@ -119,6 +119,35 @@ describe('TransitionDirector — orphan card survival', () => {
     })
 })
 
+describe('TransitionDirector — lifecycle arming', () => {
+    test('newly-registered cards remain spawning across a microtask flush during a transition', async () => {
+        const { container, getByTestId } = render(<Harness />)
+
+        // Let card-a's initial auto-activate microtask settle.
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        act(() => {
+            getByTestId('go-b').click()
+        })
+
+        // Flush microtasks — without arm(), card-b's default-policy
+        // auto-activate would fire here and the article would become
+        // visible. With arm() in the director's Phase-1 effect, the
+        // registry suppresses the microtask and card-b stays spawning.
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        const cardB = container.querySelector(
+            '[data-card-id="card-b"]',
+        ) as HTMLElement
+        expect(cardB).toBeTruthy()
+        expect(cardB.style.visibility).toBe('hidden')
+    })
+})
+
 describe('TransitionDirector — provider mount', () => {
     test('mounts and unmounts without throwing', () => {
         function Inner() {
