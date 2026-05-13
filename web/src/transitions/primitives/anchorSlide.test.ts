@@ -1,6 +1,9 @@
 import { describe, test, expect } from 'vitest'
 import { PhysicsWorld } from '../../physics/PhysicsWorld'
 import { anchorSlide } from './anchorSlide'
+import type { CardActivator } from '../CardRegistry'
+
+const noopActivator: CardActivator = { activate: () => {} }
 
 describe('anchorSlide (T3) — horizontal', () => {
     test('translates from-card horizontally off-viewport over duration', () => {
@@ -14,6 +17,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'horizontal',
@@ -52,6 +56,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'horizontal',
@@ -79,6 +84,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: [], toIds: ['b'] },
             {
                 axis: 'horizontal',
@@ -112,6 +118,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'horizontal',
@@ -144,6 +151,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: [], toIds: [] },
             {
                 axis: 'horizontal',
@@ -174,6 +182,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: [], toIds: ['b'] },
             {
                 axis: 'horizontal',
@@ -210,6 +219,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'vertical',
@@ -242,6 +252,7 @@ describe('anchorSlide (T3) — horizontal', () => {
         )
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: [], toIds: ['b'] },
             {
                 axis: 'vertical',
@@ -267,6 +278,7 @@ describe('anchorSlide (T3) — horizontal', () => {
         )
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: [], toIds: ['b'] },
             {
                 axis: 'vertical',
@@ -291,6 +303,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'vertical',
@@ -315,6 +328,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'vertical',
@@ -340,6 +354,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'vertical',
@@ -357,6 +372,58 @@ describe('anchorSlide (T3) — horizontal', () => {
         expect(world.isSensor(world.floorHandle)).toBe(false)
     })
 
+    test('lifecycle: activate(id) is called after setPosition for each toId; never for fromId (I-1)', () => {
+        const calls: string[] = []
+        const handles: Record<string, { id: string }> = {
+            a: { id: 'a' },
+            b: { id: 'b' },
+            x: { id: 'x' },
+        }
+        const idOf = (h: { id: string } | undefined) => h?.id ?? '?'
+        const stubWorld = {
+            ceilingHandle: { id: 'ceiling' },
+            floorHandle: { id: 'floor' },
+            getHandleById: (id: string) => handles[id],
+            getPosition: () => ({ x: 0, y: 0 }),
+            tether: {
+                records: () => [],
+                remove: () => {},
+                add: () => {},
+            },
+            setDragging: () => {},
+            setPosition: (h: { id: string }) => {
+                calls.push(`setPosition:${idOf(h)}`)
+            },
+            setVelocity: () => {},
+            setSensor: () => {},
+        }
+        const activator: CardActivator = {
+            activate: (id: string) => {
+                calls.push(`activate:${id}`)
+            },
+        }
+        const step = anchorSlide(
+            stubWorld as unknown as Parameters<typeof anchorSlide>[0],
+            activator,
+            { fromIds: ['x'], toIds: ['a', 'b'] },
+            {
+                axis: 'horizontal',
+                sign: 1,
+                durationMs: 500,
+                viewport: { width: 800, height: 600 },
+            },
+        )
+        step(0)
+
+        for (const id of ['a', 'b']) {
+            const setPosIdx = calls.indexOf(`setPosition:${id}`)
+            const actIdx = calls.indexOf(`activate:${id}`)
+            expect(setPosIdx).toBeGreaterThanOrEqual(0)
+            expect(actIdx).toBeGreaterThan(setPosIdx)
+        }
+        expect(calls).not.toContain('activate:x')
+    })
+
     test('from-card tether is captured on init and NOT restored (card is dying)', () => {
         const viewport = { width: 800, height: 600 }
         const world = new PhysicsWorld({ viewport })
@@ -372,6 +439,7 @@ describe('anchorSlide (T3) — horizontal', () => {
 
         const step = anchorSlide(
             world,
+            noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
                 axis: 'horizontal',

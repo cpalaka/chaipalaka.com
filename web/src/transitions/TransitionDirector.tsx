@@ -9,7 +9,11 @@ import {
 } from 'react'
 import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
+import {
+    useCardRegistry,
+    type CardActivator,
+    type PhysicsCardEntry,
+} from './CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
 import {
     dispatch,
@@ -131,7 +135,11 @@ export function TransitionDirector({
                 releaseFromIds()
                 const layerEl = findPhysicsLayerElement()
                 if (layerEl) {
-                    await runStep(crossFade(layerEl, { durationMs: REDUCED_MOTION_MS }))
+                    await runStep(
+                        crossFade(layerEl, registry, toIds, {
+                            durationMs: REDUCED_MOTION_MS,
+                        }),
+                    )
                 }
                 return
             }
@@ -139,6 +147,7 @@ export function TransitionDirector({
             if (plan.kind === 'coupled') {
                 const step = anchorSlide(
                     world,
+                    registry,
                     { fromIds, toIds },
                     { ...plan.config, viewport },
                 )
@@ -151,6 +160,7 @@ export function TransitionDirector({
             const exitStep = buildPrimitive(
                 plan.exit,
                 world,
+                registry,
                 viewport,
                 fromIds,
                 pourEntries,
@@ -158,6 +168,7 @@ export function TransitionDirector({
             const enterStep = buildPrimitive(
                 plan.enter,
                 world,
+                registry,
                 viewport,
                 fromIds,
                 pourEntries,
@@ -268,22 +279,22 @@ export function TransitionDirector({
 function buildPrimitive(
     id: TransitionId,
     world: ReturnType<typeof usePhysicsWorld>,
+    activator: CardActivator,
     viewport: Viewport,
     fromIds: readonly string[],
     toEntries: readonly PourInDropEntry[],
 ): PrimitiveStep {
+    const toIds = toEntries.map((e) => e.id)
     switch (id) {
         case 'string-cut-drop':
             return stringCutDrop(world, fromIds, { viewport })
         case 'pour-in-drop':
-            return pourInDrop(world, toEntries, { viewport })
+            return pourInDrop(world, activator, toEntries, { viewport })
         case 'anchor-slide':
             return anchorSlide(
                 world,
-                {
-                    fromIds,
-                    toIds: toEntries.map((e) => e.id),
-                },
+                activator,
+                { fromIds, toIds },
                 {
                     axis: 'horizontal',
                     sign: 1,
@@ -294,7 +305,9 @@ function buildPrimitive(
         case 'cross-fade': {
             const el = findPhysicsLayerElement()
             if (!el) return () => true
-            return crossFade(el, { durationMs: REDUCED_MOTION_MS })
+            return crossFade(el, activator, toIds, {
+                durationMs: REDUCED_MOTION_MS,
+            })
         }
     }
 }

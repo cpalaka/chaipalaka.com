@@ -1,3 +1,4 @@
+import type { CardActivator } from '../CardRegistry'
 import type { PrimitiveStep } from './types'
 
 export interface CrossFadeOpts {
@@ -6,6 +7,8 @@ export interface CrossFadeOpts {
 
 export function crossFade(
     element: HTMLElement,
+    activator: CardActivator,
+    toIds: readonly string[],
     opts: CrossFadeOpts = {},
 ): PrimitiveStep {
     const durationMs = opts.durationMs ?? 150
@@ -14,6 +17,7 @@ export function crossFade(
     return (dtMs) => {
         if (!initialized) {
             element.style.opacity = '0'
+            for (const id of toIds) activator.activate(id)
             initialized = true
         }
         elapsedMs += dtMs

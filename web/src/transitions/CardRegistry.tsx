@@ -23,11 +23,14 @@ export interface PhysicsCardEntry {
 
 export type RegisterArgs = Omit<PhysicsCardEntry, 'state'>
 
-export interface CardRegistryAPI {
+export interface CardActivator {
+    activate(id: string): void
+}
+
+export interface CardRegistryAPI extends CardActivator {
     register(entry: RegisterArgs): void
     requestUnregister(id: string): void
     markExiting(id: string): void
-    activate(id: string): void
     arm(): void
     disarm(): void
     release(id: string): void
