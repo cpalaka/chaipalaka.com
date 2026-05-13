@@ -59,6 +59,7 @@ export function PhysicsPage({
                         height={c?.height ?? 160}
                         anchor={{ x, y }}
                         parent={spec.parent}
+                        trail={spec.trail}
                         buoyancy={buoyancyForKind(spec.kind)}
                         minimizable={c?.minimizable ?? false}
                         label={c?.label}

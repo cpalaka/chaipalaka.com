@@ -89,9 +89,11 @@ describe('anchorSlide (T3) — horizontal', () => {
         )
 
         step(0)
-        // toCard with sign=+1: enters from origin side (left) — initial position pushed off-screen left
+        // toCard with sign=+1 horizontal: enters from the RIGHT (the opposite
+        // side of the from-card's exit direction) — both cards slide left
+        // together as a unified strip.
         const initialPos = world.getPosition(b)
-        expect(initialPos.x).toBeLessThanOrEqual(-100)
+        expect(initialPos.x).toBeGreaterThanOrEqual(viewport.width)
 
         // At end, reaches its layout position
         step(700)
@@ -197,6 +199,176 @@ describe('anchorSlide (T3) — horizontal', () => {
         expect(restored).toHaveLength(1)
         expect(restored[0]!.length).toBe(TETHER_LEN)
         expect(restored[0]!.parent).toBe(world.ceilingHandle)
+    })
+
+    test('vertical axis: from-card exits along axis × -sign', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const a = world.registerById(
+            'a',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            {
+                axis: 'vertical',
+                sign: 1,
+                durationMs: 700,
+                viewport,
+            },
+        )
+
+        step(0)
+        const start = world.getPosition(a)
+        step(700)
+        const final = world.getPosition(a)
+        // sign=+1 vertical → from-card exits upward (y decreases)
+        expect(final.y).toBeLessThan(start.y)
+        expect(final.y).toBeLessThan(-50)
+    })
+
+    test('vertical sign=+1: to-card enters from BELOW (opposite of from-exit direction)', () => {
+        // Unified-strip slide: from-card exits UP (sign=+1 vertical) and the
+        // new card enters from BELOW the viewport, both moving up together.
+        // The previous behaviour had to-card entering from above — which made
+        // the two cards pass through each other vertically.
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const b = world.registerById(
+            'b',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+        const step = anchorSlide(
+            world,
+            { fromIds: [], toIds: ['b'] },
+            {
+                axis: 'vertical',
+                sign: 1,
+                durationMs: 700,
+                viewport,
+            },
+        )
+        step(0)
+        // sign=+1 vertical → to-card starts BELOW (y > viewport.height)
+        expect(world.getPosition(b).y).toBeGreaterThan(viewport.height)
+        step(700)
+        expect(world.getPosition(b).y).toBeCloseTo(300, 1)
+    })
+
+    test('vertical sign=-1: to-card enters from ABOVE (falls down into view)', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        const b = world.registerById(
+            'b',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+        const step = anchorSlide(
+            world,
+            { fromIds: [], toIds: ['b'] },
+            {
+                axis: 'vertical',
+                sign: -1,
+                durationMs: 700,
+                viewport,
+            },
+        )
+        step(0)
+        // sign=-1 vertical → to-card starts ABOVE (negative y)
+        expect(world.getPosition(b).y).toBeLessThan(0)
+        step(700)
+        expect(world.getPosition(b).y).toBeCloseTo(300, 1)
+    })
+
+    test('sensorEdges: ceiling — toggles ceiling sensor on init, restores at end', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        world.registerById(
+            'a',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+
+        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            {
+                axis: 'vertical',
+                sign: 1,
+                durationMs: 700,
+                viewport,
+                sensorEdges: 'ceiling',
+            },
+        )
+
+        step(0)
+        expect(world.isSensor(world.ceilingHandle)).toBe(true)
+
+        step(700)
+        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+    })
+
+    test('sensorEdges: floor — toggles floor sensor (back/T4-back direction)', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        world.registerById(
+            'a',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            {
+                axis: 'vertical',
+                sign: -1,
+                durationMs: 100,
+                viewport,
+                sensorEdges: 'floor',
+            },
+        )
+
+        step(0)
+        expect(world.isSensor(world.floorHandle)).toBe(true)
+        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+
+        step(100)
+        expect(world.isSensor(world.floorHandle)).toBe(false)
+    })
+
+    test('sensorEdges omitted — neither edge is toggled', () => {
+        const viewport = { width: 800, height: 600 }
+        const world = new PhysicsWorld({ viewport })
+        world.registerById(
+            'a',
+            { x: 400, y: 300 },
+            { width: 200, height: 100 },
+        )
+
+        const step = anchorSlide(
+            world,
+            { fromIds: ['a'], toIds: [] },
+            {
+                axis: 'vertical',
+                sign: 1,
+                durationMs: 100,
+                viewport,
+            },
+        )
+
+        step(0)
+        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+        expect(world.isSensor(world.floorHandle)).toBe(false)
+        step(100)
+        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+        expect(world.isSensor(world.floorHandle)).toBe(false)
     })
 
     test('from-card tether is captured on init and NOT restored (card is dying)', () => {

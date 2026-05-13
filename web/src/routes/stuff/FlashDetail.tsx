@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
+import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import type { PageDef } from '../../physics/PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
 import type { Viewport } from '../../physics/PhysicsWorld'
@@ -165,6 +166,8 @@ function buildPage(
     return { pageDef, cardContent }
 }
 
+const EMPTY_PAGE_DEF: PageDef = { gravity: 'down', cards: [] }
+
 export default function FlashDetail() {
     const { slug } = useParams<{ slug: string }>()
     const piece = slug ? getPieceBySlug(slug) : undefined
@@ -179,10 +182,16 @@ export default function FlashDetail() {
         [slug],
     )
 
-    if (!piece) {
+    const built = useMemo(
+        () => (piece ? buildPage(piece, offsets) : null),
+        [piece, offsets],
+    )
+
+    useRegisterPageDef(built?.pageDef ?? EMPTY_PAGE_DEF)
+
+    if (!piece || !built) {
         return <Navigate to="/stuff/flash" replace />
     }
 
-    const { pageDef, cardContent } = buildPage(piece, offsets)
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <PhysicsPage pageDef={built.pageDef} cardContent={built.cardContent} />
 }

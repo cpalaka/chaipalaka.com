@@ -21,6 +21,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
     const {
         id,
         parent,
+        trail,
         kind,
         buoyancy,
         anchor,
@@ -45,6 +46,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
     const anchorRef = useRef(anchor)
     anchorRef.current = anchor
     const tetherHandleRef = useRef<TetherHandle | null>(null)
+    const trailTetherHandleRef = useRef<TetherHandle | null>(null)
 
     const registry = useMinimizedRegistry()
     const isMinimized = useIsMinimized(minimizable ? id : undefined)
@@ -101,6 +103,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
         if (buoyancy) world.setBuoyancy(handle, buoyancy)
 
         let rafId = 0
+        let trailRafId = 0
         if (parent) {
             const resolved = resolveParent(world, parent)
             if (resolved.handle != null) {
@@ -121,6 +124,35 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                         return
                     }
                     tetherHandleRef.current = wireTetherFor(
+                        world,
+                        retried.handle,
+                        retried.kind,
+                        handle,
+                        anchorRef.current,
+                    )
+                })
+            }
+        }
+        if (trail) {
+            const resolved = resolveParent(world, trail)
+            if (resolved.handle != null) {
+                trailTetherHandleRef.current = wireTetherFor(
+                    world,
+                    resolved.handle,
+                    resolved.kind,
+                    handle,
+                    anchorRef.current,
+                )
+            } else {
+                trailRafId = requestAnimationFrame(() => {
+                    const retried = resolveParent(world, trail)
+                    if (retried.handle == null) {
+                        console.warn(
+                            `PhysicsCard: trail "${trail}" not found after one frame; tether skipped`,
+                        )
+                        return
+                    }
+                    trailTetherHandleRef.current = wireTetherFor(
                         world,
                         retried.handle,
                         retried.kind,
@@ -196,9 +228,14 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
 
         return () => {
             cancelAnimationFrame(rafId)
+            cancelAnimationFrame(trailRafId)
             if (tetherHandleRef.current !== null) {
                 world.untether(tetherHandleRef.current)
                 tetherHandleRef.current = null
+            }
+            if (trailTetherHandleRef.current !== null) {
+                world.untether(trailTetherHandleRef.current)
+                trailTetherHandleRef.current = null
             }
             world.unregister(handle)
             handleRef.current = null
@@ -208,7 +245,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                 window.removeEventListener('pointerup', onPointerUp)
             }
         }
-    }, [world, id, width, height, isMinimized, draggable, parent, buoyancy])
+    }, [world, id, width, height, isMinimized, draggable, parent, trail, buoyancy])
 
     useEffect(() => {
         if (handleRef.current === null) return
@@ -227,7 +264,21 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                 )
             }
         }
-    }, [world, anchor.x, anchor.y, parent])
+        if (trailTetherHandleRef.current !== null && trail) {
+            world.untether(trailTetherHandleRef.current)
+            trailTetherHandleRef.current = null
+            const resolved = resolveParent(world, trail)
+            if (resolved.handle != null) {
+                trailTetherHandleRef.current = wireTetherFor(
+                    world,
+                    resolved.handle,
+                    resolved.kind,
+                    handleRef.current,
+                    anchor,
+                )
+            }
+        }
+    }, [world, anchor.x, anchor.y, parent, trail])
 
     useEffect(() => {
         if (isMinimized || !minimizable) return

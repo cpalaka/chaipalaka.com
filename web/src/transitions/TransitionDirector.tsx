@@ -11,7 +11,13 @@ import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
 import { useCardRegistry, type PhysicsCardEntry } from './CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
-import { dispatch, type EdgeTransitions, type TransitionPlan } from './dispatch'
+import {
+    dispatch,
+    type EdgeTransitions,
+    type PageDefResolver,
+    type TransitionPlan,
+} from './dispatch'
+import { usePageDefRegistry } from './PageDefRegistry'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import { stringCutDrop } from './primitives/stringCutDrop'
 import { pourInDrop, type PourInDropEntry } from './primitives/pourInDrop'
@@ -87,7 +93,16 @@ export function TransitionDirector({
     const navType = useNavigationType() as NavigationType
     const reduced = usePrefersReducedMotion()
     const registry = useCardRegistry()
+    const pageDefRegistry = usePageDefRegistry()
     const world = usePhysicsWorld()
+
+    // Runtime registrations (via useRegisterPageDef) take precedence over the
+    // static map. This is how dynamic routes (/blog/:slug, /stuff/flash/:slug)
+    // participate in dispatch.
+    const resolvePageDef: PageDefResolver = useCallback(
+        (path: string) => pageDefRegistry.resolve(path) ?? pageDefs[path],
+        [pageDefRegistry, pageDefs],
+    )
 
     const prevLocationRef = useRef<Location | null>(null)
     const reducedRef = useRef(reduced)
@@ -156,7 +171,7 @@ export function TransitionDirector({
 
     const dispatchTransition = useCallback(
         (fromPath: string, toPath: string, direction: ReturnType<typeof classifyDirection>) => {
-            const plan = dispatch(fromPath, toPath, pageDefs, edges, direction)
+            const plan = dispatch(fromPath, toPath, resolvePageDef, edges, direction)
             return executeTransition(fromPath, toPath, plan).catch((err) => {
                 if (import.meta.env.DEV) throw err
                 console.warn(
@@ -168,7 +183,38 @@ export function TransitionDirector({
                 }
             })
         },
-        [pageDefs, edges, executeTransition, registry],
+        [resolvePageDef, edges, executeTransition, registry],
+    )
+
+    const isTransitionTrigger = useCallback(
+        (
+            prev: Location,
+            next: Location,
+        ): { trigger: boolean; from: string; to: string } => {
+            const samePath = prev.pathname === next.pathname
+            if (!samePath) {
+                return {
+                    trigger: true,
+                    from: prev.pathname,
+                    to: next.pathname,
+                }
+            }
+            const hashChanged = prev.hash !== next.hash
+            if (!hashChanged) {
+                return { trigger: false, from: '', to: '' }
+            }
+            // Same-pathname hash change is only a transition if the destination
+            // pageDef opts in via `sections`. Otherwise, treat as a non-event
+            // (e.g. clicking a `#footer` link should not animate cards).
+            const sections = resolvePageDef(next.pathname)?.sections
+            if (!sections) return { trigger: false, from: '', to: '' }
+            return {
+                trigger: true,
+                from: `${prev.pathname}${prev.hash}`,
+                to: `${next.pathname}${next.hash}`,
+            }
+        },
+        [resolvePageDef],
     )
 
     // Phase 1: BEFORE old route's cleanups, mark every currently-active card
@@ -178,11 +224,13 @@ export function TransitionDirector({
     // cards would otherwise pop out instantly when the route unmounts.
     useLayoutEffect(() => {
         const prev = prevLocationRef.current
-        if (!prev || prev.pathname === location.pathname) return
+        if (!prev) return
+        const { trigger } = isTransitionTrigger(prev, location)
+        if (!trigger) return
         for (const entry of registry.snapshot()) {
             if (entry.state === 'active') registry.markExiting(entry.id)
         }
-    }, [location, registry])
+    }, [location, registry, isTransitionTrigger])
 
     // Phase 2: AFTER children's effects (new cards now registered in PhysicsWorld),
     // dispatch and execute the transition primitives.
@@ -192,14 +240,15 @@ export function TransitionDirector({
             prevLocationRef.current = location
             return
         }
-        if (prev.pathname === location.pathname) {
+        const { trigger, from, to } = isTransitionTrigger(prev, location)
+        if (!trigger) {
             prevLocationRef.current = location
             return
         }
         const direction = classifyDirection(navType)
-        dispatchTransition(prev.pathname, location.pathname, direction)
+        dispatchTransition(from, to, direction)
         prevLocationRef.current = location
-    }, [location, navType, dispatchTransition])
+    }, [location, navType, dispatchTransition, isTransitionTrigger])
 
     const runTransition = useCallback(
         ({ from, to }: RunTransitionArgs) => {

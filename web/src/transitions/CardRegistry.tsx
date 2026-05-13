@@ -13,6 +13,7 @@ export type CardLifecycle = 'active' | 'exiting'
 export interface PhysicsCardEntry {
     id: string
     parent: ParentRef
+    trail?: ParentRef
     kind: string
     buoyancy: Buoyancy
     anchor: { x: number; y: number }
