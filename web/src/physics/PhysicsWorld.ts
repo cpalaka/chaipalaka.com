@@ -216,6 +216,18 @@ export class PhysicsWorld implements BodyForceSource {
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
         Matter.Body.setPosition(reg.body, position)
         Matter.Body.setVelocity(reg.body, { x: 0, y: 0 })
+        // Synchronously notify the renderer so el.style.transform reflects
+        // the new position before any state change that would unhide the
+        // article. Without this, the next world.tick lags one frame and
+        // pour-in's activate fires while the DOM transform still points at
+        // the previous (layout-anchor) position.
+        if (reg.onTransform) {
+            reg.onTransform({
+                x: reg.body.position.x,
+                y: reg.body.position.y,
+                rotation: reg.body.angle,
+            })
+        }
     }
 
     setGravityDirection(dir: Cardinal): void {
