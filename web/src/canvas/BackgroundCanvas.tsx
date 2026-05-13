@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { detectWebGL } from './detect-webgl'
 import { useGallery } from './useGallery'
+import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import type { BackgroundScene } from './types'
 import './BackgroundCanvas.css'
 
@@ -51,18 +52,6 @@ function getLazyScene(scene: BackgroundScene) {
         sceneLazyCache.set(scene.id, lazyComp)
     }
     return sceneLazyCache.get(scene.id)!
-}
-
-function usePrefersReducedMotion(): boolean {
-    const [reduced, setReduced] = useState(false)
-    useEffect(() => {
-        const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-        setReduced(mq.matches)
-        const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-        mq.addEventListener('change', handler)
-        return () => mq.removeEventListener('change', handler)
-    }, [])
-    return reduced
 }
 
 // useFadeSwap: tracks the outgoing scene during a cross-fade window (~250ms).

@@ -5,7 +5,7 @@ import type { CardContent } from '../physics/PhysicsPage'
 const CARD_W = 280
 const CARD_H = 160
 
-const pageDef: PageDef = {
+export const pageDef: PageDef = {
     gravity: 'down',
     cards: [
         {

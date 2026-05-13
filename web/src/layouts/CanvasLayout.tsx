@@ -6,6 +6,10 @@ import { PhysicsProvider } from '../physics/PhysicsContext'
 import { FrameBar } from '../canvas/FrameBar'
 import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
+import { TransitionDirector } from '../transitions/TransitionDirector'
+import { PhysicsLayer } from '../transitions/PhysicsLayer'
+import { pageDefs } from '../transitions/pageDefs'
+import { edges } from '../transitions/edges'
 import './CanvasLayout.css'
 
 export default function CanvasLayout() {
@@ -19,16 +23,19 @@ export default function CanvasLayout() {
 
     return (
         <PhysicsProvider>
-            <div
-                data-layout="canvas"
-                data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
-                data-frame-edge={edge}
-            >
-                <BackgroundCanvas />
-                <StringLayer />
-                <FrameBar />
-                <Outlet />
-            </div>
+            <TransitionDirector pageDefs={pageDefs} edges={edges}>
+                <div
+                    data-layout="canvas"
+                    data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
+                    data-frame-edge={edge}
+                >
+                    <BackgroundCanvas />
+                    <PhysicsLayer />
+                    <StringLayer />
+                    <FrameBar />
+                    <Outlet />
+                </div>
+            </TransitionDirector>
         </PhysicsProvider>
     )
 }

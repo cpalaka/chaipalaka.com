@@ -10,9 +10,13 @@ export interface CardContent {
     width: number
     height: number
     children?: ReactNode
+    header?: ReactNode
     minimizable?: boolean
     label?: string
     draggable?: boolean
+    variant?: string
+    className?: string
+    style?: React.CSSProperties
 }
 
 function getViewport(): Viewport {

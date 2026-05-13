@@ -6,7 +6,7 @@ import type { CardContent } from '../physics/PhysicsPage'
 
 const recentPosts = getPosts().slice(0, 3)
 
-const pageDef: PageDef = {
+export const pageDef: PageDef = {
     gravity: 'up',
     cards: [
         {
