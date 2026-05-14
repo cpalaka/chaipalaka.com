@@ -1,4 +1,4 @@
-import type { CardActivator } from '../CardRegistry'
+import type { CardActivator } from '../../card/CardRegistry'
 import type { PrimitiveStep } from './types'
 
 export interface CrossFadeOpts {

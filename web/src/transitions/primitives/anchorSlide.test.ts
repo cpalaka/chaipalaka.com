@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { createFakeBodyDriver } from '../../physics/createFakeBodyDriver'
 import { anchorSlide } from './anchorSlide'
-import type { CardActivator } from '../CardRegistry'
+import type { CardActivator } from '../../card/CardRegistry'
 
 const noopActivator: CardActivator = { activate: () => {} }
 

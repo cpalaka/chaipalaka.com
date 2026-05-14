@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { createFakeBodyDriver } from '../../physics/createFakeBodyDriver'
 import { pourInDrop } from './pourInDrop'
-import type { CardActivator } from '../CardRegistry'
+import type { CardActivator } from '../../card/CardRegistry'
 
 const noopActivator: CardActivator = { activate: () => {} }
 const FIXED_DT_MS = 1000 / 60

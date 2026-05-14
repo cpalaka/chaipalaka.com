@@ -39,15 +39,15 @@ vi.mock('../blog/posts', () => ({
 
 import NotFound, { pageDef } from './NotFound'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { CardRegistryProvider } from '../transitions/CardRegistry'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
+import { CardRegistryProvider } from '../card/CardRegistry'
+import { CardLayer } from '../card/CardLayer'
 
 function renderNotFound() {
     return render(
         <MemoryRouter initialEntries={['/bogus']}>
             <PhysicsProvider>
                 <CardRegistryProvider>
-                    <PhysicsLayer />
+                    <CardLayer />
                     <NotFound />
                 </CardRegistryProvider>
             </PhysicsProvider>

@@ -7,15 +7,15 @@ export type MeasureFn = (
     maxWidth: number,
 ) => { width: number; height: number }
 
-/** Gap between flex children inside a card — must match the CSS `gap` in PhysicsCard.css (--card-gap). */
+/** Gap between flex children inside a card — must match the CSS `gap` in Card.css (--card-gap). */
 export const CARD_GAP = 24
-/** Horizontal and top padding inside the card — must match the CSS padding in PhysicsCard.css. */
+/** Horizontal and top padding inside the card — must match the CSS padding in Card.css. */
 export const CARD_PADDING = 24
 /** Bottom padding — larger than top to give the CTA link more visual breathing room. */
 export const CARD_PADDING_BOTTOM = 36
 /**
  * Height of the card header bar (when present).
- * Must match [data-card-header] min-height in PhysicsCard.css.
+ * Must match [data-card-header] min-height in Card.css.
  * The header has margin-top: -card-padding so it sits inside the top padding, but
  * it still consumes this many px of vertical space before the card body content.
  */

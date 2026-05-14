@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { PhysicsCard } from '../../physics/PhysicsCard'
+import { Card } from '../../card/Card'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { getPosts } from '../../blog/posts'
 import { mdxComponents } from '../../blog/components/mdx-components'
@@ -57,7 +57,7 @@ export default function BlogPost() {
     const PostContent = post.Component
 
     return (
-        <PhysicsCard
+        <Card
             text={post.frontmatter.title}
             anchor={dims.anchor}
             width={dims.w}
@@ -87,6 +87,6 @@ export default function BlogPost() {
                     <PostContent components={mdxComponents} />
                 </article>
             </div>
-        </PhysicsCard>
+        </Card>
     )
 }

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { TransitionDirector } from './TransitionDirector'
-import { PhysicsLayer } from './PhysicsLayer'
+import { CardLayer } from '../card/CardLayer'
+import { CardRegistryProvider } from '../card/CardRegistry'
 import { PageDefRegistryProvider } from './PageDefRegistry'
-import { PhysicsCard } from '../physics/PhysicsCard'
+import { Card } from '../card/Card'
 import type { PageDef } from '../routes/PageDef'
 
 afterEach(() => {
@@ -44,7 +45,7 @@ const pageDefs: Record<string, PageDef> = {
 
 function RouteA() {
     return (
-        <PhysicsCard
+        <Card
             id="card-a"
             text="A content"
             width={200}
@@ -57,7 +58,7 @@ function RouteA() {
 
 function RouteB() {
     return (
-        <PhysicsCard
+        <Card
             id="card-b"
             text="B content"
             width={200}
@@ -83,7 +84,7 @@ function RouteBlogLike() {
     return (
         <>
             {chain.map((card, i) => (
-                <PhysicsCard
+                <Card
                     key={card.id}
                     id={card.id}
                     text={`chain ${i}`}
@@ -110,19 +111,21 @@ function Harness() {
     return (
         <MemoryRouter initialEntries={['/a']}>
             <PhysicsProvider>
-                <PageDefRegistryProvider>
-                    <TransitionDirector pageDefs={pageDefs}>
-                        <PhysicsLayer />
-                        <NavigateButton to="/a" label="go-a" />
-                        <NavigateButton to="/b" label="go-b" />
-                        <NavigateButton to="/blog" label="go-blog" />
-                        <Routes>
-                            <Route path="/a" element={<RouteA />} />
-                            <Route path="/b" element={<RouteB />} />
-                            <Route path="/blog" element={<RouteBlogLike />} />
-                        </Routes>
-                    </TransitionDirector>
-                </PageDefRegistryProvider>
+                <CardRegistryProvider>
+                    <PageDefRegistryProvider>
+                        <TransitionDirector pageDefs={pageDefs}>
+                            <CardLayer />
+                            <NavigateButton to="/a" label="go-a" />
+                            <NavigateButton to="/b" label="go-b" />
+                            <NavigateButton to="/blog" label="go-blog" />
+                            <Routes>
+                                <Route path="/a" element={<RouteA />} />
+                                <Route path="/b" element={<RouteB />} />
+                                <Route path="/blog" element={<RouteBlogLike />} />
+                            </Routes>
+                        </TransitionDirector>
+                    </PageDefRegistryProvider>
+                </CardRegistryProvider>
             </PhysicsProvider>
         </MemoryRouter>
     )
@@ -135,9 +138,9 @@ describe('TransitionDirector — orphan card survival', () => {
         // Route A is mounted; its card should be in DOM.
         expect(container.querySelector('[data-card-id="card-a"]')).toBeTruthy()
 
-        // Navigate to /b. The PhysicsCard registrar for /a unmounts, but the director
+        // Navigate to /b. The Card registrar for /a unmounts, but the director
         // should have marked card-a as exiting in its layout effect, so the registry
-        // (and therefore PhysicsLayer) keeps rendering it.
+        // (and therefore CardLayer) keeps rendering it.
         act(() => {
             getByTestId('go-b').click()
         })
@@ -168,14 +171,16 @@ describe('TransitionDirector — lifecycle arming', () => {
             return (
                 <MemoryRouter initialEntries={['/blog']}>
                     <PhysicsProvider>
-                        <PageDefRegistryProvider>
-                            <TransitionDirector pageDefs={pageDefs}>
-                                <PhysicsLayer />
-                                <Routes>
-                                    <Route path="/blog" element={<RouteBlogLike />} />
-                                </Routes>
-                            </TransitionDirector>
-                        </PageDefRegistryProvider>
+                        <CardRegistryProvider>
+                            <PageDefRegistryProvider>
+                                <TransitionDirector pageDefs={pageDefs}>
+                                    <CardLayer />
+                                    <Routes>
+                                        <Route path="/blog" element={<RouteBlogLike />} />
+                                    </Routes>
+                                </TransitionDirector>
+                            </PageDefRegistryProvider>
+                        </CardRegistryProvider>
                     </PhysicsProvider>
                 </MemoryRouter>
             )
@@ -227,15 +232,17 @@ describe('TransitionDirector — provider mount', () => {
             return (
                 <MemoryRouter initialEntries={[path]} key={path}>
                     <PhysicsProvider>
-                        <PageDefRegistryProvider>
-                            <TransitionDirector pageDefs={pageDefs}>
-                                <PhysicsLayer />
-                                <Routes>
-                                    <Route path="/a" element={<RouteA />} />
-                                    <Route path="/b" element={<RouteB />} />
-                                </Routes>
-                            </TransitionDirector>
-                        </PageDefRegistryProvider>
+                        <CardRegistryProvider>
+                            <PageDefRegistryProvider>
+                                <TransitionDirector pageDefs={pageDefs}>
+                                    <CardLayer />
+                                    <Routes>
+                                        <Route path="/a" element={<RouteA />} />
+                                        <Route path="/b" element={<RouteB />} />
+                                    </Routes>
+                                </TransitionDirector>
+                            </PageDefRegistryProvider>
+                        </CardRegistryProvider>
                     </PhysicsProvider>
                 </MemoryRouter>
             )
