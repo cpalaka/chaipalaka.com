@@ -215,7 +215,10 @@ the motion, not just that the call happened.
   Enumerate every body mutation each primitive performs before designing
   the interface — otherwise the adapter is shallow.
 
-**Linkage.** Falls naturally after Candidate 1.
+**Linkage.** Independent of Candidate 1 (#108). Can land in either order;
+`BodyDriver` and `BodyForceSource` are siblings that share readonly query
+methods but address distinct consumers (body primitives vs. tether rope
+forces).
 
 **ADR conflict?** No.
 

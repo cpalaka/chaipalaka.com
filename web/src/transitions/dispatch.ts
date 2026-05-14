@@ -89,6 +89,33 @@ export function dispatch(
         }
     }
 
+    // Debug toggle (kept across the transitions refactor series): flip
+    // FORCE_STRING_CUT_FOR_TESTING to `true` locally to route every
+    // cross-route transition through string-cut → pour-in, regardless of
+    // edge configs, pageDef-declared transitions, or sibling/direction
+    // routing. Useful for hand-testing the decoupled exit/enter primitives
+    // (and their interaction with chained routes like /blog) against any
+    // nav target without having to construct a specific edge.
+    //
+    // The `: boolean` annotation keeps TS from narrowing the literal and
+    // marking the rest of the function unreachable, so this compiles in
+    // either state.
+    //
+    // TODO: remove this block once the BodyDriver / transitions refactor
+    // series is complete and we no longer need an ad-hoc way to force
+    // string-cut on every route. Production routing should fall through
+    // to the lower dispatch branches (edge configs → pageDef transitions
+    // → sibling anchor-slide → decoupled fallback).
+    const FORCE_STRING_CUT_FOR_TESTING: boolean = false
+    if (FORCE_STRING_CUT_FOR_TESTING) {
+        return {
+            kind: 'decoupled',
+            exit: 'string-cut-drop',
+            enter: 'pour-in-drop',
+            overlapMs: DEFAULT_DECOUPLED_OVERLAP_MS,
+        }
+    }
+
     const edgeKey = `${from}→${to}`
     const edge = edges[edgeKey]
     if (edge) {

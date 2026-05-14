@@ -1,9 +1,10 @@
 import type {
+    BodyDriver,
     PhysicsHandle,
-    PhysicsWorld,
+    TetherSpec,
     Vec2,
-    Viewport,
-} from '../../physics/PhysicsWorld'
+} from '../../physics/BodyDriver'
+import type { Viewport } from '../../physics/PhysicsWorld'
 import type { CardActivator } from '../CardRegistry'
 import type { PrimitiveStep } from './types'
 
@@ -18,65 +19,30 @@ export interface AnchorSlideOpts {
     durationMs: number
     viewport: Viewport
     /**
-     * Temporarily toggle a viewport edge to sensor mode for the duration of the
-     * slide. Used by T4 (within-page section pagination) so chains can pass
-     * through the ceiling (forward) or floor (back) edge. Restored at the end.
+     * Temporarily toggle a viewport edge to sensor mode for the duration of
+     * the slide. Used by T4 (within-page section pagination) so chains can
+     * pass through the ceiling (forward) or floor (back) edge. The director
+     * resolves the `'ceiling' | 'floor'` config to a `PhysicsHandle` so the
+     * primitive doesn't need to know about world identity.
      */
-    sensorEdges?: 'ceiling' | 'floor' | 'none'
+    sensorEdgeHandle?: PhysicsHandle
 }
 
 const OFFSCREEN_PAD = 100
-
-interface CapturedTether {
-    parent: PhysicsHandle
-    length: number
-    anchorA?: Vec2
-}
 
 function easeOutCubic(t: number): number {
     return 1 - Math.pow(1 - t, 3)
 }
 
-/**
- * Untether the first record where `child === handle` and return its spec
- * (parent + length + optional anchorA). Returns undefined if the card has
- * no tether. Mirrors `pourInDrop`'s capture pattern so StringLayer doesn't
- * draw a long diagonal string from the original parent anchor to the
- * sliding card.
- */
-function captureAndUntether(
-    world: PhysicsWorld,
-    handle: PhysicsHandle,
-): CapturedTether | undefined {
-    for (const t of world.tether.records()) {
-        if (t.child !== handle) continue
-        const captured: CapturedTether = {
-            parent: t.parent,
-            length: t.length,
-            ...(t.anchorA ? { anchorA: { ...t.anchorA } } : {}),
-        }
-        world.tether.remove(t.handle)
-        return captured
-    }
-    return undefined
-}
-
 export function anchorSlide(
-    world: PhysicsWorld,
+    driver: BodyDriver,
     activator: CardActivator,
     targets: AnchorSlideTargets,
     opts: AnchorSlideOpts,
 ): PrimitiveStep {
-    const { axis, sign, durationMs, viewport, sensorEdges } = opts
+    const { axis, sign, durationMs, viewport, sensorEdgeHandle } = opts
     let elapsedMs = 0
     let initialized = false
-
-    const sensorEdgeHandle =
-        sensorEdges === 'ceiling'
-            ? world.ceilingHandle
-            : sensorEdges === 'floor'
-              ? world.floorHandle
-              : undefined
 
     const fromInitial = new Map<string, Vec2>()
     const fromFinal = new Map<string, Vec2>()
@@ -86,7 +52,7 @@ export function anchorSlide(
     // card resumes hanging at its layout anchor. From-card tethers are
     // captured-and-discarded — the cards are about to be released by
     // TransitionDirector when the slide ends.
-    const toCaptured = new Map<string, CapturedTether>()
+    const toCaptured = new Map<string, TetherSpec>()
 
     const horizontalSpan = viewport.width + OFFSCREEN_PAD
     const verticalSpan = viewport.height + OFFSCREEN_PAD
@@ -101,13 +67,13 @@ export function anchorSlide(
     return (dtMs) => {
         if (!initialized) {
             if (sensorEdgeHandle !== undefined) {
-                world.setSensor(sensorEdgeHandle, true)
+                driver.setSensor(sensorEdgeHandle, true)
             }
             for (const id of targets.fromIds) {
-                const handle = world.getHandleById(id)
+                const handle = driver.getHandleById(id)
                 if (handle === undefined) continue
-                captureAndUntether(world, handle)
-                const pos = world.getPosition(handle)
+                driver.detachTetherOf(handle)
+                const pos = driver.getPosition(handle)
                 const start = { x: pos.x, y: pos.y }
                 fromInitial.set(id, start)
                 // From-card exits in axis × -sign direction
@@ -116,14 +82,14 @@ export function anchorSlide(
                     x: start.x + exitOffset.x,
                     y: start.y + exitOffset.y,
                 })
-                world.setDragging(handle, true)
+                driver.setDragging(handle, true)
             }
             for (const id of targets.toIds) {
-                const handle = world.getHandleById(id)
+                const handle = driver.getHandleById(id)
                 if (handle === undefined) continue
-                const captured = captureAndUntether(world, handle)
+                const captured = driver.detachTetherOf(handle)
                 if (captured) toCaptured.set(id, captured)
-                const pos = world.getPosition(handle)
+                const pos = driver.getPosition(handle)
                 const layout = { x: pos.x, y: pos.y }
                 toLayout.set(id, layout)
                 // To-card enters from the OPPOSITE side of the from-card's
@@ -137,8 +103,8 @@ export function anchorSlide(
                     y: layout.y + enterOffset.y,
                 }
                 toInitial.set(id, start)
-                world.setDragging(handle, true)
-                world.setPosition(handle, start)
+                driver.setDragging(handle, true)
+                driver.setPosition(handle, start)
                 activator.activate(id)
             }
             initialized = true
@@ -149,23 +115,23 @@ export function anchorSlide(
         const eased = easeOutCubic(tRaw)
 
         for (const id of targets.fromIds) {
-            const handle = world.getHandleById(id)
+            const handle = driver.getHandleById(id)
             if (handle === undefined) continue
             const a = fromInitial.get(id)
             const b = fromFinal.get(id)
             if (!a || !b) continue
-            world.setPosition(handle, {
+            driver.setPosition(handle, {
                 x: a.x + (b.x - a.x) * eased,
                 y: a.y + (b.y - a.y) * eased,
             })
         }
         for (const id of targets.toIds) {
-            const handle = world.getHandleById(id)
+            const handle = driver.getHandleById(id)
             if (handle === undefined) continue
             const a = toInitial.get(id)
             const b = toLayout.get(id)
             if (!a || !b) continue
-            world.setPosition(handle, {
+            driver.setPosition(handle, {
                 x: a.x + (b.x - a.x) * eased,
                 y: a.y + (b.y - a.y) * eased,
             })
@@ -173,27 +139,20 @@ export function anchorSlide(
 
         if (tRaw >= 1) {
             for (const id of targets.fromIds) {
-                const handle = world.getHandleById(id)
+                const handle = driver.getHandleById(id)
                 if (handle === undefined) continue
-                world.setDragging(handle, false)
+                driver.setDragging(handle, false)
             }
             for (const id of targets.toIds) {
-                const handle = world.getHandleById(id)
+                const handle = driver.getHandleById(id)
                 if (handle === undefined) continue
-                world.setDragging(handle, false)
-                world.setVelocity(handle, { x: 0, y: 0 })
+                driver.setDragging(handle, false)
+                driver.setVelocity(handle, { x: 0, y: 0 })
                 const captured = toCaptured.get(id)
-                if (captured) {
-                    world.tether.add(
-                        captured.parent,
-                        handle,
-                        captured.length,
-                        captured.anchorA,
-                    )
-                }
+                if (captured) driver.attachTether(captured)
             }
             if (sensorEdgeHandle !== undefined) {
-                world.setSensor(sensorEdgeHandle, false)
+                driver.setSensor(sensorEdgeHandle, false)
             }
             return true
         }

@@ -152,11 +152,25 @@ export function TransitionDirector({
             }
 
             if (plan.kind === 'coupled') {
+                // Resolve the static-edge handle here so the primitive doesn't
+                // need to know world identity (ceiling/floor). See BodyDriver.
+                const sensorEdgeHandle =
+                    plan.config.sensorEdges === 'ceiling'
+                        ? world.ceilingHandle
+                        : plan.config.sensorEdges === 'floor'
+                          ? world.floorHandle
+                          : undefined
                 const step = anchorSlide(
                     world,
                     registry,
                     { fromIds, toIds },
-                    { ...plan.config, viewport },
+                    {
+                        axis: plan.config.axis,
+                        sign: plan.config.sign,
+                        durationMs: plan.config.durationMs,
+                        viewport,
+                        sensorEdgeHandle,
+                    },
                 )
                 await runStep(step)
                 releaseFromIds()
@@ -296,7 +310,10 @@ function buildPrimitive(
     const toIds = toEntries.map((e) => e.id)
     switch (id) {
         case 'string-cut-drop':
-            return stringCutDrop(world, fromIds, { viewport })
+            return stringCutDrop(world, fromIds, {
+                viewport,
+                floorHandle: world.floorHandle,
+            })
         case 'pour-in-drop':
             return pourInDrop(world, activator, toEntries, { viewport })
         case 'anchor-slide':
