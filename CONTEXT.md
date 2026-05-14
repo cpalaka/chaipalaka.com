@@ -207,6 +207,16 @@ _Avoid_: transition manager (drift), router controller (routing belongs
 to react-router-dom; the **Director** consumes location changes, doesn't
 own routing).
 
+**CardLayer**:
+The React layer mounted once at app root (inside `CanvasLayout`) that
+renders every active **Card** via the `CardRegistry`. Survives route
+unmount, which is how an exiting **Card** keeps painting through its
+exit **Primitive** after the route that registered it has gone. The
+matching DOM probe (`[data-physics-layer]`) retains the older name for
+selector-stability reasons; the React component is `CardLayer`.
+_Avoid_: card list, card portal, physics layer (the prior name; misread
+the component as a layer of physics rather than a layer of cards).
+
 **Primitive**:
 A named animation step that runs during a route transition. Each is a
 `PrimitiveStep` — a per-tick function returning whether it has
@@ -330,5 +340,3 @@ in `text/registry.ts` discovered 2026-05-13).
   (3) the rope behaviour of a **Tether**.
   Resolved: **Tether** is the relationship; the SVG line is the **string
   layer rendering of a Tether**; the behaviour is **rope** (adjective).
-- **"PhysicsCard"** is a code identifier (the React component) and is
-  *not* the canonical domain term — **Card** is.
