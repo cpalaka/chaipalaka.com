@@ -20,6 +20,7 @@ export interface GalleryDeps {
 }
 
 export interface BackgroundGallery {
+    get(): BackgroundScene
     getActive(): BackgroundScene
     setActive(id: string): void
     register(scene: BackgroundScene): void
@@ -66,6 +67,7 @@ export function createGallery(deps: GalleryDeps): BackgroundGallery {
     writeAccent(active)
 
     return {
+        get: () => active,
         getActive: () => active,
 
         setActive(id: string) {
