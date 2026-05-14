@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
-import { registry as pretextRegistry } from '../../text/registry'
+import { measure } from '../../text/measure'
 import { getPosts } from '../../blog/posts'
 import {
     measureBlogCard,
@@ -187,8 +187,6 @@ export default function BlogIndex() {
         function update() {
             const vp = getViewport()
             setViewport(vp)
-            const measure = (text: string, fontKey: string, mw: number) =>
-                pretextRegistry.measure(text, fontKey, mw)
             setChain(buildChain(posts, vp, measure))
         }
         update()
