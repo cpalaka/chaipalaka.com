@@ -235,6 +235,33 @@ identity, and the two should not be welded.
 _Avoid_: global (suggests ambient mutable state with no owner), module
 state (true but uninformative), instance hack.
 
+### Text and measurement
+
+**Font**:
+A named typographic specification — `{ family, size, weight, lineHeight }`
+plus a derived canvas font-string. Declared as a const value (e.g.
+`FONT_BODY`, `FONT_CARD_TITLE`) and imported by callers; not registered
+under a string key. The **Font**'s `family`, `size`, and `weight` must
+match the corresponding CSS token in `tokens.css` so that **TextMeasure**
+predicts the same dimensions the browser will paint — a drift test
+asserts this agreement in CI.
+_Avoid_: font key (string-keyed lookup is the older registry shape, now
+deprecated), font spec (drift from the existing **CardSpec** /
+**SceneParamSchema** pattern; **Font** is a value, not a "spec").
+
+**TextMeasure**:
+The pre-paint typographic measurement primitive: given **Font** + text +
+max width, returns the dimensions a paint would produce, without
+touching the DOM. Built on `@chenglou/pretext`'s canvas-based
+measurement; the implementation library is an internal detail of the
+**TextMeasure** module. Today's surface is `measure(text, font, maxWidth)
+→ { width, height, lines }`; future growth (variable-width line
+streaming for prose around physics-card obstacles, particle-glyph
+preparation for transitions) lives behind the same seam.
+_Avoid_: pretext (leaks the implementation library into the domain),
+font registry (the older shape, retired by this term — see drift bug
+in `text/registry.ts` discovered 2026-05-13).
+
 ## Relationships
 
 - A **Card** has at most one **Tether** to a parent; multiple **Card**s can
