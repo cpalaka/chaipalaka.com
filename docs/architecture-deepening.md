@@ -38,19 +38,30 @@ Pass 1: every candidate has shipped. Status one-liners live in the
 Pass 2 (2026-05-14): a second run of `/improve-codebase-architecture`
 surfaced three new candidates plus one micro follow-up. All grilled in
 the same session; see [Pass 2 (2026-05-14)](#pass-2-2026-05-14) below.
+**All three shipped same-day.**
 
-- **Candidate 11** — Scene registration sprawl. Grilled; ready to slice.
+- **Candidate 11** — Scene registration sprawl. Shipped via issue
+  [#140](https://github.com/cpalaka/chaipalaka.com/issues/140) /
+  PR [#144](https://github.com/cpalaka/chaipalaka.com/pull/144)
+  (`e43cf6e`).
 - **Candidate 12** — `edges` table conflates defaults with tunings.
-  Grilled; ready to slice.
-- **Candidate 13** — Controller listener-plus-storage skeleton. Grilled;
-  ready to slice.
+  Shipped via issue
+  [#141](https://github.com/cpalaka/chaipalaka.com/issues/141) /
+  PR [#145](https://github.com/cpalaka/chaipalaka.com/pull/145)
+  (`fcdb619`).
+- **Candidate 13** — Controller listener-plus-storage skeleton. Shipped
+  via issue [#142](https://github.com/cpalaka/chaipalaka.com/issues/142)
+  / PR [#146](https://github.com/cpalaka/chaipalaka.com/pull/146)
+  (`b3b3299`).
 - **Micro follow-up to #3** — exiting-card reattach predicate promoted
   to a docstring at the `BodyDriver` seam. Shipped inline during the
   grill.
 
-The cross-cutting observations near the end of this file (`layout/` vs
-`layouts/` naming; sandbox parallelism; deferred backend candidates)
-remain open and have not been promoted to full candidates yet.
+Pass 2 closed. The cross-cutting observations near the end of this file
+(`layout/` vs `layouts/` naming; sandbox parallelism; deferred backend
+candidates) remain open and have not been promoted to full candidates
+yet — they are the natural starting points for a Pass 3 if/when one is
+opened.
 
 Per-candidate sections retain their full original text (Problem, Direction,
 Why grill, Linkage, ADR conflict?) so a future explorer can re-derive the
@@ -1052,10 +1063,17 @@ ready to slice. The micro follow-up shipped during the grill itself
 
 ## Candidate 11 — Scene registration sprawl
 
-**Status: grilled 2026-05-14; ready to slice. Builds on Pass 1 #5
-(paramSchema) without overlapping — Pass 1 deepened the parameter
-declaration layer; this candidate deepens the layer above
-(scene identity, metadata, loaders).**
+**Status: shipped 2026-05-14 via issue
+[#140](https://github.com/cpalaka/chaipalaka.com/issues/140) / PR
+[#144](https://github.com/cpalaka/chaipalaka.com/pull/144) (`e43cf6e`).
+Builds on Pass 1 #5 (paramSchema) without overlapping — Pass 1
+deepened the parameter declaration layer; this candidate deepened
+the layer above (scene identity, metadata, loaders).** New
+`canvas/scenes/registry.ts` exists; `manifest.json`, `index.ts`,
+and `tunable.ts` deleted; reflective `Object.values(mod).find(...)`
+in `BackgroundCanvas.getLazyScene` replaced by typed loader.
+CONTEXT.md `BackgroundScene` (narrowed) + `SceneRegistry` are the
+surviving vocabulary artifacts.
 
 **Files**
 - `web/src/canvas/scenes/manifest.json` — 9-entry array, canonical
@@ -1186,10 +1204,14 @@ added under "Background scenes."
 
 ## Candidate 12 — `edges` table conflates defaults with tunings
 
-**Status: grilled 2026-05-14; ready to slice. Pass 1 #9 declared
-`edges` as a public export of `transitions/index.ts`; that export
-survives. Only the entries get pruned and the file's contract
-narrows; the file is renamed to express its real role.**
+**Status: shipped 2026-05-14 via issue
+[#141](https://github.com/cpalaka/chaipalaka.com/issues/141) / PR
+[#145](https://github.com/cpalaka/chaipalaka.com/pull/145) (`fcdb619`).
+Pass 1 #9 declared `edges` as a public export of
+`transitions/index.ts`; that export survives under the new file
+name. Entries pruned; file renamed
+`transitions/edges.ts → transitions/transitionOverrides.ts`;
+`FORCE_STRING_CUT_FOR_TESTING` debug toggle deleted.**
 
 **Files**
 - `web/src/transitions/edges.ts` — 12 enumerated entries, all
@@ -1290,10 +1312,18 @@ once the table is empty. The current branch uses
 
 ## Candidate 13 — Controller listener-plus-storage skeleton
 
-**Status: grilled 2026-05-14; ready to slice. Builds on Pass 1 #4
-(useController bridge) one level below — Pass 1 deepened the React
-subscribe boilerplate; this candidate deepens the Controller-internal
-state-and-listeners bookkeeping.**
+**Status: shipped 2026-05-14 via issue
+[#142](https://github.com/cpalaka/chaipalaka.com/issues/142) / PR
+[#146](https://github.com/cpalaka/chaipalaka.com/pull/146) (`b3b3299`).
+Builds on Pass 1 #4 (useController bridge) one level below — Pass 1
+deepened the React subscribe boilerplate; this candidate deepened
+the Controller-internal state-and-listeners bookkeeping.** New
+`web/src/state/subscribable.ts` ships; gallery, frame-edge, and
+theme Controllers each wrap a `Subscribable<T>`; gallery's
+accent-CSS write became an explicit subscriber registration. The
+`useController` bridge is unchanged (a `Subscribable<T>` satisfies
+`Controller<T>` structurally). No CONTEXT.md update — `Subscribable`
+stays implementation vocabulary beneath **Controller**.
 
 **Files**
 - `web/src/canvas/gallery.ts:55-88` — `createGallery` factory; has
@@ -1516,28 +1546,22 @@ Pass 1 — closed / shipped:
   `computeSpawnOffset` + `computeFlingImpulse`, `resolveParent` moved
   to `physics/Tether.ts`).
 
-Pass 2 — grilled 2026-05-14, ready to slice:
+Pass 2 — closed / shipped:
 
-- **#11** — Scene registration sprawl. New `canvas/scenes/registry.ts`;
-  `manifest.json` / `index.ts` / `tunable.ts` retire; reflective
-  `getLazyScene` extraction dies. Suggested first to slice — highest
-  AI-navigability payoff per unit of work and most-touched surface
-  for the "add a scene" workflow.
-- **#12** — `edges` table conflates defaults with tunings. Empty the
-  table, rename file → `transitionOverrides.ts`, delete
-  `FORCE_STRING_CUT_FOR_TESTING`. Cheap; mostly deletion plus a
-  sibling-order equivalence check.
-- **#13** — Controller listener-plus-storage skeleton. New
-  `state/subscribable.ts`; three Controllers refactor to wrap it.
-  Defensible to defer until a fourth Controller appears, but the
-  gallery accent-CSS write becoming an explicit subscriber is a
-  real readability win on its own.
+- **#11** — shipped (#140 / PR #144 — `canvas/scenes/registry.ts`;
+  `manifest.json`, `index.ts`, `tunable.ts` retired; reflective
+  `getLazyScene` extraction died).
+- **#12** — shipped (#141 / PR #145 — table emptied, file renamed
+  `edges.ts → transitionOverrides.ts`, `FORCE_STRING_CUT_FOR_TESTING`
+  deleted).
+- **#13** — shipped (#142 / PR #146 — `state/subscribable.ts`; three
+  Controllers wrap it; gallery accent-CSS write becomes explicit
+  subscriber).
+- **Micro follow-up to #3** — shipped inline during the grill
+  (`physics/BodyDriver.ts` docstring).
 
-Pass 2 — shipped inline during the grill:
-
-- **Micro follow-up to #3** — exiting-card reattach predicate
-  promoted to a docstring at the `BodyDriver` seam.
-
-The cross-cutting observations below (`layout/` vs `layouts/`; sandbox
-parallelism; deferred backend candidates) remain open and have not been
-promoted to full candidates yet.
+Both passes are now closed. The cross-cutting observations below
+(`layout/` vs `layouts/`; sandbox parallelism; deferred backend
+candidates) remain open and have not been promoted to full candidates
+— they are the natural starting points for a Pass 3 if/when one is
+opened.
