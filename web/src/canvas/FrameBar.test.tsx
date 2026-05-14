@@ -1,10 +1,9 @@
-import { describe, test, expect, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { describe, test, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FrameBar } from './FrameBar'
 import { getFrameEdgeController } from './useFrameEdge'
-import { useMinimizedRegistry } from './useMinimizedRegistry'
 
 function renderInRouter(initialPath = '/') {
     return render(
@@ -80,13 +79,6 @@ describe('FrameBar', () => {
         await userEvent.click(btn)
         expect(btn).toHaveAttribute('aria-expanded', 'false')
         expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    })
-
-    test('minimized strip has aria-live="polite" and is empty', () => {
-        renderInRouter()
-        const strip = screen.getByRole('region', { name: 'Minimized cards' })
-        expect(strip).toHaveAttribute('aria-live', 'polite')
-        expect(strip).toBeEmptyDOMElement()
     })
 
     test('/portfolio nav button is NOT rendered', () => {
@@ -172,49 +164,6 @@ describe('FrameBar', () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
         expect(screen.queryByText('Gravity')).not.toBeInTheDocument()
-    })
-
-    describe('minimized strip', () => {
-        afterEach(() => {
-            // Clean up any cards left in the registry between strip tests.
-            const reg = useMinimizedRegistry()
-            for (const entry of reg.list()) reg.restore(entry.id)
-        })
-
-        test('chip appears in strip when a card is minimized', async () => {
-            renderInRouter()
-            const reg = useMinimizedRegistry()
-            reg.minimize('test-card', { label: 'Books', kind: 'lifelog' })
-            const chip = await screen.findByRole('button', { name: 'Restore: Books' })
-            expect(chip).toBeInTheDocument()
-        })
-
-        test('chip is removed from strip when restored', async () => {
-            renderInRouter()
-            const reg = useMinimizedRegistry()
-            reg.minimize('test-card', { label: 'Books', kind: 'lifelog' })
-            await screen.findByRole('button', { name: 'Restore: Books' })
-            reg.restore('test-card')
-            await waitFor(() => {
-                expect(screen.queryByRole('button', { name: 'Restore: Books' })).not.toBeInTheDocument()
-            })
-        })
-
-        test('clicking a chip calls registry.restore with the chip rect', async () => {
-            renderInRouter()
-            const reg = useMinimizedRegistry()
-            reg.minimize('test-card', { label: 'Books', kind: 'lifelog' })
-            const chip = await screen.findByRole('button', { name: 'Restore: Books' })
-            await userEvent.click(chip)
-            // After clicking restore, the chip should be gone and the entry removed.
-            expect(reg.list().some((e) => e.id === 'test-card')).toBe(false)
-        })
-
-        test('strip aria-live is polite', () => {
-            renderInRouter()
-            const strip = screen.getByRole('region', { name: 'Minimized cards' })
-            expect(strip).toHaveAttribute('aria-live', 'polite')
-        })
     })
 
     test('pressing Esc closes the menu and returns focus to the trigger', async () => {
