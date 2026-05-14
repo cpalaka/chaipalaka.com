@@ -28,16 +28,17 @@ grilling session, not here.
 
 ## Progress snapshot (2026-05-14)
 
-Every candidate has had its grill outcome by this point. Status one-liners
-live in the `**Status:**` header at the top of each candidate. Summary:
+Every candidate has shipped. Status one-liners live in the `**Status:**`
+header at the top of each candidate. Summary:
 
-- **Candidates 2, 3, 4, 5, 6, 7, 8, 9** — resolved or shipped.
+- **Candidates 2, 3, 4, 5, 6, 7, 8, 9, 10** — shipped.
 - **Candidate 1** — partial. Tether extracted; BalloonForces and MatterEngine
   deliberately not extracted (grill resolved against further sub-modules).
-- **Candidate 10** — grilled 2026-05-14. Path A locked: extract pure
-  helpers (`computeSpawnOffset`, `computeFlingImpulse`), move
-  `resolveParent` to `physics/Tether.ts`. No new module, no new seam.
-  Slice not yet filed.
+
+The list of full candidates is closed unless a new one surfaces. The
+cross-cutting observations near the end of this file (`layout/` vs
+`layouts/` naming; sandbox parallelism; deferred backend candidates) remain
+open and have not been promoted to full candidates yet.
 
 Per-candidate sections retain their full original text (Problem, Direction,
 Why grill, Linkage, ADR conflict?) so a future explorer can re-derive the
@@ -1078,19 +1079,9 @@ Several candidates fuse if you pick one:
 
 ## Recommended grilling order
 
-Reflects status as of 2026-05-14. Every original candidate has either
-shipped or has a recorded "Grill outcome" or "Resolution" section. Open
-work:
-
-1. **Candidate 9 slice — issue
-   [#133](https://github.com/cpalaka/chaipalaka.com/issues/133).** Card
-   subsystem extraction. Mechanical move + all-in rename + freebie
-   cleanups; one PR.
-2. **Candidate 10 slice — issue
-   [#136](https://github.com/cpalaka/chaipalaka.com/issues/136).**
-   Path A: extract `computeSpawnOffset` and `computeFlingImpulse` as
-   pure-function helpers in `card/`; move `resolveParent` to
-   `physics/Tether.ts` with a tightened return type.
+Reflects status as of 2026-05-14. Every original candidate has shipped or
+been deliberately resolved against extraction. No open candidate work
+remains in this list.
 
 Closed / shipped:
 
@@ -1103,12 +1094,11 @@ Closed / shipped:
 - **#6** — resolved by deletion (#125 BackgroundRegistry collapse).
 - **#7** — grilled + shipped (#127 / PR #129 TextMeasure).
 - **#8** — grilled + shipped (#130 / PR #132 PageDef split).
-
-New candidates surfaced during 2026-05-14 work:
-
-- **Candidate 10** — `CardImpl` internal split. Grilled 2026-05-14 (Path
-  A — extract pure helpers, defer the `CardView` / `CardBody` module
-  split).
+- **#9** — grilled + shipped (#133 / PR #135 card/ subsystem extraction
+  + `PhysicsCard → Card` rename + freebie cleanups).
+- **#10** — grilled + shipped (#136 / PR #138 Path A — pure helpers
+  `computeSpawnOffset` + `computeFlingImpulse`, `resolveParent` moved
+  to `physics/Tether.ts`).
 
 The cross-cutting observations below (`layout/` vs `layouts/`; sandbox
 parallelism; deferred backend candidates) remain open and have not been
