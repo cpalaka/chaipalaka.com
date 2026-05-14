@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react'
-import { PhysicsCard } from './Card'
+import { Card } from './Card'
 import { buoyancyForKind } from '../physics/PageSpec'
 import { usePageDef } from '../physics/usePageDef'
 import type { PageSpec } from '../physics/PageSpec'
@@ -24,7 +24,7 @@ function getViewport(): Viewport {
         : { width: 1024, height: 768 }
 }
 
-export function PhysicsPage({
+export function Page({
     pageDef,
     cardContent,
 }: {
@@ -50,7 +50,7 @@ export function PhysicsPage({
                 const c = cardContent[spec.id]
                 const { x, y } = spec.anchor(viewport)
                 return (
-                    <PhysicsCard
+                    <Card
                         key={spec.id}
                         id={spec.id}
                         text={c?.text ?? ''}
@@ -64,7 +64,7 @@ export function PhysicsPage({
                         draggable={c?.draggable ?? true}
                     >
                         {c?.children}
-                    </PhysicsCard>
+                    </Card>
                 )
             })}
         </>

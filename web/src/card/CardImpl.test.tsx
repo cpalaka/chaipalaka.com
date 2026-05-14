@@ -3,14 +3,14 @@ import { act, render, cleanup, fireEvent } from '@testing-library/react'
 import { useState } from 'react'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from './CardRegistry'
-import { PhysicsCardImpl } from './CardImpl'
-import type { PhysicsCardEntry } from './CardRegistry'
+import { CardImpl } from './CardImpl'
+import type { CardEntry } from './CardRegistry'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 
-// Helper: build a PhysicsCardEntry with sensible defaults.
+// Helper: build a CardEntry with sensible defaults.
 function makeEntry(
-    overrides: Partial<PhysicsCardEntry> = {},
-): PhysicsCardEntry {
+    overrides: Partial<CardEntry> = {},
+): CardEntry {
     return {
         id: overrides.id ?? 'card-1',
         parent: overrides.parent ?? null,
@@ -87,13 +87,13 @@ beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
-describe('PhysicsCardImpl — article shape & data attrs', () => {
+describe('CardImpl — article shape & data attrs', () => {
     test('renders article.physics-card with data-card-id and data-variant attrs', () => {
         const entry = makeEntry({
             id: 'shape-1',
             content: { text: 't', width: 120, height: 80, variant: 'lifelog' },
         })
-        const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { container } = renderWith(<CardImpl entry={entry} />)
         const article = container.querySelector('article.physics-card')
         expect(article).toBeTruthy()
         expect(article!.getAttribute('data-card-id')).toBe('shape-1')
@@ -101,10 +101,10 @@ describe('PhysicsCardImpl — article shape & data attrs', () => {
     })
 })
 
-describe('PhysicsCardImpl — lifecycle visibility (I-1)', () => {
+describe('CardImpl — lifecycle visibility (I-1)', () => {
     test('article has visibility: hidden while entry.state === "spawning"', () => {
         const entry = makeEntry({ id: 'spawning-1', state: 'spawning' })
-        const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { container } = renderWith(<CardImpl entry={entry} />)
         const article = container.querySelector(
             'article.physics-card',
         ) as HTMLElement
@@ -114,7 +114,7 @@ describe('PhysicsCardImpl — lifecycle visibility (I-1)', () => {
 
     test('article visibility is not hidden when entry.state === "active"', () => {
         const entry = makeEntry({ id: 'active-1', state: 'active' })
-        const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { container } = renderWith(<CardImpl entry={entry} />)
         const article = container.querySelector(
             'article.physics-card',
         ) as HTMLElement
@@ -122,10 +122,10 @@ describe('PhysicsCardImpl — lifecycle visibility (I-1)', () => {
     })
 })
 
-describe('PhysicsCardImpl — drag handler install', () => {
+describe('CardImpl — drag handler install', () => {
     test('draggable=true (default) sets cursor: grabbing on pointerdown', () => {
         const entry = makeEntry({ id: 'drag-on' })
-        const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { container } = renderWith(<CardImpl entry={entry} />)
         const article = container.querySelector(
             'article.physics-card',
         ) as HTMLElement
@@ -137,7 +137,7 @@ describe('PhysicsCardImpl — drag handler install', () => {
     test('draggable=true calls world.setDragging(handle, true) on pointerdown', () => {
         const entry = makeEntry({ id: 'drag-spy' })
         const { container, getWorld } = renderWith(
-            <PhysicsCardImpl entry={entry} />,
+            <CardImpl entry={entry} />,
         )
         const setDragging = vi.spyOn(getWorld(), 'setDragging')
         const article = container.querySelector(
@@ -156,7 +156,7 @@ describe('PhysicsCardImpl — drag handler install', () => {
             content: { text: 't', width: 120, height: 80, draggable: false },
         })
         const { container, getWorld } = renderWith(
-            <PhysicsCardImpl entry={entry} />,
+            <CardImpl entry={entry} />,
         )
         const setDragging = vi.spyOn(getWorld(), 'setDragging')
         const article = container.querySelector(
@@ -169,10 +169,10 @@ describe('PhysicsCardImpl — drag handler install', () => {
     })
 })
 
-describe('PhysicsCardImpl — parent tether wiring', () => {
+describe('CardImpl — parent tether wiring', () => {
     test('parent="ceiling" wires a tether from the card to the ceiling handle', async () => {
         const entry = makeEntry({ id: 'tether-ceil', parent: 'ceiling' })
-        const { getWorld } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('tether-ceil')!
@@ -185,7 +185,7 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
 
     test('parent="floor" wires a tether from the card to the floor handle', async () => {
         const entry = makeEntry({ id: 'tether-floor', parent: 'floor' })
-        const { getWorld } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('tether-floor')!
@@ -205,8 +205,8 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
         })
         const { getWorld } = renderWith(
             <>
-                <PhysicsCardImpl entry={parentEntry} />
-                <PhysicsCardImpl entry={childEntry} />
+                <CardImpl entry={parentEntry} />
+                <CardImpl entry={childEntry} />
             </>,
         )
         await flushRaf()
@@ -226,7 +226,7 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
             id: 'lonely-child',
             parent: 'nonexistent-parent',
         })
-        const { getWorld } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
         // First RAF flushes the reveal gate; second flushes the parent-resolve retry.
         await flushRaf()
         await flushRaf()
@@ -246,7 +246,7 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
             parent: 'ceiling',
             trail: 'floor',
         })
-        const { getWorld } = renderWith(<PhysicsCardImpl entry={entry} />)
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
         await flushRaf()
         const world = getWorld()
         const childHandle = world.getHandleById('dual-tether')!
@@ -259,13 +259,13 @@ describe('PhysicsCardImpl — parent tether wiring', () => {
     })
 })
 
-describe('PhysicsCardImpl — anchor changes', () => {
+describe('CardImpl — anchor changes', () => {
     test('changing the anchor calls world.setAnchor and re-wires the parent tether', async () => {
         function Harness() {
             const [anchor, setAnchor] = useState({ x: 100, y: 100 })
             return (
                 <>
-                    <PhysicsCardImpl
+                    <CardImpl
                         entry={makeEntry({
                             id: 'anchor-card',
                             parent: 'ceiling',
@@ -314,11 +314,11 @@ describe('PhysicsCardImpl — anchor changes', () => {
     })
 })
 
-describe('PhysicsCardImpl — unmount cleanup', () => {
+describe('CardImpl — unmount cleanup', () => {
     test('unmounting untethers, unregisters the body, and the card disappears from the world', async () => {
         function Harness({ mounted }: { mounted: boolean }) {
             return mounted ? (
-                <PhysicsCardImpl
+                <CardImpl
                     entry={makeEntry({ id: 'unmount-me', parent: 'ceiling' })}
                 />
             ) : null

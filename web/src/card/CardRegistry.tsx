@@ -10,7 +10,7 @@ import type { CardContent } from './Page'
 
 export type CardLifecycle = 'spawning' | 'active' | 'exiting'
 
-export interface PhysicsCardEntry {
+export interface CardEntry {
     id: string
     parent: ParentRef
     trail?: ParentRef
@@ -21,7 +21,7 @@ export interface PhysicsCardEntry {
     state: CardLifecycle
 }
 
-export type RegisterArgs = Omit<PhysicsCardEntry, 'state'>
+export type RegisterArgs = Omit<CardEntry, 'state'>
 
 export interface CardActivator {
     activate(id: string): void
@@ -34,14 +34,14 @@ export interface CardRegistryAPI extends CardActivator {
     arm(): void
     disarm(): void
     release(id: string): void
-    snapshot(): readonly PhysicsCardEntry[]
+    snapshot(): readonly CardEntry[]
     subscribe(cb: () => void): () => void
 }
 
 export class CardRegistryStore {
-    private entries = new Map<string, PhysicsCardEntry>()
+    private entries = new Map<string, CardEntry>()
     private listeners = new Set<() => void>()
-    private cachedSnapshot: readonly PhysicsCardEntry[] | null = null
+    private cachedSnapshot: readonly CardEntry[] | null = null
     private armed = false
 
     subscribe = (cb: () => void): (() => void) => {
@@ -51,7 +51,7 @@ export class CardRegistryStore {
         }
     }
 
-    snapshot = (): readonly PhysicsCardEntry[] => {
+    snapshot = (): readonly CardEntry[] => {
         if (!this.cachedSnapshot) {
             this.cachedSnapshot = Object.freeze([...this.entries.values()])
         }
@@ -149,7 +149,7 @@ export function useCardRegistry(): CardRegistryAPI {
     return api
 }
 
-export function useCardRegistryEntries(): readonly PhysicsCardEntry[] {
+export function useCardRegistryEntries(): readonly CardEntry[] {
     const api = useCardRegistry()
     return useSyncExternalStore(api.subscribe, api.snapshot, api.snapshot)
 }

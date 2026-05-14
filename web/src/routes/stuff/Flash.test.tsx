@@ -17,7 +17,7 @@ vi.mock('../../stuff/flash/pieces', () => ({
 import Flash, { buildFlashIndex } from './Flash'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
 import { CardRegistryProvider } from '../../card/CardRegistry'
-import { PhysicsLayer } from '../../card/CardLayer'
+import { CardLayer } from '../../card/CardLayer'
 
 const CHAIN_TOP = 100
 const HEADER_H = 140
@@ -157,7 +157,7 @@ describe('Flash — default export render', () => {
                 <MemoryRouter initialEntries={['/stuff/flash']}>
                     <PhysicsProvider>
                         <CardRegistryProvider>
-                            <PhysicsLayer />
+                            <CardLayer />
                             <Flash />
                         </CardRegistryProvider>
                     </PhysicsProvider>

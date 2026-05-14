@@ -1,9 +1,9 @@
 import { describe, test, expect, afterEach } from 'vitest'
 import { act, render, cleanup } from '@testing-library/react'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
-import { PhysicsCard } from './Card'
+import { Card } from './Card'
 import { CardRegistryProvider } from './CardRegistry'
-import { PhysicsLayer } from './CardLayer'
+import { CardLayer } from './CardLayer'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 
 afterEach(() => {
@@ -25,17 +25,17 @@ function renderWith(children: React.ReactNode) {
     return render(
         <PhysicsProvider>
             <CardRegistryProvider>
-                <PhysicsLayer />
+                <CardLayer />
                 {children}
             </CardRegistryProvider>
         </PhysicsProvider>,
     )
 }
 
-describe('PhysicsCard — draggable prop', () => {
+describe('Card — draggable prop', () => {
     test('default (draggable=true) sets cursor to grabbing on pointerdown', () => {
         const { container } = renderWith(
-            <PhysicsCard
+            <Card
                 id="default-drag"
                 text="default"
                 width={120}
@@ -62,9 +62,9 @@ describe('PhysicsCard — draggable prop', () => {
             render(
                 <PhysicsProvider>
                     <CardRegistryProvider>
-                        <PhysicsLayer />
+                        <CardLayer />
                         <Probe />
-                        <PhysicsCard
+                        <Card
                             id="dual-tether"
                             text="dual"
                             width={120}
@@ -76,7 +76,7 @@ describe('PhysicsCard — draggable prop', () => {
                     </CardRegistryProvider>
                 </PhysicsProvider>,
             )
-            // Give the registry/PhysicsLayer pipeline a frame to wire tethers.
+            // Give the registry/CardLayer pipeline a frame to wire tethers.
             await new Promise((r) => requestAnimationFrame(() => r(null)))
         })
         const world = captured! as PhysicsWorld
@@ -90,7 +90,7 @@ describe('PhysicsCard — draggable prop', () => {
 
     test('draggable={false} does NOT set cursor to grabbing on pointerdown', () => {
         const { container } = renderWith(
-            <PhysicsCard
+            <Card
                 id="no-drag"
                 text="frozen"
                 width={120}

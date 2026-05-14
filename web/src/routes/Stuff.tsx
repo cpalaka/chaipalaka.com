@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { PhysicsPage } from '../card/Page'
+import { Page } from '../card/Page'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 
@@ -89,5 +89,5 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function Stuff() {
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <Page pageDef={pageDef} cardContent={cardContent} />
 }

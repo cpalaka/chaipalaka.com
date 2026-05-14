@@ -12,7 +12,7 @@ import { usePhysicsWorld } from '../physics/PhysicsContext'
 import {
     useCardRegistry,
     type CardActivator,
-    type PhysicsCardEntry,
+    type CardEntry,
 } from '../card/CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
 import {
@@ -117,7 +117,7 @@ export function TransitionDirector({
         async (_fromPath: string, _toPath: string, plan: TransitionPlan) => {
             // Source of truth is the registry: cards marked `exiting` belong
             // to the outgoing route; cards still `spawning` are the incoming
-            // ones registered by the newly-mounted route's <PhysicsCard>s
+            // ones registered by the newly-mounted route's <Card>s
             // (Director Armed before they registered, so default-policy
             // auto-activate is suppressed and the primitive owns activation).
             // This lets routes that aren't listed in `pageDefs` (e.g. /blog,
@@ -340,7 +340,7 @@ function buildPrimitive(
 }
 
 function makePourEntry(
-    entry: PhysicsCardEntry,
+    entry: CardEntry,
     index: number,
 ): PourInDropEntry {
     return {

@@ -1,14 +1,14 @@
 import { useRef } from 'react'
 import { useCardRegistryEntries } from './CardRegistry'
-import { PhysicsCardImpl } from './CardImpl'
+import { CardImpl } from './CardImpl'
 
-export function PhysicsLayer() {
+export function CardLayer() {
     const entries = useCardRegistryEntries()
     const containerRef = useRef<HTMLDivElement | null>(null)
     return (
         <div ref={containerRef} data-physics-layer="">
             {entries.map((entry) => (
-                <PhysicsCardImpl key={entry.id} entry={entry} />
+                <CardImpl key={entry.id} entry={entry} />
             ))}
         </div>
     )

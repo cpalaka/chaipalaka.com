@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { PhysicsCard } from '../card/Card'
+import { Card } from '../card/Card'
 import { StringLayer } from './StringLayer'
 
 describe('StringLayer', () => {
@@ -13,7 +13,7 @@ describe('StringLayer', () => {
             render(
                 <PhysicsProvider>
                     <StringLayer />
-                    <PhysicsCard
+                    <Card
                         id="parent"
                         text="P"
                         width={80}
@@ -22,7 +22,7 @@ describe('StringLayer', () => {
                         parent="ceiling"
                         buoyancy="heavy"
                     />
-                    <PhysicsCard
+                    <Card
                         text="C"
                         width={80}
                         height={40}

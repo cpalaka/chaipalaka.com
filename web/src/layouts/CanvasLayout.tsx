@@ -7,7 +7,7 @@ import { FrameBar } from '../canvas/FrameBar'
 import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
 import { TransitionDirector } from '../transitions/TransitionDirector'
-import { PhysicsLayer } from '../card/CardLayer'
+import { CardLayer } from '../card/CardLayer'
 import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/edges'
@@ -32,7 +32,7 @@ export default function CanvasLayout() {
                         data-frame-edge={edge}
                     >
                         <BackgroundCanvas />
-                        <PhysicsLayer />
+                        <CardLayer />
                         <StringLayer />
                         <FrameBar />
                         <Outlet />

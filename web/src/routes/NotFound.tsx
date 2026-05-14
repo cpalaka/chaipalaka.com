@@ -1,4 +1,4 @@
-import { PhysicsPage } from '../card/Page'
+import { Page } from '../card/Page'
 import { Link } from 'react-router-dom'
 import { getPosts } from '../blog/posts'
 import type { PageDef } from './PageDef'
@@ -102,5 +102,5 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function NotFound() {
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <Page pageDef={pageDef} cardContent={cardContent} />
 }
