@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
-import { TETHER_STIFFNESS, Tether } from './Tether'
+import { TETHER_STIFFNESS, Tether, resolveParent } from './Tether'
 import type { BodyForceSource } from './BodyForceSource'
-import type { PhysicsHandle, Vec2 } from './PhysicsWorld'
+import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
 
 class FakeBodyForceSource implements BodyForceSource {
     private bodies = new Map<
@@ -342,5 +342,64 @@ describe('Tether applyRopeForces', () => {
         tether.add(1, 2, 80)
         expect(tether.removeReferencing(99)).toBe(0)
         expect(tether.records()).toHaveLength(1)
+    })
+})
+
+describe('resolveParent', () => {
+    function makeWorldStub(opts: {
+        ceilingHandle: PhysicsHandle
+        floorHandle: PhysicsHandle
+        registered: ReadonlyMap<string, PhysicsHandle>
+    }): PhysicsWorld {
+        return {
+            ceilingHandle: opts.ceilingHandle,
+            floorHandle: opts.floorHandle,
+            getHandleById: (id: string) => opts.registered.get(id),
+        } as unknown as PhysicsWorld
+    }
+
+    test("'ceiling' resolves to world.ceilingHandle with kind 'ceiling'", () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+        })
+        expect(resolveParent(world, 'ceiling')).toEqual({
+            handle: 7,
+            kind: 'ceiling',
+        })
+    })
+
+    test("'floor' resolves to world.floorHandle with kind 'floor'", () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+        })
+        expect(resolveParent(world, 'floor')).toEqual({
+            handle: 8,
+            kind: 'floor',
+        })
+    })
+
+    test('registered card-id resolves to its handle with kind \'card\'', () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map([['card-a', 42]]),
+        })
+        expect(resolveParent(world, 'card-a')).toEqual({
+            handle: 42,
+            kind: 'card',
+        })
+    })
+
+    test('missing card-id resolves to null', () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+        })
+        expect(resolveParent(world, 'never-registered')).toBeNull()
     })
 })
