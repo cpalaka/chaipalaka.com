@@ -1,3 +1,4 @@
+import { createSubscribable } from '../state/subscribable'
 import type { BackgroundScene } from './types'
 
 export const STORAGE_KEY = 'chaipalaka.background.activeId'
@@ -23,7 +24,6 @@ export interface BackgroundGallery {
     getActive(): BackgroundScene
     setActive(id: string): void
     subscribe(listener: (active: BackgroundScene) => void): () => void
-    destroy(): void
 }
 
 export function createGallery(deps: GalleryDeps): BackgroundGallery {
@@ -52,18 +52,18 @@ export function createGallery(deps: GalleryDeps): BackgroundGallery {
         return def
     }
 
-    let active = pickInitial()
-    const listeners = new Set<(active: BackgroundScene) => void>()
-
     function writeAccent(scene: BackgroundScene) {
         root?.style.setProperty('--color-accent', scene.accentColor)
     }
 
-    writeAccent(active)
+    const initial = pickInitial()
+    const state = createSubscribable<BackgroundScene>(initial)
+    state.subscribe(writeAccent)
+    writeAccent(initial)
 
     return {
-        get: () => active,
-        getActive: () => active,
+        get: state.get,
+        getActive: state.get,
 
         setActive(id: string) {
             const scene = sceneById.get(id)
@@ -71,19 +71,10 @@ export function createGallery(deps: GalleryDeps): BackgroundGallery {
                 console.warn(`BackgroundGallery.setActive: unknown id "${id}"`)
                 return
             }
-            active = scene
             storage?.setItem(STORAGE_KEY, id)
-            writeAccent(scene)
-            for (const l of listeners) l(scene)
+            state.set(scene)
         },
 
-        subscribe(listener: (active: BackgroundScene) => void) {
-            listeners.add(listener)
-            return () => listeners.delete(listener)
-        },
-
-        destroy() {
-            listeners.clear()
-        },
+        subscribe: state.subscribe,
     }
 }

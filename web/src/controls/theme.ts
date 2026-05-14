@@ -1,3 +1,5 @@
+import { createSubscribable } from '../state/subscribable'
+
 export type Theme = 'dark' | 'light'
 
 export const THEME_STORAGE_KEY = 'chaipalaka.theme'
@@ -34,35 +36,26 @@ export function createThemeController(
     deps: ThemeControllerDeps,
 ): ThemeController {
     const { storage, getSystemPreference } = deps
-    let current: Theme = readTheme(storage, getSystemPreference)
-    const listeners = new Set<(theme: Theme) => void>()
+    const state = createSubscribable<Theme>(readTheme(storage, getSystemPreference))
+
+    function commit(next: Theme) {
+        storage.set(THEME_STORAGE_KEY, next)
+        state.set(next)
+    }
 
     return {
-        get: () => current,
-
-        getTheme() {
-            return current
-        },
+        get: state.get,
+        getTheme: state.get,
+        getDataTheme: state.get,
 
         setTheme(theme: Theme) {
-            current = theme
-            storage.set(THEME_STORAGE_KEY, current)
-            for (const l of listeners) l(current)
+            commit(theme)
         },
 
         cycleTheme() {
-            current = current === 'dark' ? 'light' : 'dark'
-            storage.set(THEME_STORAGE_KEY, current)
-            for (const l of listeners) l(current)
+            commit(state.get() === 'dark' ? 'light' : 'dark')
         },
 
-        getDataTheme() {
-            return current
-        },
-
-        subscribe(listener) {
-            listeners.add(listener)
-            return () => listeners.delete(listener)
-        },
+        subscribe: state.subscribe,
     }
 }
