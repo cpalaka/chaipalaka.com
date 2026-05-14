@@ -1,6 +1,7 @@
 import Matter from 'matter-js'
 import { Tether } from './Tether'
 import type { BodyForceSource } from './BodyForceSource'
+import type { BodyDriver, TetherSpec } from './BodyDriver'
 
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
 
@@ -186,6 +187,14 @@ export class PhysicsWorld implements BodyForceSource {
     unregister(handle: PhysicsHandle): void {
         const reg = this.registrations.get(handle)
         if (!reg) return
+        // Sweep tether records that reference this body. Owning React
+        // components only know the original tether handle from `tether.add`;
+        // primitives that detach+reattach via `detachTetherOf`/`attachTether`
+        // produce a new record with a fresh handle that no component is
+        // tracking. Without this sweep, those records survive past the body
+        // and the next physics tick throws `unknown handle N` from
+        // `Tether.applyRopeForces` / `Tether.list`.
+        this.tether.removeReferencing(handle)
         Matter.Composite.remove(this.world, reg.body)
         if (reg.id) this.byId.delete(reg.id)
         this.registrations.delete(handle)
@@ -351,6 +360,29 @@ export class PhysicsWorld implements BodyForceSource {
         return reg.body.isSensor
     }
 
+    // BodyDriver atomic tether ops. Thin wrappers over the tether sub-object
+    // so body primitives can capture-and-restore (anchorSlide, pourInDrop) or
+    // selectively reattach (stringCutDrop) without reaching into world.tether
+    // and without leaking ceiling/floor identity through the seam.
+    detachTetherOf(child: PhysicsHandle): TetherSpec | undefined {
+        for (const r of this.tether.records()) {
+            if (r.child !== child) continue
+            const spec: TetherSpec = {
+                parent: r.parent,
+                child: r.child,
+                length: r.length,
+                ...(r.anchorA ? { anchorA: { ...r.anchorA } } : {}),
+            }
+            this.tether.remove(r.handle)
+            return spec
+        }
+        return undefined
+    }
+
+    attachTether(spec: TetherSpec): void {
+        this.tether.add(spec.parent, spec.child, spec.length, spec.anchorA)
+    }
+
     tick(dtMs: number): void {
         // 1. Apply balloon buoyancy — per-tick force opposing gravity, scaled to match gravity force units
         const g = this.getGravityVector()
@@ -380,4 +412,14 @@ export class PhysicsWorld implements BodyForceSource {
             })
         }
     }
+}
+
+// Structural assignability check: `PhysicsWorld` must satisfy `BodyDriver`.
+// If a future refactor changes a method signature so the world no longer
+// matches the seam, this typecheck fails loudly and the body primitives'
+// migration is forced to follow. `BodyState` is structurally assignable to
+// `Vec2` (the extra `rotation` is a permitted superset).
+{
+    const _check: BodyDriver = null as unknown as PhysicsWorld
+    void _check
 }

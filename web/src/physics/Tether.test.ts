@@ -313,4 +313,34 @@ describe('Tether applyRopeForces', () => {
         expect(src.totalForceOn(2).y).toBeLessThan(0)
         expect(src.totalForceOn(4).y).toBeLessThan(0)
     })
+
+    test('removeReferencing drops every record where the body appears as parent or child', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 100 }, 5)
+        src.setBody(3, { x: 0, y: 200 }, 5)
+        src.setBody(4, { x: 0, y: 300 }, 5)
+        const tether = new Tether(src)
+        tether.add(1, 2, 80) // ceiling → 2
+        tether.add(2, 3, 80) // 2 → 3 (body 2 is the parent)
+        tether.add(3, 4, 80) // 3 → 4 (unaffected by removing body 2)
+        expect(tether.records()).toHaveLength(3)
+
+        const removed = tether.removeReferencing(2)
+        expect(removed).toBe(2)
+        const remaining = tether.records()
+        expect(remaining).toHaveLength(1)
+        expect(remaining[0]?.parent).toBe(3)
+        expect(remaining[0]?.child).toBe(4)
+    })
+
+    test('removeReferencing is a no-op when the body appears in no record', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 100 }, 5)
+        const tether = new Tether(src)
+        tether.add(1, 2, 80)
+        expect(tether.removeReferencing(99)).toBe(0)
+        expect(tether.records()).toHaveLength(1)
+    })
 })

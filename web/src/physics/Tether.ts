@@ -63,6 +63,28 @@ export class Tether {
         this.invalidate()
     }
 
+    /**
+     * Drop every tether record that references `body` as either parent or
+     * child, returning the number removed. Called by `PhysicsWorld.unregister`
+     * to enforce the invariant that no tether may reference a body the world
+     * no longer knows about. Without this sweep, any record produced by a
+     * primitive's `detachTetherOf`/`attachTether` cycle (whose new handle is
+     * not known to the React component that owned the original) becomes an
+     * orphan as soon as the body unregisters, throwing `unknown handle N` on
+     * the next physics tick.
+     */
+    removeReferencing(body: PhysicsHandle): number {
+        let removed = 0
+        for (const [handle, rec] of this.records_) {
+            if (rec.parent === body || rec.child === body) {
+                this.records_.delete(handle)
+                removed += 1
+            }
+        }
+        if (removed > 0) this.invalidate()
+        return removed
+    }
+
     records(): readonly TetherRecord[] {
         if (!this.cachedRecords) {
             this.cachedRecords = Object.freeze(

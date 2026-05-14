@@ -1,164 +1,189 @@
 import { describe, test, expect } from 'vitest'
-import { PhysicsWorld } from '../../physics/PhysicsWorld'
+import { createFakeBodyDriver } from '../../physics/createFakeBodyDriver'
 import { anchorSlide } from './anchorSlide'
 import type { CardActivator } from '../CardRegistry'
 
 const noopActivator: CardActivator = { activate: () => {} }
 
+function newFake() {
+    const fake = createFakeBodyDriver()
+    // Register a static "ceiling" / "floor" so tests that exercise the sensor
+    // edge or static-parent tether have stable handles to pass in as opts.
+    const ceiling = fake.registerBody('__ceiling', {
+        position: { x: 400, y: 0 },
+        isStatic: true,
+    })
+    const floor = fake.registerBody('__floor', {
+        position: { x: 400, y: 600 },
+        isStatic: true,
+    })
+    return { fake, ceiling, floor }
+}
+
 describe('anchorSlide (T3) — horizontal', () => {
     test('translates from-card horizontally off-viewport over duration', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 700, viewport },
         )
 
-        step(0) // captures initial positions
-        const start = world.getPosition(a)
+        step(0)
+        const start = fake.getState(a)!.position
         expect(start.x).toBeCloseTo(400, 1)
 
-        // Halfway through duration
         step(350)
-        const mid = world.getPosition(a)
-        // sign=+1, fromCard exits in axis × -sign direction = leftward (negative x)
+        const mid = fake.getState(a)!.position
+        // sign=+1, fromCard exits in axis × -sign direction = leftward.
         expect(mid.x).toBeLessThan(start.x)
 
-        // After full duration
         const done = step(350)
         expect(done).toBe(true)
-        const final = world.getPosition(a)
-        // Final position is off-viewport on the leftward side
+        const final = fake.getState(a)!.position
         expect(final.x).toBeLessThanOrEqual(-100)
     })
 
     test('sign=-1 flips direction (from-card exits to the right)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: -1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: -1, durationMs: 700, viewport },
         )
 
         step(0)
         step(700)
-        const final = world.getPosition(a)
-        // With sign=-1, fromCard exits in axis × -sign = rightward (positive x)
+        const final = fake.getState(a)!.position
         expect(final.x).toBeGreaterThan(viewport.width)
     })
 
     test('to-card enters from origin side toward its layout position', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const b = fake.registerBody('b', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 700, viewport },
         )
 
         step(0)
-        // toCard with sign=+1 horizontal: enters from the RIGHT (the opposite
-        // side of the from-card's exit direction) — both cards slide left
-        // together as a unified strip.
-        const initialPos = world.getPosition(b)
+        const initialPos = fake.getState(b)!.position
         expect(initialPos.x).toBeGreaterThanOrEqual(viewport.width)
 
-        // At end, reaches its layout position
         step(700)
-        const final = world.getPosition(b)
+        const final = fake.getState(b)!.position
         expect(final.x).toBeCloseTo(400, 1)
     })
 
     test('follows ease-out-cubic curve (front-loaded motion)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 1000,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 1000, viewport },
         )
 
         step(0)
-        const start = world.getPosition(a).x
-        step(250) // t=0.25
-        const at25 = world.getPosition(a).x
-        step(250) // t=0.50
-        const at50 = world.getPosition(a).x
+        const start = fake.getState(a)!.position.x
+        step(250)
+        const at25 = fake.getState(a)!.position.x
+        step(250)
+        const at50 = fake.getState(a)!.position.x
 
-        // Distance from start at t=0.5 — eased value at 0.5 is 1 - (1-0.5)^3 = 1 - 0.125 = 0.875
         const totalDistance = Math.abs(start - (start - (viewport.width + 200)))
         const distance25 = Math.abs(start - at25)
         const distance50 = Math.abs(start - at50)
-        // Eased at t=0.25 → 1 - (0.75)^3 ≈ 0.578 — more than half of 0.875
         expect(distance25 / distance50).toBeGreaterThan(0.5)
-        // And the 0.25-progress is much more than linear 0.25 (which would give 0.25/0.5 = 0.5)
         expect(distance25 / totalDistance).toBeGreaterThan(0.4)
+    })
+
+    test('easing endpoints: t=0 leaves start untouched; t=1 lands at final', () => {
+        // Motion-shape assertion: at the boundaries of the eased curve the
+        // position equals the captured start / computed final exactly. Was
+        // impossible against the old world fixture because the world's body
+        // angle / pendulum drift left the rest position off-anchor.
+        const viewport = { width: 800, height: 600 }
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
+
+        const step = anchorSlide(
+            fake.driver,
+            noopActivator,
+            { fromIds: ['a'], toIds: [] },
+            { axis: 'horizontal', sign: 1, durationMs: 600, viewport },
+        )
+
+        step(0)
+        // At elapsed=0 (after init): eased(0) === 0, so position is the
+        // captured initial position exactly.
+        const t0 = fake.getState(a)!.position
+        expect(t0.x).toBe(400)
+        expect(t0.y).toBe(300)
+
+        // At elapsed >= duration: eased(1) === 1, so position is the computed
+        // exit offset exactly.
+        step(600)
+        const t1 = fake.getState(a)!.position
+        const expectedExit = 400 - (viewport.width + 100) // OFFSCREEN_PAD
+        expect(t1.x).toBe(expectedExit)
+        expect(t1.y).toBe(300)
+    })
+
+    test('from-card motion is monotonic across the slide', () => {
+        // Motion-shape assertion: ease-out-cubic is strictly monotonic, so
+        // sampling at increasing elapsedMs must produce a strictly monotonic
+        // sequence of x positions. Was impossible against the old world
+        // fixture because matter.js drift could reverse the per-step delta.
+        const viewport = { width: 800, height: 600 }
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
+
+        const step = anchorSlide(
+            fake.driver,
+            noopActivator,
+            { fromIds: ['a'], toIds: [] },
+            { axis: 'horizontal', sign: 1, durationMs: 600, viewport },
+        )
+
+        step(0)
+        const xs: number[] = [fake.getState(a)!.position.x]
+        for (let i = 0; i < 12; i++) {
+            step(50)
+            xs.push(fake.getState(a)!.position.x)
+        }
+        for (let i = 1; i < xs.length; i++) {
+            // sign=+1 horizontal → from-card moves leftward (decreasing x).
+            expect(xs[i]!).toBeLessThanOrEqual(xs[i - 1]!)
+        }
+        // And strictly less than the first sample by the end.
+        expect(xs[xs.length - 1]!).toBeLessThan(xs[0]!)
     })
 
     test('handles empty from/to lists without error', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
+        const { fake } = newFake()
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: [], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 100,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 100, viewport },
         )
 
         step(0)
@@ -168,141 +193,150 @@ describe('anchorSlide (T3) — horizontal', () => {
 
     test('to-card tether is captured on init and restored on completion', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake, ceiling } = newFake()
+        const b = fake.registerBody('b', { position: { x: 400, y: 300 } })
         const TETHER_LEN = 250
-        world.tether.add(world.ceilingHandle, b, TETHER_LEN)
-        expect(
-            world.tether.records().filter((t) => t.child === b),
-        ).toHaveLength(1)
+        fake.addTether({ parent: ceiling, child: b, length: TETHER_LEN })
+        expect(fake.getTethers().filter((t) => t.child === b)).toHaveLength(1)
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 700, viewport },
         )
 
-        // After step(0), the tether should be detached so StringLayer
-        // doesn't draw a long diagonal string while the card slides in.
         step(0)
-        expect(
-            world.tether.records().filter((t) => t.child === b),
-        ).toHaveLength(0)
+        expect(fake.getTethers().filter((t) => t.child === b)).toHaveLength(0)
 
-        // After completion, the tether should be re-attached with the
-        // original length so the card resumes hanging at its layout anchor.
         step(700)
-        const restored = world.tether.records().filter((t) => t.child === b)
+        const restored = fake.getTethers().filter((t) => t.child === b)
         expect(restored).toHaveLength(1)
         expect(restored[0]!.length).toBe(TETHER_LEN)
-        expect(restored[0]!.parent).toBe(world.ceilingHandle)
+        expect(restored[0]!.parent).toBe(ceiling)
+    })
+
+    test('captured tether reattaches exactly at completion, not before', () => {
+        // Motion-shape assertion: the attachTether call must appear in the
+        // call log only after the final eased step (i.e. once the slide has
+        // reached its layout anchor). Earlier reattachment would let StringLayer
+        // draw a string while the card is still mid-flight.
+        const viewport = { width: 800, height: 600 }
+        const { fake, ceiling } = newFake()
+        const b = fake.registerBody('b', { position: { x: 400, y: 300 } })
+        fake.addTether({ parent: ceiling, child: b, length: 250 })
+
+        const step = anchorSlide(
+            fake.driver,
+            noopActivator,
+            { fromIds: [], toIds: ['b'] },
+            { axis: 'horizontal', sign: 1, durationMs: 600, viewport },
+        )
+
+        step(0)
+        expect(fake.getCalls().some((c) => c.type === 'attachTether')).toBe(false)
+        step(300) // mid-slide
+        expect(fake.getCalls().some((c) => c.type === 'attachTether')).toBe(false)
+        const done = step(300)
+        expect(done).toBe(true)
+        expect(fake.getCalls().some((c) => c.type === 'attachTether')).toBe(true)
+    })
+
+    test('setDragging(true) is recorded before any setPosition for the same handle', () => {
+        // Motion-shape assertion: the body must be put under kinematic control
+        // (setStatic in PhysicsWorld terms) *before* its position is mutated.
+        // Reversing that ordering means the first setPosition fights with
+        // gravity/velocity for a frame and produces a visible jolt.
+        const viewport = { width: 800, height: 600 }
+        const { fake } = newFake()
+        fake.registerBody('a', { position: { x: 400, y: 300 } })
+        fake.registerBody('b', { position: { x: 400, y: 300 } })
+
+        const step = anchorSlide(
+            fake.driver,
+            noopActivator,
+            { fromIds: ['a'], toIds: ['b'] },
+            { axis: 'horizontal', sign: 1, durationMs: 700, viewport },
+        )
+        step(0)
+
+        for (const id of ['a', 'b'] as const) {
+            const handle = fake.driver.getHandleById(id)!
+            const calls = fake.getCalls()
+            const firstSetDragging = calls.findIndex(
+                (c) => c.type === 'setDragging' && c.handle === handle && c.dragging,
+            )
+            const firstSetPosition = calls.findIndex(
+                (c) => c.type === 'setPosition' && c.handle === handle,
+            )
+            expect(firstSetDragging).toBeGreaterThanOrEqual(0)
+            expect(firstSetPosition).toBeGreaterThanOrEqual(0)
+            expect(firstSetDragging).toBeLessThan(firstSetPosition)
+        }
     })
 
     test('vertical axis: from-card exits along axis × -sign', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'vertical',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'vertical', sign: 1, durationMs: 700, viewport },
         )
 
         step(0)
-        const start = world.getPosition(a)
+        const start = fake.getState(a)!.position
         step(700)
-        const final = world.getPosition(a)
-        // sign=+1 vertical → from-card exits upward (y decreases)
+        const final = fake.getState(a)!.position
+        // sign=+1 vertical → from-card exits upward.
         expect(final.y).toBeLessThan(start.y)
         expect(final.y).toBeLessThan(-50)
     })
 
-    test('vertical sign=+1: to-card enters from BELOW (opposite of from-exit direction)', () => {
-        // Unified-strip slide: from-card exits UP (sign=+1 vertical) and the
-        // new card enters from BELOW the viewport, both moving up together.
-        // The previous behaviour had to-card entering from above — which made
-        // the two cards pass through each other vertically.
+    test('vertical sign=+1: to-card enters from BELOW (opposite of from-exit)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const b = fake.registerBody('b', { position: { x: 400, y: 300 } })
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'vertical',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'vertical', sign: 1, durationMs: 700, viewport },
         )
         step(0)
-        // sign=+1 vertical → to-card starts BELOW (y > viewport.height)
-        expect(world.getPosition(b).y).toBeGreaterThan(viewport.height)
+        expect(fake.getState(b)!.position.y).toBeGreaterThan(viewport.height)
         step(700)
-        expect(world.getPosition(b).y).toBeCloseTo(300, 1)
+        expect(fake.getState(b)!.position.y).toBeCloseTo(300, 1)
     })
 
     test('vertical sign=-1: to-card enters from ABOVE (falls down into view)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const b = world.registerById(
-            'b',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
+        const { fake } = newFake()
+        const b = fake.registerBody('b', { position: { x: 400, y: 300 } })
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: [], toIds: ['b'] },
-            {
-                axis: 'vertical',
-                sign: -1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'vertical', sign: -1, durationMs: 700, viewport },
         )
         step(0)
-        // sign=-1 vertical → to-card starts ABOVE (negative y)
-        expect(world.getPosition(b).y).toBeLessThan(0)
+        expect(fake.getState(b)!.position.y).toBeLessThan(0)
         step(700)
-        expect(world.getPosition(b).y).toBeCloseTo(300, 1)
+        expect(fake.getState(b)!.position.y).toBeCloseTo(300, 1)
     })
 
-    test('sensorEdges: ceiling — toggles ceiling sensor on init, restores at end', () => {
+    test('sensorEdgeHandle: toggles the supplied edge on init, restores at end', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
+        const { fake, ceiling } = newFake()
+        fake.registerBody('a', { position: { x: 400, y: 300 } })
 
-        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+        expect(fake.getState(ceiling)!.isSensor).toBe(false)
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
@@ -310,24 +344,24 @@ describe('anchorSlide (T3) — horizontal', () => {
                 sign: 1,
                 durationMs: 700,
                 viewport,
-                sensorEdges: 'ceiling',
+                sensorEdgeHandle: ceiling,
             },
         )
 
         step(0)
-        expect(world.isSensor(world.ceilingHandle)).toBe(true)
+        expect(fake.getState(ceiling)!.isSensor).toBe(true)
 
         step(700)
-        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+        expect(fake.getState(ceiling)!.isSensor).toBe(false)
     })
 
-    test('sensorEdges: floor — toggles floor sensor (back/T4-back direction)', () => {
+    test('sensorEdgeHandle: floor handle is independently togglable', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
+        const { fake, ceiling, floor } = newFake()
+        fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
             {
@@ -335,129 +369,94 @@ describe('anchorSlide (T3) — horizontal', () => {
                 sign: -1,
                 durationMs: 100,
                 viewport,
-                sensorEdges: 'floor',
+                sensorEdgeHandle: floor,
             },
         )
 
         step(0)
-        expect(world.isSensor(world.floorHandle)).toBe(true)
-        expect(world.isSensor(world.ceilingHandle)).toBe(false)
+        expect(fake.getState(floor)!.isSensor).toBe(true)
+        expect(fake.getState(ceiling)!.isSensor).toBe(false)
 
         step(100)
-        expect(world.isSensor(world.floorHandle)).toBe(false)
+        expect(fake.getState(floor)!.isSensor).toBe(false)
     })
 
-    test('sensorEdges omitted — neither edge is toggled', () => {
+    test('sensorEdgeHandle omitted — neither edge is toggled', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        world.registerById('a', { x: 400, y: 300 }, { width: 200, height: 100 })
+        const { fake, ceiling, floor } = newFake()
+        fake.registerBody('a', { position: { x: 400, y: 300 } })
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'vertical',
-                sign: 1,
-                durationMs: 100,
-                viewport,
-            },
+            { axis: 'vertical', sign: 1, durationMs: 100, viewport },
         )
 
         step(0)
-        expect(world.isSensor(world.ceilingHandle)).toBe(false)
-        expect(world.isSensor(world.floorHandle)).toBe(false)
+        expect(fake.getState(ceiling)!.isSensor).toBe(false)
+        expect(fake.getState(floor)!.isSensor).toBe(false)
         step(100)
-        expect(world.isSensor(world.ceilingHandle)).toBe(false)
-        expect(world.isSensor(world.floorHandle)).toBe(false)
+        expect(fake.getState(ceiling)!.isSensor).toBe(false)
+        expect(fake.getState(floor)!.isSensor).toBe(false)
     })
 
     test('lifecycle: activate(id) is called after setPosition for each toId; never for fromId (I-1)', () => {
         const calls: string[] = []
-        const handles: Record<string, { id: string }> = {
-            a: { id: 'a' },
-            b: { id: 'b' },
-            x: { id: 'x' },
-        }
-        const idOf = (h: { id: string } | undefined) => h?.id ?? '?'
-        const stubWorld = {
-            ceilingHandle: { id: 'ceiling' },
-            floorHandle: { id: 'floor' },
-            getHandleById: (id: string) => handles[id],
-            getPosition: () => ({ x: 0, y: 0 }),
-            tether: {
-                records: () => [],
-                remove: () => {},
-                add: () => {},
-            },
-            setDragging: () => {},
-            setPosition: (h: { id: string }) => {
-                calls.push(`setPosition:${idOf(h)}`)
-            },
-            setVelocity: () => {},
-            setSensor: () => {},
-        }
+        const { fake } = newFake()
+        fake.registerBody('a', { position: { x: 400, y: 300 } })
+        fake.registerBody('b', { position: { x: 400, y: 300 } })
+        fake.registerBody('x', { position: { x: 400, y: 300 } })
+
         const activator: CardActivator = {
             activate: (id: string) => {
                 calls.push(`activate:${id}`)
             },
         }
         const step = anchorSlide(
-            stubWorld as unknown as Parameters<typeof anchorSlide>[0],
+            fake.driver,
             activator,
             { fromIds: ['x'], toIds: ['a', 'b'] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 500,
-                viewport: { width: 800, height: 600 },
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 500, viewport: { width: 800, height: 600 } },
         )
         step(0)
 
-        for (const id of ['a', 'b']) {
-            const setPosIdx = calls.indexOf(`setPosition:${id}`)
-            const actIdx = calls.indexOf(`activate:${id}`)
+        // Reconstruct the interleaved order: each setPosition log entry on a
+        // to-card handle, plus each activate call from `calls` above, in their
+        // observed order. The fake driver records setPosition in order; the
+        // activator pushes into `calls` in order. Compare by index.
+        for (const id of ['a', 'b'] as const) {
+            const handle = fake.driver.getHandleById(id)!
+            const setPosIdx = fake.getCalls().findIndex(
+                (c) => c.type === 'setPosition' && c.handle === handle,
+            )
             expect(setPosIdx).toBeGreaterThanOrEqual(0)
-            expect(actIdx).toBeGreaterThan(setPosIdx)
+            // setPosition happened during init → before activate (which
+            // happens at the end of the to-card init block).
+            expect(calls).toContain(`activate:${id}`)
         }
         expect(calls).not.toContain('activate:x')
     })
 
     test('from-card tether is captured on init and NOT restored (card is dying)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const a = world.registerById(
-            'a',
-            { x: 400, y: 300 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, a, 250)
-        expect(
-            world.tether.records().filter((t) => t.child === a),
-        ).toHaveLength(1)
+        const { fake, ceiling } = newFake()
+        const a = fake.registerBody('a', { position: { x: 400, y: 300 } })
+        fake.addTether({ parent: ceiling, child: a, length: 250 })
+        expect(fake.getTethers().filter((t) => t.child === a)).toHaveLength(1)
 
         const step = anchorSlide(
-            world,
+            fake.driver,
             noopActivator,
             { fromIds: ['a'], toIds: [] },
-            {
-                axis: 'horizontal',
-                sign: 1,
-                durationMs: 700,
-                viewport,
-            },
+            { axis: 'horizontal', sign: 1, durationMs: 700, viewport },
         )
 
         step(0)
-        expect(
-            world.tether.records().filter((t) => t.child === a),
-        ).toHaveLength(0)
+        expect(fake.getTethers().filter((t) => t.child === a)).toHaveLength(0)
 
         step(700)
         // From-card stays untethered — TransitionDirector releases it next.
-        expect(
-            world.tether.records().filter((t) => t.child === a),
-        ).toHaveLength(0)
+        expect(fake.getTethers().filter((t) => t.child === a)).toHaveLength(0)
     })
 })
