@@ -21,26 +21,20 @@ const SCENE_ID = 'particles-starfield'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-// === TUNABLE CONSTANTS ===
-export interface StarfieldParams {
-    count: number
-    sizeMin: number
-    sizeMax: number
-    speedMin: number
-    speedMax: number
-    colorA: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: StarfieldParams = {
-    count: 10000,
-    sizeMin: 0.0001,
-    sizeMax: 0.0049,
-    speedMin: 0.001,
-    speedMax: 0.104,
-    colorA: '#070a18',
-    colorB: '#5fb6c4',
-}
+export const SCHEMA = defineSceneParams({
+    count:    { kind: 'number', default: 10000,  min: 1000,   max: 100000, step: 1000,   label: 'Count', remount: true },
+    sizeMin:  { kind: 'range',  default: 0.0001, min: 0.0001, max: 0.01,   step: 0.0001, label: 'Size min' },
+    sizeMax:  { kind: 'range',  default: 0.0049, min: 0.001,  max: 0.02,   step: 0.0001, label: 'Size max' },
+    speedMin: { kind: 'range',  default: 0.001,  min: 0.001,  max: 0.1,    step: 0.001,  label: 'Speed min' },
+    speedMax: { kind: 'range',  default: 0.104,  min: 0.005,  max: 0.2,    step: 0.001,  label: 'Speed max' },
+    colorA:   { kind: 'color',  default: '#070a18', label: 'Background color' },
+    colorB:   { kind: 'color',  default: '#5fb6c4', label: 'Star color' },
+})
+
+export type StarfieldParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 const VERTEX_SHADER = /* glsl */ `
   attribute float aSeed;
@@ -210,3 +204,5 @@ export const particlesStarfieldScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { StarfieldScene as Scene }
