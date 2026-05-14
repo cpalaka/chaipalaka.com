@@ -121,7 +121,7 @@ export default defineConfig({
                 `/blog/${slug}`,
                 `/blog/${slug}/read`,
             ])
-            const { TUNABLE_SCENE_IDS } = await import('./src/canvas/scenes/tunable')
+            const { TUNABLE_SCENE_IDS } = await import('./src/canvas/scenes/registry')
             const sandboxScenePaths = TUNABLE_SCENE_IDS.map(
                 (id) => `/sandbox/scenes/${id}`,
             )

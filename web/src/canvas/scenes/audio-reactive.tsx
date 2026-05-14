@@ -1,20 +1,8 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import { Color, ShaderMaterial, Vector2 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
 
-interface SceneManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: readonly [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as unknown as readonly SceneManifestEntry[]
-
-const SCENE_ID = 'audio-reactive'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
+const FALLBACK_COLORS: readonly [string, string] = ['#1f0e0e', '#d97a5b']
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -68,8 +56,8 @@ function AudioReactive() {
         () => ({
             uTime: { value: 0 },
             uResolution: { value: new Vector2(1, 1) },
-            uColorA: { value: new Color(meta!.fallbackColors[0]) },
-            uColorB: { value: new Color(meta!.fallbackColors[1]) },
+            uColorA: { value: new Color(FALLBACK_COLORS[0]) },
+            uColorB: { value: new Color(FALLBACK_COLORS[1]) },
         }),
         [],
     )
@@ -96,10 +84,4 @@ function AudioReactive() {
     )
 }
 
-export const audioReactiveScene: BackgroundScene = {
-    id: meta.id,
-    Component: AudioReactive,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors,
-    fallbackPng: meta.fallbackPng,
-}
+export { AudioReactive as Scene }

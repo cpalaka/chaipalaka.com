@@ -9,20 +9,6 @@ import {
     ShaderMaterial,
     Vector2,
 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'particles-cursor'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
-
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
 export const SCHEMA = defineSceneParams({
@@ -108,7 +94,26 @@ function buildLattice(cols: number, rows: number): BufferGeometry {
 }
 
 export function CursorScene({ params }: { params?: Partial<CursorParams> }) {
-    const resolved = { ...DEFAULT_PARAMS, ...params }
+    // Auto mode (no params passed by parent) sizes cols/rows from the
+    // viewport and re-runs on resize. Tuner-mode (params provided) yields
+    // control to the panel and skips the resize listener.
+    const autoModeRef = useRef(!params)
+    const [autoDims, setAutoDims] = useState<{ cols: number; rows: number } | null>(
+        () => (autoModeRef.current ? calcDims(isDegraded ? 0.6 : 1) : null),
+    )
+
+    useEffect(() => {
+        if (!autoModeRef.current) return
+        function onResize() {
+            setAutoDims(calcDims(isDegraded ? 0.6 : 1))
+        }
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
+
+    const resolved = autoModeRef.current
+        ? { ...DEFAULT_PARAMS, ...(autoDims ?? {}) }
+        : { ...DEFAULT_PARAMS, ...params }
     const { scene } = useThree()
 
     const { cols, rows } = resolved
@@ -245,28 +250,6 @@ function calcDims(scale = 1) {
         cols: Math.round(window.innerWidth / 10 * scale),
         rows: Math.round(window.innerHeight / 10 * scale),
     }
-}
-
-function CursorGallery() {
-    const [dims, setDims] = useState(() => calcDims(isDegraded ? 0.6 : 1))
-
-    useEffect(() => {
-        function onResize() {
-            setDims(calcDims(isDegraded ? 0.6 : 1))
-        }
-        window.addEventListener('resize', onResize)
-        return () => window.removeEventListener('resize', onResize)
-    }, [])
-
-    return <CursorScene params={dims} />
-}
-
-export const particlesCursorScene: BackgroundScene = {
-    id: meta.id,
-    Component: CursorGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
 }
 
 export { CursorScene as Scene }

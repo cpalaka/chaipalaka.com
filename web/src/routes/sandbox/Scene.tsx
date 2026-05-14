@@ -1,31 +1,35 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import {
-    tunableSceneLoaders,
-    type TunableSceneModule,
-} from '../../canvas/scenes/tunable'
+import { getSceneEntry, type SceneId } from '../../canvas/scenes/registry'
+import type { SceneParamSchema } from '../../canvas/scenes/paramSchema'
 import { Tuner } from '../../sandbox/particles/Tuner'
+
+type TunableModule = {
+    Scene: React.ComponentType<{ params?: Record<string, unknown> }>
+    SCHEMA: SceneParamSchema
+}
 
 export default function SandboxScene() {
     const { id } = useParams<{ id: string }>()
-    const loader = id ? tunableSceneLoaders[id] : undefined
-    const [mod, setMod] = useState<TunableSceneModule | null>(null)
+    const entry = id ? getSceneEntry(id as SceneId) : undefined
+    const tunable = entry?.tunable ? entry : undefined
+    const [mod, setMod] = useState<TunableModule | null>(null)
 
     useEffect(() => {
-        if (!loader) {
+        if (!tunable) {
             setMod(null)
             return
         }
         let cancelled = false
-        loader().then((m) => {
+        tunable.loader().then((m) => {
             if (!cancelled) setMod(m)
         })
         return () => {
             cancelled = true
         }
-    }, [loader])
+    }, [tunable])
 
-    if (!loader) return <NoTunerPanel id={id} />
+    if (!tunable) return <NoTunerPanel id={id} />
     if (!mod) return <LoadingPanel />
     return <Tuner schema={mod.SCHEMA} Scene={mod.Scene} />
 }

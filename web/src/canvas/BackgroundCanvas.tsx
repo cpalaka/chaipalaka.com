@@ -4,53 +4,24 @@ import { detectWebGL } from './detect-webgl'
 import { useGallery } from './useGallery'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import type { BackgroundScene } from './types'
+import { getSceneEntry } from './scenes/registry'
 import './BackgroundCanvas.css'
-
-// Static import() paths are required for Vite chunk analysis — one chunk per scene.
-const sceneLoaders: Record<string, () => Promise<unknown>> = {
-    'flow-shader': () => import('./scenes/flow-shader'),
-    'particles-starfield': () => import('./scenes/particles-starfield'),
-    'particles-cursor': () => import('./scenes/particles-cursor'),
-    'particles-flow': () => import('./scenes/particles-flow'),
-    'particles-boids': () => import('./scenes/particles-boids'),
-    'geometric-reaction-diffusion': () => import('./scenes/geometric-reaction-diffusion'),
-    'geometric-voronoi': () => import('./scenes/geometric-voronoi'),
-    'geometric-subdivision': () => import('./scenes/geometric-subdivision'),
-    'audio-reactive': () => import('./scenes/audio-reactive'),
-}
 
 // Cache React.lazy wrappers so they aren't recreated on re-renders.
 const sceneLazyCache = new Map<
     string,
-    React.LazyExoticComponent<() => React.ReactElement | null>
+    React.LazyExoticComponent<React.ComponentType>
 >()
 
 /** @internal — exported for tests; not part of the public API. */
 export function getLazyScene(scene: BackgroundScene) {
     if (!sceneLazyCache.has(scene.id)) {
-        const loader = sceneLoaders[scene.id]
-        if (!loader) throw new Error(`No loader for scene: ${scene.id}`)
-        // Dynamic import returns a module; extract the Component.
-        const lazyComp = lazy(async () => {
-            const mod = (await loader()) as Record<string, unknown>
-            // Find the exported BackgroundScene entry and return its Component.
-            const entry = Object.values(mod).find(
-                (v): v is BackgroundScene =>
-                    typeof v === 'object' &&
-                    v !== null &&
-                    'Component' in v &&
-                    'id' in v &&
-                    (v as BackgroundScene).id === scene.id,
-            )
-            if (!entry)
-                throw new Error(
-                    `Scene module for "${scene.id}" has no matching export`,
-                )
-            const SceneComponent =
-                entry.Component as () => React.ReactElement | null
-            return { default: SceneComponent }
-        })
-        sceneLazyCache.set(scene.id, lazyComp)
+        const entry = getSceneEntry(scene.id)
+        if (!entry) throw new Error(`No loader for scene: ${scene.id}`)
+        sceneLazyCache.set(
+            scene.id,
+            lazy(() => entry.loader().then((m) => ({ default: m.Scene }))),
+        )
     }
     return sceneLazyCache.get(scene.id)!
 }

@@ -1,20 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { Color, ShaderMaterial, Vector2 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'geometric-subdivision'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
-
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
 export const SCHEMA = defineSceneParams({
@@ -171,18 +157,6 @@ export function SubdivisionScene({ params }: { params?: Partial<SubdivisionParam
             />
         </mesh>
     )
-}
-
-function SubdivisionGallery() {
-    return <SubdivisionScene />
-}
-
-export const geometricSubdivisionScene: BackgroundScene = {
-    id: meta.id,
-    Component: SubdivisionGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
 }
 
 export { SubdivisionScene as Scene }

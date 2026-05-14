@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom'
 import { useGallery } from './useGallery'
 import { useTheme } from '../controls/useTheme'
 import { useFrameEdge } from './useFrameEdge'
-import manifest from './scenes/manifest.json'
+import { BACKGROUND_SCENES } from './scenes/registry'
 import './FrameBar.css'
 
 const SECTIONS = [
@@ -112,7 +112,7 @@ export function FrameBar() {
                                 value={active.id}
                                 onChange={(e) => setActive(e.target.value)}
                             >
-                                {manifest.map((scene) => (
+                                {BACKGROUND_SCENES.map((scene) => (
                                     <option key={scene.id} value={scene.id}>
                                         {scene.id}
                                     </option>
