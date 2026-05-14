@@ -1,10 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import {
-    useIsMinimized,
-    useMinimizedRegistry,
-} from '../canvas/useMinimizedRegistry'
-import { flipMorph } from '../canvas/flip'
 import { wireTetherFor } from '../physics/PhysicsCard'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
@@ -20,7 +15,6 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
         id,
         parent,
         trail,
-        kind,
         buoyancy,
         anchor,
         content: {
@@ -29,8 +23,6 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
             height,
             children,
             header,
-            minimizable = false,
-            label,
             draggable = true,
             variant,
             className,
@@ -46,11 +38,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
     const tetherHandleRef = useRef<TetherHandle | null>(null)
     const trailTetherHandleRef = useRef<TetherHandle | null>(null)
 
-    const registry = useMinimizedRegistry()
-    const isMinimized = useIsMinimized(minimizable ? id : undefined)
-
     useEffect(() => {
-        if (isMinimized) return
         const el = elRef.current
         if (!el) return
 
@@ -227,17 +215,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                 window.removeEventListener('pointerup', onPointerUp)
             }
         }
-    }, [
-        world,
-        id,
-        width,
-        height,
-        isMinimized,
-        draggable,
-        parent,
-        trail,
-        buoyancy,
-    ])
+    }, [world, id, width, height, draggable, parent, trail, buoyancy])
 
     useEffect(() => {
         if (handleRef.current === null) return
@@ -272,28 +250,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
         }
     }, [world, anchor.x, anchor.y, parent, trail])
 
-    useEffect(() => {
-        if (isMinimized || !minimizable) return
-        const el = elRef.current
-        if (!el) return
-        const fromChipRect = registry.consumeRestoreRect(id)
-        if (!fromChipRect) return
-        const endTransform = el.style.transform
-        requestAnimationFrame(() => {
-            flipMorph(fromChipRect, el, { opacityFrom: 0.5, endTransform })
-        })
-    }, [isMinimized, id, minimizable, registry])
-
-    if (isMinimized) return null
-
-    function handleMinimize() {
-        const el = elRef.current
-        if (!el) return
-        const fromRect = el.getBoundingClientRect()
-        registry.minimize(id, { label: label ?? text, kind, fromRect })
-    }
-
-    const showHeader = header != null || minimizable
+    const showHeader = header != null
     const cls = ['physics-card', className].filter(Boolean).join(' ')
 
     return (
@@ -310,22 +267,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                     : style
             }
         >
-            {showHeader ? (
-                <div data-card-header>
-                    {minimizable ? (
-                        <button
-                            type="button"
-                            title="Minimize"
-                            className="physics-card__minimize-btn"
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={handleMinimize}
-                        >
-                            −
-                        </button>
-                    ) : null}
-                    {header}
-                </div>
-            ) : null}
+            {showHeader ? <div data-card-header>{header}</div> : null}
             {children ?? text}
         </article>
     )
