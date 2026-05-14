@@ -1,9 +1,7 @@
 import { memo } from 'react'
+import type { SceneFieldDescriptor } from '../../canvas/scenes/paramSchema'
 
-export type FieldDef =
-    | { key: string; label: string; type: 'range'; min: number; max: number; step: number }
-    | { key: string; label: string; type: 'number'; min?: number; max?: number; step?: number }
-    | { key: string; label: string; type: 'color' }
+export type FieldDef = SceneFieldDescriptor
 
 interface Props<T extends Record<string, unknown>> {
     fields: FieldDef[]
@@ -83,7 +81,7 @@ function TunePanelInner<T extends Record<string, unknown>>({
             </div>
             {fields.map((field) => {
                 const value = params[field.key]
-                if (field.type === 'color') {
+                if (field.kind === 'color') {
                     return (
                         <div key={field.key} style={rowStyle}>
                             <label style={labelStyle}>{field.label}</label>
@@ -101,7 +99,7 @@ function TunePanelInner<T extends Record<string, unknown>>({
                         </div>
                     )
                 }
-                if (field.type === 'range') {
+                if (field.kind === 'range') {
                     return (
                         <div key={field.key} style={rowStyle}>
                             <label style={labelStyle}>

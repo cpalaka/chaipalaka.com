@@ -10,6 +10,7 @@ import {
 } from 'three'
 import type { BackgroundScene } from '../types'
 import rawManifest from './manifest.json'
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
 interface ManifestEntry {
     id: string
@@ -22,32 +23,21 @@ const SCENE_ID = 'particles-boids'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-// === TUNABLE CONSTANTS ===
-export interface BoidsParams {
-    count: number
-    pointSize: number
-    perceptionRadius: number  // neighbourhood radius in NDC
-    separationWeight: number
-    alignmentWeight: number
-    cohesionWeight: number
-    maxSpeed: number          // NDC units/sec
-    maxForce: number          // acceleration cap, NDC units/sec²
-    colorA: string
-    colorB: string
-}
+export const SCHEMA = defineSceneParams({
+    count:            { kind: 'number', default: 5500,   min: 500,   max: 10000, step: 500,    label: 'Count', remount: true },
+    pointSize:        { kind: 'range',  default: 0.0025, min: 0.001, max: 0.015, step: 0.0005, label: 'Point size' },
+    perceptionRadius: { kind: 'range',  default: 0.11,   min: 0.02,  max: 0.3,   step: 0.01,   label: 'Perception radius' },
+    separationWeight: { kind: 'range',  default: 1.1,    min: 0,     max: 4,     step: 0.1,    label: 'Separation' },
+    alignmentWeight:  { kind: 'range',  default: 0.2,    min: 0,     max: 4,     step: 0.1,    label: 'Alignment' },
+    cohesionWeight:   { kind: 'range',  default: 0.1,    min: 0,     max: 4,     step: 0.1,    label: 'Cohesion' },
+    maxSpeed:         { kind: 'range',  default: 0.1,    min: 0.05,  max: 1.0,   step: 0.05,   label: 'Max speed' },
+    maxForce:         { kind: 'range',  default: 1.3,    min: 0.1,   max: 2.0,   step: 0.1,    label: 'Max force' },
+    colorA:           { kind: 'color',  default: '#0c2036', label: 'Background color' },
+    colorB:           { kind: 'color',  default: '#ddba92', label: 'Accent color' },
+})
 
-export const DEFAULT_PARAMS: BoidsParams = {
-    count: 5500,
-    pointSize: 0.0025,
-    perceptionRadius: 0.11,
-    separationWeight: 1.1,
-    alignmentWeight: 0.2,
-    cohesionWeight: 0.1,
-    maxSpeed: 0.1,
-    maxForce: 1.3,
-    colorA: '#0c2036',
-    colorB: '#ddba92',
-}
+export type BoidsParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 // ---- Spatial hash grid for O(N) boid neighbourhood queries ----
 
@@ -382,3 +372,5 @@ export const particlesBoidsScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { BoidsScene as Scene }

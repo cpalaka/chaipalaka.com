@@ -17,23 +17,19 @@ if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
 const MAX_SITES = 64
 
-export interface VoronoiParams {
-    count: number
-    driftSpeed: number
-    edgeWidth: number
-    colorA: string
-    colorBorder: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: VoronoiParams = {
-    count: 12,
-    driftSpeed: 0.02,
-    edgeWidth: 0.002,
-    colorA: '#485f8e',
-    colorBorder: '#ffffff',
-    colorB: '#ffffff',
-}
+export const SCHEMA = defineSceneParams({
+    count:       { kind: 'number', default: 12,    min: 4,     max: 64,   step: 1,     label: 'Site count' },
+    driftSpeed:  { kind: 'range',  default: 0.02,  min: 0.005, max: 0.3,  step: 0.005, label: 'Drift speed' },
+    edgeWidth:   { kind: 'range',  default: 0.002, min: 0.001, max: 0.04, step: 0.001, label: 'Edge width' },
+    colorA:      { kind: 'color',  default: '#485f8e', label: 'Cell fill' },
+    colorB:      { kind: 'color',  default: '#ffffff', label: 'Cell tint (alt)' },
+    colorBorder: { kind: 'color',  default: '#ffffff', label: 'Border color' },
+})
+
+export type VoronoiParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -218,3 +214,5 @@ export const geometricVoronoiScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { VoronoiScene as Scene }

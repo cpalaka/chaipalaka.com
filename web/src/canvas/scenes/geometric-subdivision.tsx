@@ -15,25 +15,20 @@ const SCENE_ID = 'geometric-subdivision'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-export interface SubdivisionParams {
-    minDepth: number
-    maxDepth: number
-    noiseScale: number
-    evolutionSpeed: number
-    lineWidth: number
-    colorA: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: SubdivisionParams = {
-    minDepth: 5,
-    maxDepth: 30,
-    noiseScale: 3.2,
-    evolutionSpeed: 0.075,
-    lineWidth: 0.015,
-    colorA: '#700000',
-    colorB: '#000000',
-}
+export const SCHEMA = defineSceneParams({
+    minDepth:       { kind: 'number', default: 5,     min: 1,    max: 5,    step: 1,     label: 'Min depth' },
+    maxDepth:       { kind: 'number', default: 30,    min: 2,    max: 7,    step: 1,     label: 'Max depth' },
+    noiseScale:     { kind: 'range',  default: 3.2,   min: 0.5,  max: 8.0,  step: 0.1,   label: 'Noise scale' },
+    evolutionSpeed: { kind: 'range',  default: 0.075, min: 0.0,  max: 0.3,  step: 0.005, label: 'Evolution speed' },
+    lineWidth:      { kind: 'range',  default: 0.015, min: 0.01, max: 0.15, step: 0.005, label: 'Line width' },
+    colorA:         { kind: 'color',  default: '#700000', label: 'Cell fill' },
+    colorB:         { kind: 'color',  default: '#000000', label: 'Line color' },
+})
+
+export type SubdivisionParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -189,3 +184,5 @@ export const geometricSubdivisionScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { SubdivisionScene as Scene }
