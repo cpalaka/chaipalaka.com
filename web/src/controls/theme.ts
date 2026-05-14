@@ -3,6 +3,7 @@ export type Theme = 'dark' | 'light'
 export const THEME_STORAGE_KEY = 'chaipalaka.theme'
 
 export interface ThemeController {
+    get(): Theme
     getTheme(): Theme
     setTheme(theme: Theme): void
     cycleTheme(): void
@@ -37,6 +38,8 @@ export function createThemeController(
     const listeners = new Set<(theme: Theme) => void>()
 
     return {
+        get: () => current,
+
         getTheme() {
             return current
         },

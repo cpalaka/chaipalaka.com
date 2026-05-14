@@ -3,6 +3,7 @@ export type FrameEdge = 'top' | 'bottom'
 export const FRAME_EDGE_STORAGE_KEY = 'chaipalaka.frame.edge'
 
 export interface FrameEdgeController {
+    get(): FrameEdge
     getEdge(): FrameEdge
     setEdge(edge: FrameEdge): void
     toggleEdge(): void
@@ -30,6 +31,8 @@ export function createFrameEdgeController(
     const listeners = new Set<(edge: FrameEdge) => void>()
 
     return {
+        get: () => current,
+
         getEdge() {
             return current
         },
