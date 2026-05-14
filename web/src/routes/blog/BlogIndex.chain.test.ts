@@ -7,7 +7,7 @@ import {
     CHAIN_TOP,
 } from './BlogIndex'
 import { NAV_CARD_H, NAV_TOP_INSET } from '../../layout/sectionLayout'
-import type { CardSpec } from '../../physics/PageDef'
+import type { CardSpec } from '../../physics/PageSpec'
 import { measureBlogCard, CARD_PADDING } from './BlogIndex.measure'
 import type { Font } from '../../text/fonts'
 import type { Post } from '../../blog/types'

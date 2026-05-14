@@ -20,7 +20,8 @@ import {
     NAV_TOP_INSET,
 } from '../../layout/sectionLayout'
 import { NavCardContent } from '../../transitions/NavCardContent'
-import type { PageDef, CardSpec } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
+import type { CardSpec } from '../../physics/PageSpec'
 import type { Post } from '../../blog/types'
 import type { Viewport } from '../../physics/PhysicsWorld'
 

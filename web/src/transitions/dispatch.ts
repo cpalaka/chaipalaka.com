@@ -1,4 +1,5 @@
-import type { PageDef, TransitionId } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
+import type { TransitionId } from './TransitionSpec'
 import type { Direction } from './classifyDirection'
 
 export interface AnchorSlideConfig {

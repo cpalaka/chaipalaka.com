@@ -52,10 +52,24 @@ _Avoid_: direction (too generic), vector (gravity isn't authored as a
 vector — the cardinal compiles to one).
 
 **PageDef**:
-A route's declarative spec — the **Cardinal** gravity for the route, the
-list of **CardSpec**s, the tether topology, and (for transitions /
-sections) per-route metadata.
+A route's declarative spec — the composition of a **PageSpec** and a
+**TransitionSpec**. Routes author the intersection; subsystems read
+only the half they need.
 _Avoid_: page config, route schema, layout def.
+
+**PageSpec**:
+A route's declared content — its **Cardinal** gravity, **CardSpec**
+list, and optional **SectionsConfig**. The "what the route is" half
+of a **PageDef**. Physics-side consumers (`PhysicsPage`, `usePageDef`,
+`partitionPageDef`) read **PageSpec**, never the transitions half.
+_Avoid_: page config, route schema.
+
+**TransitionSpec**:
+A route's declared transition behaviour — preferred exit/enter
+**Primitive**s and sibling-axis order. The "how the route moves" half
+of a **PageDef**. The **Director** and `dispatch()` read the
+transitions half off a **PageDef** when computing a **TransitionPlan**.
+_Avoid_: transition config, transition def.
 
 **CardSpec**:
 A single **Card**'s declaration within a **PageDef**: its `id`, `kind`,

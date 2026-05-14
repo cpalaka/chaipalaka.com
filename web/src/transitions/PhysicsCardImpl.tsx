@@ -273,7 +273,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
     )
 }
 
-import type { ParentRef } from '../physics/PageDef'
+import type { ParentRef } from '../physics/PageSpec'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 
 type ParentKind = 'ceiling' | 'floor' | 'card'

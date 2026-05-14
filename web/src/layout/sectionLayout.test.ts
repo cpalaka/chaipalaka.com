@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { partitionChain, type ChainItem, type PartitionOptions } from './sectionLayout'
-import type { CardSpec } from '../physics/PageDef'
+import type { CardSpec } from '../physics/PageSpec'
 
 function makeCard(id: string, overrides: Partial<CardSpec> = {}): CardSpec {
     return {

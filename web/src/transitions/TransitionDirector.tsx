@@ -28,7 +28,8 @@ import { pourInDrop, type PourInDropEntry } from './primitives/pourInDrop'
 import { anchorSlide } from './primitives/anchorSlide'
 import { crossFade } from './primitives/crossFade'
 import type { PrimitiveStep } from './primitives/types'
-import type { PageDef, TransitionId } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
+import type { TransitionId } from './TransitionSpec'
 import type { Viewport } from '../physics/PhysicsWorld'
 
 const REDUCED_MOTION_MS = 150

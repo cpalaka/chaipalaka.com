@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import type { PageDef } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
 import type { CardContent } from '../../physics/PhysicsPage'
 

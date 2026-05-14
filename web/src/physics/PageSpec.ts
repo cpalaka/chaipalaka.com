@@ -12,12 +12,6 @@ export type CardKind =
     | 'headline'
     | 'nav'
 
-export type TransitionId =
-    | 'string-cut-drop'
-    | 'pour-in-drop'
-    | 'anchor-slide'
-    | 'cross-fade'
-
 export type ChainNavTarget = 'prev' | 'next'
 
 export interface CardSpec {
@@ -40,16 +34,10 @@ export type SectionsConfig =
     | { mode: 'author'; sections: readonly AuthorSectionDef[] }
     | { mode: 'auto-chain'; chainRoot?: string; maxPerSection?: number }
 
-export interface PageDef {
+export interface PageSpec {
     gravity: Cardinal
     cards: CardSpec[]
-    transitions?: {
-        exit?: TransitionId
-        enter?: TransitionId
-    }
-    siblingOrder?: 'left' | 'right'
     sections?: SectionsConfig
-    sectionsPushHistory?: boolean
 }
 
 export function buoyancyForKind(kind: CardKind): Buoyancy {
