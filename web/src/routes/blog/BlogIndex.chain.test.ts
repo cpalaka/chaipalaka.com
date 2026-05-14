@@ -9,10 +9,11 @@ import {
 import { NAV_CARD_H, NAV_TOP_INSET } from '../../layout/sectionLayout'
 import type { CardSpec } from '../../physics/PageDef'
 import { measureBlogCard, CARD_PADDING } from './BlogIndex.measure'
+import type { Font } from '../../text/fonts'
 import type { Post } from '../../blog/types'
 
 const GUTTER = 16
-const fixedMeasure = (_text: string, _fontKey: string, _mw: number) => ({
+const fixedMeasure = (_text: string, _font: Font, _mw: number) => ({
     width: 200,
     height: 80,
 })
