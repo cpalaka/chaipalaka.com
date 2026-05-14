@@ -170,66 +170,12 @@ export const routes: RouteRecord[] = [
         },
     },
     {
-        path: '/sandbox/particles-starfield',
+        path: '/sandbox/scenes/:id',
         lazy: async () => {
-            const { default: ParticlesStarfield } = await import(
-                './routes/sandbox/ParticlesStarfield'
+            const { default: SandboxScene } = await import(
+                './routes/sandbox/Scene'
             )
-            return { Component: ParticlesStarfield }
-        },
-    },
-    {
-        path: '/sandbox/particles-cursor',
-        lazy: async () => {
-            const { default: ParticlesCursor } = await import(
-                './routes/sandbox/ParticlesCursor'
-            )
-            return { Component: ParticlesCursor }
-        },
-    },
-    {
-        path: '/sandbox/particles-flow',
-        lazy: async () => {
-            const { default: ParticlesFlow } = await import(
-                './routes/sandbox/ParticlesFlow'
-            )
-            return { Component: ParticlesFlow }
-        },
-    },
-    {
-        path: '/sandbox/particles-boids',
-        lazy: async () => {
-            const { default: ParticlesBoids } = await import(
-                './routes/sandbox/ParticlesBoids'
-            )
-            return { Component: ParticlesBoids }
-        },
-    },
-    {
-        path: '/sandbox/geometric-reaction-diffusion',
-        lazy: async () => {
-            const { default: GeometricReactionDiffusion } = await import(
-                './routes/sandbox/GeometricReactionDiffusion'
-            )
-            return { Component: GeometricReactionDiffusion }
-        },
-    },
-    {
-        path: '/sandbox/geometric-voronoi',
-        lazy: async () => {
-            const { default: GeometricVoronoi } = await import(
-                './routes/sandbox/GeometricVoronoi'
-            )
-            return { Component: GeometricVoronoi }
-        },
-    },
-    {
-        path: '/sandbox/geometric-subdivision',
-        lazy: async () => {
-            const { default: GeometricSubdivision } = await import(
-                './routes/sandbox/GeometricSubdivision'
-            )
-            return { Component: GeometricSubdivision }
+            return { Component: SandboxScene }
         },
     },
     {
