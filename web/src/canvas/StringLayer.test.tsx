@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { Card } from '../card/Card'
+import { CardRegistryProvider } from '../card/CardRegistry'
 import { StringLayer } from './StringLayer'
 
 describe('StringLayer', () => {
@@ -12,24 +13,26 @@ describe('StringLayer', () => {
         expect(() =>
             render(
                 <PhysicsProvider>
-                    <StringLayer />
-                    <Card
-                        id="parent"
-                        text="P"
-                        width={80}
-                        height={40}
-                        anchor={{ x: 100, y: 100 }}
-                        parent="ceiling"
-                        buoyancy="heavy"
-                    />
-                    <Card
-                        text="C"
-                        width={80}
-                        height={40}
-                        anchor={{ x: 100, y: 200 }}
-                        parent="parent"
-                        buoyancy="heavy"
-                    />
+                    <CardRegistryProvider>
+                        <StringLayer />
+                        <Card
+                            id="parent"
+                            text="P"
+                            width={80}
+                            height={40}
+                            anchor={{ x: 100, y: 100 }}
+                            parent="ceiling"
+                            buoyancy="heavy"
+                        />
+                        <Card
+                            text="C"
+                            width={80}
+                            height={40}
+                            anchor={{ x: 100, y: 200 }}
+                            parent="parent"
+                            buoyancy="heavy"
+                        />
+                    </CardRegistryProvider>
                 </PhysicsProvider>,
             ),
         ).not.toThrow()

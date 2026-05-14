@@ -7,7 +7,6 @@ import {
 } from 'react'
 import { PhysicsWorld } from './PhysicsWorld'
 import { useFrameEdge, getFrameEdgeController } from '../canvas/useFrameEdge'
-import { CardRegistryProvider } from '../card/CardRegistry'
 import type { FrameEdge } from '../canvas/useFrameEdge'
 
 export const FRAME_BAR_HEIGHT = 40
@@ -77,8 +76,6 @@ export function PhysicsProvider({ children }: PhysicsProviderProps) {
     }, [world, edge])
 
     return (
-        <PhysicsContext.Provider value={world}>
-            <CardRegistryProvider>{children}</CardRegistryProvider>
-        </PhysicsContext.Provider>
+        <PhysicsContext.Provider value={world}>{children}</PhysicsContext.Provider>
     )
 }

@@ -8,6 +8,7 @@ import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
 import { TransitionDirector } from '../transitions/TransitionDirector'
 import { CardLayer } from '../card/CardLayer'
+import { CardRegistryProvider } from '../card/CardRegistry'
 import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/edges'
@@ -24,21 +25,23 @@ export default function CanvasLayout() {
 
     return (
         <PhysicsProvider>
-            <PageDefRegistryProvider>
-                <TransitionDirector pageDefs={pageDefs} edges={edges}>
-                    <div
-                        data-layout="canvas"
-                        data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
-                        data-frame-edge={edge}
-                    >
-                        <BackgroundCanvas />
-                        <CardLayer />
-                        <StringLayer />
-                        <FrameBar />
-                        <Outlet />
-                    </div>
-                </TransitionDirector>
-            </PageDefRegistryProvider>
+            <CardRegistryProvider>
+                <PageDefRegistryProvider>
+                    <TransitionDirector pageDefs={pageDefs} edges={edges}>
+                        <div
+                            data-layout="canvas"
+                            data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
+                            data-frame-edge={edge}
+                        >
+                            <BackgroundCanvas />
+                            <CardLayer />
+                            <StringLayer />
+                            <FrameBar />
+                            <Outlet />
+                        </div>
+                    </TransitionDirector>
+                </PageDefRegistryProvider>
+            </CardRegistryProvider>
         </PhysicsProvider>
     )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
+import { CardRegistryProvider } from '../../card/CardRegistry'
 import { Card } from '../../card/Card'
 import { StringLayer } from '../../canvas/StringLayer'
 
@@ -36,7 +37,8 @@ export default function Strings() {
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
             <PhysicsProvider>
-                <StringLayer />
+                <CardRegistryProvider>
+                    <StringLayer />
 
                 {/* Scenario 1: heavy card hanging from ceiling */}
                 <Card
@@ -119,6 +121,7 @@ export default function Strings() {
                     height={CARD_H}
                     anchor={layout.detached}
                 />
+                </CardRegistryProvider>
             </PhysicsProvider>
         </div>
     )
