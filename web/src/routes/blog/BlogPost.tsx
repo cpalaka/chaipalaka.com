@@ -4,7 +4,7 @@ import { PhysicsCard } from '../../physics/PhysicsCard'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { getPosts } from '../../blog/posts'
 import { mdxComponents } from '../../blog/components/mdx-components'
-import type { PageDef } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
 import './BlogPost.css'
 
 const posts = getPosts()

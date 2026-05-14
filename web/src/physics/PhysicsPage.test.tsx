@@ -3,9 +3,9 @@ import { render, cleanup, screen } from '@testing-library/react'
 import { PhysicsProvider } from './PhysicsContext'
 import { PhysicsPage } from './PhysicsPage'
 import { PhysicsLayer } from '../transitions/PhysicsLayer'
-import type { PageDef } from './PageDef'
+import type { PageSpec } from './PageSpec'
 
-const pageDef: PageDef = {
+const pageDef: PageSpec = {
     gravity: 'down',
     cards: [
         {

@@ -4,7 +4,7 @@ import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
-import type { PageDef } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
 import type { Viewport } from '../../physics/PhysicsWorld'
 

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { buoyancyForKind } from './PageDef'
+import { buoyancyForKind } from './PageSpec'
 
 describe('buoyancyForKind', () => {
     test('note kind returns balloon', () => {

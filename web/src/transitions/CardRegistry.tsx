@@ -5,7 +5,7 @@ import {
     useSyncExternalStore,
     type ReactNode,
 } from 'react'
-import type { Buoyancy, ParentRef } from '../physics/PageDef'
+import type { Buoyancy, ParentRef } from '../physics/PageSpec'
 import type { CardContent } from '../physics/PhysicsPage'
 
 export type CardLifecycle = 'spawning' | 'active' | 'exiting'

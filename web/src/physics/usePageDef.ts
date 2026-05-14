@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { usePhysicsWorld } from './PhysicsContext'
-import type { PageDef } from './PageDef'
+import type { PageSpec } from './PageSpec'
 
-export function usePageDef(pageDef: PageDef): void {
+export function usePageDef(pageDef: PageSpec): void {
     const world = usePhysicsWorld()
     const { gravity } = pageDef
 

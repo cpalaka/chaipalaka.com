@@ -3,7 +3,7 @@ import { render, cleanup } from '@testing-library/react'
 import { PhysicsProvider } from './PhysicsContext'
 import { PhysicsWorld } from './PhysicsWorld'
 import { usePageDef } from './usePageDef'
-import type { PageDef } from './PageDef'
+import type { PageSpec } from './PageSpec'
 import type { Cardinal } from './PhysicsWorld'
 
 afterEach(() => {
@@ -11,11 +11,11 @@ afterEach(() => {
     vi.restoreAllMocks()
 })
 
-function pageDef(gravity: Cardinal): PageDef {
+function pageDef(gravity: Cardinal): PageSpec {
     return { gravity, cards: [] }
 }
 
-function Consumer({ def }: { def: PageDef }) {
+function Consumer({ def }: { def: PageSpec }) {
     usePageDef(def)
     return null
 }

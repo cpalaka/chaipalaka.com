@@ -1,6 +1,6 @@
 import { createContext, use, useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
-import type { PageDef } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
 
 export interface PageDefRegistryAPI {
     register(path: string, def: PageDef): void
