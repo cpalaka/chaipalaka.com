@@ -1,3 +1,5 @@
+import { createSubscribable } from '../state/subscribable'
+
 export type FrameEdge = 'top' | 'bottom'
 
 export const FRAME_EDGE_STORAGE_KEY = 'chaipalaka.frame.edge'
@@ -27,31 +29,25 @@ export function createFrameEdgeController(
     deps: FrameEdgeControllerDeps,
 ): FrameEdgeController {
     const { storage } = deps
-    let current: FrameEdge = readEdge(storage)
-    const listeners = new Set<(edge: FrameEdge) => void>()
+    const state = createSubscribable<FrameEdge>(readEdge(storage))
+
+    function commit(next: FrameEdge) {
+        storage.set(FRAME_EDGE_STORAGE_KEY, next)
+        state.set(next)
+    }
 
     return {
-        get: () => current,
-
-        getEdge() {
-            return current
-        },
+        get: state.get,
+        getEdge: state.get,
 
         setEdge(edge: FrameEdge) {
-            current = edge
-            storage.set(FRAME_EDGE_STORAGE_KEY, current)
-            for (const l of listeners) l(current)
+            commit(edge)
         },
 
         toggleEdge() {
-            current = current === 'bottom' ? 'top' : 'bottom'
-            storage.set(FRAME_EDGE_STORAGE_KEY, current)
-            for (const l of listeners) l(current)
+            commit(state.get() === 'bottom' ? 'top' : 'bottom')
         },
 
-        subscribe(listener) {
-            listeners.add(listener)
-            return () => listeners.delete(listener)
-        },
+        subscribe: state.subscribe,
     }
 }
