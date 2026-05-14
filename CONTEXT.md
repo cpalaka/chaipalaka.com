@@ -108,6 +108,49 @@ exiting cards. While **Armed**, the registry does *not* auto-activate
 on the next microtask (default policy, used on initial page load).
 _Avoid_: in-transition (drift), busy.
 
+### Background scenes
+
+**BackgroundScene**:
+The per-route ambient visual rendered behind the foreground physics —
+typically a Three.js / `@react-three/fiber` component drawing particles
+or a shader, sometimes a CPU-driven geometric pattern. Declared per
+route in its **PageDef** (and on the **BackgroundGallery** controller)
+by `id`; the renderer (`BackgroundCanvas`) lazy-loads the scene's
+module on first use. Each scene module exports a runtime object
+carrying `id`, the `Component`, `accentColor`, `fallbackColors`
+(a pre-WebGL paint), and `fallbackPng` (a static image for SSG /
+no-WebGL fallback). Tunable scenes additionally export a
+**SceneParamSchema**.
+_Avoid_: shader (not all scenes are shader-based — `geometric-voronoi`
+is CPU-driven); background (ambiguous with CSS); scene (collides with
+Three.js's own `Scene` object — say **BackgroundScene** when domain is
+ambiguous).
+
+**SceneParamSchema**:
+The colocated declarative source of truth for a **BackgroundScene**'s
+tunable parameters. One declaration produces the scene's params type,
+its default values, and the UI field definitions consumed by the
+**Tuner**. Includes a per-field `remount` flag that captures the
+otherwise-implicit invariant "this field requires the host `<Canvas>` to
+re-mount when it changes." Schemaless scenes (e.g. `audio-reactive`,
+`flow-shader`) carry no schema at all — the absence is informative,
+meaning "this scene has no tunables," and they have no **Tuner** route.
+_Avoid_: params config, tuner spec, param schema (drops the **Scene**
+qualifier and collides with Zod's "schema" connotation that **Scene
+ParamSchema** explicitly does not adopt).
+
+**Tuner**:
+The generic sandbox UI that renders a **SceneParamSchema** as live
+controls bound to a single **BackgroundScene** instance. Lives in
+`sandbox/`, reachable only from the dynamic route
+`/sandbox/scenes/:id`. Drives the host `<Canvas>` remount key from
+schema fields flagged `remount: true`. Distinct from the per-route
+ambient renderer (`BackgroundCanvas`) — the **Tuner** is a development
+tool, not a production surface.
+_Avoid_: tune panel (drift from the existing `TunePanel` visual layer,
+which may survive underneath the **Tuner** as a presentational
+component); control panel (collides with the retired `ControlsPanel`).
+
 ### Architecture
 
 **BodyForceSource**:
