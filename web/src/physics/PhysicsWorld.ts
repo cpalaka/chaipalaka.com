@@ -187,6 +187,14 @@ export class PhysicsWorld implements BodyForceSource {
     unregister(handle: PhysicsHandle): void {
         const reg = this.registrations.get(handle)
         if (!reg) return
+        // Sweep tether records that reference this body. Owning React
+        // components only know the original tether handle from `tether.add`;
+        // primitives that detach+reattach via `detachTetherOf`/`attachTether`
+        // produce a new record with a fresh handle that no component is
+        // tracking. Without this sweep, those records survive past the body
+        // and the next physics tick throws `unknown handle N` from
+        // `Tether.applyRopeForces` / `Tether.list`.
+        this.tether.removeReferencing(handle)
         Matter.Composite.remove(this.world, reg.body)
         if (reg.id) this.byId.delete(reg.id)
         this.registrations.delete(handle)

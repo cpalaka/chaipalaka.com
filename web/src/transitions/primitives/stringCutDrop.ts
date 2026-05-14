@@ -50,19 +50,20 @@ export function stringCutDrop(
                 const h = driver.getHandleById(id)
                 if (h !== undefined) exitingHandles.add(h)
             }
-            // For each exiting card, detach its tether. If the parent is a
-            // static body (ceiling or floor in current topology), discard the
-            // spec — the tether is severed permanently. If the parent is a
-            // dynamic body (card-to-card chain), reattach so chain children
-            // continue to swing from their parents during the drop. This
-            // replaces the old `parent === ceilingHandle || parent === floorHandle`
-            // filter with a topological property that doesn't leak world
-            // identity through the seam.
+            // For each exiting card, detach its tether and decide whether to
+            // reattach. Discard if:
+            //   - parent is static (ceiling/floor): tether is severed permanently;
+            //   - parent is also in exitingHandles: parent will unregister moments
+            //     later when its route unmounts, so a reattached tether would
+            //     point at a dead handle and throw on the next physics tick.
+            // Otherwise (dynamic parent that survives the transition) reattach
+            // so the child keeps swinging from its parent during the drop.
             for (const handle of exitingHandles) {
                 const spec = driver.detachTetherOf(handle)
-                if (spec && !driver.isStatic(spec.parent)) {
-                    driver.attachTether(spec)
-                }
+                if (!spec) continue
+                if (driver.isStatic(spec.parent)) continue
+                if (exitingHandles.has(spec.parent)) continue
+                driver.attachTether(spec)
             }
             // Switch the floor to a sensor: exiting cards fall straight through
             // without collision, while incoming cards' floor-anchored tethers
