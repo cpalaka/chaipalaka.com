@@ -3,7 +3,7 @@ import { act, render, cleanup, fireEvent } from '@testing-library/react'
 import { useState } from 'react'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from './CardRegistry'
-import { PhysicsCardImpl } from './PhysicsCardImpl'
+import { PhysicsCardImpl } from './CardImpl'
 import type { PhysicsCardEntry } from './CardRegistry'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 

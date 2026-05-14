@@ -13,7 +13,7 @@ import {
     useCardRegistry,
     type CardActivator,
     type PhysicsCardEntry,
-} from './CardRegistry'
+} from '../card/CardRegistry'
 import { classifyDirection, type NavigationType } from './classifyDirection'
 import {
     dispatch,

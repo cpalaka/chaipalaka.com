@@ -39,8 +39,8 @@ vi.mock('../blog/posts', () => ({
 
 import NotFound, { pageDef } from './NotFound'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { CardRegistryProvider } from '../transitions/CardRegistry'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
+import { CardRegistryProvider } from '../card/CardRegistry'
+import { PhysicsLayer } from '../card/CardLayer'
 
 function renderNotFound() {
     return render(

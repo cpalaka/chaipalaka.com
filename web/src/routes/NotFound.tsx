@@ -1,8 +1,8 @@
-import { PhysicsPage } from '../physics/PhysicsPage'
+import { PhysicsPage } from '../card/Page'
 import { Link } from 'react-router-dom'
 import { getPosts } from '../blog/posts'
 import type { PageDef } from './PageDef'
-import type { CardContent } from '../physics/PhysicsPage'
+import type { CardContent } from '../card/Page'
 
 const recentPosts = getPosts().slice(0, 3)
 

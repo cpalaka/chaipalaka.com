@@ -1,9 +1,9 @@
 import { useState, useEffect, type ReactNode } from 'react'
-import { PhysicsCard } from './PhysicsCard'
-import { buoyancyForKind } from './PageSpec'
-import { usePageDef } from './usePageDef'
-import type { PageSpec } from './PageSpec'
-import type { Viewport } from './PhysicsWorld'
+import { PhysicsCard } from './Card'
+import { buoyancyForKind } from '../physics/PageSpec'
+import { usePageDef } from '../physics/usePageDef'
+import type { PageSpec } from '../physics/PageSpec'
+import type { Viewport } from '../physics/PhysicsWorld'
 
 export interface CardContent {
     text: string

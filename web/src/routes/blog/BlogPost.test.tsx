@@ -47,8 +47,8 @@ vi.mock('../../transitions/PageDefRegistry', () => ({
 }))
 
 import { PhysicsProvider } from '../../physics/PhysicsContext'
-import { CardRegistryProvider } from '../../transitions/CardRegistry'
-import { PhysicsLayer } from '../../transitions/PhysicsLayer'
+import { CardRegistryProvider } from '../../card/CardRegistry'
+import { PhysicsLayer } from '../../card/CardLayer'
 import BlogPost from './BlogPost'
 
 function renderAt(path: string) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PhysicsCard } from '../../physics/PhysicsCard'
+import { PhysicsCard } from '../../card/Card'
 import { HiddenScroll } from './HiddenScroll'
 
 const DEFAULT_W = 320

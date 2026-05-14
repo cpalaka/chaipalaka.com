@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
-import { PhysicsCard } from '../../physics/PhysicsCard'
+import { PhysicsCard } from '../../card/Card'
 import { StringLayer } from '../../canvas/StringLayer'
 
 function computeLayout(w: number, h: number) {

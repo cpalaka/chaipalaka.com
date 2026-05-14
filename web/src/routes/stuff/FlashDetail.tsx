@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
+import { PhysicsPage, type CardContent } from '../../card/Page'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'

@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo } from 'react'
-import { useCardRegistry } from '../transitions/CardRegistry'
-import type { Buoyancy, ParentRef } from './PageSpec'
+import { useCardRegistry } from './CardRegistry'
+import type { Buoyancy, ParentRef } from '../physics/PageSpec'
 
 export interface PhysicsCardProps {
     text: string

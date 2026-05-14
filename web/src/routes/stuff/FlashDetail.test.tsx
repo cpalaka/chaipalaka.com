@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { PageDef } from '../PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
-import type { CardContent } from '../../physics/PhysicsPage'
+import type { CardContent } from '../../card/Page'
 
 vi.mock('../../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -22,10 +22,10 @@ const physicsPageCalls: Array<{
     pageDef: PageDef
     cardContent: Record<string, CardContent>
 }> = []
-vi.mock('../../physics/PhysicsPage', async () => {
+vi.mock('../../card/Page', async () => {
     const mod = await vi.importActual<
-        typeof import('../../physics/PhysicsPage')
-    >('../../physics/PhysicsPage')
+        typeof import('../../card/Page')
+    >('../../card/Page')
     return {
         ...mod,
         PhysicsPage: (props: {

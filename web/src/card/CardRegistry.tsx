@@ -6,7 +6,7 @@ import {
     type ReactNode,
 } from 'react'
 import type { Buoyancy, ParentRef } from '../physics/PageSpec'
-import type { CardContent } from '../physics/PhysicsPage'
+import type { CardContent } from './Page'
 
 export type CardLifecycle = 'spawning' | 'active' | 'exiting'
 

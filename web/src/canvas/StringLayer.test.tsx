@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { PhysicsCard } from '../physics/PhysicsCard'
+import { PhysicsCard } from '../card/Card'
 import { StringLayer } from './StringLayer'
 
 describe('StringLayer', () => {

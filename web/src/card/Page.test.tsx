@@ -1,9 +1,9 @@
 import { describe, test, expect } from 'vitest'
 import { render, cleanup, screen } from '@testing-library/react'
-import { PhysicsProvider } from './PhysicsContext'
-import { PhysicsPage } from './PhysicsPage'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
-import type { PageSpec } from './PageSpec'
+import { PhysicsProvider } from '../physics/PhysicsContext'
+import { PhysicsPage } from './Page'
+import { PhysicsLayer } from './CardLayer'
+import type { PageSpec } from '../physics/PageSpec'
 
 const pageDef: PageSpec = {
     gravity: 'down',
