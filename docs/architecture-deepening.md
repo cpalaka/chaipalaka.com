@@ -22,10 +22,24 @@ grilling session, not here.
 3. Pick a candidate from the list below. Suggested order at the end of the file.
 4. Drop into the skill's grilling loop — it walks the design tree once told
    which candidate to focus on.
-5. **There is no `CONTEXT.md`.** The skill's vocabulary discipline depends on
-   one; creating it (by extracting the domain glossary from `PRD.md`) should
-   happen as a side effect of the first real grilling session, not as a
-   separate task.
+5. **`CONTEXT.md` exists** (created during the Candidate 7 grill, 2026-05-13;
+   grown by each subsequent session). New domain terms and resolved
+   ambiguities land in it inline as grilling produces them.
+
+## Progress snapshot (2026-05-14)
+
+Every candidate has had its grill outcome by this point. Status one-liners
+live in the `**Status:**` header at the top of each candidate. Summary:
+
+- **Candidates 2, 3, 4, 5, 6, 7, 8, 9** — resolved or shipped.
+- **Candidate 1** — partial. Tether extracted; BalloonForces and MatterEngine
+  deliberately not extracted (grill resolved against further sub-modules).
+- **Candidate 10** — new. Parked pending real motivation; surfaced during
+  the Candidate 9 grill.
+
+Per-candidate sections retain their full original text (Problem, Direction,
+Why grill, Linkage, ADR conflict?) so a future explorer can re-derive the
+reasoning without re-running git archaeology.
 
 ---
 
@@ -87,6 +101,11 @@ Corrections to earlier notes:
 
 ## Candidate 1 — `PhysicsWorld`: wide outward seam, no internal seams
 
+**Status: partial. Tether extracted via slice 108 (`0956de4`,
+PR [#110](https://github.com/cpalaka/chaipalaka.com/pull/110)). BalloonForces
+and MatterEngine deliberately not extracted — the grill's two follow-up
+questions resolved against further sub-modules.** See "Resolution" below.
+
 **Files**
 - `web/src/physics/PhysicsWorld.ts` (578 LOC, ~35 public entries)
 - `web/src/physics/PhysicsWorld.test.ts` (larger than the implementation)
@@ -126,9 +145,35 @@ minimize subsystem call `subtreeOf(cardId)` (Candidate 4).
 
 **ADR conflict?** No — ADR-0001 specifies behaviour, not module shape.
 
+### Resolution (2026-05-14)
+
+- **Tether extracted** via slice 108. `web/src/physics/Tether.ts` (170 LOC)
+  owns rope semantics, the `BodyForceSource` seam, and TetherSpec
+  capture/restore. PhysicsWorld shrank from 578 → 425 LOC. Callers reach
+  Tether through `world.tether.X` (Candidate 1's grill question "should
+  Tether be exposed directly to callers?" — answered "yes, via
+  `world.tether`, not as a separate module a caller imports").
+- **BalloonForces NOT extracted.** The grill question "is it inline-able?"
+  resolved yes. Buoyancy became a per-body property (`Buoyancy` in
+  `PageSpec.ts`) and the force is applied inside PhysicsWorld's tick. No
+  separate module justified.
+- **MatterEngine adapter NOT extracted.** The grill question "what does its
+  interface look like? If it leaks matter.js types, the adapter is
+  shallow." — resolved against extraction: PhysicsWorld already
+  encapsulates matter.js types; a thin MatterEngine layer underneath would
+  be redundant.
+
+CONTEXT.md `BodyForceSource` and `Tether` entries are the surviving
+artifacts. The cascade-minimize concern that this Candidate cross-referenced
+to Candidate 4 dissolved separately (minimize removed via #118).
+
 ---
 
 ## Candidate 2 — Transitions ↔ PhysicsCard ↔ Registry: contract lives in RAF order
+
+**Status: resolved by slice 111 (state machine — `4acedd2`, `c874918`,
+`3c913a9`, `5eb4678`) + Candidate 9 slice (card/ folder extraction).** See
+"Resolution" below.
 
 **Files**
 - `web/src/transitions/PhysicsCardImpl.tsx` (~355 LOC)
@@ -182,9 +227,46 @@ a cleaner dependency for tether/subtree operations).
 **ADR conflict?** No — ADR-0001 §10 (cascade-minimize) names the behaviour;
 this is about honouring its seam in code.
 
+### Resolution (2026-05-14)
+
+The doc's "what is the actual sequence of frames?" question got the only
+answer the question can have: a state machine. Slice 111 introduced
+`CardLifecycle` (`spawning → active → exiting`), owned by the **registry**,
+driven by the **Director** and **Primitive**s. The load-bearing artifacts:
+
+- **Visibility now derives from state.** Spawning cards paint
+  `visibility:hidden`; the RAF-ordered "reveal flag" is gone. Invariant I-1
+  ("a Spawning Card never paints") is a property of the state machine and
+  asserted directly in tests instead of being a prose comment.
+- **Primitives drive activation.** Body primitives call
+  `registry.activate(id)` after positioning the body. The Director
+  coordinates by `arm()`/`disarm()`-ing the registry around each
+  transition.
+- **CardRegistry did NOT collapse into the Director.** The grill's
+  subquestion resolved no — they're orthogonal concerns with separate test
+  surfaces. The Director orchestrates transitions; the registry stores
+  card identity (which exists outside transitions too — initial mount,
+  drag, idle).
+- **Folder structure follows separately** via Candidate 9: the card
+  subsystem (registry, layer, per-entry renderer, author API, page
+  renderer) moves into a dedicated `card/` folder, removing the
+  `physics/ → transitions/` backward dependency.
+
+CONTEXT.md's `CardLifecycle`, `Director`, `Primitive`, `Armed`,
+`BodyDriver`, `TetherSpec` entries are the surviving vocabulary artifacts.
+
 ---
 
 ## Candidate 3 — Transition primitives are stateful closures bound to live `PhysicsWorld`
+
+**Status: resolved. `BodyDriver` interface introduced; `PhysicsWorld` is one
+adapter and `createFakeBodyDriver` is the other (the "two adapters = real
+seam" check passes). Documented in CONTEXT.md (`BodyDriver`, `TetherSpec`)
+via PR [#115](https://github.com/cpalaka/chaipalaka.com/pull/115).** Body
+primitives (`pour-in-drop`, `string-cut-drop`, `anchor-slide`) drive bodies
+through the `BodyDriver` seam; their tests run against
+`createFakeBodyDriver` and assert the shape of motion, not just that the
+call happened.
 
 **Files**
 - `web/src/transitions/dispatch.ts`
@@ -225,6 +307,20 @@ forces).
 ---
 
 ## Candidate 4 — Hook-singleton pattern repeated across four domains + cascade-minimize split
+
+**Status: resolved. Both halves dissolved separately.**
+- *Cascade-minimize half:* removed entirely via issue
+  [#118](https://github.com/cpalaka/chaipalaka.com/issues/118) and ADR-0002.
+  `MinimizedRegistry` and its hooks deleted; the feature itself was retired.
+- *Hook-singleton half:* consolidated via issue
+  [#117](https://github.com/cpalaka/chaipalaka.com/issues/117).
+  `web/src/state/useController.ts` is the `useController` bridge hook;
+  `useGallery`, `useFrameEdge`, `useTheme` now adopt it. The
+  module-level `let instance` ritual still lives in each file (it's the
+  unit of session-scoped identity per CONTEXT.md `Lazy singleton`) but the
+  React subscribe boilerplate is one place. The original "merge into one
+  primitive" idea narrowed: the `Controller` is the unit of behaviour and
+  the singleton is the unit of identity; they correctly stay separate.
 
 **Files (the singleton pattern, in production)**
 - `web/src/canvas/useGallery.ts:16` — `let galleryInstance`
@@ -297,6 +393,12 @@ its seam.
 
 ## Candidate 5 — Particle scenes duplicate the param schema across many files
 
+**Status: resolved via #122–#124 (design + DSL + generic Tuner). `paramSchema.ts`
++ `tunable.ts` ship the schema-once-→-(type, defaults, UI, serializer)
+pattern. CONTEXT.md `SceneParamSchema` and `Tuner` are the artifacts.** Per
+the grill's question on Zod: a small local DSL was the right call given
+canvas bundle-size sensitivity.
+
 **Files**
 - `web/src/canvas/scenes/particles-*.tsx` (4 particle scenes, ~220–384 LOC each)
 - `web/src/canvas/scenes/geometric-*.tsx` + `flow-shader.tsx` +
@@ -340,6 +442,12 @@ risk: over-engineering. Verify before designing:
 
 ## Candidate 6 — `canvas/registry.ts`: shallow Map wrapper, two callers
 
+**Status: resolved by deletion via issue
+[#125](https://github.com/cpalaka/chaipalaka.com/issues/125). `BackgroundRegistry`
+collapsed into `BackgroundGallery`; `canvas/registry.ts` deleted. Deletion
+test signal that the doc flagged ("complexity does not reappear across N
+callers") was correct.**
+
 **Files**
 - `web/src/canvas/registry.ts` (~19 LOC) — `createRegistry`: a Map wrapper
 - `web/src/canvas/gallery.ts` (~97 LOC) — calls `createRegistry`; doesn't reuse internals
@@ -371,8 +479,9 @@ gallery/useGallery split is the same hook-pattern smell.
 
 ## Candidate 7 — `text/PretextRegistry` has exactly one caller
 
-**Status: grilled 2026-05-13. Decision: reframe + narrow.** See "Grill
-outcome" below.
+**Status: grilled 2026-05-13 + shipped via issue
+[#127](https://github.com/cpalaka/chaipalaka.com/issues/127) (PR #129).
+Decision: reframe + narrow.** See "Grill outcome" below.
 
 **Files**
 - `web/src/text/PretextRegistry.ts` — the class
@@ -469,8 +578,10 @@ return as a deliberate typography slice if Chai wants it later.
 
 ## Candidate 8 — `PageDef` is a grab-bag **Interface** spanning three subsystems
 
-**Status: grilled 2026-05-14. Decision: two-way split + relocate to
-`routes/`.** See "Grill outcome" below.
+**Status: grilled 2026-05-14 + shipped via issue
+[#130](https://github.com/cpalaka/chaipalaka.com/issues/130) (PR #132).
+Decision: two-way split + relocate to `routes/`.** See "Grill outcome"
+below.
 
 **Files**
 - `web/src/physics/PageDef.ts` — main type (`gravity`, `cards`, `sections`)
@@ -591,6 +702,10 @@ update the `PageDef` entry to "the composition of a **PageSpec** and a
 
 ## Candidate 9 — `transitions/` has no declared **Seam**
 
+**Status: grilled 2026-05-14. Decision: reframe — extract a `card/`
+subsystem; declared seams for both `card/` and `transitions/`; bundled
+renames and freebie cleanups.** See "Grill outcome" below.
+
 **Files:** all of `web/src/transitions/` (~16 files plus the `primitives/`
 subfolder).
 
@@ -620,6 +735,197 @@ internal-only.
 
 **ADR conflict?** No.
 
+### Grill outcome (2026-05-14)
+
+**Reframe — doc had three drifts.**
+- The doc's claim that external imports are *"`TransitionDirector`,
+  `PageDefRegistryProvider`, `useTransitionContext`"* undercounted. Actual
+  external production-code imports were 10 symbols across 3 sibling
+  folders (`layouts/`, `physics/`, `routes/`). The narrow-surface framing
+  was wrong; the surface is wide AND incoherent.
+- `useTransitionContext` (exported at `TransitionDirector.tsx:52`) had
+  **zero production or test callers** — dead Interface surface, same
+  pattern as Candidate 8's `sectionsPushHistory` freebie.
+- The doc framed #9 as a follow-up to #2. The reverse is closer to true:
+  honestly grilling #9 forces #2's resolution. (#2's state-machine half
+  shipped via slice 111 separately; #2's folder half is delivered here.)
+
+**Cross-folder reality.** Two backward edges revealed the unnamed
+subsystem:
+- `physics/PhysicsContext.tsx:10` wraps children in `<CardRegistryProvider>`
+  imported from `transitions/`.
+- `physics/PhysicsCard.tsx:55` calls `useCardRegistry()` from `transitions/`.
+
+These pointed at a **card subsystem** with no folder — registry +
+per-entry renderer + layer (in `transitions/`) plus author API + page
+renderer (in `physics/`). The folder name `transitions/` actively misled:
+`CardRegistry` and `PhysicsCardImpl` are card-subsystem concerns, not
+transition concerns.
+
+**Decisions.**
+
+1. **Extract `card/` folder.** Both `physics/` and `transitions/` shrink.
+   Three-folder world: `physics/` (matter.js + bodies + tether + page
+   spec), `card/` (the React surface of Cards — registry, layer,
+   per-entry renderer, author API, page renderer), `transitions/` (route
+   animation — Director, dispatch, primitives, edges, hash watcher,
+   PageDefRegistry).
+2. **Move `PhysicsCardImpl` whole into `card/`.** Don't split JSX vs.
+   body-wiring during this slice. AI-navigability wins more from
+   folder-name-matches-concept than from in-file splitting; the in-file
+   split is speculative without a forcing function (no test or behaviour
+   pushing on it). Defers the speculative split as new Candidate 10.
+3. **All-in `PhysicsX → X` rename for card-side identifiers.**
+   `PhysicsCard → Card`, `PhysicsPage → Page` (inside `card/`,
+   unambiguous), `PhysicsLayer → CardLayer` (the prior name was a misread:
+   it's a layer of cards, not a layer of physics), `PhysicsCardImpl →
+   CardImpl`. Types: `PhysicsCardProps → CardProps`,
+   `PhysicsCardEntry → CardEntry`. Physics-side identifiers
+   (`PhysicsWorld`, `PhysicsContext`, `PhysicsProvider`) keep their names
+   — they're physics-side. CSS class `physics-card` stays in HTML
+   (separate stability story; not load-bearing).
+4. **Move `wireTetherFor` from `card/Card.tsx` to `physics/Tether.ts`.**
+   It's tether-wiring, not card-author concern; its only caller is
+   `CardImpl`. Removes one cross-import smell that would otherwise outlive
+   the refactor.
+5. **`PhysicsContext` stops wrapping `<CardRegistryProvider>`.**
+   `CanvasLayout` mounts it directly:
+   `<PhysicsProvider><CardRegistryProvider>…`. Clear owner; no implicit
+   coupling.
+6. **Declare seams via `index.ts` files** for both `card/` and
+   `transitions/`. Honors the original Candidate 9 spirit but at the new
+   (correct) granularity. Public exports:
+   - `card/index.ts` — `Card`, `CardProps`, `Page`, `CardContent`,
+     `CardLayer`, `CardRegistryProvider`, `useCardRegistry`, types
+     (`CardEntry`, `CardLifecycle`, `CardActivator`).
+   - `transitions/index.ts` — `TransitionDirector`,
+     `PageDefRegistryProvider`, `useRegisterPageDef`,
+     `usePageDefRegistry`, `useHashSection`, `TransitionSpec`,
+     `TransitionId`, `edges`.
+7. **Bundled freebies.**
+   - Delete `useTransitionContext`, `TransitionContextValue`,
+     `RunTransitionArgs`, and the entire `TransitionContext` wiring in
+     `TransitionDirector.tsx` (dead Interface surface).
+   - Move `transitions/NavCardContent.tsx` → `routes/blog/NavCardContent.tsx`
+     (single caller in `BlogIndex`; misleadingly named — it's section-nav
+     button content for blog pages, not a generic "nav card").
+
+**Module shape chosen.**
+```
+web/src/
+  card/                       ← new
+    Card.tsx, Card.css, Card.test.tsx
+    Page.tsx, Page.test.tsx
+    CardRegistry.tsx, CardRegistry.test.tsx
+    CardRegistryStore.test.ts
+    CardLayer.tsx, CardLayer.test.tsx
+    CardImpl.tsx, CardImpl.test.tsx
+    index.ts                  ← declared seam
+  physics/                    ← shrinks
+    PhysicsWorld.ts, PhysicsContext.tsx
+    Tether.ts (gains wireTetherFor)
+    BodyDriver.ts, BodyForceSource.ts, createFakeBodyDriver.ts
+    PageSpec.ts, usePageDef.ts
+  transitions/                ← shrinks
+    TransitionDirector.tsx (no useTransitionContext)
+    TransitionSpec.ts, PageDefRegistry.tsx, dispatch.ts
+    edges.ts, classifyDirection.ts, useHashSection.ts
+    primitives/
+    index.ts                  ← declared seam
+  routes/blog/
+    NavCardContent.tsx        ← moved from transitions/
+```
+
+**Dependency graph after the slice.**
+- `routes/` → `card/{Card, Page}`, `transitions/{useRegisterPageDef,
+  useHashSection, TransitionSpec}`
+- `layouts/` → `card/{CardLayer, CardRegistryProvider}`,
+  `physics/PhysicsProvider`, `transitions/{TransitionDirector,
+  PageDefRegistryProvider, edges}`
+- `card/` → `physics/{PhysicsWorld, PhysicsContext, PageSpec, Tether}`
+  *(forward only ✓)*
+- `physics/` → nothing in `card/` or `transitions/` *(fully decoupled ✓)*
+- `transitions/` → `physics/{PageSpec, PhysicsContext, PhysicsWorld}`,
+  `card/{useCardRegistry, CardEntry, CardActivator}` *(forward only ✓)*,
+  `routes/PageDef` *(type, deliberate; see Candidate 8)*
+
+Two backward edges deleted; one cross-folder function smell resolved;
+one dead Interface surface deleted; one misleadingly-located component
+relocated.
+
+**CONTEXT.md updates** (land with implementation, not now):
+- **Remove** the "PhysicsCard is a code identifier... — Card is" entry
+  under "Flagged ambiguities." Gap closed.
+- **Add `CardLayer`** entry under "Foreground physics" or "Architecture":
+  the React layer mounted once at app root that renders every active
+  **Card** via the **CardRegistry**; survives route unmount.
+- *(No `CardImpl` term — private internal of `CardLayer`.)*
+
+**Deferred (not in this slice).**
+- The `CardImpl` internal split (JSX shell vs. body wiring) — surfaced
+  during this grill, parked as new Candidate 10. No current motivation
+  forces it.
+- CSS class `physics-card` → `card`. Cosmetic; touches CSS rules; worth
+  its own tiny slice if desired.
+- PageDefRegistry dual-mechanism unification (deferred from Candidate 8;
+  still load-bearing per #130 grill outcome).
+
+**Slice naming.** Branch: `refactor/extract-card-subsystem`. Issue title:
+*"Extract card/ subsystem (rename PhysicsCard → Card, decouple physics
+from transitions)"*. Scope: ~22 file moves/renames + ~25 import-path
+updates across routes, tests, layouts. Mechanical; one PR (rename + move
+are entangled).
+
+**Issue:** [#133](https://github.com/cpalaka/chaipalaka.com/issues/133)
+
+---
+
+## Candidate 10 — `card/CardImpl` is a fat multi-concern file
+
+**Status: parked. Surfaced during the Candidate 9 grill (2026-05-14);
+deferred because no current motivation forces the split.**
+
+**Files** (post-Candidate-9):
+- `web/src/card/CardImpl.tsx` (~290 LOC)
+
+**Problem.** `CardImpl` does six things in one file: renders the
+`<article>` JSX, spawns the body via `world.registerById`, wires tethers
+(via `physics/Tether.wireTetherFor` post-Candidate 9), resolves parent
+refs against the world, wires drag/fling pointer listeners, and honors
+invariant I-1 (Spawning → `visibility:hidden`). Its outward interface is
+small (a React component, single `entry` prop, stable), but inside it the
+JSX-shell concerns and the body-wiring concerns are tangled. Currently
+testable only end-to-end via React rendering + a real `PhysicsWorld`; the
+body-wiring layer can't be exercised independently.
+
+**Deletion test.** Each concern is load-bearing. The shallowness is
+internal: the seam between "card React surface" and "card body wiring"
+exists conceptually but isn't expressed in code.
+
+**Direction (one option among several to grill).** Split into
+`card/CardView.tsx` (JSX + `state → visibility` + ref-to-body bridge) and
+`physics/CardBody.ts` (spawn + tether + drag + parent resolution +
+lifecycle synchronization). `CardBody` becomes testable without React.
+`CardView` becomes a thin renderer over the registry entry.
+
+**Why grill.** Real open questions:
+- What is the right interface between View and Body? A ref-bridge? An
+  imperative handle? An attach/detach pair?
+- Does the lifecycle synchronization (Spawning → `visibility:hidden`)
+  survive a split, or does it leak across both files?
+- Is the split worth it without a second use case (e.g., a "headless card"
+  with no DOM)? If not, this candidate stays parked.
+
+**Linkage.** Independent now that Candidates 1, 2, 9 are done.
+
+**ADR conflict?** No.
+
+**Recommended trigger.** Don't grill until a real motivation appears —
+for example: a new **Card** kind that needs body-wiring without DOM, a
+hard-to-write test where body-attach behaviour isn't exposable through
+the React surface, or a perf concern requiring body-attach memoization
+independent of React renders.
+
 ---
 
 ## Cross-cutting observations (not full candidates)
@@ -634,16 +940,11 @@ Two directories with confusingly similar names doing different things.
 Pure naming friction. Rename `layout/` → `sectioning/` (or whatever domain
 word survives a grilling against a future `CONTEXT.md`).
 
-### No `CONTEXT.md`
+### `CONTEXT.md` (resolved)
 
-The skill's vocabulary discipline depends on `CONTEXT.md` for domain terms.
-There isn't one yet. If any candidate is grilled, the new module name (and
-any sharpened domain terms) should land in a freshly-created `CONTEXT.md`
-so the next pass uses the same words.
-
-The PRD has the domain vocabulary embedded in prose; extracting a glossary
-from it is itself a worthwhile side effect of the first real grilling
-session.
+`CONTEXT.md` was created during the Candidate 7 grill (2026-05-13) and has
+been grown by each subsequent grilling session. New domain terms and
+resolved ambiguities land in it inline as grilling produces them.
 
 ### `sandbox/` exists in parallel with production
 
@@ -683,19 +984,35 @@ Several candidates fuse if you pick one:
 
 ## Recommended grilling order
 
-A reasonable order if doing several. None of this is committed — pick
-whichever the next session has appetite for.
+Reflects status as of 2026-05-14. Every original candidate has either
+shipped or has a recorded "Grill outcome" or "Resolution" section. Open
+work:
 
-1. **#1** (foundation: `Tether` extraction from `PhysicsWorld`).
-2. **#2** (transitions/card contract, named explicitly; the cascade-minimize
-   half of #4 falls out here).
-3. **#3** (`BodyDriver` for primitives, now possible because Tether exists).
-4. **#4** (the broader hook-singleton primitive across gallery / frame-edge /
-   minimized / theme; absorbs #6 in passing).
-5. **#8** (PageDef sub-interfaces — cheap, type-only).
-6. **#9** (transitions/ declared seam, after #2 settles the contents).
-7. **#5, #7** (independent cleanups; #5 is good as a standalone warm-up).
+1. **Candidate 9 slice — issue
+   [#133](https://github.com/cpalaka/chaipalaka.com/issues/133).** Card
+   subsystem extraction. Mechanical move + all-in rename + freebie
+   cleanups; one PR.
+2. **Candidate 10 (parked).** `CardImpl` JSX-vs-body split. Do not grill
+   until a real motivation appears (new card kind without DOM,
+   hard-to-write test, perf concern). See Candidate 10's "Recommended
+   trigger."
 
-Bias toward the smaller blast-radius items (#5, #7, #8) if the session is
-short and you want a contained win. Bias toward #1–#3 if the goal is
-"where the runtime bugs hide."
+Closed / shipped:
+
+- **#1** — partial (Tether shipped; BalloonForces/MatterEngine resolved
+  against extraction).
+- **#2** — shipped (slice 111 state machine + Candidate 9 folder).
+- **#3** — shipped (BodyDriver + fake adapter).
+- **#4** — shipped (#117 useController + #118 minimize removal).
+- **#5** — shipped (#122–#124 paramSchema + Tuner).
+- **#6** — resolved by deletion (#125 BackgroundRegistry collapse).
+- **#7** — grilled + shipped (#127 / PR #129 TextMeasure).
+- **#8** — grilled + shipped (#130 / PR #132 PageDef split).
+
+New candidates surfaced during 2026-05-14 work:
+
+- **Candidate 10** — `CardImpl` internal split. Parked.
+
+The cross-cutting observations below (`layout/` vs `layouts/`; sandbox
+parallelism; deferred backend candidates) remain open and have not been
+promoted to full candidates yet.
