@@ -6,7 +6,7 @@ import {
     activityAnchor,
 } from './Lifelog'
 import { PhysicsWorld } from '../physics/PhysicsWorld'
-import { wireTetherFor } from '../physics/PhysicsCard'
+import { wireTetherFor } from '../physics/Tether'
 
 const viewport = { width: 1200, height: 800 }
 
