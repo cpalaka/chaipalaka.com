@@ -1,6 +1,6 @@
-import { PhysicsPage } from '../physics/PhysicsPage'
+import { Page } from '../card/Page'
 import type { PageDef } from './PageDef'
-import type { CardContent } from '../physics/PhysicsPage'
+import type { CardContent } from '../card/Page'
 
 const CARD_W = 280
 const CARD_H = 160
@@ -39,5 +39,5 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function Home() {
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <Page pageDef={pageDef} cardContent={cardContent} />
 }

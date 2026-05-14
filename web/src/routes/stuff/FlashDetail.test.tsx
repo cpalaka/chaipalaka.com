@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { PageDef } from '../PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
-import type { CardContent } from '../../physics/PhysicsPage'
+import type { CardContent } from '../../card/Page'
 
 vi.mock('../../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -15,20 +15,20 @@ vi.mock('../../stuff/flash/RuffleEmbed', () => ({
     RuffleEmbed: () => <div data-testid="ruffle-stub" />,
 }))
 
-// Capture the props PhysicsPage was rendered with — this is the cleanest way
+// Capture the props Page was rendered with — this is the cleanest way
 // to assert per-card props (draggable, etc.) without driving the full physics
 // pipeline.
 const physicsPageCalls: Array<{
     pageDef: PageDef
     cardContent: Record<string, CardContent>
 }> = []
-vi.mock('../../physics/PhysicsPage', async () => {
+vi.mock('../../card/Page', async () => {
     const mod = await vi.importActual<
-        typeof import('../../physics/PhysicsPage')
-    >('../../physics/PhysicsPage')
+        typeof import('../../card/Page')
+    >('../../card/Page')
     return {
         ...mod,
-        PhysicsPage: (props: {
+        Page: (props: {
             pageDef: PageDef
             cardContent: Record<string, CardContent>
         }) => {
@@ -157,7 +157,7 @@ describe('FlashDetail — slug match', () => {
     test('useRegisterPageDef is invoked with the built pageDef', () => {
         setup()
         expect(registered.def).not.toBeNull()
-        // The same object passed to PhysicsPage is the one registered.
+        // The same object passed to Page is the one registered.
         expect(registered.def).toBe(physicsPageCalls[0]!.pageDef)
     })
 

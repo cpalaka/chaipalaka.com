@@ -1,7 +1,33 @@
 import type { BodyForceSource } from './BodyForceSource'
-import type { PhysicsHandle, Vec2 } from './PhysicsWorld'
+import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
 
 export type TetherHandle = number
+
+export type TetherParentKind = 'ceiling' | 'floor' | 'card'
+
+export function wireTetherFor(
+    world: PhysicsWorld,
+    parentHandle: PhysicsHandle,
+    parentKind: TetherParentKind,
+    childHandle: PhysicsHandle,
+    childAnchor: Vec2,
+): TetherHandle {
+    const parentBodyPos = world.getPosition(parentHandle)
+    if (parentKind === 'card') {
+        const length = Math.hypot(
+            childAnchor.x - parentBodyPos.x,
+            childAnchor.y - parentBodyPos.y,
+        )
+        return world.tether.add(parentHandle, childHandle, length)
+    }
+    const parentAnchor = world.getAnchor(parentHandle)
+    const anchorA = {
+        x: childAnchor.x - parentBodyPos.x,
+        y: parentAnchor.y - parentBodyPos.y,
+    }
+    const length = Math.abs(childAnchor.y - parentAnchor.y)
+    return world.tether.add(parentHandle, childHandle, length, anchorA)
+}
 
 export interface TetherView {
     parentPos: Vec2

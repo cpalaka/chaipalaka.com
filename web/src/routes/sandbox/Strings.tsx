@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
-import { PhysicsCard } from '../../physics/PhysicsCard'
+import { CardRegistryProvider } from '../../card/CardRegistry'
+import { Card } from '../../card/Card'
 import { StringLayer } from '../../canvas/StringLayer'
 
 function computeLayout(w: number, h: number) {
@@ -36,10 +37,11 @@ export default function Strings() {
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
             <PhysicsProvider>
-                <StringLayer />
+                <CardRegistryProvider>
+                    <StringLayer />
 
                 {/* Scenario 1: heavy card hanging from ceiling */}
-                <PhysicsCard
+                <Card
                     id="heavy-ceiling"
                     text="Ceiling hang"
                     width={CARD_W}
@@ -51,7 +53,7 @@ export default function Strings() {
                 />
 
                 {/* Scenario 2a: balloon tethered to floor */}
-                <PhysicsCard
+                <Card
                     id="balloon-floor-1"
                     text="Balloon 1"
                     width={CARD_W}
@@ -62,7 +64,7 @@ export default function Strings() {
                 />
 
                 {/* Scenario 2b: balloon tethered to floor */}
-                <PhysicsCard
+                <Card
                     id="balloon-floor-2"
                     text="Balloon 2"
                     width={CARD_W}
@@ -73,7 +75,7 @@ export default function Strings() {
                 />
 
                 {/* Scenario 3: parent with 3 mixed children */}
-                <PhysicsCard
+                <Card
                     id="parent-mixed"
                     text="Parent"
                     width={CARD_W}
@@ -83,7 +85,7 @@ export default function Strings() {
                     buoyancy="heavy"
                     label="Parent (mixed)"
                 />
-                <PhysicsCard
+                <Card
                     id="child-heavy"
                     text="Child heavy"
                     width={CARD_W}
@@ -92,7 +94,7 @@ export default function Strings() {
                     parent="parent-mixed"
                     buoyancy="heavy"
                 />
-                <PhysicsCard
+                <Card
                     id="child-balloon"
                     text="Child balloon"
                     width={CARD_W}
@@ -101,7 +103,7 @@ export default function Strings() {
                     parent="parent-mixed"
                     buoyancy="balloon"
                 />
-                <PhysicsCard
+                <Card
                     id="child-heavy-2"
                     text="Child heavy 2"
                     width={CARD_W}
@@ -112,13 +114,14 @@ export default function Strings() {
                 />
 
                 {/* Scenario 4: detached heavy — falls to floor */}
-                <PhysicsCard
+                <Card
                     id="detached"
                     text="Detached"
                     width={CARD_W}
                     height={CARD_H}
                     anchor={layout.detached}
                 />
+                </CardRegistryProvider>
             </PhysicsProvider>
         </div>
     )

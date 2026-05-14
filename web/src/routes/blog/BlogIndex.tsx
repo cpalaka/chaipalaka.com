@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
+import { Page, type CardContent } from '../../card/Page'
 import { measure } from '../../text/measure'
 import { getPosts } from '../../blog/posts'
 import {
@@ -19,7 +19,7 @@ import {
     NAV_CARD_H,
     NAV_TOP_INSET,
 } from '../../layout/sectionLayout'
-import { NavCardContent } from '../../transitions/NavCardContent'
+import { NavCardContent } from './NavCardContent'
 import type { PageDef } from '../PageDef'
 import type { CardSpec } from '../../physics/PageSpec'
 import type { Post } from '../../blog/types'
@@ -303,7 +303,7 @@ export default function BlogIndex() {
 
     return (
         <div data-section-root>
-            <PhysicsPage pageDef={sectionPageDef} cardContent={sectionContent} />
+            <Page pageDef={sectionPageDef} cardContent={sectionContent} />
         </div>
     )
 }

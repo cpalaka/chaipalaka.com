@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { crossFade } from './crossFade'
-import type { CardActivator } from '../CardRegistry'
+import type { CardActivator } from '../../card/CardRegistry'
 
 const noopActivator: CardActivator = { activate: () => {} }
 

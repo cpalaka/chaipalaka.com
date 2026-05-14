@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
+import { CardRegistryProvider } from '../../card/CardRegistry'
 import { DEFAULT_CONFIG, type SandboxConfig } from '../../sandbox/cards/state'
 import { encode, decode } from '../../sandbox/cards/snapshot'
 import { SandboxChrome } from '../../sandbox/cards/SandboxChrome'
@@ -24,23 +25,25 @@ export default function Cards() {
 
     return (
         <PhysicsProvider>
-            <div
-                data-sandbox=""
-                data-color-mode={config.colorMode}
-                className="sandbox-root"
-            >
-                <SandboxChrome
-                    config={config}
-                    onChange={setConfig}
-                    onSnapshot={handleSnapshot}
-                />
-                <div className="sandbox-body">
-                    <div className="sandbox-canvas-area">
-                        <FrameMock config={config} />
-                        <Playground />
+            <CardRegistryProvider>
+                <div
+                    data-sandbox=""
+                    data-color-mode={config.colorMode}
+                    className="sandbox-root"
+                >
+                    <SandboxChrome
+                        config={config}
+                        onChange={setConfig}
+                        onSnapshot={handleSnapshot}
+                    />
+                    <div className="sandbox-body">
+                        <div className="sandbox-canvas-area">
+                            <FrameMock config={config} />
+                            <Playground />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </CardRegistryProvider>
         </PhysicsProvider>
     )
 }

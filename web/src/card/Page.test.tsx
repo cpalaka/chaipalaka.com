@@ -1,9 +1,10 @@
 import { describe, test, expect } from 'vitest'
 import { render, cleanup, screen } from '@testing-library/react'
-import { PhysicsProvider } from './PhysicsContext'
-import { PhysicsPage } from './PhysicsPage'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
-import type { PageSpec } from './PageSpec'
+import { PhysicsProvider } from '../physics/PhysicsContext'
+import { CardRegistryProvider } from './CardRegistry'
+import { Page } from './Page'
+import { CardLayer } from './CardLayer'
+import type { PageSpec } from '../physics/PageSpec'
 
 const pageDef: PageSpec = {
     gravity: 'down',
@@ -28,12 +29,14 @@ const cardContent = {
     'child-card': { text: 'A note', width: 200, height: 100 },
 }
 
-describe('PhysicsPage', () => {
+describe('Page', () => {
     test('renders one DOM card per spec', () => {
         render(
             <PhysicsProvider>
-                <PhysicsLayer />
-                <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+                <CardRegistryProvider>
+                    <CardLayer />
+                    <Page pageDef={pageDef} cardContent={cardContent} />
+                </CardRegistryProvider>
             </PhysicsProvider>,
         )
         expect(screen.getByText('Headline')).toBeTruthy()
@@ -45,7 +48,9 @@ describe('PhysicsPage', () => {
         expect(() =>
             render(
                 <PhysicsProvider>
-                    <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+                    <CardRegistryProvider>
+                        <Page pageDef={pageDef} cardContent={cardContent} />
+                    </CardRegistryProvider>
                 </PhysicsProvider>,
             ),
         ).not.toThrow()

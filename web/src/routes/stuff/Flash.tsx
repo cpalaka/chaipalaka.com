@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
+import { Page, type CardContent } from '../../card/Page'
 import { getPiecesByCategory } from '../../stuff/flash/pieces'
 import { getCategoryMeta } from '../../stuff/flash/categories'
 import type { PageDef } from '../PageDef'
@@ -131,5 +131,5 @@ export default function Flash() {
         return () => window.removeEventListener('resize', update)
     }, [])
 
-    return <PhysicsPage pageDef={page.pageDef} cardContent={page.cardContent} />
+    return <Page pageDef={page.pageDef} cardContent={page.cardContent} />
 }

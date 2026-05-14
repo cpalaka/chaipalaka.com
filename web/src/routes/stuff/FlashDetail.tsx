@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
+import { Page, type CardContent } from '../../card/Page'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
 import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
@@ -193,5 +193,5 @@ export default function FlashDetail() {
         return <Navigate to="/stuff/flash" replace />
     }
 
-    return <PhysicsPage pageDef={built.pageDef} cardContent={built.cardContent} />
+    return <Page pageDef={built.pageDef} cardContent={built.cardContent} />
 }
