@@ -19,4 +19,4 @@ export { useHashSection } from './useHashSection'
 
 export type { TransitionSpec, TransitionId } from './TransitionSpec'
 
-export { edges } from './edges'
+export { edges } from './transitionOverrides'
