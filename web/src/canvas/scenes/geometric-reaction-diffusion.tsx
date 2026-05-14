@@ -13,20 +13,6 @@ import {
     Vector2,
     WebGLRenderTarget,
 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'geometric-reaction-diffusion'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
-
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
 export const SCHEMA = defineSceneParams({
@@ -147,7 +133,9 @@ function createSeedTexture(res: number, seedCount: number): DataTexture {
 }
 
 export function ReactionDiffusionScene({ params }: { params?: Partial<ReactionDiffusionParams> }) {
-    const resolved = { ...DEFAULT_PARAMS, ...params }
+    const resolved = params
+        ? { ...DEFAULT_PARAMS, ...params }
+        : { ...DEFAULT_PARAMS, ...(isDegraded ? { stepsPerFrame: 2 } : {}) }
     const { scene } = useThree()
 
     const [rtA, rtB] = useMemo(() => {
@@ -283,17 +271,5 @@ export function ReactionDiffusionScene({ params }: { params?: Partial<ReactionDi
 const isDegraded =
     typeof window !== 'undefined' &&
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
-
-function ReactionDiffusionGallery() {
-    return <ReactionDiffusionScene params={isDegraded ? { stepsPerFrame: 2 } : undefined} />
-}
-
-export const geometricReactionDiffusionScene: BackgroundScene = {
-    id: meta.id,
-    Component: ReactionDiffusionGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
-}
 
 export { ReactionDiffusionScene as Scene }

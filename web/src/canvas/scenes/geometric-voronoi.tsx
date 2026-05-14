@@ -1,20 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { Color, ShaderMaterial, Vector2 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'geometric-voronoi'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
-
 const MAX_SITES = 64
 
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
@@ -86,7 +72,9 @@ const FRAGMENT_SHADER = /* glsl */ `
 `
 
 export function VoronoiScene({ params }: { params?: Partial<VoronoiParams> }) {
-    const resolved = { ...DEFAULT_PARAMS, ...params }
+    const resolved = params
+        ? { ...DEFAULT_PARAMS, ...params }
+        : { ...DEFAULT_PARAMS, ...(isDegraded ? { count: 16 } : {}) }
     const { scene } = useThree()
 
     // Site positions and velocities in [0,1]x[0,1]
@@ -202,17 +190,5 @@ export function VoronoiScene({ params }: { params?: Partial<VoronoiParams> }) {
 const isDegraded =
     typeof window !== 'undefined' &&
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
-
-function VoronoiGallery() {
-    return <VoronoiScene params={isDegraded ? { count: 16 } : undefined} />
-}
-
-export const geometricVoronoiScene: BackgroundScene = {
-    id: meta.id,
-    Component: VoronoiGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
-}
 
 export { VoronoiScene as Scene }
