@@ -11,7 +11,7 @@ import { CardLayer } from '../card/CardLayer'
 import { CardRegistryProvider } from '../card/CardRegistry'
 import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../routes/pageDefs'
-import { edges } from '../transitions/edges'
+import { edges } from '../transitions/transitionOverrides'
 import './CanvasLayout.css'
 
 export default function CanvasLayout() {
