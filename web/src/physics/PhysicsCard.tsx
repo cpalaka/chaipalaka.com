@@ -40,7 +40,6 @@ export interface PhysicsCardProps {
     variant?: string
     className?: string
     style?: React.CSSProperties
-    minimizable?: boolean
     id?: string
     label?: string
     kind?: string
@@ -69,7 +68,6 @@ export function PhysicsCard(props: PhysicsCardProps) {
                 height: props.height,
                 children: props.children,
                 header: props.header,
-                minimizable: props.minimizable,
                 label: props.label,
                 draggable: props.draggable,
                 variant: props.variant,
@@ -90,7 +88,6 @@ export function PhysicsCard(props: PhysicsCardProps) {
             props.height,
             props.children,
             props.header,
-            props.minimizable,
             props.label,
             props.draggable,
             props.variant,
