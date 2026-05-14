@@ -28,17 +28,29 @@ grilling session, not here.
 
 ## Progress snapshot (2026-05-14)
 
-Every candidate has shipped. Status one-liners live in the `**Status:**`
-header at the top of each candidate. Summary:
+Pass 1: every candidate has shipped. Status one-liners live in the
+`**Status:**` header at the top of each candidate. Summary:
 
 - **Candidates 2, 3, 4, 5, 6, 7, 8, 9, 10** — shipped.
 - **Candidate 1** — partial. Tether extracted; BalloonForces and MatterEngine
   deliberately not extracted (grill resolved against further sub-modules).
 
-The list of full candidates is closed unless a new one surfaces. The
-cross-cutting observations near the end of this file (`layout/` vs
-`layouts/` naming; sandbox parallelism; deferred backend candidates) remain
-open and have not been promoted to full candidates yet.
+Pass 2 (2026-05-14): a second run of `/improve-codebase-architecture`
+surfaced three new candidates plus one micro follow-up. All grilled in
+the same session; see [Pass 2 (2026-05-14)](#pass-2-2026-05-14) below.
+
+- **Candidate 11** — Scene registration sprawl. Grilled; ready to slice.
+- **Candidate 12** — `edges` table conflates defaults with tunings.
+  Grilled; ready to slice.
+- **Candidate 13** — Controller listener-plus-storage skeleton. Grilled;
+  ready to slice.
+- **Micro follow-up to #3** — exiting-card reattach predicate promoted
+  to a docstring at the `BodyDriver` seam. Shipped inline during the
+  grill.
+
+The cross-cutting observations near the end of this file (`layout/` vs
+`layouts/` naming; sandbox parallelism; deferred backend candidates)
+remain open and have not been promoted to full candidates yet.
 
 Per-candidate sections retain their full original text (Problem, Direction,
 Why grill, Linkage, ADR conflict?) so a future explorer can re-derive the
@@ -1023,6 +1035,412 @@ closure did the work.
 
 ---
 
+## Pass 2 (2026-05-14)
+
+A second run of `/improve-codebase-architecture` against the codebase
+after Pass 1's resolutions landed. The aim of this pass — declared up
+front — is AI-navigability and codebase extensibility for future
+features. Three new full candidates surfaced plus one micro follow-up
+to Pass 1 #3. ADRs 0001/0002/0003 framed the no-go zones; nothing in
+Pass 2 reopens them.
+
+All three full candidates were grilled inline on 2026-05-14 and are
+ready to slice. The micro follow-up shipped during the grill itself
+(a docstring update in `physics/BodyDriver.ts`).
+
+---
+
+## Candidate 11 — Scene registration sprawl
+
+**Status: grilled 2026-05-14; ready to slice. Builds on Pass 1 #5
+(paramSchema) without overlapping — Pass 1 deepened the parameter
+declaration layer; this candidate deepens the layer above
+(scene identity, metadata, loaders).**
+
+**Files**
+- `web/src/canvas/scenes/manifest.json` — 9-entry array, canonical
+  source of `accentColor` / `fallbackColors` / `fallbackPng`.
+- `web/src/canvas/scenes/index.ts` (~28 LOC) — parses manifest,
+  produces a `backgroundScenes` array with a `Placeholder` Component
+  in each entry.
+- `web/src/canvas/scenes/tunable.ts` (~19 LOC) — separate
+  `tunableSceneLoaders` Record, 7 entries with string keys.
+- `web/src/canvas/BackgroundCanvas.tsx:10-20` — separate `sceneLoaders`
+  Record listing all 9 scene `import()` paths.
+- `web/src/canvas/BackgroundCanvas.tsx:34-52` — `getLazyScene` does
+  reflective `Object.values(mod).find(v => v.id === scene.id)` to
+  extract the `BackgroundScene` export from the dynamically-imported
+  module. Throws at first render if nothing matches.
+- Every scene module (e.g. `particles-boids.tsx:12-24`) — repeats the
+  same `import rawManifest from './manifest.json'; const meta =
+  manifest.find(m => m.id === SCENE_ID); if (!meta) throw …` ritual
+  at the top, plus exports a bottom-of-file `BackgroundScene` object
+  used only via reflection.
+
+**Problem.** Adding a new **BackgroundScene** today requires touching
+`manifest.json`, `BackgroundCanvas.sceneLoaders`, `tunable.ts` (if
+tunable), and copying the manifest-find ritual into the new scene
+file. None of these locations is type-linked to the others — scene
+IDs are stringly typed across all four. The reflective extraction in
+`getLazyScene` scans `Object.values(mod)` looking for a value that
+quacks like a `BackgroundScene`, with no compile-time guarantee that
+any scene file exports such a value.
+
+**Deletion test.** Deleting any one of these locations breaks the
+system — they're not redundant in the "two views of one thing" sense;
+they're four partial views, none authoritative. Concentrating them
+into one **SceneRegistry** module makes the complexity vanish from
+the call sites (BackgroundCanvas, tunable.ts, each scene file's
+`meta` lookup) and reappear in one named place — the canonical
+"deletion test concentrates complexity" win.
+
+**Direction (pre-grill sketch).** A single registry module pairing
+each scene's eager metadata with a typed lazy loader; per-scene
+modules export a stable `Scene` symbol (and `SCHEMA` if tunable).
+Reflection in `getLazyScene` dies.
+
+**Why grill.** Real open questions:
+- Is `manifest.json` load-bearing as JSON for designer-friendly
+  palette tweaks, or is the JSON-ness incidental and a typed TS const
+  would serve better?
+- After the split, what does `BackgroundScene` as a domain term
+  become — does it survive in narrowed form, or does it retire in
+  favour of new names?
+- How does "this scene is tunable" get expressed in the registry —
+  per-entry discriminant, parallel list, or runtime check?
+
+**Linkage.** Builds on Pass 1 #5 (which solved the params layer);
+otherwise independent.
+
+**ADR conflict?** No. ADR-0003 (paramSchema DSL) is orthogonal and
+composes — the registry holds the optional `SCHEMA` reference, not
+the schema itself.
+
+### Grill outcome (2026-05-14)
+
+**Manifest form.** JSON is incidental — typed TS const preferred.
+`manifest.json` retires.
+
+**Term split.** `BackgroundScene` is **narrowed** to eager metadata
+only (`{ id, accentColor, fallbackColors, fallbackPng }`) — the
+`Component` field drops. The lazy-loaded `{ Scene, SCHEMA? }` shape
+is internal registry vocabulary, not promoted to a CONTEXT.md term.
+New term **SceneRegistry** added to CONTEXT.md naming the canonical
+registry module.
+
+**Tunable shape.** Discriminated entry with type-varying loader:
+
+- `{ scene; tunable: false; loader: () => Promise<{ Scene }> }`
+- `{ scene; tunable: true;  loader: () => Promise<{ Scene, SCHEMA: SceneParamSchema }> }`
+
+The discriminant lets the **Tuner** route enumerate tunable scenes
+eagerly without triggering any lazy-loads, and the type system
+catches drift between a scene's `tunable` flag and whether its
+module actually exports a SCHEMA.
+
+**`SceneId` as literal union.** Promote scene IDs to a string-literal
+union; replaces stringly-typed Record keys across the codebase.
+`gallery.ts`'s `console.warn('BackgroundGallery.setActive: unknown
+id "..."')` warning path stops being reachable for typed callers.
+
+**Module shape chosen.**
+- `web/src/canvas/scenes/registry.ts` (new) — owns `SceneId`,
+  `BackgroundScene` (narrowed), `SceneEntry` (discriminated union),
+  `SCENE_REGISTRY` (the canonical list), and derived helpers
+  (`getSceneEntry(id)`, `BACKGROUND_SCENES`, `TUNABLE_SCENE_IDS`).
+- Each scene module exports `Scene` (stable named export) and, if
+  tunable, `SCHEMA`. The manifest-find ritual at the top and the
+  bottom-of-file `BackgroundScene` export both die.
+
+**Dies entirely.**
+- `canvas/scenes/manifest.json`
+- `canvas/scenes/index.ts` (the `Placeholder` Component ruse)
+- `canvas/scenes/tunable.ts`
+- The reflective `Object.values(mod).find(...)` in
+  `BackgroundCanvas.getLazyScene` — becomes
+  `loader().then(m => m.Scene)`.
+
+**CONTEXT.md updates (applied inline 2026-05-14).** **BackgroundScene**
+narrowed to the eager metadata definition; new **SceneRegistry** term
+added under "Background scenes."
+
+**Slice deliverables.**
+1. Build `canvas/scenes/registry.ts` with the new types and the
+   `SCENE_REGISTRY` const.
+2. Update each of the 9 scene modules: drop the manifest-find ritual,
+   drop the bottom-of-file `BackgroundScene` export, ensure each
+   exports `Scene` (and `SCHEMA` if tunable).
+3. Rewrite `BackgroundCanvas.getLazyScene` to use the registry's
+   typed loader; delete the reflective `Object.values(mod).find(...)`.
+4. Update `BackgroundGallery` (`gallery.ts`) to consume
+   `BACKGROUND_SCENES` (the derived eager-metadata list) from the
+   registry.
+5. Update `useGallery` / settings menu / fallback rendering as
+   needed for the narrowed `BackgroundScene` shape.
+6. Delete `manifest.json`, `index.ts`, `tunable.ts`.
+7. Tests: new `registry.test.ts` covers the registry's invariants
+   (unique IDs, discriminant matches actual module exports). Update
+   existing scene / canvas tests for the new shape.
+
+---
+
+## Candidate 12 — `edges` table conflates defaults with tunings
+
+**Status: grilled 2026-05-14; ready to slice. Pass 1 #9 declared
+`edges` as a public export of `transitions/index.ts`; that export
+survives. Only the entries get pruned and the file's contract
+narrows; the file is renamed to express its real role.**
+
+**Files**
+- `web/src/transitions/edges.ts` — 12 enumerated entries, all
+  `{ primitive: 'anchor-slide', axis: 'horizontal' }`, zero per-pair
+  variation. File comment says: *"Once we settle on which pairs
+  should use which primitive, this list should be pruned."*
+- `web/src/transitions/dispatch.ts:110-118` —
+  `FORCE_STRING_CUT_FOR_TESTING: boolean = false` debug toggle with
+  an in-file TODO to remove.
+- `web/src/transitions/dispatch.ts:120-132` — the edge-table
+  consumption branch.
+
+**Problem.** Every current entry in `edges.ts` encodes default
+behavior (`axis: 'horizontal'`, no `sign`, no `durationMs` — exactly
+what the sibling-order fallback computes). The table is **inert**:
+every entry produces the same plan dispatch would produce one branch
+later. Future-you reading the table cannot tell *which pairs are
+tuned* from *which pairs are scaffolded*, because both look
+identical. This is the same shape ADR-0002 cleared: code that looks
+load-bearing but isn't doing meaningful distinct work.
+
+**Deletion test.** Entries that match default behavior pass the
+"vanishes" half of the test — deleting them concentrates complexity
+nowhere. The table's *structure* (Record-of-overrides) survives
+because per-pair tuning is a real future affordance; only the noise
+entries die.
+
+**Direction (pre-grill sketch).** Either (a) prune to non-default
+entries only (the table becomes a true override surface), (b) rename
+the file to express the role (`transitionOverrides.ts` rather than
+`edges.ts`), or (c) both. Plus the orthogonal cleanup of the
+`FORCE_STRING_CUT_FOR_TESTING` debug toggle.
+
+**Why grill.** Real open question: what was the original intent of
+the table? Two stories diverge:
+- Story A: unfinished tuning — placeholder for per-pair design
+  judgment that will eventually populate. Deletion kills the
+  affordance.
+- Story B: prototype scaffolding — wired anchor-slide into specific
+  routes during the transitions-system rebuild; intent was always to
+  migrate to siblingOrder + pageDef-declared transitions and drop
+  the edges. Vestigial.
+
+**Linkage.** Independent.
+
+**ADR conflict?** No.
+
+### Grill outcome (2026-05-14)
+
+**Story A picked.** The table survives as a tuning surface. The
+deepening is not "delete the file"; it is "stop maintaining defaults
+as data."
+
+**Key shape.** Keep `${from}→${to}` string keys (today's shape).
+Considered tuple keys and a `RoutePath` literal union; both lose to
+dynamic routes (`/blog/:slug`, `/stuff/flash/:slug`) needing escape
+hatches, and the table will be small (a handful of explicit
+tunings).
+
+**Module shape chosen.**
+- Empty the table: `export const edges: EdgeTransitions = {}`.
+- Top-of-file comment establishes the contract: *every entry here
+  MUST express behavior distinct from the sibling-order default
+  (axis: horizontal, sign-from-toDef.siblingOrder, duration: 700ms,
+  primitive: anchor-slide). Equivalent-to-default entries are
+  noise — future readers cannot tell tuning intent from cargo-culted
+  scaffolding when both look the same.*
+- Rename `edges.ts` → `transitionOverrides.ts` so the file name
+  expresses "deviations from default" rather than "the routing
+  table." Updates imports in `dispatch.ts` and
+  `TransitionDirector.tsx`; `transitions/index.ts` re-exports under
+  the new name (Pass 1 #9's declared seam survives).
+- Delete the `FORCE_STRING_CUT_FOR_TESTING` block from `dispatch.ts`
+  along with its TODO. If a debug-forcing mechanism is later needed
+  it belongs in a test fixture.
+
+**Verification step before slicing.** Spot-check that
+`dispatch.ts:147-159`'s sibling-order branch produces equivalent
+plans for the four canvas routes (`/`, `/lifelog`, `/stuff`, `/blog`)
+once the table is empty. The current branch uses
+`toDef?.siblingOrder` for sign; the edge branch uses
+`signFromDirection(direction)`. If a route's PageDef is missing
+`siblingOrder` and the test reveals a sign regression, add
+`siblingOrder` to that route's PageDef (the proper home).
+
+**Slice deliverables.**
+1. Empty `transitions/edges.ts` to `export const edges: EdgeTransitions = {}`
+   with the contract comment.
+2. Rename file → `transitions/transitionOverrides.ts`; update imports
+   in `dispatch.ts`, `TransitionDirector.tsx`, `transitions/index.ts`,
+   and existing tests.
+3. Delete `FORCE_STRING_CUT_FOR_TESTING` block from `dispatch.ts`.
+4. Add or update tests verifying the sibling-order branch produces
+   the expected horizontal anchor-slide for each of the 12
+   previously-enumerated pairs.
+
+---
+
+## Candidate 13 — Controller listener-plus-storage skeleton
+
+**Status: grilled 2026-05-14; ready to slice. Builds on Pass 1 #4
+(useController bridge) one level below — Pass 1 deepened the React
+subscribe boilerplate; this candidate deepens the Controller-internal
+state-and-listeners bookkeeping.**
+
+**Files**
+- `web/src/canvas/gallery.ts:55-88` — `createGallery` factory; has
+  `let active; const listeners = new Set; for (const l of listeners) l(...)`.
+- `web/src/canvas/frame-edge.ts:30-56` — `createFrameEdgeController`;
+  same pattern, different domain.
+- `web/src/controls/theme.ts:37-67` — `createThemeController`; same
+  pattern, different domain.
+- `web/src/state/useController.ts` — the React bridge hook from
+  Pass 1 #4, unchanged by this candidate.
+
+**Problem.** All three **Controller** factories implement the same
+shape: `let current: T`, `const listeners = new Set<(v: T) => void>()`,
+a manual `for (const l of listeners) l(...)` after every mutation, a
+`subscribe(l) { listeners.add(l); return () => listeners.delete(l) }`.
+The domain logic per Controller is small (5–15 lines of read-from-
+storage / cycle / persist); the listener+storage plumbing is 10–15
+lines of pure ceremony each. The `useController` bridge already
+covers the React side, so this is a Controller-internal-implementation
+friction.
+
+**Deletion test.** Borderline. Each individual replication is small
+and almost readable as a coherent unit. But a new **Controller**
+(e.g. for a future per-route playback state, settings panel, layout
+mode toggle — pretext-prose use case (α) hints at one already) would
+replicate the same pattern, and the agent writing it would
+cargo-cult one of the three.
+
+**Direction (pre-grill sketch).** A small
+`createSubscribable<T>(initial)` primitive that owns `current` +
+`listeners` + `get`/`set`/`subscribe`. Each Controller wraps one and
+composes domain mutators around it.
+
+**Why grill.** Real open questions:
+- What scope does the primitive cover — state + listeners only, or
+  also storage persistence?
+- Does the primitive expose a `destroy()`, or do Controllers manage
+  cleanup internally?
+- Naming: `Subscribable<T>` (generic) vs `ControllerState<T>`
+  (anchors to the domain term) vs something else?
+- Does this earn a CONTEXT.md term, or stay implementation
+  vocabulary?
+
+**Linkage.** Builds on Pass 1 #4 (the React bridge). Otherwise
+independent.
+
+**ADR conflict?** No.
+
+### Grill outcome (2026-05-14)
+
+**Scope.** Just state + listeners — the primitive owns `current` +
+`listeners` + `get`/`set`/`subscribe`. Storage, side effects (CSS
+writes), validation, and domain mutators stay in each Controller.
+
+**Gallery's accent-CSS write becomes an explicit subscriber.** The
+under-noticed win: the side effect (`writeAccent(scene)`) stops
+being embedded in `setActive` and becomes a top-level
+`subscribable.subscribe(writeAccent)` registration inside
+`createGallery`. A future reader sees *state changes → accent CSS
+updates* as a named wiring, not as something tucked into a setter.
+
+**No dedupe-on-equal in the primitive.** Today none of the
+Controllers dedupe (`setEdge('bottom')` after `setEdge('bottom')`
+fires listeners). The primitive preserves that behaviour; callers
+that want dedupe wrap.
+
+**No `destroy()` in the primitive.** In production, Controllers are
+session-scoped **lazy singletons** that never destroy. Gallery's
+existing `destroy()` is test-only; either drop it (tests build fresh
+`createGallery()` instances) or the Controller manages cleanup
+internally via the `Subscribable` — not by adding a method to the
+primitive.
+
+**Naming: `Subscribable<T>` + `createSubscribable<T>(initial)`.**
+Plain English, paired with `subscribe()`. Not promoted to a
+CONTEXT.md term — it's implementation vocabulary beneath
+**Controller**.
+
+**Module shape chosen.**
+- `web/src/state/subscribable.ts` (new) — exports `Subscribable<T>`
+  interface and `createSubscribable<T>(initial)` factory.
+- Each Controller wraps one `Subscribable<T>` internally; `get` and
+  `subscribe` delegate; domain mutators call
+  `subscribable.set(next)` plus their own validation / persistence /
+  side effects.
+
+**`useController` bridge unchanged.** A `Subscribable<T>` satisfies
+the existing `Controller<T>` shape (`get` + `subscribe`)
+structurally; no React-side rewiring.
+
+**Slice deliverables.**
+1. Add `state/subscribable.ts` with the interface and factory; tests
+   cover get/set/subscribe/multi-listener semantics.
+2. Refactor `canvas/gallery.ts` to wrap a
+   `Subscribable<BackgroundScene>`; convert the accent-CSS write to
+   an explicit subscriber; preserve the unknown-id `console.warn`
+   validation behaviour in `setActive`.
+3. Refactor `canvas/frame-edge.ts` to wrap a `Subscribable<FrameEdge>`;
+   preserve storage read/write in `setEdge`/`toggleEdge`.
+4. Refactor `controls/theme.ts` to wrap a `Subscribable<Theme>`;
+   preserve storage read with migration-from-`'system'` in the
+   factory's initialisation.
+5. Existing tests for each Controller stay green; add focused tests
+   for the new pure observability semantics where present.
+
+**No CONTEXT.md updates.** `Subscribable` is implementation
+vocabulary, not domain.
+
+---
+
+## Micro follow-up to #3 — exiting-card reattach predicate at the BodyDriver seam
+
+**Status: shipped inline during the grill on 2026-05-14. Small
+follow-up to Pass 1 #3 (BodyDriver introduction).**
+
+**Files**
+- `web/src/physics/BodyDriver.ts` — docstring above
+  `detachTetherOf` / `attachTether` updated to articulate the
+  exiting-card reattach predicate.
+
+**Problem.** Pass 1 #3 created the `BodyDriver` seam, but the
+"when can a captured tether spec be safely reattached?" predicate
+ended up living only in a comment inside `stringCutDrop.ts:56-66`.
+A future **Primitive** that operates on exiting cards would need
+the same rule and have to rediscover it.
+
+**Resolution.** Promoted the rule from `stringCutDrop`'s inline
+comment to a docstring at the `BodyDriver.detachTetherOf` /
+`attachTether` seam:
+
+> REATTACH A CAPTURED SPEC FOR AN EXITING CARD IFF:
+>   - the parent is dynamic (not static — i.e. not ceiling /
+>     floor / side wall); AND
+>   - the parent is not itself in the exiting set.
+
+The two recipes (kinematic-drive capture-and-restore vs. selective
+immediate sever) are also explicitly named in the docstring so
+future readers see the design space before reaching for one.
+
+**Why not extract a helper.** The reattach predicate has exactly
+one non-trivial caller today (`stringCutDrop`). Per LANGUAGE.md's
+*"one adapter means a hypothetical seam, two adapters means a real
+one"* — pre-emptive extraction would be hypothetical-seam territory.
+Defer extraction until a second primitive needs the same predicate.
+
+---
+
 ## Cross-cutting observations (not full candidates)
 
 ### `layout/` vs `layouts/`
@@ -1079,11 +1497,9 @@ Several candidates fuse if you pick one:
 
 ## Recommended grilling order
 
-Reflects status as of 2026-05-14. Every original candidate has shipped or
-been deliberately resolved against extraction. No open candidate work
-remains in this list.
+Reflects status as of 2026-05-14.
 
-Closed / shipped:
+Pass 1 — closed / shipped:
 
 - **#1** — partial (Tether shipped; BalloonForces/MatterEngine resolved
   against extraction).
@@ -1099,6 +1515,28 @@ Closed / shipped:
 - **#10** — grilled + shipped (#136 / PR #138 Path A — pure helpers
   `computeSpawnOffset` + `computeFlingImpulse`, `resolveParent` moved
   to `physics/Tether.ts`).
+
+Pass 2 — grilled 2026-05-14, ready to slice:
+
+- **#11** — Scene registration sprawl. New `canvas/scenes/registry.ts`;
+  `manifest.json` / `index.ts` / `tunable.ts` retire; reflective
+  `getLazyScene` extraction dies. Suggested first to slice — highest
+  AI-navigability payoff per unit of work and most-touched surface
+  for the "add a scene" workflow.
+- **#12** — `edges` table conflates defaults with tunings. Empty the
+  table, rename file → `transitionOverrides.ts`, delete
+  `FORCE_STRING_CUT_FOR_TESTING`. Cheap; mostly deletion plus a
+  sibling-order equivalence check.
+- **#13** — Controller listener-plus-storage skeleton. New
+  `state/subscribable.ts`; three Controllers refactor to wrap it.
+  Defensible to defer until a fourth Controller appears, but the
+  gallery accent-CSS write becoming an explicit subscriber is a
+  real readability win on its own.
+
+Pass 2 — shipped inline during the grill:
+
+- **Micro follow-up to #3** — exiting-card reattach predicate
+  promoted to a docstring at the `BodyDriver` seam.
 
 The cross-cutting observations below (`layout/` vs `layouts/`; sandbox
 parallelism; deferred backend candidates) remain open and have not been
