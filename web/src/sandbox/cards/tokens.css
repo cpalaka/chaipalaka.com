@@ -216,34 +216,6 @@
     color: var(--card-accent, var(--color-accent));
 }
 
-.frame-bar__minimized-strip {
-    display: flex;
-    gap: 6px;
-    padding: 0 12px;
-    flex: 1;
-    overflow: hidden;
-    align-items: center;
-}
-
-.frame-bar__mini-card {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border: 1px solid var(--card-border-color, #333);
-    background: var(--card-bg, #fff);
-    color: var(--card-fg, #111);
-    font-size: 10px;
-    cursor: pointer;
-    white-space: nowrap;
-    pointer-events: auto;
-}
-
-.frame-bar__mini-card:hover {
-    background: var(--card-accent, var(--color-accent));
-    color: var(--card-bg, #fff);
-}
-
 /* ──────────────────────────────────────────────────────────────────────────
    Scroll indicator — arrow only
    ────────────────────────────────────────────────────────────────────────── */
