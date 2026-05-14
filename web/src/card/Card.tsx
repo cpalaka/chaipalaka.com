@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo } from 'react'
 import { useCardRegistry } from './CardRegistry'
 import type { Buoyancy, ParentRef } from '../physics/PageSpec'
 
-export interface PhysicsCardProps {
+export interface CardProps {
     text: string
     width: number
     height: number
@@ -21,7 +21,7 @@ export interface PhysicsCardProps {
     draggable?: boolean
 }
 
-export function PhysicsCard(props: PhysicsCardProps) {
+export function Card(props: CardProps) {
     const generatedId = useId()
     const id = props.id ?? generatedId
     const registry = useCardRegistry()

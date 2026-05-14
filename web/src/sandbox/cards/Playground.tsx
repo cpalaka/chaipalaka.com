@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PhysicsCard } from '../../card/Card'
+import { Card } from '../../card/Card'
 import { HiddenScroll } from './HiddenScroll'
 
 const DEFAULT_W = 320
@@ -30,7 +30,7 @@ export function Playground() {
     }, [])
 
     return (
-        <PhysicsCard
+        <Card
             id="playground-card"
             text={LOREM}
             anchor={anchor}
@@ -57,6 +57,6 @@ export function Playground() {
                     <p style={{ margin: '6px 0 0', opacity: 0.55 }}>{LOREM}</p>
                 </HiddenScroll>
             </div>
-        </PhysicsCard>
+        </Card>
     )
 }

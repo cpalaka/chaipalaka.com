@@ -15,7 +15,7 @@ vi.mock('../../stuff/flash/RuffleEmbed', () => ({
     RuffleEmbed: () => <div data-testid="ruffle-stub" />,
 }))
 
-// Capture the props PhysicsPage was rendered with — this is the cleanest way
+// Capture the props Page was rendered with — this is the cleanest way
 // to assert per-card props (draggable, etc.) without driving the full physics
 // pipeline.
 const physicsPageCalls: Array<{
@@ -28,7 +28,7 @@ vi.mock('../../card/Page', async () => {
     >('../../card/Page')
     return {
         ...mod,
-        PhysicsPage: (props: {
+        Page: (props: {
             pageDef: PageDef
             cardContent: Record<string, CardContent>
         }) => {
@@ -157,7 +157,7 @@ describe('FlashDetail — slug match', () => {
     test('useRegisterPageDef is invoked with the built pageDef', () => {
         setup()
         expect(registered.def).not.toBeNull()
-        // The same object passed to PhysicsPage is the one registered.
+        // The same object passed to Page is the one registered.
         expect(registered.def).toBe(physicsPageCalls[0]!.pageDef)
     })
 

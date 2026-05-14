@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import Home, { pageDef } from './Home'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from '../card/CardRegistry'
-import { PhysicsLayer } from '../card/CardLayer'
+import { CardLayer } from '../card/CardLayer'
 
 vi.mock('../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -13,7 +13,7 @@ function renderHome() {
     return render(
         <PhysicsProvider>
             <CardRegistryProvider>
-                <PhysicsLayer />
+                <CardLayer />
                 <Home />
             </CardRegistryProvider>
         </PhysicsProvider>,

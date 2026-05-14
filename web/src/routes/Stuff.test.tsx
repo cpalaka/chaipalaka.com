@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import Stuff, { pageDef } from './Stuff'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from '../card/CardRegistry'
-import { PhysicsLayer } from '../card/CardLayer'
+import { CardLayer } from '../card/CardLayer'
 
 vi.mock('../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -15,7 +15,7 @@ function renderStuff() {
         <MemoryRouter initialEntries={['/stuff']}>
             <PhysicsProvider>
                 <CardRegistryProvider>
-                    <PhysicsLayer />
+                    <CardLayer />
                     <Stuff />
                 </CardRegistryProvider>
             </PhysicsProvider>

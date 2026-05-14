@@ -48,7 +48,7 @@ vi.mock('../../transitions/PageDefRegistry', () => ({
 
 import { PhysicsProvider } from '../../physics/PhysicsContext'
 import { CardRegistryProvider } from '../../card/CardRegistry'
-import { PhysicsLayer } from '../../card/CardLayer'
+import { CardLayer } from '../../card/CardLayer'
 import BlogPost from './BlogPost'
 
 function renderAt(path: string) {
@@ -57,7 +57,7 @@ function renderAt(path: string) {
         <MemoryRouter initialEntries={[path]}>
             <PhysicsProvider>
                 <CardRegistryProvider>
-                    <PhysicsLayer />
+                    <CardLayer />
                     <Routes>
                         <Route path="/blog/:slug" element={<BlogPost />} />
                     </Routes>
@@ -70,7 +70,7 @@ function renderAt(path: string) {
 describe('BlogPost — slug miss', () => {
     test('returns null DOM when slug does not match any post', () => {
         const { container } = renderAt('/blog/does-not-exist')
-        // No headline/title for an unknown slug — only the PhysicsLayer wrapper.
+        // No headline/title for an unknown slug — only the CardLayer wrapper.
         expect(container.querySelector('h1')).toBeNull()
     })
 })

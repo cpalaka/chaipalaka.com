@@ -5,8 +5,8 @@ import {
     CardRegistryProvider,
     useCardRegistry,
 } from './CardRegistry'
-import { PhysicsLayer } from './CardLayer'
-import type { CardRegistryAPI, PhysicsCardEntry } from './CardRegistry'
+import { CardLayer } from './CardLayer'
+import type { CardRegistryAPI, CardEntry } from './CardRegistry'
 
 vi.mock('../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -16,7 +16,7 @@ afterEach(() => {
     cleanup()
 })
 
-function makeEntry(id: string, overrides: Partial<PhysicsCardEntry> = {}): PhysicsCardEntry {
+function makeEntry(id: string, overrides: Partial<CardEntry> = {}): CardEntry {
     return {
         id,
         parent: null,
@@ -44,14 +44,14 @@ function renderLayer() {
         <PhysicsProvider>
             <CardRegistryProvider>
                 <Probe />
-                <PhysicsLayer />
+                <CardLayer />
             </CardRegistryProvider>
         </PhysicsProvider>,
     )
     return { ...utils, getApi: () => api! }
 }
 
-describe('PhysicsLayer', () => {
+describe('CardLayer', () => {
     test('renders a <div data-physics-layer> wrapper', () => {
         const { container } = renderLayer()
         expect(

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../card/Page'
+import { Page, type CardContent } from '../../card/Page'
 import { measure } from '../../text/measure'
 import { getPosts } from '../../blog/posts'
 import {
@@ -303,7 +303,7 @@ export default function BlogIndex() {
 
     return (
         <div data-section-root>
-            <PhysicsPage pageDef={sectionPageDef} cardContent={sectionContent} />
+            <Page pageDef={sectionPageDef} cardContent={sectionContent} />
         </div>
     )
 }

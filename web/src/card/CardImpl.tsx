@@ -3,14 +3,14 @@ import { usePhysicsWorld } from '../physics/PhysicsContext'
 import { wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
-import type { PhysicsCardEntry } from './CardRegistry'
+import type { CardEntry } from './CardRegistry'
 import './Card.css'
 
-interface PhysicsCardImplProps {
-    entry: PhysicsCardEntry
+interface CardImplProps {
+    entry: CardEntry
 }
 
-export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
+export function CardImpl({ entry }: CardImplProps) {
     const {
         id,
         parent,
@@ -89,7 +89,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                     const retried = resolveParent(world, parent)
                     if (retried.handle == null) {
                         console.warn(
-                            `PhysicsCard: parent "${parent}" not found after one frame; tether skipped`,
+                            `Card: parent "${parent}" not found after one frame; tether skipped`,
                         )
                         return
                     }
@@ -118,7 +118,7 @@ export function PhysicsCardImpl({ entry }: PhysicsCardImplProps) {
                     const retried = resolveParent(world, trail)
                     if (retried.handle == null) {
                         console.warn(
-                            `PhysicsCard: trail "${trail}" not found after one frame; tether skipped`,
+                            `Card: trail "${trail}" not found after one frame; tether skipped`,
                         )
                         return
                     }

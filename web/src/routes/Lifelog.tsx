@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PhysicsPage, type CardContent } from '../card/Page'
+import { Page, type CardContent } from '../card/Page'
 import type { PageDef } from './PageDef'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'
@@ -400,5 +400,5 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function Lifelog() {
-    return <PhysicsPage pageDef={pageDef} cardContent={cardContent} />
+    return <Page pageDef={pageDef} cardContent={cardContent} />
 }
