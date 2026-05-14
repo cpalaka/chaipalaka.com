@@ -114,10 +114,28 @@ _Avoid_: in-transition (drift), busy.
 A small adapter interface (`getPosition`, `getMass`, `isStatic`,
 `applyForce`) that abstracts a body source for modules that need to read
 body state and push forces without depending on matter.js. The seam used
-by **Tether** to apply rope forces; the same seam primitives use to drive
-bodies during route transitions.
-_Avoid_: BodyDriver (reserve that name for the primitives-side superset
-when it grows mutators like `setDragging`/`setPosition`), engine adapter.
+by **Tether** to apply rope forces.
+_Avoid_: engine adapter.
+
+**BodyDriver**:
+The primitives-side superset of **BodyForceSource**: per-handle reads
+(`getPosition`, `getVelocity`, `getSize`, `getBuoyancy`, `isStatic`,
+`getGravityVector`), per-handle mutators (`setPosition`, `setVelocity`,
+`setDragging`, `setSensor`), and atomic tether ops (`detachTetherOf`,
+`attachTether`) that take/return a **TetherSpec**. The seam **body
+primitives** drive bodies through during route transitions, free of
+matter.js types and free of world identity (no `ceilingHandle`/
+`floorHandle`; `isStatic(parent)` carries that knowledge instead).
+`PhysicsWorld` is one adapter; the test fake is the other.
+_Avoid_: engine adapter, world facade.
+
+**TetherSpec**:
+The snapshot of a **Tether** — `{parent, child, length, anchorA?}` —
+used by **body primitives** to capture-and-restore a card's tether
+around a kinematic drive. Distinct from the **Tether** itself: the
+spec is plain data and re-applying it produces an equivalent tether.
+_Avoid_: tether config, tether record (records exist in `PhysicsWorld`
+internals).
 
 **Director**:
 The single coordinator that arms route transitions on navigation,
@@ -130,11 +148,17 @@ to react-router-dom; the **Director** consumes location changes, doesn't
 own routing).
 
 **Primitive**:
-A named animation step that drives bodies during a route transition.
-Examples: `pour-in-drop`, `string-cut-drop`, `anchor-slide`,
-`cross-fade`. Each **Primitive** is a `PrimitiveStep` — a per-tick
-function returning whether it has completed. Composed by the
-**Director** per the route's **PageDef**.
+A named animation step that runs during a route transition. Each is a
+`PrimitiveStep` — a per-tick function returning whether it has
+completed. Composed by the **Director** per the route's **PageDef**.
+Two families share the type:
+
+- **Body primitive** — drives **Card** bodies through the
+  **BodyDriver** seam. Examples: `pour-in-drop`, `string-cut-drop`,
+  `anchor-slide`.
+- **DOM primitive** — drives a DOM property without touching bodies.
+  Example: `cross-fade` (opacity on an HTMLElement).
+
 _Avoid_: step (too generic), animation (used for non-route animations
 like FrameBar idle).
 
