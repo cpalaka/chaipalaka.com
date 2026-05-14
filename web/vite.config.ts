@@ -121,8 +121,12 @@ export default defineConfig({
                 `/blog/${slug}`,
                 `/blog/${slug}/read`,
             ])
-            return [...paths, ...blogPaths].filter(
-                (p) => !p.startsWith('/sandbox'),
+            const { TUNABLE_SCENE_IDS } = await import('./src/canvas/scenes/tunable')
+            const sandboxScenePaths = TUNABLE_SCENE_IDS.map(
+                (id) => `/sandbox/scenes/${id}`,
+            )
+            return [...paths, ...blogPaths, ...sandboxScenePaths].filter(
+                (p) => !p.startsWith('/sandbox/') || p.startsWith('/sandbox/scenes/'),
             )
         },
     },

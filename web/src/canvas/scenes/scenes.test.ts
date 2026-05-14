@@ -2,6 +2,8 @@ import { describe, test, expect } from 'vitest'
 import type { BackgroundScene } from '../types'
 import { getLazyScene } from '../BackgroundCanvas'
 import manifest from './manifest.json'
+import { TUNABLE_SCENE_IDS, tunableSceneLoaders } from './tunable'
+import { defaultsOf, type SceneParamSchema } from './paramSchema'
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
 
@@ -67,6 +69,25 @@ describe('canvas scenes — module shape', () => {
                 expect(entry.fallbackColors).toHaveLength(2)
                 expect(entry.fallbackColors[0]).toMatch(HEX6)
                 expect(entry.fallbackColors[1]).toMatch(HEX6)
+            })
+        })
+    }
+})
+
+describe('tunable scenes — SCHEMA shape', () => {
+    for (const id of TUNABLE_SCENE_IDS) {
+        describe(id, () => {
+            test('module exports SCHEMA, Scene, and DEFAULT_PARAMS derived from SCHEMA', async () => {
+                const mod = (await tunableSceneLoaders[id]!()) as unknown as {
+                    SCHEMA: SceneParamSchema
+                    Scene: unknown
+                    DEFAULT_PARAMS: Record<string, unknown>
+                }
+                expect(mod.SCHEMA, 'SCHEMA export required').toBeDefined()
+                expect(typeof mod.Scene, 'Scene export must be a function').toBe('function')
+                const derived = defaultsOf(mod.SCHEMA)
+                expect(Object.keys(derived).sort()).toEqual(Object.keys(mod.SCHEMA).sort())
+                expect(mod.DEFAULT_PARAMS).toEqual(derived)
             })
         })
     }

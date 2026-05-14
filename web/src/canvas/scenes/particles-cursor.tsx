@@ -23,32 +23,23 @@ const SCENE_ID = 'particles-cursor'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-// === TUNABLE CONSTANTS ===
-export interface CursorParams {
-    cols: number
-    rows: number
-    pointSize: number
-    repelRadius: number
-    repelStrength: number
-    returnSpeed: number
-    restBrightness: number  // colorB multiplier at rest [0,1]
-    restAlpha: number       // point alpha at rest [0,1]
-    colorA: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: CursorParams = {
-    cols: 120,   // gallery overrides with window.innerWidth / 10
-    rows: 80,    // gallery overrides with window.innerHeight / 10
-    pointSize: 0.004,
-    repelRadius: 0.22,
-    repelStrength: 0.01,
-    returnSpeed: 0.5,
-    restBrightness: 0.4,
-    restAlpha: 0.65,
-    colorA: '#0e0816',
-    colorB: '#25db00',
-}
+export const SCHEMA = defineSceneParams({
+    cols:           { kind: 'number', default: 120,   min: 20,    max: 300, step: 10,     label: 'Columns', remount: true },
+    rows:           { kind: 'number', default: 80,    min: 20,    max: 200, step: 10,     label: 'Rows', remount: true },
+    pointSize:      { kind: 'range',  default: 0.004, min: 0.001, max: 0.015, step: 0.0005, label: 'Point size' },
+    repelRadius:    { kind: 'range',  default: 0.22,  min: 0.05,  max: 0.5,   step: 0.01,   label: 'Repel radius' },
+    repelStrength:  { kind: 'range',  default: 0.01,  min: 0.01,  max: 0.2,   step: 0.005,  label: 'Repel strength' },
+    returnSpeed:    { kind: 'range',  default: 0.5,   min: 0.5,   max: 15,    step: 0.5,    label: 'Return speed' },
+    restBrightness: { kind: 'range',  default: 0.4,   min: 0,     max: 1,     step: 0.05,   label: 'Rest brightness' },
+    restAlpha:      { kind: 'range',  default: 0.65,  min: 0,     max: 1,     step: 0.05,   label: 'Rest alpha' },
+    colorA:         { kind: 'color',  default: '#0e0816', label: 'Background color' },
+    colorB:         { kind: 'color',  default: '#25db00', label: 'Accent color' },
+})
+
+export type CursorParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 const VERTEX_SHADER = /* glsl */ `
   attribute vec2 aLattice;  // rest position in NDC [-1,1]
@@ -277,3 +268,5 @@ export const particlesCursorScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { CursorScene as Scene }

@@ -27,29 +27,22 @@ const SCENE_ID = 'geometric-reaction-diffusion'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-export interface ReactionDiffusionParams {
-    simRes: number
-    feed: number
-    kill: number
-    diffA: number
-    diffB: number
-    stepsPerFrame: number
-    seedCount: number
-    colorA: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: ReactionDiffusionParams = {
-    simRes: 128,
-    feed: 0.026,
-    kill: 0.058,
-    diffA: 0.55,
-    diffB: 0.25,
-    stepsPerFrame: 4,
-    seedCount: 10,
-    colorA: '#ffd6d6',
-    colorB: '#d0b9df',
-}
+export const SCHEMA = defineSceneParams({
+    simRes:        { kind: 'number', default: 128,   min: 64,   max: 512,  step: 64,   label: 'Sim resolution', remount: true },
+    feed:          { kind: 'range',  default: 0.026, min: 0.01, max: 0.08, step: 0.001, label: 'Feed (F)' },
+    kill:          { kind: 'range',  default: 0.058, min: 0.04, max: 0.08, step: 0.001, label: 'Kill (K)' },
+    diffA:         { kind: 'range',  default: 0.55,  min: 0.1,  max: 2.0,  step: 0.05, label: 'Diff A' },
+    diffB:         { kind: 'range',  default: 0.25,  min: 0.05, max: 1.5,  step: 0.05, label: 'Diff B' },
+    stepsPerFrame: { kind: 'number', default: 4,     min: 1,    max: 12,   step: 1,    label: 'Steps/frame' },
+    seedCount:     { kind: 'number', default: 10,    min: 1,    max: 60,   step: 1,    label: 'Seed blobs', remount: true },
+    colorA:        { kind: 'color',  default: '#ffd6d6', label: 'Background color' },
+    colorB:        { kind: 'color',  default: '#d0b9df', label: 'Pattern color' },
+})
+
+export type ReactionDiffusionParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -302,3 +295,5 @@ export const geometricReactionDiffusionScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { ReactionDiffusionScene as Scene }

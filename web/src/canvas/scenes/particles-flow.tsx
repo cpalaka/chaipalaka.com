@@ -22,26 +22,20 @@ const SCENE_ID = 'particles-flow'
 const meta = manifest.find((m) => m.id === SCENE_ID)
 if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
-// === TUNABLE CONSTANTS ===
-export interface FlowParams {
-    count: number
-    pointSize: number
-    fieldScale: number    // noise frequency — smaller = wider swirls
-    fieldSpeed: number    // how fast the field evolves over time
-    particleSpeed: number // how fast particles step along the field per frame
-    colorA: string
-    colorB: string
-}
+import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
-export const DEFAULT_PARAMS: FlowParams = {
-    count: 10000,
-    pointSize: 0.0034,
-    fieldScale: 1.4,
-    fieldSpeed: 0.2,
-    particleSpeed: 0.001,
-    colorA: '#08608c',
-    colorB: '#ffffff',
-}
+export const SCHEMA = defineSceneParams({
+    count:         { kind: 'number', default: 10000,  min: 1000,   max: 60000, step: 1000,   label: 'Count', remount: true },
+    pointSize:     { kind: 'range',  default: 0.0034, min: 0.0005, max: 0.008, step: 0.0001, label: 'Point size' },
+    fieldScale:    { kind: 'range',  default: 1.4,    min: 0.3,    max: 5,     step: 0.1,    label: 'Field scale (swirl size)' },
+    fieldSpeed:    { kind: 'range',  default: 0.2,    min: 0.005,  max: 0.2,   step: 0.005,  label: 'Field evolution speed' },
+    particleSpeed: { kind: 'range',  default: 0.001,  min: 0.001,  max: 0.02,  step: 0.001,  label: 'Particle speed' },
+    colorA:        { kind: 'color',  default: '#08608c', label: 'Background color' },
+    colorB:        { kind: 'color',  default: '#ffffff', label: 'Accent color' },
+})
+
+export type FlowParams = ParamsOf<typeof SCHEMA>
+export const DEFAULT_PARAMS = defaultsOf(SCHEMA)
 
 // Fast integer-based value noise. Avoids Math.sin for hot-loop performance.
 function fastHash(ix: number, iy: number): number {
@@ -231,3 +225,5 @@ export const particlesFlowScene: BackgroundScene = {
     fallbackColors: meta.fallbackColors as readonly [string, string],
     fallbackPng: meta.fallbackPng,
 }
+
+export { FlowScene as Scene }
