@@ -1,9 +1,10 @@
 import type {
+    BodyDriver,
     PhysicsHandle,
-    PhysicsWorld,
+    TetherSpec,
     Vec2,
-    Viewport,
-} from '../../physics/PhysicsWorld'
+} from '../../physics/BodyDriver'
+import type { Viewport } from '../../physics/PhysicsWorld'
 import type { CardActivator } from '../CardRegistry'
 import type { PrimitiveStep } from './types'
 
@@ -24,15 +25,9 @@ const DEFAULT_HARD_CEILING_MS = 2500
 const DEFAULT_TWEEN_DURATION_MS = 600
 const ABOVE_VIEWPORT_PAD = 220
 
-interface CapturedTether {
-    parent: PhysicsHandle
-    length: number
-    anchorA?: Vec2
-}
-
 interface EntryState {
     handle: PhysicsHandle
-    captured?: CapturedTether
+    captured?: TetherSpec
     startPos: Vec2
     tweenStartMs: number // -1 until the per-entry stagger has elapsed
     finalized: boolean
@@ -52,7 +47,7 @@ function easeOutCubic(t: number): number {
  *   soft to decelerate a card that has free-fallen from above the viewport, so
  *   handing physics the catch produces cards that sail right through their
  *   layout y and exit the bottom. Driving the position directly (via
- *   `setStatic`) lets us animate the drop, then hand the body back to physics
+ *   `setDragging`) lets us animate the drop, then hand the body back to physics
  *   at rest exactly at its anchor where the existing tether will hold it.
  *
  * Per-entry flow:
@@ -69,7 +64,7 @@ function easeOutCubic(t: number): number {
  * Hard-ceiling fallback finalizes every still-in-flight entry at its anchor.
  */
 export function pourInDrop(
-    world: PhysicsWorld,
+    driver: BodyDriver,
     activator: CardActivator,
     entries: readonly PourInDropEntry[],
     opts: PourInDropOpts,
@@ -87,27 +82,17 @@ export function pourInDrop(
     const preSpawnAll = () => {
         for (const entry of entries) {
             if (state.has(entry.id)) continue
-            const handle = world.getHandleById(entry.id)
+            const handle = driver.getHandleById(entry.id)
             if (handle === undefined) continue
 
-            let captured: CapturedTether | undefined
-            for (const t of world.tether.records()) {
-                if (t.child !== handle) continue
-                captured = {
-                    parent: t.parent,
-                    length: t.length,
-                    ...(t.anchorA ? { anchorA: { ...t.anchorA } } : {}),
-                }
-                world.tether.remove(t.handle)
-                break
-            }
+            const captured = driver.detachTetherOf(handle)
 
             const startPos: Vec2 = {
                 x: entry.layoutAnchor.x,
                 y: -entry.height - ABOVE_VIEWPORT_PAD,
             }
-            world.setDragging(handle, true)
-            world.setPosition(handle, startPos)
+            driver.setDragging(handle, true)
+            driver.setPosition(handle, startPos)
             activator.activate(entry.id)
 
             state.set(entry.id, {
@@ -122,28 +107,21 @@ export function pourInDrop(
 
     const finalize = (entry: PourInDropEntry, s: EntryState) => {
         if (s.finalized) return
-        if (!world.has(s.handle)) {
+        if (!driver.has(s.handle)) {
             s.finalized = true
             return
         }
-        world.setPosition(s.handle, entry.layoutAnchor)
-        world.setDragging(s.handle, false)
-        world.setVelocity(s.handle, { x: 0, y: 0 })
-        if (s.captured) {
-            world.tether.add(
-                s.captured.parent,
-                s.handle,
-                s.captured.length,
-                s.captured.anchorA,
-            )
-        }
+        driver.setPosition(s.handle, entry.layoutAnchor)
+        driver.setDragging(s.handle, false)
+        driver.setVelocity(s.handle, { x: 0, y: 0 })
+        if (s.captured) driver.attachTether(s.captured)
         s.finalized = true
     }
 
     const updateEntry = (entry: PourInDropEntry) => {
         const s = state.get(entry.id)
         if (!s || s.finalized) return
-        if (!world.has(s.handle)) {
+        if (!driver.has(s.handle)) {
             s.finalized = true
             return
         }
@@ -160,7 +138,7 @@ export function pourInDrop(
             return
         }
         const eased = easeOutCubic(t)
-        world.setPosition(s.handle, {
+        driver.setPosition(s.handle, {
             x: s.startPos.x + (entry.layoutAnchor.x - s.startPos.x) * eased,
             y: s.startPos.y + (entry.layoutAnchor.y - s.startPos.y) * eased,
         })

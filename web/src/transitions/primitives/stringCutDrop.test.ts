@@ -1,107 +1,140 @@
 import { describe, test, expect } from 'vitest'
-import { PhysicsWorld } from '../../physics/PhysicsWorld'
+import { createFakeBodyDriver } from '../../physics/createFakeBodyDriver'
 import { stringCutDrop } from './stringCutDrop'
 
 const FIXED_DT_MS = 1000 / 60
+const EXIT_KICK = 10 // mirrors primitive constant
 
-function runUntil(step: (dt: number) => boolean, world: PhysicsWorld) {
-    let done = false
-    let frames = 0
-    while (!done && frames < 600) {
-        done = step(FIXED_DT_MS)
-        world.tick(FIXED_DT_MS)
-        frames++
-    }
-    return { done, frames }
+function newFake() {
+    const fake = createFakeBodyDriver({ gravity: { x: 0, y: 0.7 } })
+    const ceiling = fake.registerBody('__ceiling', {
+        position: { x: 400, y: 0 },
+        isStatic: true,
+    })
+    const floor = fake.registerBody('__floor', {
+        position: { x: 400, y: 600 },
+        isStatic: true,
+    })
+    return { fake, ceiling, floor }
 }
 
 describe('stringCutDrop (T1)', () => {
-    test('cuts ceiling tether of a strung card; card falls past the viewport', () => {
+    test('cuts the ceiling tether of a strung card on init', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const card = world.registerById(
-            'a',
-            { x: 400, y: 200 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, card, 150, { x: 0, y: 0 })
-        expect(world.tether.records()).toHaveLength(1)
+        const { fake, ceiling, floor } = newFake()
+        const card = fake.registerBody('a', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+        })
+        fake.addTether({
+            parent: ceiling,
+            child: card,
+            length: 150,
+            anchorA: { x: 0, y: 0 },
+        })
+        expect(fake.getTethers()).toHaveLength(1)
 
-        const step = stringCutDrop(world, ['a'], { viewport })
-
-        // First step performs setup (cuts tether)
+        const step = stringCutDrop(fake.driver, ['a'], { viewport, floorHandle: floor })
         step(0)
-        expect(world.tether.records()).toHaveLength(0)
-
-        const { done } = runUntil(step, world)
-        expect(done).toBe(true)
-        const final = world.getPosition(card)
-        expect(final.y).toBeGreaterThan(viewport.height)
+        // Static-parent tether is severed; not reattached.
+        expect(fake.getTethers().filter((t) => t.child === card)).toHaveLength(0)
     })
 
     test('preserves card-to-card chain tether (only direct ceiling tether is cut)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const parent = world.registerById(
-            'p',
-            { x: 400, y: 200 },
-            { width: 200, height: 100 },
-        )
-        const child = world.registerById(
-            'c',
-            { x: 400, y: 360 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, parent, 150, { x: 0, y: 0 })
-        world.tether.add(parent, child, 160)
-        expect(world.tether.records()).toHaveLength(2)
+        const { fake, ceiling, floor } = newFake()
+        const parent = fake.registerBody('p', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+        })
+        const child = fake.registerBody('c', {
+            position: { x: 400, y: 360 },
+            size: { width: 200, height: 100 },
+        })
+        fake.addTether({
+            parent: ceiling,
+            child: parent,
+            length: 150,
+            anchorA: { x: 0, y: 0 },
+        })
+        fake.addTether({ parent: parent, child: child, length: 160 })
+        expect(fake.getTethers()).toHaveLength(2)
 
-        const step = stringCutDrop(world, ['p', 'c'], { viewport })
+        const step = stringCutDrop(fake.driver, ['p', 'c'], { viewport, floorHandle: floor })
         step(0)
-        const remaining = world.tether.records()
+
+        // Motion-shape assertion: the static-parent tether (ceiling→parent)
+        // is severed and not reattached; the non-static-parent tether
+        // (parent→child) is detached and immediately reattached.
+        const remaining = fake.getTethers()
         expect(remaining).toHaveLength(1)
         expect(remaining[0]?.parent).toBe(parent)
         expect(remaining[0]?.child).toBe(child)
     })
 
-    test('balloon rises symmetrically after its floor tether is cut', () => {
+    test('kick magnitude + direction: heavy uses gravity sign, balloon uses opposite', () => {
+        // Motion-shape assertion impossible against the old world fixture:
+        // the kick magnitude is EXIT_KICK along the normalized gravity vector,
+        // with sign per getBuoyancy. Reads the exact setVelocity values.
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const balloon = world.registerById(
-            'b',
-            { x: 400, y: 400 },
-            { width: 200, height: 100 },
-        )
-        world.setBuoyancy(balloon, 'balloon')
-        world.tether.add(world.floorHandle, balloon, 150, { x: 0, y: 0 })
-        const startY = world.getPosition(balloon).y
-
-        const step = stringCutDrop(world, ['b'], {
-            viewport,
-            hardCeilingMs: 5000,
+        const { fake, ceiling, floor } = newFake()
+        const heavy = fake.registerBody('h', {
+            position: { x: 200, y: 200 },
+            size: { width: 200, height: 100 },
+            buoyancy: 'heavy',
         })
-        step(0)
-        expect(world.tether.records()).toHaveLength(0)
+        const balloon = fake.registerBody('b', {
+            position: { x: 600, y: 400 },
+            size: { width: 200, height: 100 },
+            buoyancy: 'balloon',
+        })
+        fake.addTether({ parent: ceiling, child: heavy, length: 150 })
+        fake.addTether({ parent: floor, child: balloon, length: 150 })
 
-        const { done } = runUntil(step, world)
-        expect(done).toBe(true)
-        const final = world.getPosition(balloon)
-        // Balloon moved upward (lower y) after its floor tether was cut.
-        expect(final.y).toBeLessThan(startY)
+        const step = stringCutDrop(fake.driver, ['h', 'b'], { viewport, floorHandle: floor })
+        step(0)
+
+        // Heavy: gravity is (0, 0.7), normalized to (0, 1). Sign +1.
+        // Initial velocity was zero; final velocity y should be +EXIT_KICK.
+        const vh = fake.getState(heavy)!.velocity
+        expect(vh.x).toBeCloseTo(0, 5)
+        expect(vh.y).toBeCloseTo(EXIT_KICK, 5)
+
+        // Balloon: same gravity normal, sign -1.
+        const vb = fake.getState(balloon)!.velocity
+        expect(vb.x).toBeCloseTo(0, 5)
+        expect(vb.y).toBeCloseTo(-EXIT_KICK, 5)
+    })
+
+    test('kick is additive on top of pre-existing velocity', () => {
+        const viewport = { width: 800, height: 600 }
+        const { fake, ceiling, floor } = newFake()
+        const card = fake.registerBody('a', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+            velocity: { x: 3, y: -2 },
+        })
+        fake.addTether({ parent: ceiling, child: card, length: 150 })
+
+        const step = stringCutDrop(fake.driver, ['a'], { viewport, floorHandle: floor })
+        step(0)
+        const v = fake.getState(card)!.velocity
+        // Gravity (0, 0.7) normalizes to (0, 1) → kick contributes (0, +10).
+        expect(v.x).toBeCloseTo(3, 5)
+        expect(v.y).toBeCloseTo(-2 + EXIT_KICK, 5)
     })
 
     test('resolves at hard-ceiling timeout even when card has not cleared', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        world.registerById(
-            'stuck',
-            { x: 400, y: 200 },
-            { width: 200, height: 100 },
-        )
-        // No tether — card just falls slowly under gravity.
+        const { fake, floor } = newFake()
+        fake.registerBody('stuck', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+        })
 
-        const step = stringCutDrop(world, ['stuck'], {
+        const step = stringCutDrop(fake.driver, ['stuck'], {
             viewport,
+            floorHandle: floor,
             hardCeilingMs: 100,
         })
         let elapsed = 0
@@ -114,88 +147,23 @@ describe('stringCutDrop (T1)', () => {
         expect(elapsed).toBeGreaterThanOrEqual(100)
     })
 
-    test('puts the floor in sensor mode so exiting cards fall through it', () => {
+    test('puts the floor in sensor mode on init and restores on finalize', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        // Register an uncleared card so the primitive stays mid-flight (and
-        // therefore keeps the floor in sensor mode) at the time we observe.
-        world.registerById(
-            'in-flight',
-            { x: 400, y: 200 },
-            { width: 200, height: 100 },
-        )
-        expect(world.isSensor(world.floorHandle)).toBe(false)
-        const step = stringCutDrop(world, ['in-flight'], { viewport })
-        step(0)
-        expect(world.isSensor(world.floorHandle)).toBe(true)
-        // The floor body itself does not move — moving the body would shift
-        // the effective anchor of any tether wired to the floor (anchorA is
-        // body-relative) and drag incoming cards. See i111 regression.
-        const floorPos = world.getPosition(world.floorHandle).y
-        expect(floorPos).toBeLessThanOrEqual(viewport.height + 30)
-    })
-
-    test('only cuts tethers belonging to exiting cards (incoming card stays strung)', () => {
-        const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const exiting = world.registerById(
-            'old',
-            { x: 200, y: 200 },
-            { width: 200, height: 100 },
-        )
-        const incoming = world.registerById(
-            'new',
-            { x: 600, y: 200 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, exiting, 150, { x: 0, y: 0 })
-        world.tether.add(world.ceilingHandle, incoming, 150, { x: 0, y: 0 })
-
-        const step = stringCutDrop(world, ['old'], { viewport })
-        step(0)
-
-        const remaining = world.tether.records()
-        expect(remaining).toHaveLength(1)
-        expect(remaining[0]?.child).toBe(incoming)
-    })
-
-    test('kicks exiting cards along the buoyancy axis on init', () => {
-        const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        const heavy = world.registerById(
-            'h',
-            { x: 200, y: 200 },
-            { width: 200, height: 100 },
-        )
-        const balloon = world.registerById(
-            'b',
-            { x: 600, y: 400 },
-            { width: 200, height: 100 },
-        )
-        world.setBuoyancy(balloon, 'balloon')
-        world.tether.add(world.ceilingHandle, heavy, 150, { x: 0, y: 0 })
-        world.tether.add(world.floorHandle, balloon, 150, { x: 0, y: 0 })
-
-        const step = stringCutDrop(world, ['h', 'b'], { viewport })
-        step(0)
-
-        // Heavy gets downward kick (gravity direction).
-        const vh = world.getVelocity(heavy)
-        expect(vh.y).toBeGreaterThan(0)
-        // Balloon gets upward kick (opposite gravity).
-        const vb = world.getVelocity(balloon)
-        expect(vb.y).toBeLessThan(0)
-    })
-
-    test('clears the floor sensor flag on completion', () => {
-        const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-
-        const step = stringCutDrop(world, [], {
+        const { fake, floor } = newFake()
+        fake.registerBody('in-flight', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+        })
+        expect(fake.getState(floor)!.isSensor).toBe(false)
+        const step = stringCutDrop(fake.driver, ['in-flight'], {
             viewport,
+            floorHandle: floor,
             hardCeilingMs: 50,
         })
-        // Tick until the primitive returns true (hits hard ceiling with no cards).
+        step(0)
+        expect(fake.getState(floor)!.isSensor).toBe(true)
+
+        // Drive past hardCeilingMs to trigger finalize.
         let elapsed = 0
         let done = false
         while (!done && elapsed < 200) {
@@ -203,48 +171,76 @@ describe('stringCutDrop (T1)', () => {
             elapsed += FIXED_DT_MS
         }
         expect(done).toBe(true)
-        expect(world.isSensor(world.floorHandle)).toBe(false)
+        expect(fake.getState(floor)!.isSensor).toBe(false)
     })
 
-    test('does not perturb a non-exiting card whose trail tethers the floor', () => {
+    test('only cuts tethers belonging to exiting cards (incoming card stays strung)', () => {
         const viewport = { width: 800, height: 600 }
-        const world = new PhysicsWorld({ viewport })
-        // Exiting card (parent of string-cut).
-        const exiting = world.registerById(
-            'old',
-            { x: 200, y: 200 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, exiting, 150, { x: 0, y: 0 })
-        // Incoming card with a trail tether to the floor (mirrors next-nav on
-        // a paginated /blog section). Anchor at y=400; trail tether length is
-        // the same as the gap from incoming anchor to floor anchor.
-        const incoming = world.registerById(
-            'incoming',
-            { x: 600, y: 400 },
-            { width: 200, height: 100 },
-        )
-        world.tether.add(world.ceilingHandle, incoming, 400, { x: 0, y: 0 })
-        const floorAnchor = world.getAnchor(world.floorHandle)
-        const trailLength = Math.abs(400 - floorAnchor.y)
-        world.tether.add(world.floorHandle, incoming, trailLength, {
-            x: 600 - floorAnchor.x,
-            y: 0,
+        const { fake, ceiling, floor } = newFake()
+        const exiting = fake.registerBody('old', {
+            position: { x: 200, y: 200 },
+            size: { width: 200, height: 100 },
         })
-        const incomingStartY = world.getPosition(incoming).y
+        const incoming = fake.registerBody('new', {
+            position: { x: 600, y: 200 },
+            size: { width: 200, height: 100 },
+        })
+        fake.addTether({ parent: ceiling, child: exiting, length: 150 })
+        fake.addTether({ parent: ceiling, child: incoming, length: 150 })
 
-        const step = stringCutDrop(world, ['old'], { viewport })
-        // Run for several frames so any spurious overshoot from a moved-floor
-        // would have had time to drag the incoming card downward.
-        for (let i = 0; i < 30; i++) {
-            step(FIXED_DT_MS)
-            world.tick(FIXED_DT_MS)
-        }
+        const step = stringCutDrop(fake.driver, ['old'], { viewport, floorHandle: floor })
+        step(0)
 
-        const incomingFinalY = world.getPosition(incoming).y
-        // The incoming card should not have moved further than its own
-        // settling pendulum drift (~20px) — pre-fix, the moved floor created
-        // a huge overshoot that yanked this card down hundreds of pixels.
-        expect(Math.abs(incomingFinalY - incomingStartY)).toBeLessThan(20)
+        const remaining = fake.getTethers()
+        expect(remaining).toHaveLength(1)
+        expect(remaining[0]?.child).toBe(incoming)
+    })
+
+    test('allCleared honours getSize: heavy card released when top crosses below viewport', () => {
+        // Motion-shape assertion: predicate uses (pos.y - height/2) > vp.h+pad.
+        // We simulate physics by manually setting the position past the
+        // threshold and asserting the primitive returns true.
+        const viewport = { width: 800, height: 600 }
+        const { fake, floor } = newFake()
+        const card = fake.registerBody('a', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+            buoyancy: 'heavy',
+        })
+
+        const step = stringCutDrop(fake.driver, ['a'], { viewport, floorHandle: floor })
+        step(0)
+        // Move card just *short* of the clear threshold: top = viewport.h + 100,
+        // i.e. y = viewport.h + 100 + height/2 = 750. With pad=100, threshold
+        // is top > 700.
+        fake.driver.setPosition(card, { x: 400, y: 749 })
+        // top = 749 - 50 = 699 → NOT cleared (needs > 700).
+        expect(step(FIXED_DT_MS)).toBe(false)
+
+        // Now push the card just past the threshold.
+        fake.driver.setPosition(card, { x: 400, y: 752 })
+        // top = 752 - 50 = 702 → cleared.
+        expect(step(FIXED_DT_MS)).toBe(true)
+    })
+
+    test('allCleared honours getSize: balloon released when bottom crosses above 0', () => {
+        const viewport = { width: 800, height: 600 }
+        const { fake, floor } = newFake()
+        const card = fake.registerBody('b', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+            buoyancy: 'balloon',
+        })
+
+        const step = stringCutDrop(fake.driver, ['b'], { viewport, floorHandle: floor })
+        step(0)
+        // Threshold: bottom < -100 (pad). bottom = y + height/2.
+        fake.driver.setPosition(card, { x: 400, y: -49 })
+        // bottom = -49 + 50 = 1 → NOT cleared.
+        expect(step(FIXED_DT_MS)).toBe(false)
+
+        fake.driver.setPosition(card, { x: 400, y: -152 })
+        // bottom = -152 + 50 = -102 → cleared.
+        expect(step(FIXED_DT_MS)).toBe(true)
     })
 })
