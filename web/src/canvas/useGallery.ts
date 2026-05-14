@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { backgroundScenes } from './scenes'
-import { createRegistry } from './registry'
 import { createGallery, STORAGE_KEY } from './gallery'
 import type { BackgroundGallery } from './gallery'
 import type { BackgroundScene } from './types'
@@ -39,7 +38,7 @@ function getGallery(): BackgroundGallery {
         typeof document !== 'undefined' ? document.documentElement : undefined
 
     galleryInstance = createGallery({
-        registry: createRegistry(backgroundScenes),
+        scenes: backgroundScenes,
         storage,
         root,
         defaultId: 'flow-shader',

@@ -126,6 +126,9 @@ is CPU-driven); background (ambiguous with CSS); scene (collides with
 Three.js's own `Scene` object — say **BackgroundScene** when domain is
 ambiguous).
 
+Within a **BackgroundGallery** instance, every **BackgroundScene** must
+have a unique `id`; the gallery throws at construction if not.
+
 **SceneParamSchema**:
 The colocated declarative source of truth for a **BackgroundScene**'s
 tunable parameters. One declaration produces the scene's params type,

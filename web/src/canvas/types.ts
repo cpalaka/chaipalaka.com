@@ -7,9 +7,3 @@ export interface BackgroundScene {
     fallbackColors: readonly [string, string]
     fallbackPng: string
 }
-
-export interface BackgroundRegistry {
-    get(id: string): BackgroundScene | undefined
-    has(id: string): boolean
-    list(): readonly BackgroundScene[]
-}
