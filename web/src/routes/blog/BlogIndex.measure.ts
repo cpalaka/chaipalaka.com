@@ -1,8 +1,9 @@
 import type { PostFrontmatter } from '../../blog/types'
+import { FONT_BODY, FONT_CARD_TITLE, type Font } from '../../text/fonts'
 
 export type MeasureFn = (
     text: string,
-    fontKey: string,
+    font: Font,
     maxWidth: number,
 ) => { width: number; height: number }
 
@@ -39,12 +40,12 @@ export function measureBlogCard(
     maxWidth: number,
     measure: MeasureFn,
 ): { width: number; height: number } {
-    const titleM = measure(frontmatter.title, 'card-title', maxWidth)
-    const descM = measure(frontmatter.description, 'body', maxWidth)
-    const dateM = measure(formatPostDate(frontmatter.date), 'body', maxWidth)
+    const titleM = measure(frontmatter.title, FONT_CARD_TITLE, maxWidth)
+    const descM = measure(frontmatter.description, FONT_BODY, maxWidth)
+    const dateM = measure(formatPostDate(frontmatter.date), FONT_BODY, maxWidth)
     const tagsStr = frontmatter.tags.join(' · ')
-    const tagsM = tagsStr ? measure(tagsStr, 'body', maxWidth) : null
-    const ctaM = measure('Read post →', 'body', maxWidth)
+    const tagsM = tagsStr ? measure(tagsStr, FONT_BODY, maxWidth) : null
+    const ctaM = measure('Read post →', FONT_BODY, maxWidth)
 
     const parts = [titleM, descM, dateM, tagsM, ctaM].filter(
         (p): p is { width: number; height: number } => p !== null,
