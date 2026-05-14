@@ -8,20 +8,7 @@ import {
     Float32BufferAttribute,
     ShaderMaterial,
 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'particles-boids'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
 
 export const SCHEMA = defineSceneParams({
     count:            { kind: 'number', default: 5500,   min: 500,   max: 10000, step: 500,    label: 'Count', remount: true },
@@ -274,7 +261,9 @@ function buildGeometry(count: number): BufferGeometry {
 }
 
 export function BoidsScene({ params }: { params?: Partial<BoidsParams> }) {
-    const resolved = { ...DEFAULT_PARAMS, ...params }
+    const resolved = params
+        ? { ...DEFAULT_PARAMS, ...params }
+        : { ...DEFAULT_PARAMS, ...(isDegraded ? { count: 1500 } : {}) }
     const { scene } = useThree()
 
     const count = resolved.count
@@ -360,17 +349,5 @@ export function BoidsScene({ params }: { params?: Partial<BoidsParams> }) {
 const isDegraded =
     typeof window !== 'undefined' &&
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
-
-function BoidsGallery() {
-    return <BoidsScene params={isDegraded ? { count: 1500 } : undefined} />
-}
-
-export const particlesBoidsScene: BackgroundScene = {
-    id: meta.id,
-    Component: BoidsGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
-}
 
 export { BoidsScene as Scene }

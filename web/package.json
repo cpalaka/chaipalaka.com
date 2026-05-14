@@ -6,7 +6,7 @@
     "description": "chaipalaka.com — Vite + React + TypeScript frontend, statically generated via vite-react-ssg.",
     "scripts": {
         "dev": "vite",
-        "prebuild": "node scripts/generate-fallback-pngs.mjs",
+        "prebuild": "node --experimental-strip-types scripts/generate-fallback-pngs.ts",
         "build": "vite-react-ssg build",
         "build:vite": "vite build",
         "preview": "vite preview",
