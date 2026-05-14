@@ -11,7 +11,6 @@ export interface CardContent {
     height: number
     children?: ReactNode
     header?: ReactNode
-    minimizable?: boolean
     label?: string
     draggable?: boolean
     variant?: string
@@ -61,7 +60,6 @@ export function PhysicsPage({
                         parent={spec.parent}
                         trail={spec.trail}
                         buoyancy={buoyancyForKind(spec.kind)}
-                        minimizable={c?.minimizable ?? false}
                         label={c?.label}
                         draggable={c?.draggable ?? true}
                     >

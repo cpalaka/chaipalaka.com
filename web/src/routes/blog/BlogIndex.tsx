@@ -124,7 +124,6 @@ export function buildChain(
             text: post.frontmatter.title,
             width,
             height,
-            minimizable: true,
             label: post.frontmatter.title,
             children: (
                 <>

@@ -3,9 +3,6 @@ import { useLocation, Link } from 'react-router-dom'
 import { useGallery } from './useGallery'
 import { useTheme } from '../controls/useTheme'
 import { useFrameEdge } from './useFrameEdge'
-import { useMinimizedEntries, useMinimizedRegistry } from './useMinimizedRegistry'
-import { flipMorph } from './flip'
-import type { MinimizedEntry } from './MinimizedRegistry'
 import manifest from './scenes/manifest.json'
 import './FrameBar.css'
 
@@ -20,58 +17,12 @@ export function isActiveRoute(pathname: string, target: string): boolean {
     return pathname === target || pathname.startsWith(target + '/')
 }
 
-interface MinimizedChipProps {
-    entry: MinimizedEntry
-    onRestore: (id: string, chipRect: DOMRect) => void
-}
-
-function MinimizedChip({ entry, onRestore }: MinimizedChipProps) {
-    const chipRef = useRef<HTMLButtonElement | null>(null)
-
-    useEffect(() => {
-        const chipEl = chipRef.current
-        if (!chipEl || !entry.fromRect) return
-        const fromRect = entry.fromRect
-        // FLIP: animate chip in from the card's source rect. Runs once on chip mount.
-        requestAnimationFrame(() => {
-            flipMorph(fromRect, chipEl, { opacityFrom: 0.85 })
-        })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
-    function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-        const chipRect = e.currentTarget.getBoundingClientRect()
-        onRestore(entry.id, chipRect)
-    }
-
-    const badge = entry.subtreeSize > 1 ? `+${entry.subtreeSize - 1}` : null
-    const ariaLabel = badge
-        ? `Restore: ${entry.label} (${badge} more)`
-        : `Restore: ${entry.label}`
-
-    return (
-        <button
-            ref={chipRef}
-            type="button"
-            className="frame-bar__mini-card"
-            aria-label={ariaLabel}
-            title={ariaLabel}
-            onClick={handleClick}
-        >
-            {entry.label}
-            {badge ? <span className="frame-bar__mini-card-badge">{badge}</span> : null}
-        </button>
-    )
-}
-
 export function FrameBar() {
     const { pathname } = useLocation()
     const [settingsOpen, setSettingsOpen] = useState(false)
     const { active, setActive } = useGallery()
     const { theme, cycleTheme } = useTheme()
     const { edge, setEdge } = useFrameEdge()
-    const minimizedEntries = useMinimizedEntries()
-    const registry = useMinimizedRegistry()
 
     const settingsContainerRef = useRef<HTMLDivElement>(null)
     const settingsBtnRef = useRef<HTMLButtonElement>(null)
@@ -98,10 +49,6 @@ export function FrameBar() {
         document.addEventListener('keydown', onKeyDown)
         return () => document.removeEventListener('keydown', onKeyDown)
     }, [settingsOpen])
-
-    function handleRestore(id: string, chipRect: DOMRect) {
-        registry.restore(id, chipRect)
-    }
 
     return (
         <header role="banner" className="frame-bar">
@@ -132,19 +79,6 @@ export function FrameBar() {
                     </Link>
                 ))}
             </nav>
-
-            <div className="frame-bar__divider" aria-hidden="true" />
-
-            <div
-                role="region"
-                aria-label="Minimized cards"
-                aria-live="polite"
-                className="frame-bar__minimized-strip"
-            >
-                {minimizedEntries.map((entry) => (
-                    <MinimizedChip key={entry.id} entry={entry} onRestore={handleRestore} />
-                ))}
-            </div>
 
             <div ref={settingsContainerRef} className="frame-bar__settings">
                 <button

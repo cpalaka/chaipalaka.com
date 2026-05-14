@@ -47,7 +47,6 @@ export default function Strings() {
                     anchor={layout.heavyCeiling}
                     parent="ceiling"
                     buoyancy="heavy"
-                    minimizable
                     label="Ceiling hang"
                 />
 
@@ -82,7 +81,6 @@ export default function Strings() {
                     anchor={layout.parentMixed}
                     parent="ceiling"
                     buoyancy="heavy"
-                    minimizable
                     label="Parent (mixed)"
                 />
                 <PhysicsCard

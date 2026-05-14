@@ -102,6 +102,8 @@ During the May 2026 Swiss-grid redesign we wanted physics to feel more intention
 
 ### 10. Cascade-minimize
 
+> **Superseded by [ADR-0002](0002-remove-minimize-card.md)** (2026-05-13) — the minimize-card feature was removed entirely. The decision below is retained for historical context.
+
 **Decision:** Minimizing a parent card minimizes its entire strung subtree atomically. The frame-bar chip shows a `+N` badge when subtree size > 1. Restore restores the full subtree.
 
 **Why:** If minimizing a parent left children hanging, they'd have no visual anchor and would either fall (confusing) or re-anchor to grandparent (surprising). Cascade-to-chip is the least surprising behavior and maintains spatial coherence.
@@ -114,7 +116,7 @@ During the May 2026 Swiss-grid redesign we wanted physics to feel more intention
 - Issue #24 (404 page) updated to use `gravity: 'up'` in its `PageDef`.
 - `PhysicsWorld` public API changes: `setGravity(boolean)` → `setGravityDirection(Cardinal)`; `setStatic` and `setSensor` become internal.
 - `PhysicsCard` drops `interactionMode` prop and padlock icon.
-- `MinimizedRegistry` gains parent/child relationship tracking.
+- `MinimizedRegistry` gains parent/child relationship tracking. (Superseded by [ADR-0002](0002-remove-minimize-card.md) — `MinimizedRegistry` is removed.)
 - New module: `Tether` (built on existing `linkBodies`).
 - New component: `<StringLayer>` SVG overlay.
 - New type: `PageDef`, `CardSpec`, `Cardinal`.

@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PhysicsCard } from '../../physics/PhysicsCard'
 import { HiddenScroll } from './HiddenScroll'
-import { CardHeader } from './CardHeader'
-
-interface PlaygroundProps {
-    minimized: boolean
-    onMinimize: () => void
-}
 
 const DEFAULT_W = 320
 const DEFAULT_H = 220
@@ -23,7 +17,7 @@ function computeAnchor(): { x: number; y: number } {
 const LOREM =
     'Type specimen — the quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow. Now is the time for bold decisions.'
 
-export function Playground({ minimized, onMinimize }: PlaygroundProps) {
+export function Playground() {
     const [anchor, setAnchor] = useState<{ x: number; y: number }>(() =>
         typeof window !== 'undefined' ? computeAnchor() : { x: 400, y: 350 },
     )
@@ -35,8 +29,6 @@ export function Playground({ minimized, onMinimize }: PlaygroundProps) {
         return () => window.removeEventListener('resize', onResize)
     }, [])
 
-    if (minimized) return null
-
     return (
         <PhysicsCard
             id="playground-card"
@@ -45,7 +37,6 @@ export function Playground({ minimized, onMinimize }: PlaygroundProps) {
             width={cardSize.width}
             height={cardSize.height}
             variant="playground"
-            header={<CardHeader onMinimize={onMinimize} />}
         >
             <div
                 style={{
