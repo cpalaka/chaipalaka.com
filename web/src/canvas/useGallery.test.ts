@@ -12,8 +12,8 @@ beforeEach(() => {
 async function setup() {
     const rtl = await import('@testing-library/react')
     const { useGallery } = await import('./useGallery')
-    const { backgroundScenes } = await import('./scenes')
-    return { ...rtl, useGallery, backgroundScenes }
+    const { BACKGROUND_SCENES } = await import('./scenes/registry')
+    return { ...rtl, useGallery, backgroundScenes: BACKGROUND_SCENES }
 }
 
 describe('useGallery', () => {

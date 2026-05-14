@@ -7,20 +7,6 @@ import {
     Float32BufferAttribute,
     ShaderMaterial,
 } from 'three'
-import type { BackgroundScene } from '../types'
-import rawManifest from './manifest.json'
-
-interface ManifestEntry {
-    id: string
-    accentColor: string
-    fallbackColors: [string, string]
-    fallbackPng: string
-}
-const manifest = rawManifest as ManifestEntry[]
-const SCENE_ID = 'particles-starfield'
-const meta = manifest.find((m) => m.id === SCENE_ID)
-if (!meta) throw new Error(`Manifest missing entry for scene: ${SCENE_ID}`)
-
 import { defineSceneParams, defaultsOf, type ParamsOf } from './paramSchema'
 
 export const SCHEMA = defineSceneParams({
@@ -116,7 +102,9 @@ function buildGeometry(params: StarfieldParams): BufferGeometry {
 }
 
 export function StarfieldScene({ params }: { params?: Partial<StarfieldParams> }) {
-    const resolved = { ...DEFAULT_PARAMS, ...params }
+    const resolved = params
+        ? { ...DEFAULT_PARAMS, ...params }
+        : { ...DEFAULT_PARAMS, ...(isDegraded ? { count: 5000 } : {}) }
     const { scene } = useThree()
 
     const geo = useMemo(() => buildGeometry(resolved), [resolved.count])
@@ -192,17 +180,5 @@ export function StarfieldScene({ params }: { params?: Partial<StarfieldParams> }
 const isDegraded =
     typeof window !== 'undefined' &&
     (window.devicePixelRatio < 1.5 || navigator.hardwareConcurrency < 4)
-
-function StarfieldGallery() {
-    return <StarfieldScene params={isDegraded ? { count: 5000 } : undefined} />
-}
-
-export const particlesStarfieldScene: BackgroundScene = {
-    id: meta.id,
-    Component: StarfieldGallery,
-    accentColor: meta.accentColor,
-    fallbackColors: meta.fallbackColors as readonly [string, string],
-    fallbackPng: meta.fallbackPng,
-}
 
 export { StarfieldScene as Scene }

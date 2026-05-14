@@ -18,8 +18,8 @@ async function setupFallback() {
     }))
     const rtl = await import('@testing-library/react')
     const { BackgroundCanvas } = await import('./BackgroundCanvas')
-    const { backgroundScenes } = await import('./scenes')
-    return { ...rtl, BackgroundCanvas, backgroundScenes }
+    const { BACKGROUND_SCENES } = await import('./scenes/registry')
+    return { ...rtl, BackgroundCanvas, backgroundScenes: BACKGROUND_SCENES }
 }
 
 async function setupWebGL() {
@@ -163,18 +163,17 @@ describe('BackgroundCanvas — cross-fade between scenes', () => {
 describe('BackgroundCanvas — getLazyScene', () => {
     test('returns the same lazy wrapper for the same scene id (cached)', async () => {
         const { getLazyScene } = await import('./BackgroundCanvas')
-        const { backgroundScenes } = await import('./scenes')
-        const scene = backgroundScenes[0]!
+        const { BACKGROUND_SCENES } = await import('./scenes/registry')
+        const scene = BACKGROUND_SCENES[0]!
         const a = getLazyScene(scene)
         const b = getLazyScene(scene)
         expect(a).toBe(b)
     })
 
-    test('throws when scene.id is not in sceneLoaders', async () => {
+    test('throws when scene.id is not in the registry', async () => {
         const { getLazyScene } = await import('./BackgroundCanvas')
         const fakeScene = {
-            id: 'does-not-exist',
-            Component: () => null,
+            id: 'does-not-exist' as never,
             accentColor: '#000',
             fallbackColors: ['#000', '#000'] as const,
             fallbackPng: '/fake.png',

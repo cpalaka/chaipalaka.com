@@ -4,8 +4,7 @@ import type { BackgroundScene } from './types'
 
 function makeScene(id: string, accentColor = '#aaaaaa'): BackgroundScene {
     return {
-        id,
-        Component: () => null,
+        id: id as BackgroundScene['id'],
         accentColor,
         fallbackColors: ['#000000', '#111111'],
         fallbackPng: `/fallbacks/${id}.png`,
