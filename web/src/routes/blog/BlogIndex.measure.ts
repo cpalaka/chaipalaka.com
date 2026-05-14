@@ -13,7 +13,7 @@ export const CARD_PADDING = 24
 /** Bottom padding — larger than top to give the CTA link more visual breathing room. */
 export const CARD_PADDING_BOTTOM = 36
 /**
- * Height of the card header bar (minimize button row).
+ * Height of the card header bar (when present).
  * Must match [data-card-header] min-height in PhysicsCard.css.
  * The header has margin-top: -card-padding so it sits inside the top padding, but
  * it still consumes this many px of vertical space before the card body content.
