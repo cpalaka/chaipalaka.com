@@ -1,6 +1,4 @@
 import {
-    createContext,
-    use,
     useCallback,
     useEffect,
     useLayoutEffect,
@@ -37,26 +35,6 @@ const REDUCED_MOTION_MS = 150
 // begins its drop-in. Gives the outgoing cards visible time to clear the
 // viewport before the new ones arrive.
 const POUR_IN_BASE_DELAY_MS = 1000
-
-export interface RunTransitionArgs {
-    from: string
-    to: string
-}
-
-export interface TransitionContextValue {
-    runTransition: (args: RunTransitionArgs) => void
-}
-
-const TransitionContext = createContext<TransitionContextValue | null>(null)
-
-export function useTransitionContext(): TransitionContextValue {
-    const ctx = use(TransitionContext)
-    if (!ctx)
-        throw new Error(
-            'useTransitionContext: must be used inside <TransitionDirector>',
-        )
-    return ctx
-}
 
 export interface TransitionDirectorProps {
     pageDefs: Record<string, PageDef>
@@ -285,19 +263,7 @@ export function TransitionDirector({
         prevLocationRef.current = location
     }, [location, navType, dispatchTransition, isTransitionTrigger])
 
-    const runTransition = useCallback(
-        ({ from, to }: RunTransitionArgs) => {
-            const direction = classifyDirection(navType)
-            dispatchTransition(from, to, direction)
-        },
-        [navType, dispatchTransition],
-    )
-
-    return (
-        <TransitionContext.Provider value={{ runTransition }}>
-            {children}
-        </TransitionContext.Provider>
-    )
+    return <>{children}</>
 }
 
 function buildPrimitive(
