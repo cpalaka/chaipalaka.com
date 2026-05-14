@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import { wireTetherFor } from '../physics/Tether'
+import { resolveParent, wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
 import type { CardEntry } from './CardRegistry'
+import { computeFlingImpulse } from './flingImpulse'
+import { computeSpawnOffset } from './spawnOffset'
 import './Card.css'
 
 interface CardImplProps {
@@ -42,17 +44,15 @@ export function CardImpl({ entry }: CardImplProps) {
         const el = elRef.current
         if (!el) return
 
-        const { x, y } = anchorRef.current
         const w = width
         const h = height
 
         const SPAWN_OFFSET = 20
-        const g = world.getGravityVector()
-        const gLen = Math.hypot(g.x, g.y)
-        const gx = gLen > 0 ? g.x / gLen : 0
-        const gy = gLen > 0 ? g.y / gLen : 1
-        const sx = x + gx * SPAWN_OFFSET
-        const sy = y + gy * SPAWN_OFFSET
+        const { x: sx, y: sy } = computeSpawnOffset(
+            anchorRef.current,
+            world.getGravityVector(),
+            SPAWN_OFFSET,
+        )
 
         el.style.width = `${w}px`
         el.style.height = `${h}px`
@@ -76,7 +76,7 @@ export function CardImpl({ entry }: CardImplProps) {
         let trailRafId = 0
         if (parent) {
             const resolved = resolveParent(world, parent)
-            if (resolved.handle != null) {
+            if (resolved !== null) {
                 tetherHandleRef.current = wireTetherFor(
                     world,
                     resolved.handle,
@@ -87,7 +87,7 @@ export function CardImpl({ entry }: CardImplProps) {
             } else {
                 rafId = requestAnimationFrame(() => {
                     const retried = resolveParent(world, parent)
-                    if (retried.handle == null) {
+                    if (retried === null) {
                         console.warn(
                             `Card: parent "${parent}" not found after one frame; tether skipped`,
                         )
@@ -105,7 +105,7 @@ export function CardImpl({ entry }: CardImplProps) {
         }
         if (trail) {
             const resolved = resolveParent(world, trail)
-            if (resolved.handle != null) {
+            if (resolved !== null) {
                 trailTetherHandleRef.current = wireTetherFor(
                     world,
                     resolved.handle,
@@ -116,7 +116,7 @@ export function CardImpl({ entry }: CardImplProps) {
             } else {
                 trailRafId = requestAnimationFrame(() => {
                     const retried = resolveParent(world, trail)
-                    if (retried.handle == null) {
+                    if (retried === null) {
                         console.warn(
                             `Card: trail "${trail}" not found after one frame; tether skipped`,
                         )
@@ -137,8 +137,9 @@ export function CardImpl({ entry }: CardImplProps) {
         let lastX = 0
         let lastY = 0
         let lastT = 0
-        let velX = 0
-        let velY = 0
+        let lastDx = 0
+        let lastDy = 0
+        let lastDt = 0
         const FLING_VELOCITY_SCALE = 16
         const FLING_PAUSE_MS = 50
 
@@ -154,8 +155,9 @@ export function CardImpl({ entry }: CardImplProps) {
             lastX = e.clientX
             lastY = e.clientY
             lastT = e.timeStamp
-            velX = 0
-            velY = 0
+            lastDx = 0
+            lastDy = 0
+            lastDt = 0
             world.setDragging(handle, true)
             el.setPointerCapture(e.pointerId)
             el.style.cursor = 'grabbing'
@@ -164,9 +166,9 @@ export function CardImpl({ entry }: CardImplProps) {
             if (!dragging) return
             const dx = e.clientX - lastX
             const dy = e.clientY - lastY
-            const dt = Math.max(e.timeStamp - lastT, 1)
-            velX = dx / dt
-            velY = dy / dt
+            lastDx = dx
+            lastDy = dy
+            lastDt = e.timeStamp - lastT
             const cur = world.getPosition(handle)
             world.setPosition(handle, { x: cur.x + dx, y: cur.y + dy })
             lastX = e.clientX
@@ -177,15 +179,12 @@ export function CardImpl({ entry }: CardImplProps) {
             if (!dragging) return
             dragging = false
             world.setDragging(handle, false)
-            const sinceLastMove = e.timeStamp - lastT
-            if (sinceLastMove > FLING_PAUSE_MS) {
-                velX = 0
-                velY = 0
-            }
-            world.setVelocity(handle, {
-                x: velX * FLING_VELOCITY_SCALE,
-                y: velY * FLING_VELOCITY_SCALE,
-            })
+            const impulse = computeFlingImpulse(
+                { dx: lastDx, dy: lastDy, dtMs: lastDt },
+                e.timeStamp - lastT,
+                { scale: FLING_VELOCITY_SCALE, pauseMs: FLING_PAUSE_MS },
+            )
+            world.setVelocity(handle, { x: impulse.vx, y: impulse.vy })
             el.releasePointerCapture(e.pointerId)
             el.style.cursor = 'grab'
         }
@@ -224,7 +223,7 @@ export function CardImpl({ entry }: CardImplProps) {
             world.tether.remove(tetherHandleRef.current)
             tetherHandleRef.current = null
             const resolved = resolveParent(world, parent)
-            if (resolved.handle != null) {
+            if (resolved !== null) {
                 tetherHandleRef.current = wireTetherFor(
                     world,
                     resolved.handle,
@@ -238,7 +237,7 @@ export function CardImpl({ entry }: CardImplProps) {
             world.tether.remove(trailTetherHandleRef.current)
             trailTetherHandleRef.current = null
             const resolved = resolveParent(world, trail)
-            if (resolved.handle != null) {
+            if (resolved !== null) {
                 trailTetherHandleRef.current = wireTetherFor(
                     world,
                     resolved.handle,
@@ -271,20 +270,4 @@ export function CardImpl({ entry }: CardImplProps) {
             {children ?? text}
         </article>
     )
-}
-
-import type { ParentRef } from '../physics/PageSpec'
-import type { PhysicsWorld } from '../physics/PhysicsWorld'
-
-type ParentKind = 'ceiling' | 'floor' | 'card'
-
-function resolveParent(
-    world: PhysicsWorld,
-    p: ParentRef,
-): { handle: PhysicsHandle | null; kind: ParentKind } {
-    if (p === 'ceiling') return { handle: world.ceilingHandle, kind: 'ceiling' }
-    if (p === 'floor') return { handle: world.floorHandle, kind: 'floor' }
-    if (p == null) return { handle: null, kind: 'card' }
-    const h = world.getHandleById(p)
-    return { handle: h ?? null, kind: 'card' }
 }
