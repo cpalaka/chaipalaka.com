@@ -170,10 +170,9 @@ that fires synchronously on every change, and any domain-specific
 mutators. React-agnostic — every **Controller** must be constructible
 and unit-testable without React in scope. Production examples:
 `BackgroundGallery` (active background scene), `FrameEdgeController`
-(frame-bar edge selection), `ThemeController` (light/dark/system),
-`MinimizedRegistry` (minimized cards). Consumed by React through a
-single bridge hook (`useController`), never by re-implementing the
-subscribe ritual per call site.
+(frame-bar edge selection), `ThemeController` (light/dark/system).
+Consumed by React through a single bridge hook (`useController`), never
+by re-implementing the subscribe ritual per call site.
 _Avoid_: store (drifts toward Redux/Zustand connotations the site does
 not adopt), service (backend-ish), manager (vague), context
 (React-coupled — a **Controller** can outlive any React tree).
