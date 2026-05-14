@@ -34,8 +34,10 @@ live in the `**Status:**` header at the top of each candidate. Summary:
 - **Candidates 2, 3, 4, 5, 6, 7, 8, 9** — resolved or shipped.
 - **Candidate 1** — partial. Tether extracted; BalloonForces and MatterEngine
   deliberately not extracted (grill resolved against further sub-modules).
-- **Candidate 10** — new. Parked pending real motivation; surfaced during
-  the Candidate 9 grill.
+- **Candidate 10** — grilled 2026-05-14. Path A locked: extract pure
+  helpers (`computeSpawnOffset`, `computeFlingImpulse`), move
+  `resolveParent` to `physics/Tether.ts`. No new module, no new seam.
+  Slice not yet filed.
 
 Per-candidate sections retain their full original text (Problem, Direction,
 Why grill, Linkage, ADR conflict?) so a future explorer can re-derive the
@@ -882,8 +884,9 @@ are entangled).
 
 ## Candidate 10 — `card/CardImpl` is a fat multi-concern file
 
-**Status: parked. Surfaced during the Candidate 9 grill (2026-05-14);
-deferred because no current motivation forces the split.**
+**Status: grilled 2026-05-14. Decision: Path A — extract pure helpers,
+no new module.** The doc's proposed `CardView` / `CardBody` split was
+considered and deferred. See "Grill outcome" below.
 
 **Files** (post-Candidate-9):
 - `web/src/card/CardImpl.tsx` (~290 LOC)
@@ -925,6 +928,97 @@ for example: a new **Card** kind that needs body-wiring without DOM, a
 hard-to-write test where body-attach behaviour isn't exposable through
 the React surface, or a perf concern requiring body-attach memoization
 independent of React renders.
+
+### Grill outcome (2026-05-14)
+
+**Reframe.** The doc parked this pending one of the recommended triggers
+above. The grill kicked off against a different motivation —
+AI-navigability and codebase extensibility. That framing shifts the
+question from *"is the split worth it without a second use case?"* to
+*"does a 290-LOC file with ~9 entangled concerns hurt navigability
+enough to act now?"* Different question, potentially different answer.
+
+**Drift check.** The "six things in one file" claim undercounts. Actual
+concerns: JSX shell + I-1 visibility honoring, spawn-offset math, body
+registration with the `onTransform` DOM bridge, buoyancy application,
+parent tether wiring with one-frame RAF retry, trail tether wiring (the
+same shape duplicated), `resolveParent` helper, drag/fling pointer
+handlers, anchor/parent/trail-change re-wiring effect, cleanup. Closer
+to nine than six. `CardImpl.tsx` = 290 LOC verified; `CardImpl.test.tsx`
+= 359 LOC (the test file is *larger* than the implementation — a smell
+the doc didn't flag).
+
+**Test-surface signal.** Every test mounts `PhysicsProvider` +
+`CardRegistryProvider` + a real `PhysicsWorld` to exercise math (fling
+velocity, spawn offset) that could be 10-line pure functions. The test
+surface alone is a load-bearing argument for *some* extraction, even
+without a second production adapter.
+
+**Decisions.**
+
+1. **Path A over Path B.** Extract pure helpers; no `CardView` /
+   `CardBody` module split; no new seam. The case-for-splitting reduces
+   to "the math is test-worthy in its own right"; Path A captures that
+   without committing to a production-side interface the codebase
+   hasn't asked for. Honors the *"one adapter = hypothetical seam"*
+   discipline shown in the Candidate 1 resolution (declined MatterEngine
+   and BalloonForces on the same grounds). Reversible — if a real second
+   adapter appears later (e.g. headless cards, Stuff/Flash-style cards
+   without the same React surface), lifting the helpers into a `CardBody`
+   module is then mechanical.
+
+2. **`computeSpawnOffset(anchor, gravity, offsetPx) → {x, y}`** in a new
+   file `card/spawnOffset.ts`. Pure function. `offsetPx` is a
+   parameter, not a baked-in constant — that's what gives it a real test
+   surface. Tests cover: gravity-direction cases, normalisation of a
+   non-unit gravity vector, the zero-length-gravity fallback to
+   `(0, 1)` (the silent-default branch nobody asserts today).
+
+3. **`computeFlingImpulse(delta, sinceLastMoveMs, config) → {vx, vy}`**
+   in a new file `card/flingImpulse.ts`. Pure function. Tests cover:
+   normal fling, paused-before-release zero-out (when `sinceLastMoveMs >
+   config.pauseMs`), the `Math.max(dt, 1)` divide-by-zero guard.
+
+4. **`resolveParent` moves to `physics/Tether.ts`.** It is physics
+   knowledge dressed up as a card helper — `card/` shouldn't have to
+   know that `'ceiling'` resolves to `world.ceilingHandle`. Colocated
+   with `wireTetherFor`, the only function that consumes its
+   `parentKind` return. Return type tightened to
+   `NonNullable<ParentRef>` input and
+   `{ handle, kind } | null` output; `null` now means exactly one thing
+   (card-id given but no body registered yet). Removes the dead "no
+   parent intended" branch the previous loose type allowed.
+
+**What does NOT change.**
+
+- No new module. No new seam. No interface design.
+- `CardImpl` remains the React surface and the only production consumer
+  of the helpers.
+- I-1 stays expressed where it is (`entry.state === 'spawning'` →
+  `visibility: 'hidden'` in the JSX). Unchanged.
+- Tether retry policy (one-frame RAF, then `console.warn` and skip)
+  stays in `CardImpl`. Surfaced during the grill as a load-bearing
+  un-tested policy; not in scope.
+- `CONTEXT.md` is unchanged. Which module file owns `resolveParent` is
+  a code fact, not a domain-language fact.
+
+**Estimated impact.** `card/CardImpl.tsx` drops ~290 → ~250 LOC. Two new
+pure-function files (~30 LOC each) + their tests land in `card/`.
+`physics/Tether.ts` gains `resolveParent` and a few test cases. Three
+named, navigable, test-isolatable concepts now exist where one fat
+closure did the work.
+
+**Deferred (not in this slice).**
+
+- Path B (the doc's `CardView` / `CardBody` module split). Re-grill if a
+  real motivation appears.
+- The "fuse `resolveParent` into `wireTetherFor`" option (Option 3 from
+  the resolveParent grill leg). Cleaner but requires deciding where the
+  RAF retry policy lives — a separable design question.
+- A regression test for the tether-retry policy itself. Load-bearing
+  ("retry once after a RAF, else warn-and-skip"), currently untested.
+
+**Issue:** [#136](https://github.com/cpalaka/chaipalaka.com/issues/136)
 
 ---
 
@@ -992,10 +1086,11 @@ work:
    [#133](https://github.com/cpalaka/chaipalaka.com/issues/133).** Card
    subsystem extraction. Mechanical move + all-in rename + freebie
    cleanups; one PR.
-2. **Candidate 10 (parked).** `CardImpl` JSX-vs-body split. Do not grill
-   until a real motivation appears (new card kind without DOM,
-   hard-to-write test, perf concern). See Candidate 10's "Recommended
-   trigger."
+2. **Candidate 10 slice — issue
+   [#136](https://github.com/cpalaka/chaipalaka.com/issues/136).**
+   Path A: extract `computeSpawnOffset` and `computeFlingImpulse` as
+   pure-function helpers in `card/`; move `resolveParent` to
+   `physics/Tether.ts` with a tightened return type.
 
 Closed / shipped:
 
@@ -1011,7 +1106,9 @@ Closed / shipped:
 
 New candidates surfaced during 2026-05-14 work:
 
-- **Candidate 10** — `CardImpl` internal split. Parked.
+- **Candidate 10** — `CardImpl` internal split. Grilled 2026-05-14 (Path
+  A — extract pure helpers, defer the `CardView` / `CardBody` module
+  split).
 
 The cross-cutting observations below (`layout/` vs `layouts/`; sandbox
 parallelism; deferred backend candidates) remain open and have not been
