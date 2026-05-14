@@ -24,6 +24,23 @@ describe('useTheme', () => {
         expect(['dark', 'light']).toContain(result.current.theme)
     })
 
+    test('setTheme updates dataset.theme via the hook’s useEffect (not inside subscribe)', async () => {
+        const { renderHook, act, useTheme } = await setup()
+        const { result } = renderHook(() => useTheme())
+
+        act(() => {
+            result.current.setTheme('light')
+        })
+        expect(result.current.theme).toBe('light')
+        expect(document.documentElement.dataset.theme).toBe('light')
+
+        act(() => {
+            result.current.setTheme('dark')
+        })
+        expect(result.current.theme).toBe('dark')
+        expect(document.documentElement.dataset.theme).toBe('dark')
+    })
+
     test('cycleTheme updates the dataset attribute and the returned theme', async () => {
         const { renderHook, act, useTheme } = await setup()
         const { result } = renderHook(() => useTheme())
