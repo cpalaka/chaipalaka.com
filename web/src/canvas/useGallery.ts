@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { backgroundScenes } from './scenes'
 import { createRegistry } from './registry'
 import { createGallery, STORAGE_KEY } from './gallery'
 import type { BackgroundGallery } from './gallery'
 import type { BackgroundScene } from './types'
+import { useController } from '../state/useController'
 
 declare global {
     interface Window {
@@ -51,15 +52,10 @@ export function useGallery(): {
     setActive: (id: string) => void
 } {
     const gallery = getGallery()
-    const [active, setActive] = useState(() => gallery.getActive())
+    const active = useController(getGallery)
 
     useEffect(() => {
-        // Install debug hook for QA and for slice-18 UI to override.
         window.__setBackground = (id: string) => gallery.setActive(id)
-        const unsub = gallery.subscribe((next) => setActive(next))
-        return () => {
-            unsub()
-        }
     }, [gallery])
 
     return { active, setActive: (id) => gallery.setActive(id) }
