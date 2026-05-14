@@ -40,7 +40,12 @@ describe('stringCutDrop (T1)', () => {
         expect(fake.getTethers().filter((t) => t.child === card)).toHaveLength(0)
     })
 
-    test('preserves card-to-card chain tether (only direct ceiling tether is cut)', () => {
+    test('discards chain tether when both parent and child are exiting (full route exit)', () => {
+        // Production scenario: a chained route like /blog exits as a whole. Every
+        // card in the chain is in `cardIds`, so reattaching child→parent tethers
+        // would leave them pointing at handles that unregister moments later
+        // when the route unmounts, producing `unknown handle N` throws on the
+        // next physics tick.
         const viewport = { width: 800, height: 600 }
         const { fake, ceiling, floor } = newFake()
         const parent = fake.registerBody('p', {
@@ -63,13 +68,41 @@ describe('stringCutDrop (T1)', () => {
         const step = stringCutDrop(fake.driver, ['p', 'c'], { viewport, floorHandle: floor })
         step(0)
 
-        // Motion-shape assertion: the static-parent tether (ceiling→parent)
-        // is severed and not reattached; the non-static-parent tether
-        // (parent→child) is detached and immediately reattached.
+        // Both tethers must be severed: the ceiling→parent one because the
+        // parent is static, and the parent→child one because the parent is
+        // also exiting.
+        expect(fake.getTethers()).toHaveLength(0)
+    })
+
+    test('preserves chain tether when parent stays and only child exits', () => {
+        // Reattach path: child is in `cardIds` but its parent is not. The
+        // dynamic-parent tether is detached and immediately reattached so the
+        // child keeps swinging from a body that survives the transition.
+        const viewport = { width: 800, height: 600 }
+        const { fake, ceiling, floor } = newFake()
+        const parent = fake.registerBody('p', {
+            position: { x: 400, y: 200 },
+            size: { width: 200, height: 100 },
+        })
+        const child = fake.registerBody('c', {
+            position: { x: 400, y: 360 },
+            size: { width: 200, height: 100 },
+        })
+        fake.addTether({
+            parent: ceiling,
+            child: parent,
+            length: 150,
+            anchorA: { x: 0, y: 0 },
+        })
+        fake.addTether({ parent: parent, child: child, length: 160 })
+
+        const step = stringCutDrop(fake.driver, ['c'], { viewport, floorHandle: floor })
+        step(0)
+
         const remaining = fake.getTethers()
-        expect(remaining).toHaveLength(1)
-        expect(remaining[0]?.parent).toBe(parent)
-        expect(remaining[0]?.child).toBe(child)
+        expect(remaining).toHaveLength(2)
+        const reattached = remaining.find((t) => t.child === child)
+        expect(reattached?.parent).toBe(parent)
     })
 
     test('kick magnitude + direction: heavy uses gravity sign, balloon uses opposite', () => {
