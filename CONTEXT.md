@@ -125,23 +125,50 @@ _Avoid_: in-transition (drift), busy.
 ### Background scenes
 
 **BackgroundScene**:
-The per-route ambient visual rendered behind the foreground physics —
-typically a Three.js / `@react-three/fiber` component drawing particles
-or a shader, sometimes a CPU-driven geometric pattern. Declared per
-route in its **PageDef** (and on the **BackgroundGallery** controller)
-by `id`; the renderer (`BackgroundCanvas`) lazy-loads the scene's
-module on first use. Each scene module exports a runtime object
-carrying `id`, the `Component`, `accentColor`, `fallbackColors`
-(a pre-WebGL paint), and `fallbackPng` (a static image for SSG /
-no-WebGL fallback). Tunable scenes additionally export a
+The eager metadata identifying a per-route ambient visual rendered
+behind the foreground physics — `{ id, accentColor, fallbackColors,
+fallbackPng }`. Carries no Component reference: the actual paint
+(typically a Three.js / `@react-three/fiber` module, sometimes a
+CPU-driven geometric pattern) is lazy-loaded by `BackgroundCanvas`
+via the scene's registry entry. The metadata is what every caller
+that isn't actively painting consumes — the **BackgroundGallery**
+controller listing scenes for the settings menu, the SSG fallback
+`<img src={fallbackPng}>`, the `--color-accent` CSS write — none of
+those need the Component, and lazy-loading nine modules at app start
+to populate the settings menu would defeat the canvas bundle-size
+discipline.
+
+The companion structure is the **SceneRegistry**: each scene's
+**BackgroundScene** metadata is paired with a typed `loader: () =>
+Promise<{ Scene, SCHEMA? }>` in one canonical module
+(`canvas/scenes/registry.ts`). Tunable scenes additionally export a
 **SceneParamSchema**.
 _Avoid_: shader (not all scenes are shader-based — `geometric-voronoi`
 is CPU-driven); background (ambiguous with CSS); scene (collides with
 Three.js's own `Scene` object — say **BackgroundScene** when domain is
 ambiguous).
 
-Within a **BackgroundGallery** instance, every **BackgroundScene** must
-have a unique `id`; the gallery throws at construction if not.
+Within the **SceneRegistry**, every **BackgroundScene** must have a
+unique `id`; the registry's `SCENE_REGISTRY` const is a flat list and
+the **BackgroundGallery** throws at construction if duplicate ids are
+ever supplied.
+
+**SceneRegistry**:
+The single canonical module (`canvas/scenes/registry.ts`) that pairs
+every scene's **BackgroundScene** metadata with a typed lazy `loader`,
+discriminated on `tunable: true | false`. A `tunable: true` entry's
+loader returns `Promise<{ Scene, SCHEMA: SceneParamSchema }>`; a
+`tunable: false` entry's loader returns `Promise<{ Scene }>`. The
+discriminant lets the **Tuner** route enumerate tunable scenes
+eagerly without triggering any lazy-loads, and the type system
+catches drift between a scene's `tunable` flag and whether its module
+actually exports a SCHEMA. Replaces the prior shape where scene
+identity, metadata, loader paths, and schema were sprawled across
+`manifest.json`, `canvas/scenes/index.ts`, `canvas/scenes/tunable.ts`,
+and `BackgroundCanvas.sceneLoaders` — each with its own stringly-typed
+id list and no compile-time link to the others.
+_Avoid_: scene manifest (drift from the retired `manifest.json`),
+scene index (drift from the retired `canvas/scenes/index.ts`).
 
 **SceneParamSchema**:
 The colocated declarative source of truth for a **BackgroundScene**'s
