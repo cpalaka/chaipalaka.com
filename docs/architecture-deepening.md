@@ -371,6 +371,9 @@ gallery/useGallery split is the same hook-pattern smell.
 
 ## Candidate 7 — `text/PretextRegistry` has exactly one caller
 
+**Status: grilled 2026-05-13. Decision: reframe + narrow.** See "Grill
+outcome" below.
+
 **Files**
 - `web/src/text/PretextRegistry.ts` — the class
 - `web/src/text/registry.ts` — module-level eager singleton
@@ -399,6 +402,68 @@ re-introduce when the second caller appears."
 **Linkage.** Independent.
 
 **ADR conflict?** No.
+
+### Grill outcome (2026-05-13)
+
+**Reframe.** The module is not a "font registry." Its load-bearing surface
+is `measure(text, font, maxWidth)` — a pre-paint text-measurement
+primitive built on `@chenglou/pretext`. `getFont` / `getLineHeight` are
+dead Interface surface (no production callers). The framing "delete vs.
+commit as font source of truth" is wrong.
+
+**Assumption.** A future feature parked in
+`memory/project_pretext_use_cases.md` — (α) prose reflowed around physics
+cards — will make text-layout a tick-rate central concern. Under that
+assumption, the **delete** branch is off the table; the **commit as
+font-source-of-truth for CSS components** branch was always wrong (CSS
+cascade still does rendering); the answer is **reframe + narrow** with a
+shape designed for α's growth.
+
+**Drift bug discovered during the grill.** `registry.ts` declares
+`'Newsreader Variable'` for the `body` and `card-title` keys, but
+`base.css` `@font-face`s only `IBM Plex Sans` and `JetBrains Mono
+Variable`. CSS uses `--font-body = 'IBM Plex Sans'` to render. So today,
+blog-index card heights are measured with one family and painted with
+another — the canvas falls back to a generic when `Newsreader Variable`
+is requested. The unit-pinned font specs in `registry.test.ts` caught the
+*desired* value but never compared it to what CSS actually loads. This is
+the motivating example for the drift-discipline test in the new shape.
+
+**Module shape chosen.**
+- Shape: pure functions + value type (not a class, not a registry).
+- Naming: **Font** as a value type, **TextMeasure** as the measurement
+  operation. Both terms now in `CONTEXT.md` under "Text and measurement."
+- Files (proposed):
+  - `web/src/text/fonts.ts` — `Font` value type + `FONT_BODY`,
+    `FONT_MONO`, `FONT_CARD_TITLE` consts.
+  - `web/src/text/measure.ts` — `measure(text, font, maxWidth)` function.
+  - Both old files (`PretextRegistry.ts`, `registry.ts`) deleted.
+- Drift policy: **D3** — a unit test parses `tokens.css` for
+  `--font-body` / `--font-mono` and asserts agreement with `fonts.ts`.
+  Catches the discovered drift bug; cheap; no build-step infra needed.
+
+**Drift bug resolution (2026-05-13).** Chose **option (a) — drop the
+Newsreader Variable intent and align to IBM Plex Sans**, which is what
+the site actually paints today. `FONT_BODY` and `FONT_CARD_TITLE` will
+declare `'IBM Plex Sans'`. No visible change for users; cheapest fix;
+no bundle additions. The "editorial serif body" idea is parked and can
+return as a deliberate typography slice if Chai wants it later.
+
+**Today's slice deliverables (small):**
+1. Introduce `fonts.ts` and `measure.ts` as above; delete the old files.
+2. Migrate `BlogIndex.measure.ts` + `BlogIndex.tsx` to the new shape.
+3. Add the drift test.
+4. Apply option (a) — `FONT_BODY` / `FONT_CARD_TITLE` become IBM Plex
+   Sans to match `base.css`.
+5. `CONTEXT.md` already updated with **Font** + **TextMeasure**.
+
+**Deferred (lands with α):**
+- `layoutFlow(text, font, obstacles)` for variable-width line streaming.
+- A peer `Prose` / `TextField` module that consumes `layoutFlow`.
+- Domain term **ProseFlow** (or similar) added to `CONTEXT.md` at that
+  time.
+
+**Issue:** [#127](https://github.com/cpalaka/chaipalaka.com/issues/127)
 
 ---
 
