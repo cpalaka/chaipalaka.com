@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
-import { wireTetherFor } from '../physics/PhysicsCard'
+import { wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
 import type { PhysicsCardEntry } from './CardRegistry'
