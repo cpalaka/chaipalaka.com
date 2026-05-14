@@ -162,6 +162,34 @@ Two families share the type:
 _Avoid_: step (too generic), animation (used for non-route animations
 like FrameBar idle).
 
+**Controller**:
+A domain-owned object exposing mutable state to the rest of the app
+through a uniform contract: a `getX(): T` reader for the current value,
+a `subscribe(cb: (next: T) => void): () => void` listener registration
+that fires synchronously on every change, and any domain-specific
+mutators. React-agnostic — every **Controller** must be constructible
+and unit-testable without React in scope. Production examples:
+`BackgroundGallery` (active background scene), `FrameEdgeController`
+(frame-bar edge selection), `ThemeController` (light/dark/system),
+`MinimizedRegistry` (minimized cards). Consumed by React through a
+single bridge hook (`useController`), never by re-implementing the
+subscribe ritual per call site.
+_Avoid_: store (drifts toward Redux/Zustand connotations the site does
+not adopt), service (backend-ish), manager (vague), context
+(React-coupled — a **Controller** can outlive any React tree).
+
+**Lazy singleton**:
+The SSR-safe module-level cache pattern used to hold one **Controller**
+instance per browser session: a `let instance: T | null` at module
+scope plus a `getInstance()` that constructs on first call, guarded so
+SSG/SSR (no `window`, no `localStorage`) doesn't throw. Lives in the
+React-side hook file that exposes the **Controller** to components,
+never inside the **Controller** module itself — the **Controller** is
+the unit of behaviour; the singleton is the unit of session-scoped
+identity, and the two should not be welded.
+_Avoid_: global (suggests ambient mutable state with no owner), module
+state (true but uninformative), instance hack.
+
 ## Relationships
 
 - A **Card** has at most one **Tether** to a parent; multiple **Card**s can
