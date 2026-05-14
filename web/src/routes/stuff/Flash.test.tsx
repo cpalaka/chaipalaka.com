@@ -16,8 +16,8 @@ vi.mock('../../stuff/flash/pieces', () => ({
 
 import Flash, { buildFlashIndex } from './Flash'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
-import { CardRegistryProvider } from '../../transitions/CardRegistry'
-import { PhysicsLayer } from '../../transitions/PhysicsLayer'
+import { CardRegistryProvider } from '../../card/CardRegistry'
+import { PhysicsLayer } from '../../card/CardLayer'
 
 const CHAIN_TOP = 100
 const HEADER_H = 140

@@ -5,7 +5,7 @@ import {
     CardRegistryProvider,
     useCardRegistry,
 } from './CardRegistry'
-import { PhysicsLayer } from './PhysicsLayer'
+import { PhysicsLayer } from './CardLayer'
 import type { CardRegistryAPI, PhysicsCardEntry } from './CardRegistry'
 
 vi.mock('../canvas/flip', () => ({

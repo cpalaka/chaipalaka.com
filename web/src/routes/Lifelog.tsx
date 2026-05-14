@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PhysicsPage, type CardContent } from '../physics/PhysicsPage'
+import { PhysicsPage, type CardContent } from '../card/Page'
 import type { PageDef } from './PageDef'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'

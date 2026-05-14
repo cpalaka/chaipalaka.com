@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { TransitionDirector } from './TransitionDirector'
-import { PhysicsLayer } from './PhysicsLayer'
+import { PhysicsLayer } from '../card/CardLayer'
 import { PageDefRegistryProvider } from './PageDefRegistry'
-import { PhysicsCard } from '../physics/PhysicsCard'
+import { PhysicsCard } from '../card/Card'
 import type { PageDef } from '../routes/PageDef'
 
 afterEach(() => {

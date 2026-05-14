@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { PhysicsPage } from '../physics/PhysicsPage'
+import { PhysicsPage } from '../card/Page'
 import type { PageDef } from './PageDef'
-import type { CardContent } from '../physics/PhysicsPage'
+import type { CardContent } from '../card/Page'
 
 export const pageDef: PageDef = {
     gravity: 'down',

@@ -1,10 +1,10 @@
 import { describe, test, expect, afterEach } from 'vitest'
 import { act, render, cleanup } from '@testing-library/react'
-import { PhysicsProvider, usePhysicsWorld } from './PhysicsContext'
-import { PhysicsCard } from './PhysicsCard'
-import { CardRegistryProvider } from '../transitions/CardRegistry'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
-import type { PhysicsWorld } from './PhysicsWorld'
+import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
+import { PhysicsCard } from './Card'
+import { CardRegistryProvider } from './CardRegistry'
+import { PhysicsLayer } from './CardLayer'
+import type { PhysicsWorld } from '../physics/PhysicsWorld'
 
 afterEach(() => {
     cleanup()

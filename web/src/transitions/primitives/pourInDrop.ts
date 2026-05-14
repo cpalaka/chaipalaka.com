@@ -5,7 +5,7 @@ import type {
     Vec2,
 } from '../../physics/BodyDriver'
 import type { Viewport } from '../../physics/PhysicsWorld'
-import type { CardActivator } from '../CardRegistry'
+import type { CardActivator } from '../../card/CardRegistry'
 import type { PrimitiveStep } from './types'
 
 export interface PourInDropEntry {

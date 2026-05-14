@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
+import { PhysicsPage, type CardContent } from '../../card/Page'
 import { getPiecesByCategory } from '../../stuff/flash/pieces'
 import { getCategoryMeta } from '../../stuff/flash/categories'
 import type { PageDef } from '../PageDef'

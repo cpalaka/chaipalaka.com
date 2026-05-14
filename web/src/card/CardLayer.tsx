@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useCardRegistryEntries } from './CardRegistry'
-import { PhysicsCardImpl } from './PhysicsCardImpl'
+import { PhysicsCardImpl } from './CardImpl'
 
 export function PhysicsLayer() {
     const entries = useCardRegistryEntries()

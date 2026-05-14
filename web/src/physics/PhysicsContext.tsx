@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { PhysicsWorld } from './PhysicsWorld'
 import { useFrameEdge, getFrameEdgeController } from '../canvas/useFrameEdge'
-import { CardRegistryProvider } from '../transitions/CardRegistry'
+import { CardRegistryProvider } from '../card/CardRegistry'
 import type { FrameEdge } from '../canvas/useFrameEdge'
 
 export const FRAME_BAR_HEIGHT = 40

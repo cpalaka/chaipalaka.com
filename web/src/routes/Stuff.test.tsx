@@ -3,8 +3,8 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Stuff, { pageDef } from './Stuff'
 import { PhysicsProvider } from '../physics/PhysicsContext'
-import { CardRegistryProvider } from '../transitions/CardRegistry'
-import { PhysicsLayer } from '../transitions/PhysicsLayer'
+import { CardRegistryProvider } from '../card/CardRegistry'
+import { PhysicsLayer } from '../card/CardLayer'
 
 vi.mock('../canvas/flip', () => ({
     flipMorph: vi.fn(),

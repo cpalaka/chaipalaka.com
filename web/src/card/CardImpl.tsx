@@ -4,7 +4,7 @@ import { wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
 import type { PhysicsCardEntry } from './CardRegistry'
-import '../physics/PhysicsCard.css'
+import './Card.css'
 
 interface PhysicsCardImplProps {
     entry: PhysicsCardEntry

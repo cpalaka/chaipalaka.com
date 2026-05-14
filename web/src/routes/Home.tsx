@@ -1,6 +1,6 @@
-import { PhysicsPage } from '../physics/PhysicsPage'
+import { PhysicsPage } from '../card/Page'
 import type { PageDef } from './PageDef'
-import type { CardContent } from '../physics/PhysicsPage'
+import type { CardContent } from '../card/Page'
 
 const CARD_W = 280
 const CARD_H = 160
