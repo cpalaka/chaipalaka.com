@@ -1,5 +1,4 @@
-import { createRegistry } from './registry'
-import type { BackgroundRegistry, BackgroundScene } from './types'
+import type { BackgroundScene } from './types'
 
 export const STORAGE_KEY = 'chaipalaka.background.activeId'
 
@@ -13,7 +12,7 @@ interface Root {
 }
 
 export interface GalleryDeps {
-    registry: BackgroundRegistry
+    scenes: readonly BackgroundScene[]
     storage?: Storage
     root?: Root
     defaultId: string
@@ -23,7 +22,6 @@ export interface BackgroundGallery {
     get(): BackgroundScene
     getActive(): BackgroundScene
     setActive(id: string): void
-    register(scene: BackgroundScene): void
     subscribe(listener: (active: BackgroundScene) => void): () => void
     destroy(): void
 }
@@ -31,25 +29,22 @@ export interface BackgroundGallery {
 export function createGallery(deps: GalleryDeps): BackgroundGallery {
     const { defaultId, storage, root } = deps
 
-    // Mutable registry so register() can add scenes after construction.
-    // We rebuild it on each register() call to preserve the uniqueness guarantee.
-    let scenes = deps.registry.list().slice()
-    let reg = deps.registry
-
-    function resolveRegistry(
-        list: readonly BackgroundScene[],
-    ): BackgroundRegistry {
-        return createRegistry(list)
+    const sceneById = new Map<string, BackgroundScene>()
+    for (const scene of deps.scenes) {
+        if (sceneById.has(scene.id)) {
+            throw new Error(`Duplicate background scene id: ${scene.id}`)
+        }
+        sceneById.set(scene.id, scene)
     }
 
     function pickInitial(): BackgroundScene {
         if (storage) {
             const persisted = storage.getItem(STORAGE_KEY)
-            if (persisted && reg.has(persisted)) {
-                return reg.get(persisted)!
+            if (persisted && sceneById.has(persisted)) {
+                return sceneById.get(persisted)!
             }
         }
-        const def = reg.get(defaultId)
+        const def = sceneById.get(defaultId)
         if (!def)
             throw new Error(
                 `BackgroundGallery: defaultId "${defaultId}" not found in registry`,
@@ -71,7 +66,7 @@ export function createGallery(deps: GalleryDeps): BackgroundGallery {
         getActive: () => active,
 
         setActive(id: string) {
-            const scene = reg.get(id)
+            const scene = sceneById.get(id)
             if (!scene) {
                 console.warn(`BackgroundGallery.setActive: unknown id "${id}"`)
                 return
@@ -80,11 +75,6 @@ export function createGallery(deps: GalleryDeps): BackgroundGallery {
             storage?.setItem(STORAGE_KEY, id)
             writeAccent(scene)
             for (const l of listeners) l(scene)
-        },
-
-        register(scene: BackgroundScene) {
-            scenes = [...scenes, scene]
-            reg = resolveRegistry(scenes)
         },
 
         subscribe(listener: (active: BackgroundScene) => void) {

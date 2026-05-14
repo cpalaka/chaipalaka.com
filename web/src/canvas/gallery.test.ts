@@ -1,6 +1,5 @@
 import { describe, test, expect, vi } from 'vitest'
 import { createGallery } from './gallery'
-import { createRegistry } from './registry'
 import type { BackgroundScene } from './types'
 
 function makeScene(id: string, accentColor = '#aaaaaa'): BackgroundScene {
@@ -42,9 +41,8 @@ const STORAGE_KEY = 'chaipalaka.background.activeId'
 describe('BackgroundGallery', () => {
     test('uses default scene when storage is empty', () => {
         const flow = makeScene(DEFAULT_ID)
-        const registry = createRegistry([flow, makeScene('particles')])
         const gallery = createGallery({
-            registry,
+            scenes: [flow, makeScene('particles')],
             storage: makeStorage(),
             root: makeRoot(),
             defaultId: DEFAULT_ID,
@@ -55,10 +53,9 @@ describe('BackgroundGallery', () => {
     test('uses persisted scene when storage holds a known id', () => {
         const flow = makeScene(DEFAULT_ID)
         const particles = makeScene('particles')
-        const registry = createRegistry([flow, particles])
         const storage = makeStorage({ [STORAGE_KEY]: 'particles' })
         const gallery = createGallery({
-            registry,
+            scenes: [flow, particles],
             storage,
             root: makeRoot(),
             defaultId: DEFAULT_ID,
@@ -68,10 +65,9 @@ describe('BackgroundGallery', () => {
 
     test('ignores persisted unknown id and falls back to default', () => {
         const flow = makeScene(DEFAULT_ID)
-        const registry = createRegistry([flow])
         const storage = makeStorage({ [STORAGE_KEY]: 'does-not-exist' })
         const gallery = createGallery({
-            registry,
+            scenes: [flow],
             storage,
             root: makeRoot(),
             defaultId: DEFAULT_ID,
@@ -81,10 +77,9 @@ describe('BackgroundGallery', () => {
 
     test('writes --color-accent on construction for initial active scene', () => {
         const flow = makeScene(DEFAULT_ID, '#c19a4b')
-        const registry = createRegistry([flow])
         const root = makeRoot()
         createGallery({
-            registry,
+            scenes: [flow],
             storage: makeStorage(),
             root,
             defaultId: DEFAULT_ID,
@@ -95,11 +90,10 @@ describe('BackgroundGallery', () => {
     test('setActive(known) persists to storage, updates accent, notifies subscribers', () => {
         const flow = makeScene(DEFAULT_ID, '#c19a4b')
         const particles = makeScene('particles', '#5fb6c4')
-        const registry = createRegistry([flow, particles])
         const storage = makeStorage()
         const root = makeRoot()
         const gallery = createGallery({
-            registry,
+            scenes: [flow, particles],
             storage,
             root,
             defaultId: DEFAULT_ID,
@@ -118,11 +112,10 @@ describe('BackgroundGallery', () => {
 
     test('setActive(unknown) is a no-op — no storage write, no notification', () => {
         const flow = makeScene(DEFAULT_ID)
-        const registry = createRegistry([flow])
         const storage = makeStorage()
         const root = makeRoot()
         const gallery = createGallery({
-            registry,
+            scenes: [flow],
             storage,
             root,
             defaultId: DEFAULT_ID,
@@ -140,9 +133,8 @@ describe('BackgroundGallery', () => {
     test('subscribe returns an unsubscribe that stops further notifications', () => {
         const flow = makeScene(DEFAULT_ID)
         const particles = makeScene('particles')
-        const registry = createRegistry([flow, particles])
         const gallery = createGallery({
-            registry,
+            scenes: [flow, particles],
             storage: makeStorage(),
             root: makeRoot(),
             defaultId: DEFAULT_ID,
@@ -156,19 +148,16 @@ describe('BackgroundGallery', () => {
         expect(listener).not.toHaveBeenCalled()
     })
 
-    test('register() adds a new scene so setActive can use it', () => {
-        const flow = makeScene(DEFAULT_ID)
-        const particles = makeScene('particles', '#5fb6c4')
-        const registry = createRegistry([flow])
-        const gallery = createGallery({
-            registry,
-            storage: makeStorage(),
-            root: makeRoot(),
-            defaultId: DEFAULT_ID,
-        })
-
-        gallery.register(particles)
-        gallery.setActive('particles')
-        expect(gallery.getActive().id).toBe('particles')
+    test('throws on duplicate scene id at construction', () => {
+        const dup1 = makeScene('flow-shader')
+        const dup2 = makeScene('flow-shader')
+        expect(() =>
+            createGallery({
+                scenes: [dup1, dup2],
+                storage: makeStorage(),
+                root: makeRoot(),
+                defaultId: 'flow-shader',
+            }),
+        ).toThrow(/flow-shader/)
     })
 })
