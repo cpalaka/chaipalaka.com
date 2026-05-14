@@ -7,7 +7,7 @@ import {
     usePageDefRegistry,
     useRegisterPageDef,
 } from './PageDefRegistry'
-import type { PageDef } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
 
 function makeDef(): PageDef {
     return { gravity: 'down', cards: [] }

@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { dispatch } from './dispatch'
-import type { PageDef } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
+import type { TransitionSpec } from './TransitionSpec'
 import type { EdgeTransitions, PageDefResolver } from './dispatch'
 
 const homeDef: PageDef = { gravity: 'down', cards: [] }
@@ -202,6 +203,23 @@ describe('dispatch', () => {
         expect(plan.kind).toBe('decoupled')
         if (plan.kind === 'decoupled') {
             expect(plan.enter).toBe('cross-fade')
+        }
+    })
+
+    // Seam-demonstration: dispatch's contract is over the TransitionSpec
+    // half of a PageDef (transitions / siblingOrder). PageSpec fields
+    // (gravity, cards) are not read in this non-section path — we stub
+    // them at the minimum the PageDef intersection requires.
+    test('dispatch consumes a TransitionSpec literal (PageSpec stubbed)', () => {
+        const trans: TransitionSpec = { transitions: { exit: 'cross-fade' } }
+        const def: PageDef = { gravity: 'down', cards: [], ...trans }
+        const resolve = resolverOf({ '/a': def, '/b': blogDef })
+
+        const plan = dispatch('/a', '/b', resolve, {}, 'forward')
+
+        expect(plan.kind).toBe('decoupled')
+        if (plan.kind === 'decoupled') {
+            expect(plan.exit).toBe('cross-fade')
         }
     })
 })
