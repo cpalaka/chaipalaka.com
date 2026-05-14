@@ -1,9 +1,20 @@
 import type { BodyForceSource } from './BodyForceSource'
+import type { ParentRef } from './PageSpec'
 import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
 
 export type TetherHandle = number
 
 export type TetherParentKind = 'ceiling' | 'floor' | 'card'
+
+export function resolveParent(
+    world: PhysicsWorld,
+    ref: NonNullable<ParentRef>,
+): { handle: PhysicsHandle; kind: TetherParentKind } | null {
+    if (ref === 'ceiling') return { handle: world.ceilingHandle, kind: 'ceiling' }
+    if (ref === 'floor') return { handle: world.floorHandle, kind: 'floor' }
+    const h = world.getHandleById(ref)
+    return h !== undefined ? { handle: h, kind: 'card' } : null
+}
 
 export function wireTetherFor(
     world: PhysicsWorld,
