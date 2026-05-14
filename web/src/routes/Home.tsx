@@ -28,15 +28,13 @@ const cardContent: Record<string, CardContent> = {
         text: 'The quick brown fox jumps over the lazy dog.',
         width: CARD_W,
         height: CARD_H,
-        minimizable: true,
-        label: 'card-a',
+        label:'card-a',
     },
     'card-b': {
         text: 'Pack my box with five dozen liquor jugs.',
         width: CARD_W,
         height: CARD_H,
-        minimizable: true,
-        label: 'card-b',
+        label:'card-b',
     },
 }
 
