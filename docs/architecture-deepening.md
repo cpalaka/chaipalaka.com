@@ -469,6 +469,9 @@ return as a deliberate typography slice if Chai wants it later.
 
 ## Candidate 8 — `PageDef` is a grab-bag **Interface** spanning three subsystems
 
+**Status: grilled 2026-05-14. Decision: two-way split + relocate to
+`routes/`.** See "Grill outcome" below.
+
 **Files**
 - `web/src/physics/PageDef.ts` — main type (`gravity`, `cards`, `sections`)
 - `web/src/transitions/pageDefs.ts` — route → PageDef map; adds `transitions: { exit, enter }`, `siblingOrder`
@@ -510,6 +513,79 @@ specs that apply.
 **Linkage.** Cheap, type-only, independent of every other candidate.
 
 **ADR conflict?** No.
+
+### Grill outcome (2026-05-14)
+
+**Reframe — doc had two factual drifts.**
+- `transitions/pageDefs.ts` does NOT add fields on top of `PageDef`.
+  It is a 21-line route-keyed map (`Record<string, PageDef>`); ALL
+  fields live in the single `PageDef` interface in
+  `physics/PageDef.ts`. The grab-bag really is one type owned by
+  physics — that makes the candidate stronger, not weaker.
+- `canvas/useFrameEdge` does NOT consume `PageDef`. Frame insets flow
+  via `useFrameEdge → PhysicsContext → PhysicsWorld.setViewport(...)`,
+  fully orthogonal. The doc's "where does an `insets` field belong"
+  grill question is parked — there is no current pressure for such a
+  field.
+
+**Cross-cutting reality.** The doc's "physics reads gravity+cards;
+transitions reads x/y/z; sections reads sections" undercounted. Actual
+consumer map at grill time:
+- `cards`: read by physics (`PhysicsPage`) AND sectioning
+  (`partitionPageDef`).
+- `sections`: read by sectioning AND transitions (4 call sites across 2
+  subsystems, all truthiness-only on the transitions side).
+- `sectionsPushHistory`: zero consumers — dead Interface surface.
+
+**Decisions.**
+1. **Sectioning is a consumer, not a subsystem.** `partitionPageDef` is
+   a pure function over `(PageSpec, viewport, routeKey, heights)`. The
+   `Partial<SectionPageSpec>` arm of the doc's three-way intersection
+   dissolves.
+2. **Two-way split, not three-way.** `PageSpec` (route-author intent —
+   `gravity`, `cards`, `sections?`) ∩ `TransitionSpec`
+   (transition-author intent — `transitions?`, `siblingOrder?`).
+3. **No predicate seam between transitions and sectioning.** Transitions
+   reads `pageDef.sections` truthiness-only; the shape of
+   `SectionsConfig` is already encapsulated in
+   `layout/sectionLayout.ts`. An `isPaginated(pageDef)` predicate would
+   add zero leverage.
+4. **`PageDef` lives in `routes/`.** Route authors compose a `PageDef`;
+   `routes/` is the honest home. Physics and transitions stand
+   independent of each other at the type level (no backward
+   cross-folder type dependency).
+5. **Static map (`pageDefs.ts`) moves to `routes/`.** Directory of
+   route-author intents, not a transition concern.
+
+**Module shape chosen.**
+- `web/src/physics/PageSpec.ts` (rename of `PageDef.ts`) — owns
+  `PageSpec`, `CardSpec`, `SectionsConfig`, `Cardinal`, `Buoyancy`,
+  `ParentRef`, `CardKind`, and `buoyancyForKind`.
+- `web/src/transitions/TransitionSpec.ts` (new) — owns
+  `TransitionSpec`, `TransitionId`.
+- `web/src/routes/PageDef.ts` (new) —
+  `export type PageDef = PageSpec & TransitionSpec`.
+- `web/src/routes/pageDefs.ts` (moved from `transitions/`) — the
+  static route-keyed map.
+
+**Deferred (out of scope for this slice).**
+- Unifying the dual routing mechanism (static `pageDefs` map + runtime
+  `PageDefRegistry`). The dual mechanism is the deliberate output of
+  the 21b grilling session (2026-05-12) and reflects a load-bearing
+  asymmetry between module-time-known and render-time-known PageDefs.
+  Revisit only if that asymmetry stops being load-bearing.
+
+**Freebies folded into the slice.**
+- Delete `sectionsPushHistory` (dead Interface surface).
+- Fix two stale doc-comments referring to "Slice 21b will introduce a
+  pattern-matching variant" — 21b shipped the runtime registry instead;
+  pattern-matching is not pending work.
+
+**CONTEXT.md updates.** Add `PageSpec` and `TransitionSpec` entries;
+update the `PageDef` entry to "the composition of a **PageSpec** and a
+**TransitionSpec**."
+
+**Issue:** [#130](https://github.com/cpalaka/chaipalaka.com/issues/130)
 
 ---
 
