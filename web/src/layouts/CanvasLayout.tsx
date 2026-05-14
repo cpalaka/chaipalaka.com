@@ -9,7 +9,7 @@ import { useFrameEdge } from '../canvas/useFrameEdge'
 import { TransitionDirector } from '../transitions/TransitionDirector'
 import { PhysicsLayer } from '../transitions/PhysicsLayer'
 import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
-import { pageDefs } from '../transitions/pageDefs'
+import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/edges'
 import './CanvasLayout.css'
 

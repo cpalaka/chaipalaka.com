@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { PhysicsPage, type CardContent } from '../../physics/PhysicsPage'
 import { getPiecesByCategory } from '../../stuff/flash/pieces'
 import { getCategoryMeta } from '../../stuff/flash/categories'
-import type { PageDef, CardSpec } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
+import type { CardSpec } from '../../physics/PageSpec'
 import type { Viewport } from '../../physics/PhysicsWorld'
 
 const CHAIN_TOP = 100

@@ -7,7 +7,7 @@ import { TransitionDirector } from './TransitionDirector'
 import { PhysicsLayer } from './PhysicsLayer'
 import { PageDefRegistryProvider } from './PageDefRegistry'
 import { PhysicsCard } from '../physics/PhysicsCard'
-import type { PageDef } from '../physics/PageDef'
+import type { PageDef } from '../routes/PageDef'
 
 afterEach(() => {
     cleanup()

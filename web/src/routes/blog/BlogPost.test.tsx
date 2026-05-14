@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest'
 import { render, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import type { PageDef } from '../../physics/PageDef'
+import type { PageDef } from '../PageDef'
 
 vi.mock('../../canvas/flip', () => ({
     flipMorph: vi.fn(),

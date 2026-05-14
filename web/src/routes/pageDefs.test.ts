@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest'
 import { pageDefs, notFoundFallbackPageDef } from './pageDefs'
-import { pageDef as notFoundPageDef } from '../routes/NotFound'
+import { pageDef as notFoundPageDef } from './NotFound'
 
-describe('transitions/pageDefs', () => {
+describe('routes/pageDefs', () => {
     test('exports the three canvas-route pageDefs (/, /lifelog, /stuff)', () => {
         expect(Object.keys(pageDefs).sort()).toEqual(['/', '/lifelog', '/stuff'])
     })

@@ -14,8 +14,7 @@ import type { EdgeTransitions } from './dispatch'
  * should be pruned.
  *
  * Dynamic routes (e.g. /blog/:slug, /stuff/flash/:slug) are not enumerated
- * here — they go through the fallback decoupled T1+T2 path. Pattern-matched
- * edges are slice 21b / issue #81 territory.
+ * here — they go through the fallback decoupled T1+T2 path.
  */
 export const edges: EdgeTransitions = {
     '/→/lifelog': { primitive: 'anchor-slide', axis: 'horizontal' },

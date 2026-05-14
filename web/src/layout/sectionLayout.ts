@@ -2,8 +2,8 @@ import type {
     AuthorSectionDef,
     CardSpec,
     ParentRef,
-    PageDef,
-} from '../physics/PageDef'
+    PageSpec,
+} from '../physics/PageSpec'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 
 export const NAV_CARD_W = 180
@@ -220,12 +220,12 @@ export function partitionChain(opts: PartitionOptions): SectionLayout[] {
 }
 
 /**
- * Convenience: produce the layout for a PageDef whose `cards` form a chain.
+ * Convenience: produce the layout for a PageSpec whose `cards` form a chain.
  * Pulls heights from the supplied `heights` map (route is responsible for
  * measuring its own card content; we don't re-implement measurement here).
  */
 export function partitionPageDef(
-    pageDef: PageDef,
+    pageDef: PageSpec,
     viewport: Viewport,
     routeKey: string,
     heights: Record<string, number>,

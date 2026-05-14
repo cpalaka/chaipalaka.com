@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { PhysicsPage } from '../physics/PhysicsPage'
-import type { PageDef } from '../physics/PageDef'
+import type { PageDef } from './PageDef'
 import type { CardContent } from '../physics/PhysicsPage'
 
 export const pageDef: PageDef = {

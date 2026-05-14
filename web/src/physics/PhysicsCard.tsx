@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo } from 'react'
 import { useCardRegistry } from '../transitions/CardRegistry'
 import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
 import type { TetherHandle } from './Tether'
-import type { Buoyancy, ParentRef } from './PageDef'
+import type { Buoyancy, ParentRef } from './PageSpec'
 
 type ParentKind = 'ceiling' | 'floor' | 'card'
 

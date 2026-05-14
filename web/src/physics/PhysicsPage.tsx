@@ -1,8 +1,8 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { PhysicsCard } from './PhysicsCard'
-import { buoyancyForKind } from './PageDef'
+import { buoyancyForKind } from './PageSpec'
 import { usePageDef } from './usePageDef'
-import type { PageDef } from './PageDef'
+import type { PageSpec } from './PageSpec'
 import type { Viewport } from './PhysicsWorld'
 
 export interface CardContent {
@@ -28,7 +28,7 @@ export function PhysicsPage({
     pageDef,
     cardContent,
 }: {
-    pageDef: PageDef
+    pageDef: PageSpec
     cardContent: Record<string, CardContent>
 }) {
     usePageDef(pageDef)
