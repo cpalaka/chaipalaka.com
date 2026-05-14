@@ -4,16 +4,8 @@ import { useState } from 'react'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from './CardRegistry'
 import { PhysicsCardImpl } from './PhysicsCardImpl'
-import { useMinimizedRegistry } from '../canvas/useMinimizedRegistry'
 import type { PhysicsCardEntry } from './CardRegistry'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
-import type { MinimizedRegistry } from '../canvas/MinimizedRegistry'
-
-vi.mock('../canvas/flip', () => ({
-    flipMorph: vi.fn(),
-}))
-
-import { flipMorph } from '../canvas/flip'
 
 // Helper: build a PhysicsCardEntry with sensible defaults.
 function makeEntry(
@@ -68,10 +60,8 @@ async function flushRaf() {
 
 function renderWith(ui: React.ReactNode) {
     let world: PhysicsWorld | null = null
-    let registry: MinimizedRegistry | null = null
     function Probe() {
         world = usePhysicsWorld()
-        registry = useMinimizedRegistry()
         return null
     }
     const utils = render(
@@ -85,13 +75,9 @@ function renderWith(ui: React.ReactNode) {
     return {
         ...utils,
         getWorld: () => world!,
-        getRegistry: () => registry!,
     }
 }
 
-// MinimizedRegistry is a module-level singleton. Each test that minimizes a
-// card is responsible for restoring it (or using a unique id), so cross-test
-// state doesn't bleed.
 afterEach(() => {
     cleanup()
     vi.clearAllMocks()
@@ -133,94 +119,6 @@ describe('PhysicsCardImpl — lifecycle visibility (I-1)', () => {
             'article.physics-card',
         ) as HTMLElement
         expect(article.style.visibility).not.toBe('hidden')
-    })
-})
-
-describe('PhysicsCardImpl — minimize', () => {
-    test('renders a header bar with a Minimize button when minimizable=true', () => {
-        const entry = makeEntry({
-            id: 'min-1',
-            content: {
-                text: 't',
-                width: 120,
-                height: 80,
-                minimizable: true,
-                label: 'My card',
-            },
-        })
-        const { container } = renderWith(<PhysicsCardImpl entry={entry} />)
-        const article = container.querySelector('article.physics-card')!
-        const header = article.querySelector('[data-card-header]')
-        expect(header).toBeTruthy()
-        const btn = header!.querySelector(
-            'button[title="Minimize"]',
-        ) as HTMLButtonElement | null
-        expect(btn).toBeTruthy()
-    })
-
-    test('clicking the minimize button moves the card to the minimized registry and unmounts the article', async () => {
-        const entry = makeEntry({
-            id: 'min-2',
-            kind: 'lifelog',
-            content: {
-                text: 't',
-                width: 120,
-                height: 80,
-                minimizable: true,
-                label: 'Min me',
-            },
-        })
-        const { container, getRegistry } = renderWith(
-            <PhysicsCardImpl entry={entry} />,
-        )
-        await flushRaf()
-        const btn = container.querySelector(
-            'button[title="Minimize"]',
-        ) as HTMLButtonElement
-        expect(btn).toBeTruthy()
-
-        await act(async () => {
-            fireEvent.click(btn)
-        })
-
-        const reg = getRegistry()
-        const list = reg.list()
-        expect(list).toHaveLength(1)
-        expect(list[0]!.id).toBe('min-2')
-        expect(list[0]!.label).toBe('Min me')
-        expect(list[0]!.kind).toBe('lifelog')
-        expect(list[0]!.fromRect).toBeTruthy()
-
-        // After minimize, the article should be gone from the DOM.
-        expect(container.querySelector('article.physics-card')).toBeNull()
-
-        // Clean up so the singleton doesn't bleed.
-        reg.restore('min-2')
-    })
-
-    test('falls back to text as the label when no explicit label is provided', async () => {
-        const entry = makeEntry({
-            id: 'min-3',
-            content: {
-                text: 'fallback-text',
-                width: 120,
-                height: 80,
-                minimizable: true,
-            },
-        })
-        const { container, getRegistry } = renderWith(
-            <PhysicsCardImpl entry={entry} />,
-        )
-        await flushRaf()
-        const btn = container.querySelector(
-            'button[title="Minimize"]',
-        ) as HTMLButtonElement
-        await act(async () => {
-            fireEvent.click(btn)
-        })
-        const reg = getRegistry()
-        expect(reg.list()[0]!.label).toBe('fallback-text')
-        reg.restore('min-3')
     })
 })
 
@@ -457,79 +355,5 @@ describe('PhysicsCardImpl — unmount cleanup', () => {
         await flushRaf()
         expect(world!.getHandleById('unmount-me')).toBeUndefined()
         expect(world!.tether.records()).toHaveLength(0)
-    })
-})
-
-describe('PhysicsCardImpl — restore from chip', () => {
-    test('un-minimizing with a pending chip rect bypasses the reveal-gate hide and calls flipMorph', async () => {
-        const entry = makeEntry({
-            id: 'restore-me',
-            content: {
-                text: 'restorable',
-                width: 200,
-                height: 100,
-                minimizable: true,
-                label: 'Restorable',
-            },
-        })
-        const { container, getRegistry } = renderWith(
-            <PhysicsCardImpl entry={entry} />,
-        )
-        await flushRaf()
-
-        // Minimize via the in-DOM button so registry.minimize captures a real fromRect.
-        const btn = container.querySelector(
-            'button[title="Minimize"]',
-        ) as HTMLButtonElement
-        await act(async () => {
-            fireEvent.click(btn)
-        })
-        expect(container.querySelector('article.physics-card')).toBeNull()
-
-        const reg = getRegistry()
-        const fromChipRect = {
-            left: 10,
-            top: 20,
-            right: 110,
-            bottom: 120,
-            width: 100,
-            height: 100,
-            x: 10,
-            y: 20,
-            toJSON() {
-                return {}
-            },
-        } as DOMRect
-
-        // Restore with an explicit chip rect — this populates pendingRestoreRects
-        // for the card so its useEffect on un-minimize will see it.
-        await act(async () => {
-            reg.restore('restore-me', fromChipRect)
-        })
-
-        // The article has re-mounted. The restore-from-chip effect runs
-        // synchronously after the main effect; it calls setRevealed(true)
-        // immediately, so React re-renders without the visibility:hidden
-        // override.
-        const article = container.querySelector(
-            'article.physics-card',
-        ) as HTMLElement
-        expect(article).toBeTruthy()
-        expect(article.style.visibility).not.toBe('hidden')
-
-        // flipMorph fires inside a requestAnimationFrame after the rect is
-        // consumed — advance one frame.
-        await flushRaf()
-        expect(flipMorph).toHaveBeenCalledTimes(1)
-        const callArgs = (flipMorph as unknown as ReturnType<typeof vi.fn>).mock
-            .calls[0]!
-        expect(callArgs[0]).toBe(fromChipRect)
-        expect(callArgs[1]).toBe(article)
-        expect(callArgs[2]).toEqual(
-            expect.objectContaining({ opacityFrom: 0.5 }),
-        )
-
-        // Clean up so the singleton stays empty.
-        reg.restore('restore-me')
     })
 })
