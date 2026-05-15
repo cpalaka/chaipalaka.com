@@ -64,3 +64,33 @@
     text-decoration-thickness: 1px;
     pointer-events: auto;
 }
+
+/* Issue #148 — placeholder `/` route variants. Revert by deleting both
+ * rules when the V2 home regains content. */
+.physics-card[data-variant='letter'] {
+    padding: 0;
+    gap: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.physics-card[data-variant='balloon'] {
+    padding: 0;
+    gap: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    background: var(--color-accent, var(--color-bg-raised));
+    color: var(--color-bg);
+}
