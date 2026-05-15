@@ -40,6 +40,12 @@ export function CardImpl({ entry }: CardImplProps) {
     anchorRef.current = anchor
     const tetherHandleRef = useRef<TetherHandle | null>(null)
     const trailTetherHandleRef = useRef<TetherHandle | null>(null)
+    // The anchor-change effect below is meant to react to *post-mount*
+    // anchor moves (e.g. viewport resize re-layouts). On initial mount its
+    // deps trip from undefined → initial value, so without this guard it
+    // teleports the body to the anchor and zeroes velocity — wiping out
+    // any spawn offset the body just registered with.
+    const anchorEffectMountedRef = useRef(false)
 
     useEffect(() => {
         const el = elRef.current
@@ -221,6 +227,10 @@ export function CardImpl({ entry }: CardImplProps) {
 
     useEffect(() => {
         if (handleRef.current === null) return
+        if (!anchorEffectMountedRef.current) {
+            anchorEffectMountedRef.current = true
+            return
+        }
         world.setAnchor(handleRef.current, anchor)
         if (tetherHandleRef.current !== null && parent) {
             world.tether.remove(tetherHandleRef.current)
