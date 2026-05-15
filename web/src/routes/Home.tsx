@@ -15,6 +15,10 @@ const LETTERS_REST_FRAC = 0.4
 // Small ± fraction added to LETTERS_REST_FRAC per letter; keep this low so
 // the row reads as a single horizontal band with subtle vertical variance.
 const LETTERS_JITTER_FRAC = 0.015
+// Each letter spawns off its taut anchor by ±LETTERS_SPAWN_RANGE_PX on
+// both axes, so the row visibly settles into place under physics on load
+// rather than appearing pre-settled.
+const LETTERS_SPAWN_RANGE_PX = 25
 
 // Balloon card: deterministic position, reverse-gravity via balloon buoyancy.
 const BALLOON_W = 200
@@ -81,21 +85,29 @@ export default function Home() {
         setThemeRef.current('light')
     }, [])
 
-    // Jittered tether lengths per page load: a small ± offset on each letter's
-    // rest-y. wireTetherFor derives length from distance(parentAnchor, layoutPos),
-    // so varying rest-y varies tether length. Computed once on mount so the
-    // first paint matches SSR (uniform), then physics settles into the jittered
-    // resting positions naturally.
+    // Per-page-load jitter for letters:
+    // - rest-y: small ± fraction so tether lengths vary
+    //   (wireTetherFor derives length from distance(parentAnchor, layoutPos)).
+    // - spawnOffset: ±LETTERS_SPAWN_RANGE_PX on both axes so letters
+    //   visibly pendulum-settle into their taut positions rather than
+    //   materialising pre-settled.
+    // Computed once on mount so SSR's deterministic first paint isn't
+    // contradicted by the client's jittered values.
     const runtimePageDef = useMemo<PageDef>(() => {
+        const letterCount = pageDef.cards.filter((c) =>
+            c.id.startsWith('letter-'),
+        ).length
+        const jitter = Array.from({ length: letterCount }, () => ({
+            dy: (Math.random() - 0.5) * 2 * LETTERS_JITTER_FRAC,
+            sx: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX,
+            sy: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX,
+        }))
         let j = 0
-        const jitters = pageDef.cards
-            .filter((c) => c.id.startsWith('letter-'))
-            .map(() => (Math.random() - 0.5) * 2 * LETTERS_JITTER_FRAC)
         return {
             ...pageDef,
             cards: pageDef.cards.map((spec) => {
                 if (!spec.id.startsWith('letter-')) return spec
-                const dy = jitters[j++] ?? 0
+                const { dy, sx, sy } = jitter[j++] ?? { dy: 0, sx: 0, sy: 0 }
                 return {
                     ...spec,
                     anchor: (vp) => {
@@ -105,6 +117,7 @@ export default function Home() {
                             y: vp.height * (LETTERS_REST_FRAC + dy),
                         }
                     },
+                    spawnOffset: { x: sx, y: sy },
                 }
             }),
         }
