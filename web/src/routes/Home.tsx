@@ -18,7 +18,7 @@ const LETTERS_JITTER_FRAC = 0.015
 // Each letter spawns off its taut anchor by ±LETTERS_SPAWN_RANGE_PX on
 // both axes, so the row visibly settles into place under physics on load
 // rather than appearing pre-settled.
-const LETTERS_SPAWN_RANGE_PX = 25
+const LETTERS_SPAWN_RANGE_PX = 100
 
 // Balloon card: deterministic position, reverse-gravity via balloon buoyancy.
 const BALLOON_W = 200
