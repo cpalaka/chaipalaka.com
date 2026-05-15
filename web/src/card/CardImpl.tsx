@@ -19,6 +19,7 @@ export function CardImpl({ entry }: CardImplProps) {
         trail,
         buoyancy,
         anchor,
+        spawnOffset,
         content: {
             text,
             width,
@@ -48,11 +49,13 @@ export function CardImpl({ entry }: CardImplProps) {
         const h = height
 
         const SPAWN_OFFSET = 20
-        const { x: sx, y: sy } = computeSpawnOffset(
+        const { x: gx, y: gy } = computeSpawnOffset(
             anchorRef.current,
             world.getGravityVector(),
             SPAWN_OFFSET,
         )
+        const sx = gx + (spawnOffset?.x ?? 0)
+        const sy = gy + (spawnOffset?.y ?? 0)
 
         el.style.width = `${w}px`
         el.style.height = `${h}px`
