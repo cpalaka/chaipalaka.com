@@ -9,6 +9,10 @@ vi.mock('../canvas/flip', () => ({
     flipMorph: vi.fn(),
 }))
 
+const HOME_TEXT = 'chaipalaka.com'
+const LETTER_IDS = HOME_TEXT.split('').map((_ch, i) => `letter-${i}`)
+const ALL_IDS = [...LETTER_IDS, 'balloon']
+
 function renderHome() {
     return render(
         <PhysicsProvider>
@@ -25,17 +29,24 @@ describe('Home — pageDef shape', () => {
         expect(pageDef.gravity).toBe('down')
     })
 
-    test('exactly 2 cards with ids card-a and card-b', () => {
-        expect(pageDef.cards).toHaveLength(2)
-        const ids = pageDef.cards.map((c) => c.id).sort()
-        expect(ids).toEqual(['card-a', 'card-b'])
+    test('one letter card per character of chaipalaka.com plus a balloon', () => {
+        expect(pageDef.cards).toHaveLength(ALL_IDS.length)
+        expect(pageDef.cards.map((c) => c.id).sort()).toEqual([...ALL_IDS].sort())
     })
 
-    test('both cards are headline kind, parented to ceiling', () => {
+    test('letters are headline kind parented to ceiling', () => {
         for (const c of pageDef.cards) {
+            if (!c.id.startsWith('letter-')) continue
             expect(c.kind).toBe('headline')
             expect(c.parent).toBe('ceiling')
         }
+    })
+
+    test('balloon is note kind parented to floor', () => {
+        const balloon = pageDef.cards.find((c) => c.id === 'balloon')
+        expect(balloon).toBeDefined()
+        expect(balloon!.kind).toBe('note')
+        expect(balloon!.parent).toBe('floor')
     })
 })
 
@@ -49,10 +60,10 @@ describe('Home — render', () => {
         const articles = Array.from(
             container.querySelectorAll('article.physics-card'),
         )
-        expect(articles).toHaveLength(2)
+        expect(articles).toHaveLength(ALL_IDS.length)
         const ids = articles
             .map((a) => a.getAttribute('data-card-id'))
-            .sort()
-        expect(ids).toEqual(['card-a', 'card-b'])
+            .sort() as string[]
+        expect(ids).toEqual([...ALL_IDS].sort())
     })
 })

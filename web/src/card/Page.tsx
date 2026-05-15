@@ -62,6 +62,10 @@ export function Page({
                         buoyancy={buoyancyForKind(spec.kind)}
                         label={c?.label}
                         draggable={c?.draggable ?? true}
+                        variant={c?.variant}
+                        className={c?.className}
+                        style={c?.style}
+                        spawnOffset={spec.spawnOffset}
                     >
                         {c?.children}
                     </Card>

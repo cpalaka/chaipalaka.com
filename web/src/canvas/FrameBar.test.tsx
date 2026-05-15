@@ -5,7 +5,10 @@ import { MemoryRouter } from 'react-router-dom'
 import { FrameBar } from './FrameBar'
 import { getFrameEdgeController } from './useFrameEdge'
 
-function renderInRouter(initialPath = '/') {
+// Default to /blog: per issue #148, FrameBar self-suppresses at `/`
+// (placeholder route). Tests that need to inspect FrameBar internals must
+// render under a path where it actually mounts.
+function renderInRouter(initialPath = '/blog') {
     return render(
         <MemoryRouter initialEntries={[initialPath]}>
             <FrameBar />
@@ -21,12 +24,9 @@ describe('FrameBar', () => {
         expect(link).toHaveAttribute('href', '/')
     })
 
-    test('site-name link is active when at /', () => {
-        renderInRouter('/')
-        expect(screen.getByRole('link', { name: 'chaipalaka' })).toHaveAttribute(
-            'data-active',
-            'true',
-        )
+    test('FrameBar self-suppresses at / (placeholder route, issue #148)', () => {
+        const { container } = renderInRouter('/')
+        expect(container).toBeEmptyDOMElement()
     })
 
     test('site-name link is NOT active when at /blog', () => {
@@ -45,11 +45,6 @@ describe('FrameBar', () => {
     test('shows current pathname in the current-page indicator', () => {
         renderInRouter('/blog')
         expect(screen.getByText('/blog')).toBeInTheDocument()
-    })
-
-    test('no current-page indicator shown at home (/)', () => {
-        renderInRouter('/')
-        expect(document.querySelector('.frame-bar__current-page')).not.toBeInTheDocument()
     })
 
     test('blog nav link is active when at /blog', () => {
