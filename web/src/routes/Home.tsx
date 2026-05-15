@@ -10,15 +10,16 @@ const TEXT = 'chaipalaka.com'
 
 // Letter cards: small squares, one per character.
 const LETTER_SIZE = 48
-const LETTER_SPACING = 56
-const LETTERS_REST_FRAC = 0.4
+const LETTER_SPACING = 70
+const LETTERS_REST_FRAC = 0.2
 // Small ± fraction added to LETTERS_REST_FRAC per letter; keep this low so
 // the row reads as a single horizontal band with subtle vertical variance.
-const LETTERS_JITTER_FRAC = 0.015
+const LETTERS_JITTER_FRAC = 0.025
 // Each letter spawns off its taut anchor by ±LETTERS_SPAWN_RANGE_PX on
 // both axes, so the row visibly settles into place under physics on load
 // rather than appearing pre-settled.
-const LETTERS_SPAWN_RANGE_PX = 100
+const LETTERS_SPAWN_RANGE_PX_X = 30
+const LETTERS_SPAWN_RANGE_PX_Y = 10
 
 // Balloon card: deterministic position, reverse-gravity via balloon buoyancy.
 const BALLOON_W = 200
@@ -99,8 +100,8 @@ export default function Home() {
         ).length
         const jitter = Array.from({ length: letterCount }, () => ({
             dy: (Math.random() - 0.5) * 2 * LETTERS_JITTER_FRAC,
-            sx: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX,
-            sy: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX,
+            sx: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX_X,
+            sy: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX_Y,
         }))
         let j = 0
         return {
