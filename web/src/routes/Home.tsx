@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Page } from '../card/Page'
 import { useGallery } from '../canvas/useGallery'
+import { useTheme } from '../controls/useTheme'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 import type { CardSpec } from '../physics/PageSpec'
@@ -11,7 +12,9 @@ const TEXT = 'chaipalaka.com'
 const LETTER_SIZE = 48
 const LETTER_SPACING = 56
 const LETTERS_REST_FRAC = 0.4
-const LETTERS_JITTER_FRAC = 0.06
+// Small ± fraction added to LETTERS_REST_FRAC per letter; keep this low so
+// the row reads as a single horizontal band with subtle vertical variance.
+const LETTERS_JITTER_FRAC = 0.015
 
 // Balloon card: deterministic position, reverse-gravity via balloon buoyancy.
 const BALLOON_W = 200
@@ -67,11 +70,15 @@ const cardContent: Record<string, CardContent> = {
 
 export default function Home() {
     const { setActive } = useGallery()
+    const { setTheme } = useTheme()
     const setActiveRef = useRef(setActive)
+    const setThemeRef = useRef(setTheme)
     setActiveRef.current = setActive
+    setThemeRef.current = setTheme
 
     useEffect(() => {
         setActiveRef.current('flow-shader')
+        setThemeRef.current('light')
     }, [])
 
     // Jittered tether lengths per page load: a small ± offset on each letter's
