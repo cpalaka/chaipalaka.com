@@ -50,7 +50,11 @@ When asked to work on issue `N`:
    may have been merged since the previous session ended, and branching
    from a stale base wastes everyone's time. Do not skip this step.
 2. Read the issue: `gh issue view N --repo cpalaka/chaipalaka.com`.
-3. Re-read the relevant section(s) of `PRD.md` for design context.
+3. Re-read the relevant section(s) of `PRD.md` for design context, plus
+   `CONTEXT.md` for the domain glossary + current architecture overview, and
+   any relevant entries in `docs/adr/` for ratified architectural decisions.
+   These three together are the authoritative design record — read them
+   before planning, not just before code review.
 4. Create the feature branch: `git checkout -b <branch-name>` (see naming
    below). You should already be on freshly-pulled `main` from step 1.
 5. Plan briefly in the chat (1–5 bullets is fine). Ask only the questions that
