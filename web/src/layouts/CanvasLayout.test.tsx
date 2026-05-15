@@ -4,9 +4,9 @@ import { MemoryRouter } from 'react-router-dom'
 import CanvasLayout from './CanvasLayout'
 import { getFrameEdgeController } from '../canvas/useFrameEdge'
 
-function renderCanvasLayout() {
+function renderCanvasLayout(initialPath = '/') {
     return render(
-        <MemoryRouter initialEntries={['/']}>
+        <MemoryRouter initialEntries={[initialPath]}>
             <CanvasLayout />
         </MemoryRouter>,
     )
@@ -41,9 +41,14 @@ describe('CanvasLayout frame-edge', () => {
 })
 
 describe('CanvasLayout FrameBar presence', () => {
-    test('FrameBar is mounted inside CanvasLayout', () => {
-        renderCanvasLayout()
+    test('FrameBar is mounted inside CanvasLayout on regular routes', () => {
+        renderCanvasLayout('/blog')
         expect(screen.getByRole('banner')).toBeInTheDocument()
         expect(screen.getByText('chaipalaka')).toBeInTheDocument()
+    })
+
+    test('FrameBar is suppressed at / (placeholder route, issue #148)', () => {
+        renderCanvasLayout('/')
+        expect(screen.queryByRole('banner')).not.toBeInTheDocument()
     })
 })
