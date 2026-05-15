@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Page } from '../card/Page'
 import { useGallery } from '../canvas/useGallery'
 import { useTheme } from '../controls/useTheme'
@@ -8,9 +8,34 @@ import type { CardSpec } from '../physics/PageSpec'
 
 const TEXT = 'chaipalaka.com'
 
-// Letter cards: small squares, one per character.
-const LETTER_SIZE = 48
-const LETTER_SPACING = 70
+// Letter cards — responsive sizing. On narrow viewports the row would
+// otherwise overflow (14 letters × 70 px desktop spacing ≈ 980 px wide),
+// so both spacing and per-card size scale down with vp.width. Bounds:
+//   spacing — viewport-fit, capped at LETTER_SPACING_MAX
+//   size    — fraction of spacing, clamped to [MIN, MAX]
+//   font    — proportional to size so the glyph keeps breathing room
+const LETTER_SPACING_MAX = 70
+const LETTER_SIZE_MAX = 48
+const LETTER_SIZE_MIN = 20
+const LETTER_SIZE_RATIO = 0.75
+const LETTER_FONT_RATIO = 0.5
+const LETTER_ROW_H_PADDING = 16
+
+function letterMetrics(vpWidth: number): {
+    spacing: number
+    size: number
+    fontSize: number
+} {
+    const available = Math.max(0, vpWidth - 2 * LETTER_ROW_H_PADDING)
+    const spacing = Math.min(LETTER_SPACING_MAX, available / TEXT.length)
+    const size = Math.max(
+        LETTER_SIZE_MIN,
+        Math.min(LETTER_SIZE_MAX, Math.round(spacing * LETTER_SIZE_RATIO)),
+    )
+    const fontSize = Math.max(10, Math.round(size * LETTER_FONT_RATIO))
+    return { spacing, size, fontSize }
+}
+
 const LETTERS_REST_FRAC = 0.2
 // Small ± fraction added to LETTERS_REST_FRAC per letter; keep this low so
 // the row reads as a single horizontal band with subtle vertical variance.
@@ -39,7 +64,9 @@ export const pageDef: PageDef = {
                 kind: 'headline',
                 parent: 'ceiling',
                 anchor: (vp) => ({
-                    x: vp.width / 2 + (i - (TEXT.length - 1) / 2) * LETTER_SPACING,
+                    x:
+                        vp.width / 2 +
+                        (i - (TEXT.length - 1) / 2) * letterMetrics(vp.width).spacing,
                     y: vp.height * LETTERS_REST_FRAC,
                 }),
             }),
@@ -53,24 +80,34 @@ export const pageDef: PageDef = {
     ],
 }
 
-const cardContent: Record<string, CardContent> = {
-    ...Object.fromEntries(
-        TEXT.split('').map((ch, i) => [
-            `letter-${i}`,
-            {
-                text: ch,
-                width: LETTER_SIZE,
-                height: LETTER_SIZE,
-                variant: 'letter',
-            },
-        ]),
-    ),
-    balloon: {
-        text: 'coming soon',
-        width: BALLOON_W,
-        height: BALLOON_H,
-        variant: 'balloon',
-    },
+function buildCardContent(
+    letterSize: number,
+    letterFontSize: number,
+): Record<string, CardContent> {
+    return {
+        ...Object.fromEntries(
+            TEXT.split('').map((ch, i) => [
+                `letter-${i}`,
+                {
+                    text: ch,
+                    width: letterSize,
+                    height: letterSize,
+                    variant: 'letter',
+                    style: { fontSize: `${letterFontSize}px` },
+                },
+            ]),
+        ),
+        balloon: {
+            text: 'coming soon',
+            width: BALLOON_W,
+            height: BALLOON_H,
+            variant: 'balloon',
+        },
+    }
+}
+
+function getInitialVpWidth(): number {
+    return typeof window !== 'undefined' ? window.innerWidth : 1024
 }
 
 export default function Home() {
@@ -85,6 +122,25 @@ export default function Home() {
         setActiveRef.current('flow-shader')
         setThemeRef.current('light')
     }, [])
+
+    // Track viewport width so cardContent (which feeds the physics body's
+    // width/height) can rescale on resize. Page already listens to resize
+    // independently for its own anchor recomputation — having one more
+    // listener here is cheap and keeps Home self-contained.
+    const [vpWidth, setVpWidth] = useState(getInitialVpWidth)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const onResize = () => setVpWidth(window.innerWidth)
+        onResize()
+        window.addEventListener('resize', onResize, { passive: true })
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
+
+    const { size: letterSize, fontSize: letterFontSize } = letterMetrics(vpWidth)
+    const runtimeCardContent = useMemo(
+        () => buildCardContent(letterSize, letterFontSize),
+        [letterSize, letterFontSize],
+    )
 
     // Per-page-load jitter for letters:
     // - rest-y: small ± fraction so tether lengths vary
@@ -124,5 +180,5 @@ export default function Home() {
         }
     }, [])
 
-    return <Page pageDef={runtimePageDef} cardContent={cardContent} />
+    return <Page pageDef={runtimePageDef} cardContent={runtimeCardContent} />
 }
