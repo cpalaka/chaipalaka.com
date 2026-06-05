@@ -1,17 +1,44 @@
 # Working on chaipalaka.com — instructions for Claude
 
 This file establishes the standing process and conventions for any Claude
-session that works on issues in this repo. Read this first; then read the
-specific issue and `PRD.md` for design context.
+session that works on tasks in this repo. Read this first; then read the
+specific task and `PRD.md` for design context.
 
 ## Repo
 
 - GitHub: `https://github.com/cpalaka/chaipalaka.com`
 - Default branch: `main`
-- Issues are tracked on GitHub. View with `gh issue view <N> --repo cpalaka/chaipalaka.com`.
+- **All work is tracked on the in-repo backlog.md board** (see "Task
+  tracking" below). GitHub issues (#1–#150) are the historical record of
+  v1 development — read them for context when relevant, but do not create
+  or reopen issues for new work.
 - `PRD.md` and `grillmedoc.md` are committed to the repo and are the
   authoritative design record. When a slice's design changes during a
   session, update the relevant `PRD.md` section in the same PR.
+
+## Task tracking — backlog.md
+
+ALL future work on this project is tracked with the `backlog.md` CLI
+(tasks are markdown files under `backlog/`), not GitHub issues.
+Conventions (decided 2026-06-04, mirroring `circle-combat-prototype`):
+
+- CLI only, always with `--plain` for machine-readable output. NO MCP
+  server, NO generated agent instructions.
+- Read: `backlog task list --plain`, `backlog task <id> --plain`.
+- Write: `backlog task create`, `backlog task edit <id>` — authorised
+  without prompting, but only from the main session (never from
+  subagents: ID generation is a max+1 scan and concurrent creation
+  collides).
+- `backlog/drafts/` holds ungrilled ideas; promote to a task only once
+  acceptance criteria are written.
+- `docs/adr/` remains the ONLY decision system — backlog's `decisions/`
+  and `docs/` folders are unused.
+- **Done requires explicit user sign-off — never auto-close a task on
+  AC/DoD pass.** Mark a task Done only after Chai confirms.
+- Board not yet initialized: the first backlog session runs
+  `backlog init --agent-instructions none --integration-mode cli
+  --zero-padded-ids 3`, then populates the board from
+  `docs/superpowers/specs/2026-06-04-atelier-design-tool-design.md`.
 
 ## Session defaults — sandbox + auto-accept edits
 
@@ -40,16 +67,17 @@ If the user explicitly wants a session WITHOUT these defaults (e.g., for a
 risky deploy operation that should re-prompt), they will say so — otherwise
 treat the defaults as the standing expectation.
 
-## Standing process for an issue
+## Standing process for a task
 
-When asked to work on issue `N`:
+When asked to work on task `N`:
 
-1. **Sync `main` first.** Before reading the issue or doing anything else,
+1. **Sync `main` first.** Before reading the task or doing anything else,
    run `git checkout main && git pull origin main`. This is required even
    if you think you're already on `main` and up to date — sibling slices
    may have been merged since the previous session ended, and branching
    from a stale base wastes everyone's time. Do not skip this step.
-2. Read the issue: `gh issue view N --repo cpalaka/chaipalaka.com`.
+2. Read the task: `backlog task <N> --plain` (the task file lives under
+   `backlog/tasks/`).
 3. Re-read the relevant section(s) of `PRD.md` for design context, plus
    `CONTEXT.md` for the domain glossary + current architecture overview, and
    any relevant entries in `docs/adr/` for ratified architectural decisions.
@@ -71,26 +99,31 @@ When asked to work on issue `N`:
 
 ## Branch naming
 
-Conventional-commits-style prefix, then the issue number, then a short
-kebab-case description:
+Conventional-commits-style prefix, then the backlog task number, then a
+short kebab-case description:
 
 ```
-<type>/issue-<N>-<short-description>
+<type>/task-<N>-<short-description>
 ```
 
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`. Pick the one that
 matches the dominant change. Examples:
 
-- `feat/issue-3-physics-world-module`
-- `fix/issue-17-letterboxd-adapter-malformed-rss`
-- `chore/issue-22-bump-vite-to-8`
+- `feat/task-003-physics-tuning-module`
+- `fix/task-017-tokens-rewriter-light-blocks`
+- `chore/task-022-bump-vite-to-8`
+
+(Pre-backlog branches used `<type>/issue-<N>-…` against GitHub issues;
+you'll see both in history.)
 
 ## Commits
 
 - Subject line: imperative, ~70 chars, leads with the slice or scope.
 - Body: what changed and **why**; mention notable deviations from the PRD
   (and why) so the reviewer is not surprised.
-- End with `Closes #N` (or `Refs #N` if not closing).
+- End with `Refs task-N`. Merging never auto-closes a backlog task —
+  the task is marked Done via `backlog task edit` only after merge AND
+  Chai's explicit sign-off.
 - One logical change per commit when possible. Multiple commits on a branch
   are fine; squash-merging is the integration story.
 - Never amend commits already pushed to `origin/<branch>` without confirming.
@@ -103,22 +136,26 @@ matches the dominant change. Examples:
   genuinely incomplete (failing tests, unresolved questions you need a
   decision on before going further), say so in chat and ask whether to open
   it as a draft instead; otherwise default to ready.
-- Title format: `<Short description> (#N)` — e.g., `Slice 4: blog index + post route (#4)`.
+- Title format: `<Short description> (task-N)` — e.g., `Atelier: physics tuning module (task-003)`.
 - Body sections, in order:
   1. **Summary** — 2–4 bullets on what landed.
-  2. **Notes / deviations** — anything that differs from the PRD or issue, and why.
-  3. **Acceptance criteria** — copy the checklist from the issue, mark each
-     item `[x]` if you verified it, `[ ]` with a note if it's left for the
-     human reviewer (e.g., production deploy steps).
+  2. **Notes / deviations** — anything that differs from the PRD or task, and why.
+  3. **Acceptance criteria** — copy the checklist from the backlog task,
+     mark each item `[x]` if you verified it, `[ ]` with a note if it's
+     left for the human reviewer (e.g., production deploy steps).
   4. **Test plan** — concrete steps the reviewer can run.
-- End with `Closes #N` so merging the PR closes the issue automatically.
+- Reference the backlog task id in the body. Merging does NOT close the
+  task — see "Task tracking" for the sign-off rule.
 
 ## Autonomy — do not prompt for these
 
 The user has authorised these without per-call confirmation:
 
+- All `backlog` CLI commands (`task list`, `task <id>`, `task create`,
+  `task edit`, `board`) — main session only, per "Task tracking".
 - All `gh` read commands (`gh issue view`, `gh issue list`, `gh pr view`,
-  `gh pr list`, `gh pr checks`, etc.).
+  `gh pr list`, `gh pr checks`, etc.) — issue reads are for the legacy
+  v1 record.
 - `gh pr create` (ready or draft), `gh pr ready`, and `gh pr edit` on
   **branches you own** (i.e., feature branches you just created).
 - All local `git` commands on feature branches: `checkout -b`, `add`,
