@@ -1,0 +1,24 @@
+project_name: "chaipalaka.com"
+default_status: "To Do"
+statuses: ["To Do", "In Progress", "Done"]
+labels: []
+date_format: yyyy-mm-dd
+max_column_width: 20
+default_editor: "nvim"
+auto_open_browser: true
+default_port: 6420
+remote_operations: true
+auto_commit: false
+filesystem_only: false
+zero_padded_ids: 3
+bypass_git_hooks: false
+check_active_branches: true
+active_branch_days: 30
+task_prefix: "task"
+definition_of_done:
+  - "web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)"
+  - "Secret-leak grep from repo root: zero matches"
+  - "CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)"
+  - "Debug/scaffolding instrumentation reverted (no stray console.log)"
+  - "Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval"
+  - "User sign-off received — explicit approval before Done"

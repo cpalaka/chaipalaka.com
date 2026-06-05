@@ -2,8 +2,9 @@
 
 - **Status**: approved (brainstorm session 2026-06-04)
 - **Owner**: Chai
-- **Implementation tracking**: backlog.md kanban board (to be initialized in this repo). This spec is the
-  source document for board population — do NOT route this work through GitHub issues or writing-plans.
+- **Implementation tracking**: backlog.md kanban board in this repo — tasks 001–010, milestone
+  "Atelier v1" (seeded 2026-06-05 from this spec via the to-issues breakdown, approved by Chai;
+  see `backlog task list --plain`). Do NOT route this work through GitHub issues or writing-plans.
 
 ## Context & goal
 
@@ -204,8 +205,9 @@ Every consequential piece is a pure function, tested in the repo's existing idio
 
 ## Implementation handoff
 
-Work is tracked on a **backlog.md** kanban board in this repo (to be installed/initialized). A
-fresh session should read this spec and decompose it into tasks. Natural seams:
+Work is tracked on the **backlog.md** kanban board in this repo (decomposed 2026-06-05 into tasks
+001–010, numbering matching the seams below; one deviation: the chain write-back target moved
+from seam 6 to seam 9, which creates `layoutTuning.ts`). Natural seams:
 
 1. `TuningSchema` extensions (enum/boolean/group) + widget components
 2. `physicsTuning.ts` refactor (read-at-use) — independently valuable

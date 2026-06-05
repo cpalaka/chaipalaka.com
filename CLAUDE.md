@@ -18,27 +18,43 @@ specific task and `PRD.md` for design context.
 
 ## Task tracking — backlog.md
 
-ALL future work on this project is tracked with the `backlog.md` CLI
-(tasks are markdown files under `backlog/`), not GitHub issues.
-Conventions (decided 2026-06-04, mirroring `circle-combat-prototype`):
+ALL future work on this project is tracked on the in-repo board under
+`backlog/` (Backlog.md, pinned v1.45.2, CLI-only — no MCP, no generated
+agent instructions), not GitHub issues. Forward-looking work goes there,
+not in memory files or doc ledgers. `docs/adr/` stays the ONLY decision
+system; design docs/specs stay in `docs/` (backlog's `decisions/` and
+`docs/` folders are unused). Conventions (decided 2026-06-04, mirroring
+`circle-combat-prototype`):
 
-- CLI only, always with `--plain` for machine-readable output. NO MCP
-  server, NO generated agent instructions.
-- Read: `backlog task list --plain`, `backlog task <id> --plain`.
-- Write: `backlog task create`, `backlog task edit <id>` — authorised
-  without prompting, but only from the main session (never from
-  subagents: ID generation is a max+1 scan and concurrent creation
-  collides).
-- `backlog/drafts/` holds ungrilled ideas; promote to a task only once
-  acceptance criteria are written.
-- `docs/adr/` remains the ONLY decision system — backlog's `decisions/`
-  and `docs/` folders are unused.
-- **Done requires explicit user sign-off — never auto-close a task on
-  AC/DoD pass.** Mark a task Done only after Chai confirms.
-- Board not yet initialized: the first backlog session runs
-  `backlog init --agent-instructions none --integration-mode cli
-  --zero-padded-ids 3`, then populates the board from
-  `docs/superpowers/specs/2026-06-04-atelier-design-tool-design.md`.
+- **Session start: check the board** — `backlog task list --plain` (or
+  `backlog board`). Set the session's task to `In Progress`.
+- **Always `--plain`** when listing/viewing tasks. All task operations via
+  the `backlog` CLI — never hand-edit files in `backlog/` (the CLI owns
+  IDs, naming, frontmatter). Config (`backlog/config.yml`) is fine to
+  hand-edit.
+- Write commands (`task create`, `task edit`) are authorised without
+  prompting, but **only from the main session** — never from parallel
+  subagents/workflow agents (ID generation is a max+1 scan; concurrent
+  creation collides).
+- **AC = task-specific verification** (typecheck/test/build green, dev
+  smoke of the affected route, screenshot where visual). Standing gates
+  live in the Definition of Done defaults (`backlog/config.yml`), not AC.
+- Multi-task slices keep a plan doc in `docs/superpowers/plans/` linked
+  via `--doc`, with a `Tracked by: task-NNN` header — **board status/AC
+  is the single source of progress; plan checkboxes are in-session
+  scratch** (completed plans get a STATUS banner instead). Single-session
+  tasks plan in-task via `--plan`.
+- **On completion**: `backlog task edit <id> --check-ac N … --notes
+  "<summary + commit hash>" -s Done`; task-file changes ride along with
+  code commits (`auto_commit` is false). **Done requires explicit user
+  sign-off — never auto-close on AC/DoD pass.** Mark Done only after
+  Chai confirms.
+- **Milestones = phases**; **labels = free-form** (multiple via `-l a,b`),
+  added organically as themes emerge. Every task Claude creates carries
+  the `claude-generated` label.
+- **Drafts = ungrilled ideas** — `backlog draft create` to capture;
+  promote to a task only once acceptance criteria are written.
+- Public repo: task files are repo content — same hygiene rules as code.
 
 ## Session defaults — sandbox + auto-accept edits
 
