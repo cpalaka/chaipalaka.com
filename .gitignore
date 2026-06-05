@@ -43,4 +43,7 @@ web/.vitest-cache/
 
 # Personal notes
 NOTES.md
+
+# Claude session artifacts — local only
+.claude/
 .superpowers/
