@@ -78,6 +78,18 @@ layout anchor, optional `parent` (another `cardId` or `'ceiling'` /
 `'floor'`), and content.
 _Avoid_: card config, card data.
 
+**RouteLayout**:
+The data half of a scatter route's **PageSpec** — `{ gravity, cards: [{
+id, kind, parent, anchor }] }` authored in a sibling
+`web/src/routes/<route>.layout.ts` file and zipped with the route's card
+content via `pageSpecFromLayout`. An anchor is either a viewport-fraction
+literal `{ fx, fy }` (the drag-editable, regenerable form) or a closure
+`(viewport) => Vec2` (legal for computed layouts — the `/` placeholder's
+letters). Fraction-only layout files are pure data literals: the
+Atelier's write-back regenerates them whole, never via AST surgery.
+_Avoid_: layout config, arrangement (the Atelier axis that *edits* a
+**RouteLayout**, not the data itself), layout def.
+
 ### Card lifecycle
 
 The three states below combine orthogonally with **Strung** / **Detached**

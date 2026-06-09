@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Stuff, { pageDef } from './Stuff'
+import { stuffLayout } from './Stuff.layout'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from '../card/CardRegistry'
 import { CardLayer } from '../card/CardLayer'
@@ -38,6 +39,16 @@ describe('Stuff — pageDef shape', () => {
         for (const c of pageDef.cards) {
             expect(c.kind).toBe('portfolio')
             expect(c.parent).toBe('ceiling')
+        }
+    })
+
+    test('layout is a pure data literal — fraction anchors only', () => {
+        for (const card of stuffLayout.cards) {
+            expect(typeof card.anchor).not.toBe('function')
+            expect(card.anchor).toEqual({
+                fx: expect.any(Number),
+                fy: expect.any(Number),
+            })
         }
     })
 })

@@ -19,7 +19,7 @@ describe('LastFmAdapter', () => {
   describe('fetchRecentTracks() — happy path with now-playing', () => {
     it('returns a Track for each item in the fixture', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -31,7 +31,7 @@ describe('LastFmAdapter', () => {
 
     it('sets isNowPlaying:true on the first track when @attr.nowplaying is present', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -48,7 +48,7 @@ describe('LastFmAdapter', () => {
 
     it('omits ts for the now-playing track (no date in upstream)', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -60,7 +60,7 @@ describe('LastFmAdapter', () => {
 
     it('sets albumArt from the extralarge image URL', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -74,7 +74,7 @@ describe('LastFmAdapter', () => {
 
     it('sets isNowPlaying:false and ts on past tracks', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -91,7 +91,7 @@ describe('LastFmAdapter', () => {
   describe('fetchRecentTracks() — no now-playing', () => {
     it('sets isNowPlaying:false on all tracks when no @attr.nowplaying', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(noNowPlayingJson),
       });
@@ -105,7 +105,7 @@ describe('LastFmAdapter', () => {
   describe('field normalisation', () => {
     it('converts empty-string mbid to undefined', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -117,7 +117,7 @@ describe('LastFmAdapter', () => {
 
     it('converts empty-string albumArt to undefined', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch(withNowPlayingJson),
       });
@@ -131,7 +131,7 @@ describe('LastFmAdapter', () => {
   describe('error handling', () => {
     it('throws on non-2xx response', async () => {
       const adapter = new LastFmAdapter({
-        apiKey: 'test-key',
+        apiKey: 'testkey',
         user: 'cpalaka',
         fetch: mockFetch('{"error":10,"message":"Invalid API key"}', 403),
       });

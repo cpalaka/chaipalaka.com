@@ -1,38 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Page } from '../card/Page'
 import { NoJsFallback } from '../nojs/NoJsFallback'
+import { stuffLayout } from './Stuff.layout'
+import { pageSpecFromLayout } from './routeLayout'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 
-export const pageDef: PageDef = {
-    gravity: 'down',
-    cards: [
-        {
-            id: 'stuff-flash',
-            kind: 'portfolio',
-            parent: 'ceiling',
-            anchor: (vp) => ({ x: vp.width * 0.25, y: 200 }),
-        },
-        {
-            id: 'stuff-digital-art',
-            kind: 'portfolio',
-            parent: 'ceiling',
-            anchor: (vp) => ({ x: vp.width * 0.5, y: 200 }),
-        },
-        {
-            id: 'stuff-software',
-            kind: 'portfolio',
-            parent: 'ceiling',
-            anchor: (vp) => ({ x: vp.width * 0.75, y: 200 }),
-        },
-        {
-            id: 'stuff-site',
-            kind: 'portfolio',
-            parent: 'ceiling',
-            anchor: (vp) => ({ x: vp.width * 0.5, y: 420 }),
-        },
-    ],
-}
+export const pageDef: PageDef = pageSpecFromLayout(stuffLayout)
 
 const cardContent: Record<string, CardContent> = {
     'stuff-flash': {

@@ -1,51 +1,57 @@
 import { describe, test, expect } from 'vitest'
-import {
-    booksAnchor,
-    nowPlayingAnchor,
-    filmsAnchor,
-    activityAnchor,
-} from './Lifelog'
+import { lifelogLayout } from './Lifelog.layout'
+import { resolveAnchor } from './routeLayout'
 import { PhysicsWorld } from '../physics/PhysicsWorld'
 import { wireTetherFor } from '../physics/Tether'
 
 const viewport = { width: 1200, height: 800 }
 
+function anchorOf(id: string) {
+    const card = lifelogLayout.cards.find((c) => c.id === id)
+    if (!card) throw new Error(`no card ${id} in lifelogLayout`)
+    return resolveAnchor(card.anchor)
+}
+
 describe('Lifelog anchor placement', () => {
     test('books card anchors to horizontal center', () => {
-        expect(booksAnchor(viewport).x).toBe(viewport.width / 2)
+        expect(anchorOf('lifelog-books')(viewport).x).toBe(viewport.width / 2)
     })
 
     test('books card anchors at y=200', () => {
-        expect(booksAnchor(viewport).y).toBe(200)
+        expect(anchorOf('lifelog-books')(viewport).y).toBe(200)
     })
 
     test('books anchor adapts to viewport width', () => {
         const narrow = { width: 800, height: 600 }
-        expect(booksAnchor(narrow).x).toBe(400)
+        expect(anchorOf('lifelog-books')(narrow).x).toBe(400)
+    })
+})
+
+describe('Lifelog layout — pure data literal', () => {
+    test('every anchor is a fraction object (whole-file regeneration stays possible)', () => {
+        for (const card of lifelogLayout.cards) {
+            expect(typeof card.anchor).not.toBe('function')
+            expect(card.anchor).toEqual({
+                fx: expect.any(Number),
+                fy: expect.any(Number),
+            })
+        }
     })
 })
 
 describe('Lifelog ceiling tethers — issue #72 regression', () => {
     test('each ceiling-strung card has a distinct rope origin matching its own anchor.x', () => {
         const world = new PhysicsWorld({ viewport })
-        const cards = [
-            {
-                anchor: booksAnchor(viewport),
-                size: { width: 320, height: 280 },
-            },
-            {
-                anchor: nowPlayingAnchor(viewport),
-                size: { width: 280, height: 180 },
-            },
-            {
-                anchor: filmsAnchor(viewport),
-                size: { width: 320, height: 320 },
-            },
-            {
-                anchor: activityAnchor(viewport),
-                size: { width: 280, height: 360 },
-            },
-        ]
+        const sizes: Record<string, { width: number; height: number }> = {
+            'lifelog-books': { width: 320, height: 280 },
+            'lifelog-now-playing': { width: 280, height: 180 },
+            'lifelog-films': { width: 320, height: 320 },
+            'lifelog-activity': { width: 280, height: 360 },
+        }
+        const cards = lifelogLayout.cards.map((c) => ({
+            anchor: resolveAnchor(c.anchor)(viewport),
+            size: sizes[c.id]!,
+        }))
         cards.forEach((c, i) => {
             const h = world.registerById(`card-${i}`, c.anchor, c.size)
             wireTetherFor(world, world.ceilingHandle, 'ceiling', h, c.anchor)

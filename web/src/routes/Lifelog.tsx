@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Page, type CardContent } from '../card/Page'
 import { NoJsFallback } from '../nojs/NoJsFallback'
+import { lifelogLayout } from './Lifelog.layout'
+import { pageSpecFromLayout } from './routeLayout'
 import type { PageDef } from './PageDef'
-import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'
 
 // ─── Books card ──────────────────────────────────────────────────────────────
 
 const BOOKS_W = 320
 const BOOKS_H = 280
-
-export const booksAnchor = (vp: Viewport): Vec2 => ({ x: vp.width / 2, y: 200 })
 
 type BookShelf = 'currently-reading'
 
@@ -79,8 +78,6 @@ function BooksPanel() {
 
 const NOW_PLAYING_W = 280
 const NOW_PLAYING_H = 180
-
-export const nowPlayingAnchor = (vp: Viewport): Vec2 => ({ x: vp.width - 200, y: 80 })
 
 interface Track {
     artist: string
@@ -154,8 +151,6 @@ function NowPlayingPanel() {
 
 const FILMS_W = 320
 const FILMS_H = 320
-
-export const filmsAnchor = (vp: Viewport): Vec2 => ({ x: vp.width / 2, y: 600 })
 
 interface Film {
     letterboxdId: string
@@ -251,8 +246,6 @@ function FilmsPanel() {
 const ACTIVITY_W = 280
 const ACTIVITY_H = 360
 
-export const activityAnchor = (vp: Viewport): Vec2 => ({ x: 200, y: vp.height / 2 })
-
 type ActivityType = 'push' | 'pull_request' | 'issue' | 'release' | 'star'
 
 interface Activity {
@@ -339,35 +332,7 @@ function ActivityPanel() {
 
 // ─── Page definition ──────────────────────────────────────────────────────────
 
-export const pageDef: PageDef = {
-    gravity: 'down',
-    cards: [
-        {
-            id: 'lifelog-books',
-            kind: 'lifelog',
-            parent: 'ceiling',
-            anchor: booksAnchor,
-        },
-        {
-            id: 'lifelog-now-playing',
-            kind: 'lifelog',
-            parent: 'ceiling',
-            anchor: nowPlayingAnchor,
-        },
-        {
-            id: 'lifelog-films',
-            kind: 'lifelog',
-            parent: 'ceiling',
-            anchor: filmsAnchor,
-        },
-        {
-            id: 'lifelog-activity',
-            kind: 'lifelog',
-            parent: 'ceiling',
-            anchor: activityAnchor,
-        },
-    ],
-}
+export const pageDef: PageDef = pageSpecFromLayout(lifelogLayout)
 
 const cardContent: Record<string, CardContent> = {
     'lifelog-books': {
