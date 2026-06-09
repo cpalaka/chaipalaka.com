@@ -224,6 +224,40 @@ reverse — the future prod-bundle guard depends on that direction. See
 _Avoid_: param schema (the scene-specific three-kind subset keeps the
 **SceneParamSchema** name), tuning config, widget schema.
 
+**AtelierStore**:
+The Atelier's working-state holder (`atelier/atelierStore.ts`) — a
+**Controller** in contract (`get`/`subscribe`/mutators, React-agnostic;
+"store" is the ratified spec term, an accepted exception to the
+**Controller** _Avoid_ list). Holds per-axis working values, per-axis
+**Baseline**s, and named **Working set**s; axes are flat string keys
+(`tokens.dark`, `tokens.light`, `physics`, `chain`, `layout.<route>`)
+whose field model derives from each axis's **TuningSchema**. Persisted
+under `chaipalaka.atelier` — except **Baseline**s, which re-derive from
+source every load. Per-field dirty is always computed (working vs.
+**Baseline**), never stored.
+_Avoid_: atelier state (vague), tuning store, store (unqualified).
+
+**Working set**:
+A named snapshot of every axis's working values — the spec shape
+`{ tokens: {dark, light}, physics, chain, layout: {<route>} }` under the
+**AtelierStore**'s flat axis keys. Switching sets re-applies every live
+binder instantly: the A/B/N comparison story. Saving and switching are
+explicit; edits after a save do not flow into the snapshot, and dirty
+stays measured against the **Baseline**, never against the active set.
+_Avoid_: preset (implies shipped defaults), profile, variant.
+
+**Baseline**:
+An axis's current *source* values — tokens read via `getComputedStyle`
+per theme when that theme becomes active in the panel; physics/chain/
+layout imported from their data modules. Reconciliation rule on refresh
+(write-back + HMR, or a hand edit): clean fields track the new
+**Baseline**; dirty fields keep their working values. After a write-back
+the regenerated source equals the working values, so reconciling clears
+every dirty flag.
+_Avoid_: defaults (schema defaults are the stale-data fallback, not the
+**Baseline**), original values, source of truth (everything in `docs/`
+claims that).
+
 ### Architecture
 
 **PhysicsTuning**:
