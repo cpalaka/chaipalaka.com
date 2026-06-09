@@ -3,9 +3,10 @@ id: TASK-006
 title: >-
   vite-plugin-atelier — write-back endpoint + tokens rewriter + physics/layout
   codegen
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-09 21:47'
 labels:
   - claude-generated
   - atelier
@@ -28,11 +29,17 @@ Dev-serve-only middleware vite-plugin-atelier.ts (same idiom as serveLocalAssets
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Fixture tests: tokens rewrite keeps both light blocks in sync; one unmatched property rejects the whole write
-- [ ] #2 Codegen round-trip tests: generate → import → deep-equal for physics and layout targets
-- [ ] #3 Mirror warnings returned for mirrored tokens; non-whitelisted targets refused
-- [ ] #4 Endpoint absent from production builds (dev-serve only)
+- [x] #1 Fixture tests: tokens rewrite keeps both light blocks in sync; one unmatched property rejects the whole write
+- [x] #2 Codegen round-trip tests: generate → import → deep-equal for physics and layout targets
+- [x] #3 Mirror warnings returned for mirrored tokens; non-whitelisted targets refused
+- [x] #4 Endpoint absent from production builds (dev-serve only)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+vite-plugin-atelier write-back endpoint merged to main as c1d92ac (squash of feat/task-006-vite-plugin-atelier). 30 tests: light-block sync + all-or-nothing, codegen round-trips + byte-identical regen, mirror warnings + whitelist refusal, dev-serve-only (zero __atelier in dist, re-verified post-merge). Dark edits get symmetric sync beyond spec; Lifelog/Stuff.layout.ts whitespace-aligned to generator. CONTEXT.md: Write-back target entry. Verified post-merge: typecheck 0, 674 tests green, build + prerender, secret grep clean. Chai sign-off 2026-06-09.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

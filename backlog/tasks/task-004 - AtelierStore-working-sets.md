@@ -1,9 +1,10 @@
 ---
 id: TASK-004
 title: AtelierStore + working sets
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-09 21:47'
 labels:
   - claude-generated
   - atelier
@@ -24,10 +25,16 @@ A subscribable (web/src/state/subscribable.ts) holding working state: current va
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Tests: set switching, dirty-diffing, baseline reconciliation (AtelierStore test suite)
-- [ ] #2 Working sets persist across reload under chaipalaka.atelier
-- [ ] #3 Per-field and per-axis reset restore baseline values
+- [x] #1 Tests: set switching, dirty-diffing, baseline reconciliation (AtelierStore test suite)
+- [x] #2 Working sets persist across reload under chaipalaka.atelier
+- [x] #3 Per-field and per-axis reset restore baseline values
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+AtelierStore + working sets merged to main as 9bf30b4 (squash of feat/task-004-atelier-store). 17 tests; baselines re-derived per load (not persisted); sanitize-on-hydrate; CONTEXT.md glossary entries AtelierStore/Working set/Baseline. Verified post-merge: typecheck 0, 674 tests green, build + prerender, secret grep clean. Chai sign-off 2026-06-09.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
