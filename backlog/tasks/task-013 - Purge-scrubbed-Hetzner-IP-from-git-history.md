@@ -1,9 +1,10 @@
 ---
 id: TASK-013
 title: Purge scrubbed Hetzner IP from git history
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-08 23:43'
+updated_date: '2026-06-09 20:42'
 labels:
   - claude-generated
   - security
@@ -28,10 +29,16 @@ Low urgency (docs-only, public IP). Run as a deliberate, isolated operation, not
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 git log -p across all branches and tags contains zero occurrences of the old Hetzner IP
-- [ ] #2 Force-push to main explicitly authorized by Chai before execution
-- [ ] #3 Remote GitHub history confirmed clean after the push
+- [x] #1 git log -p across all branches and tags contains zero occurrences of the old Hetzner IP
+- [x] #2 Force-push to main explicitly authorized by Chai before execution
+- [x] #3 Remote GitHub history confirmed clean after the push
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+History rewrite executed 2026-06-09 with explicit force-push authorization. git-filter-repo v2.47.0 --replace-text (178.105.87.102 ==> <HETZNER_IP>) on a mirror clone; all 80 branches force-pushed; local repo rewritten identically (deterministic — same SHAs). New main tip 52e2cd2 (was 4aa2903); tip tree byte-identical (9a8c2fc). Verified: 3-lens adversarial scan of rehearsal clone clean; local ODB (2570 objects) zero IP bytes; fresh GitHub mirror clone — zero IP in all 294 branch-reachable commits. Residue: 276 old commits survive ONLY via immutable refs/pull/* (61 PR heads carry the IP) — GitHub Support purge declined by Chai 2026-06-09 (accepted: public infra IP, DNS publishes it anyway). DoD: typecheck/test(627)/build+prerender green, secret grep clean. Old SHAs in issues/notes/memory now refer to pre-rewrite history. Signed off by Chai 2026-06-09.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
