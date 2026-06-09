@@ -3,9 +3,10 @@ id: TASK-014
 title: >-
   Fix api typecheck: LetterboxdAdapter Film fields typed string but are
   string|undefined
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-09 01:46'
+updated_date: '2026-06-09 19:16'
 labels:
   - claude-generated
   - bug
@@ -17,13 +18,7 @@ ordinal: 4010
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Pre-existing (predates task-011), surfaced during task-011 verification: api typecheck (tsc --noEmit in api/) fails at api/src/adapters/LetterboxdAdapter.ts:90.
-
-One or more Film fields populated from optional sources (e.g. review via extractReview, posterUrl via extractPoster, both derived from an optional RSS description) are string | undefined, but the Film type declares them as string. TS2322.
-
-Likely fix: make the genuinely-optional Film fields optional (review?: string, posterUrl?: string) rather than forcing non-null, and update consumers (web Lifelog films panel) to handle absence. Confirm whether year / watchedDate / rating have the same latent issue.
-
-Scope note: api typecheck is currently red; this is the only error. Web typecheck is green.
+Pre-existing api typecheck failure: TS2322 at api/src/adapters/LetterboxdAdapter.ts:90 — letterboxdId is assigned idMatch[1], which is string|undefined under noUncheckedIndexedAccess, but Film.letterboxdId is (correctly) required string. Investigated 2026-06-09: Film's presentational fields (review/posterUrl/year/watchedDate/rating/rewatch) are ALREADY optional in both api and the web mirror (Lifelog.tsx:155-165), and FilmsPanel already guards absence — the original review/posterUrl hypothesis was wrong. Fix: guard/narrow the regex capture group; do not make letterboxdId optional; do not relax tsconfig.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

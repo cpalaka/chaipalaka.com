@@ -59,11 +59,11 @@ function parseItems(xml: string): Film[] {
 
     const guidRaw = field(item, 'guid')
     const idMatch = guidRaw.match(/letterboxd-(?:watch|review)-(\d+)/)
-    if (!idMatch) {
+    const letterboxdId = idMatch?.[1]
+    if (!letterboxdId) {
       console.warn('[LetterboxdAdapter] skipping item: missing or unrecognised guid')
       continue
     }
-    const letterboxdId = idMatch[1]
 
     const title = decodeEntities(field(item, 'letterboxd:filmTitle') || field(item, 'title'))
     if (!title) {
