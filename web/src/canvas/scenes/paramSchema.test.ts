@@ -1,5 +1,12 @@
 import { describe, test, expect, expectTypeOf } from 'vitest'
-import { defineSceneParams, defaultsOf, fieldsOf, type ParamsOf } from './paramSchema'
+import {
+    defineSceneParams,
+    defineTuning,
+    defaultsOf,
+    fieldsOf,
+    type ParamsOf,
+    type ValuesOf,
+} from './paramSchema'
 
 describe('paramSchema — defaultsOf', () => {
     test('extracts a single number default', () => {
@@ -46,6 +53,94 @@ describe('paramSchema — fieldsOf', () => {
         const f = fieldsOf(schema)
         expect(f.find((d) => d.key === 'n')?.remount).toBe(true)
         expect(f.find((d) => d.key === 'x')?.remount).toBeUndefined()
+    })
+})
+
+describe('tuningSchema — enum/boolean defaults', () => {
+    test('extracts boolean and enum defaults', () => {
+        const schema = defineTuning({
+            showSag: { kind: 'boolean', default: true, label: 'Show sag' },
+            gravity: {
+                kind: 'enum',
+                default: 'down',
+                options: ['down', 'up', 'left', 'right'],
+                label: 'Gravity',
+            },
+        })
+        expect(defaultsOf(schema)).toEqual({ showSag: true, gravity: 'down' })
+    })
+})
+
+describe('tuningSchema — enum/boolean fieldsOf', () => {
+    test('returns descriptors with key injected, options intact', () => {
+        const schema = defineTuning({
+            showSag: { kind: 'boolean', default: false, label: 'Show sag' },
+            edge: { kind: 'enum', default: 'top', options: ['top', 'bottom'], label: 'Edge' },
+        })
+        expect(fieldsOf(schema)).toEqual([
+            { key: 'showSag', kind: 'boolean', default: false, label: 'Show sag' },
+            { key: 'edge', kind: 'enum', default: 'top', options: ['top', 'bottom'], label: 'Edge' },
+        ])
+    })
+})
+
+describe('tuningSchema — ValuesOf type inference', () => {
+    test('boolean yields boolean, enum yields union of option literals', () => {
+        const schema = defineTuning({
+            showSag: { kind: 'boolean', default: true, label: 'S' },
+            gravity: { kind: 'enum', default: 'down', options: ['down', 'up'], label: 'G' },
+        })
+        type V = ValuesOf<typeof schema>
+        expectTypeOf<V>().toEqualTypeOf<{ showSag: boolean; gravity: 'down' | 'up' }>()
+    })
+})
+
+describe('tuningSchema — group', () => {
+    test('defaultsOf recurses into group fields', () => {
+        const schema = defineTuning({
+            gravityY: { kind: 'range', default: 0.7, min: 0, max: 2, step: 0.05, label: 'Gravity' },
+            chrome: {
+                kind: 'group',
+                label: 'Card chrome',
+                fields: {
+                    borderW: { kind: 'range', default: 4, min: 0, max: 8, step: 0.5, label: 'Border' },
+                    accent: { kind: 'color', default: '#ff6600', label: 'Accent' },
+                },
+            },
+        })
+        expect(defaultsOf(schema)).toEqual({
+            gravityY: 0.7,
+            chrome: { borderW: 4, accent: '#ff6600' },
+        })
+    })
+
+    test('fieldsOf keeps the group descriptor shallow with its fields intact', () => {
+        const fields = {
+            on: { kind: 'boolean', default: true, label: 'On' },
+        } as const
+        const schema = defineTuning({
+            grp: { kind: 'group', label: 'Grp', fields },
+        })
+        expect(fieldsOf(schema)).toEqual([{ key: 'grp', kind: 'group', label: 'Grp', fields }])
+    })
+
+    test('ValuesOf yields a nested object for group fields', () => {
+        const schema = defineTuning({
+            gravity: { kind: 'enum', default: 'down', options: ['down', 'up'], label: 'G' },
+            chrome: {
+                kind: 'group',
+                label: 'Chrome',
+                fields: {
+                    borderW: { kind: 'number', default: 4, min: 0, max: 8, step: 1, label: 'B' },
+                    accent: { kind: 'color', default: '#ff6600', label: 'A' },
+                },
+            },
+        })
+        type V = ValuesOf<typeof schema>
+        expectTypeOf<V>().toEqualTypeOf<{
+            gravity: 'down' | 'up'
+            chrome: { borderW: number; accent: string }
+        }>()
     })
 })
 

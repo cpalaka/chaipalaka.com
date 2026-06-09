@@ -195,6 +195,22 @@ _Avoid_: tune panel (drift from the existing `TunePanel` visual layer,
 which may survive underneath the **Tuner** as a presentational
 component); control panel (collides with the retired `ControlsPanel`).
 
+### Atelier
+
+**TuningSchema**:
+The Atelier's declarative DSL for tunable values — a superset of
+**SceneParamSchema** living in the same module
+(`canvas/scenes/paramSchema.ts`): the three scene field kinds plus
+`enum`, `boolean`, and `group` (a nested sub-schema). One `defineTuning`
+declaration produces the values type (`ValuesOf`), the defaults
+(`defaultsOf`), and the field descriptors the Atelier widgets
+(`atelier/widgets.tsx`) auto-render (`fieldsOf`). The DSL stays in
+production code so the dev-only Atelier imports prod code, never the
+reverse — the future prod-bundle guard depends on that direction. See
+`docs/superpowers/specs/2026-06-04-atelier-design-tool-design.md`.
+_Avoid_: param schema (the scene-specific three-kind subset keeps the
+**SceneParamSchema** name), tuning config, widget schema.
+
 ### Architecture
 
 **BodyForceSource**:
