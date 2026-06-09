@@ -12,6 +12,7 @@ import { CardRegistryProvider } from '../card/CardRegistry'
 import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/transitionOverrides'
+import { AtelierGate } from '../atelier/AtelierGate'
 import './CanvasLayout.css'
 
 export default function CanvasLayout() {
@@ -38,6 +39,7 @@ export default function CanvasLayout() {
                             <StringLayer />
                             <FrameBar />
                             <Outlet />
+                            <AtelierGate />
                         </div>
                     </TransitionDirector>
                 </PageDefRegistryProvider>

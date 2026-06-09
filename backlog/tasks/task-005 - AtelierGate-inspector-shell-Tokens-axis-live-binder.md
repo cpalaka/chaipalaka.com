@@ -1,9 +1,10 @@
 ---
 id: TASK-005
 title: AtelierGate + inspector shell + Tokens axis (live binder)
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-09 22:01'
 labels:
   - claude-generated
   - atelier

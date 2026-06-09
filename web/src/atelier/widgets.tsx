@@ -10,6 +10,50 @@ interface Props {
     schema: TuningSchema
     values: Values
     onChange: (next: Values) => void
+    /** Per-field dirty flag, keyed by dot-joined leaf path (group-aware). */
+    isDirty?: (path: string) => boolean
+    /** Per-field revert, keyed like {@link Props.isDirty}. Rendered only for dirty fields. */
+    onReset?: (path: string) => void
+    /** Internal — dot-path prefix accumulated through group recursion. */
+    pathPrefix?: string
+}
+
+const resetButtonStyle: CSSProperties = {
+    marginLeft: 6,
+    padding: '0 4px',
+    background: 'none',
+    border: '1px solid rgba(255,255,255,0.25)',
+    borderRadius: 3,
+    color: '#e8b04a',
+    fontSize: 10,
+    lineHeight: '14px',
+    cursor: 'pointer',
+}
+
+function ResetButton({
+    label,
+    path,
+    onReset,
+}: {
+    label: string
+    path: string
+    onReset: (path: string) => void
+}) {
+    return (
+        <button
+            type="button"
+            aria-label={`Reset ${label}`}
+            style={resetButtonStyle}
+            onClick={(e) => {
+                // inside a <label> — don't let the click activate the input
+                e.preventDefault()
+                e.stopPropagation()
+                onReset(path)
+            }}
+        >
+            ↺
+        </button>
+    )
 }
 
 const rowStyle: CSSProperties = {
@@ -49,13 +93,25 @@ const groupStyle: CSSProperties = {
     gap: 12,
 }
 
-export function TuningFields({ schema, values, onChange }: Props) {
+export function TuningFields({
+    schema,
+    values,
+    onChange,
+    isDirty,
+    onReset,
+    pathPrefix = '',
+}: Props) {
     const set = (key: string, v: unknown) => onChange({ ...values, [key]: v })
+    const reset = (path: string, label: string) =>
+        isDirty?.(path) && onReset ? (
+            <ResetButton label={label} path={path} onReset={onReset} />
+        ) : null
 
     return (
         <>
             {fieldsOf(schema).map((field) => {
                 const value = values[field.key]
+                const path = `${pathPrefix}${field.key}`
                 switch (field.kind) {
                     case 'group':
                         return (
@@ -65,24 +121,35 @@ export function TuningFields({ schema, values, onChange }: Props) {
                                     schema={field.fields}
                                     values={value as Values}
                                     onChange={(next) => set(field.key, next)}
+                                    isDirty={isDirty}
+                                    onReset={onReset}
+                                    pathPrefix={`${path}.`}
                                 />
                             </fieldset>
                         )
                     case 'boolean':
+                        // reset stays outside the <label> — a button inside a
+                        // label click-activates the checkbox
                         return (
-                            <label key={field.key} style={{ ...rowStyle, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={value as boolean}
-                                    onChange={(e) => set(field.key, e.target.checked)}
-                                />
-                                <span style={labelTextStyle}>{field.label}</span>
-                            </label>
+                            <div key={field.key} style={{ ...rowStyle, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                                <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={value as boolean}
+                                        onChange={(e) => set(field.key, e.target.checked)}
+                                    />
+                                    <span style={labelTextStyle}>{field.label}</span>
+                                </label>
+                                {reset(path, field.label)}
+                            </div>
                         )
                     case 'enum':
                         return (
                             <label key={field.key} style={rowStyle}>
-                                <span style={labelTextStyle}>{field.label}</span>
+                                <span style={labelTextStyle}>
+                                    {field.label}
+                                    {reset(path, field.label)}
+                                </span>
                                 <select
                                     value={value as string}
                                     onChange={(e) => set(field.key, e.target.value)}
@@ -99,7 +166,10 @@ export function TuningFields({ schema, values, onChange }: Props) {
                     case 'color':
                         return (
                             <label key={field.key} style={rowStyle}>
-                                <span style={labelTextStyle}>{field.label}</span>
+                                <span style={labelTextStyle}>
+                                    {field.label}
+                                    {reset(path, field.label)}
+                                </span>
                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                     <input
                                         type="color"
@@ -117,6 +187,7 @@ export function TuningFields({ schema, values, onChange }: Props) {
                                 <span style={labelTextStyle}>
                                     {field.label} —{' '}
                                     <span style={{ color: '#c8dde8' }}>{value as number}</span>
+                                    {reset(path, field.label)}
                                 </span>
                                 <input
                                     type="range"
@@ -132,7 +203,10 @@ export function TuningFields({ schema, values, onChange }: Props) {
                     case 'number':
                         return (
                             <label key={field.key} style={rowStyle}>
-                                <span style={labelTextStyle}>{field.label}</span>
+                                <span style={labelTextStyle}>
+                                    {field.label}
+                                    {reset(path, field.label)}
+                                </span>
                                 <input
                                     type="number"
                                     min={field.min}

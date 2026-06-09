@@ -79,7 +79,13 @@ below). It refuses anything else. Git is the undo button.
   (`web/src/controls/theme.ts`) — no parallel theming mechanism (the cards-sandbox mistake, not
   repeated). Working state stores values per theme; edits apply to the active theme.
 - **Live binder**: `documentElement.style.setProperty(token, value)` — inline style wins over all
-  stylesheet declarations; revert = `removeProperty`.
+  stylesheet declarations; revert = `removeProperty`. Dirty-only: clean fields carry no inline
+  property, so stylesheet theming keeps working underneath.
+- **Base/theme split** (ratified with task-005, 2026-06-09): card chrome, typography, and spacing
+  tokens are declared only at `:root` — they live on a third axis `tokens.base`, always applied,
+  written back as `:root` edits; only the palette is per-theme (`tokens.dark` / `tokens.light`).
+  V1 excludes `--color-accent` (BackgroundGallery writes it inline per scene), shadows and rgba()
+  tokens (no widget kind), and font families/weights (string stacks; mirrored).
 - **Write-back**: value-only replacement of matched declarations in `tokens.css`, preserving
   comments/order. Light values are written into **both** light blocks — the dual-declaration
   foot-gun handled in one place.
@@ -149,7 +155,7 @@ Write-back = regenerate the whole file from working state. **No AST surgery anyw
 ## Working sets
 
 A working set is a named snapshot of **everything tunable**:
-`{ tokens: {dark, light}, physics, chain, layout: {<route>} }`. Stored via `persistentMap`
+`{ tokens: {base, dark, light}, physics, chain, layout: {<route>} }`. Stored via `persistentMap`
 (`chaipalaka.atelier`). Switching sets re-applies every live binder instantly — this is the
 A/B/N comparison story. Baseline = current source values (tokens via `getComputedStyle`, read
 per theme when that theme becomes active in the panel; physics/chain/layout imported from their

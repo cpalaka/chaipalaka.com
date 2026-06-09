@@ -23,6 +23,14 @@ function getController() {
     return controllerInstance
 }
 
+/**
+ * Session ThemeController instance — exported for the Atelier, whose theme
+ * switch must drive the production controller, never a parallel mechanism.
+ */
+export function getThemeController() {
+    return getController()
+}
+
 export function useTheme(): {
     theme: Theme
     setTheme: (t: Theme) => void

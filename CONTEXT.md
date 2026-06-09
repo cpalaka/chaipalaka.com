@@ -230,21 +230,38 @@ The Atelier's working-state holder (`atelier/atelierStore.ts`) — a
 "store" is the ratified spec term, an accepted exception to the
 **Controller** _Avoid_ list). Holds per-axis working values, per-axis
 **Baseline**s, and named **Working set**s; axes are flat string keys
-(`tokens.dark`, `tokens.light`, `physics`, `chain`, `layout.<route>`)
-whose field model derives from each axis's **TuningSchema**. Persisted
+(`tokens.base`, `tokens.dark`, `tokens.light`, `physics`, `chain`,
+`layout.<route>`) whose field model derives from each axis's
+**TuningSchema**. Persisted
 under `chaipalaka.atelier` — except **Baseline**s, which re-derive from
 source every load. Per-field dirty is always computed (working vs.
 **Baseline**), never stored.
 _Avoid_: atelier state (vague), tuning store, store (unqualified).
 
 **Working set**:
-A named snapshot of every axis's working values — the spec shape
-`{ tokens: {dark, light}, physics, chain, layout: {<route>} }` under the
-**AtelierStore**'s flat axis keys. Switching sets re-applies every live
+A named snapshot of every axis's working values —
+`{ tokens: {base, dark, light}, physics, chain, layout: {<route>} }` under
+the **AtelierStore**'s flat axis keys (the spec's original `{dark, light}`
+tokens shape gained `base` when task-005 ratified the **Base token** /
+theme-token split, 2026-06-09). Switching sets re-applies every live
 binder instantly: the A/B/N comparison story. Saving and switching are
 explicit; edits after a save do not flow into the snapshot, and dirty
 stays measured against the **Baseline**, never against the active set.
 _Avoid_: preset (implies shipped defaults), profile, variant.
+
+**Base token**:
+A tunable custom property declared only at `:root` in `tokens.css` —
+card chrome, typography scale, spacing — identical in both themes. Lives
+on the `tokens.base` axis (always live-applied regardless of active
+theme; written back as a `:root`/dark edit), unlike theme tokens (the
+palette), which live per-theme on `tokens.dark` / `tokens.light` and
+apply only while their theme is active. V1 exclusions from the Tokens
+axis (ratified 2026-06-09): `--color-accent` (BackgroundGallery writes
+it inline per scene — a live binder would fight it), shadows and rgba()
+tokens (no widget kind fits), font families/weights.
+_Avoid_: global token (suggests a scope mechanism CSS doesn't have
+here), shared token, dark token (base tokens are written via the dark
+record but are not dark-specific).
 
 **Baseline**:
 An axis's current *source* values — tokens read via `getComputedStyle`

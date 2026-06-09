@@ -99,3 +99,37 @@ describe('TuningFields — onChange', () => {
         })
     })
 })
+
+describe('TuningFields — per-field dirty and reset', () => {
+    test('dirty fields show a reset control with the dot-joined path; clean fields do not', () => {
+        const onReset = vi.fn()
+        render(
+            <TuningFields
+                schema={SCHEMA}
+                values={defaultsOf(SCHEMA)}
+                onChange={vi.fn()}
+                isDirty={(path) => path === 'chrome.borderW'}
+                onReset={onReset}
+            />,
+        )
+        expect(screen.queryByLabelText('Reset Count')).toBeNull()
+        const reset = screen.getByLabelText('Reset Border width')
+        fireEvent.click(reset)
+        expect(onReset).toHaveBeenCalledWith('chrome.borderW')
+    })
+
+    test('reset inside a checkbox label does not toggle the checkbox', () => {
+        const onChange = vi.fn()
+        render(
+            <TuningFields
+                schema={SCHEMA}
+                values={defaultsOf(SCHEMA)}
+                onChange={onChange}
+                isDirty={() => true}
+                onReset={vi.fn()}
+            />,
+        )
+        fireEvent.click(screen.getByLabelText('Reset Show sag'))
+        expect(onChange).not.toHaveBeenCalled()
+    })
+})
