@@ -87,8 +87,8 @@ if not, update the file and restart the session before proceeding.
 
 `git push` rules are deliberately NOT on the permission allowlist
 (removed 2026-06-09): pushes must surface to the classifier or a prompt
-rather than run silently, so an unattended `/goal` loop can never push
-without scrutiny. Do not re-add them.
+rather than run silently, so no autonomous loop or subagent can ever
+push without scrutiny. Do not re-add them.
 
 If the user explicitly wants a session WITHOUT these defaults (e.g., for a
 risky deploy operation that should re-prompt), they will say so — otherwise
@@ -118,8 +118,7 @@ When asked to work on task `N`:
 6. Implement. Use the `/tdd` skill when the slice has verifiable runtime
    behavior to drive (modules, pure functions, adapters, API endpoints,
    physics math, etc.). Skip TDD for pure scaffolding — slice 1 is the
-   archetype for that exception. Steps 6–9 may run under a `/goal` when
-   the task's AC is mechanically verifiable (see "/goal usage" below).
+   archetype for that exception.
 7. Verify locally before committing (see "Local verification").
 8. Commit on the branch with a descriptive message (see "Commits").
 9. Hand off for local review (see "Review & merge — no PRs"): tell Chai
@@ -129,55 +128,44 @@ When asked to work on task `N`:
     push (this push is pre-authorised by the approval; see "Review &
     merge").
 
-## /goal usage — autonomous inner loop
+## Parallel wave runs — in-session subagents (dependency-free tasks only)
 
-`/goal <condition>` (Claude Code ≥ 2.1.139; docs:
-https://code.claude.com/docs/en/goal) wraps the implement→verify loop:
-after each turn a small evaluator model checks the condition against the
-conversation and auto-starts the next turn until it holds. Rules for
-this repo:
-
-- Set the goal only AFTER step 5 — branch created, plan agreed.
-- The condition's terminal state is the step-9 **review handoff, never
-  the merge**. Every human gate is a terminal condition, not a step: no
-  merge/push to `main`, no marking Done, no deploys, no `gh` writes, no
-  `backlog` writes from parallel sessions.
-- The evaluator judges only what is shown in the conversation — the
-  condition must demand visible command output, and must include a turn
-  bound ("or stop after N turns").
-- Tasks with visual/feel AC (screenshots, "feels right") are not /goal
-  candidates — they need human eyes mid-flight.
-
-Template (adapt the branch, task number, and turn bound):
-
-```
-/goal On branch <type>/task-NNN-<slug>: task-NNN's acceptance criteria
-are implemented; npm run typecheck, npm run test, and npm run build all
-exit 0 in web/ (output shown); the prerender check passes
-(data-server-rendered in web/dist/index.html); the secret-leak grep from
-CLAUDE.md shows zero matches; all work is committed; a review handoff
-(branch name, what's verified, what to inspect closely) is posted in
-chat. Do NOT merge or push main, do NOT mark the task Done, do NOT
-deploy, do NOT run backlog write commands. Or stop after 25 turns.
-```
-
-### Parallel wave runs (dependency-free tasks only)
+`/goal` headless runs are retired for waves (decided 2026-06-09): Chai
+is at the terminal during work sessions, and in-session subagents give
+live progress in the UI and mid-flight steering that detached
+`claude -p` processes cannot. The main session is the orchestrator and
+re-verifies everything itself, which is stronger than `/goal`'s
+transcript-judging evaluator anyway.
 
 1. Main session only: sync `main`, mark each task In Progress (board
-   writes never happen in parallel sessions — ID generation collides).
+   writes never happen in subagents — ID generation collides).
 2. Per task, from the repo root:
    `git worktree add ../cp-task-NNN -b <branch> main`, then
-   `mkdir -p ../cp-task-NNN/.claude && cp .claude/settings.local.json
-   ../cp-task-NNN/.claude/` (gitignored, so worktrees don't inherit the
-   sandbox/permission defaults), then `npm install` in the worktree's
-   `web/`.
-3. Kick off each from its worktree root:
-   `claude -p "/goal <template above, prefixed with the task pointer>"`.
-4. Monitor with `claude agents`. Each run terminates at its own review
-   handoff (or its turn bound).
-5. Review each diff as usual; squash-merge serially into `main`,
+   `npm install` in the worktree's `web/`. (No settings copy — subagents
+   inherit the main session's permission mode and sandbox.)
+3. Spawn one background subagent per task, all in a single message so
+   they run concurrently. Each subagent's prompt must include: work ONLY
+   inside its own worktree; read the task (`backlog/tasks/`, read-only),
+   `PRD.md`, `CONTEXT.md`, `docs/adr/`, and the relevant spec first; TDD
+   per this file; run the full verification gate (typecheck/test/build
+   exit 0 in `web/`, prerender check, secret-leak grep) and include the
+   output in its report; commit all work on the branch; end with a
+   review handoff (branch, what's verified, what to inspect closely).
+   Hard limits, verbatim in every prompt: no merge/push to `main`, no
+   marking Done, no deploys, no `backlog` write commands, no `gh`
+   writes.
+4. Monitor live in the session UI. Steer a drifting subagent with
+   SendMessage rather than respawning it (a respawn loses its context).
+5. On each handoff, the MAIN session independently re-runs the
+   verification gate in that worktree before relaying the handoff to
+   Chai — never pass on a subagent's claims unverified.
+6. Review each diff as usual; squash-merge serially into `main`,
    re-running step-7 verification after each merge; update the board
-   from the main session; `git worktree remove` each worktree.
+   from the main session; `git worktree remove` each worktree and delete
+   merged branches.
+
+Tasks with visual/feel AC (screenshots, "feels right") don't belong in
+waves — they need human eyes mid-flight; run them solo in-session.
 
 ## Branch naming
 
