@@ -60,19 +60,21 @@ system; design docs/specs stay in `docs/` (backlog's `decisions/` and
   promote to a task only once acceptance criteria are written.
 - Public repo: task files are repo content — same hygiene rules as code.
 
-## Session defaults — sandbox + auto-accept edits
+## Session defaults — sandbox + auto mode
 
 The owner runs Claude Code in this repo with **sandbox on** and
-**`acceptEdits` permission mode on by default**. The combination — Claude
-edits/runs without per-call prompts, but inside a sandbox that prevents
-real damage — is the desired baseline for any session in this repo.
+**`auto` permission mode on by default** (switched from `acceptEdits`
+on 2026-06-09). The combination — Claude edits/runs without per-call
+prompts, gated by the auto-mode classifier, inside a sandbox that
+prevents real damage — is the desired baseline for any session in this
+repo.
 
 These two modes are configured in `.claude/settings.local.json` (gitignored
 — personal, not committed). The file should contain at least:
 
 ```jsonc
 {
-  "permissions": { "defaultMode": "acceptEdits" /*, "allow": [...] */ },
+  "permissions": { "defaultMode": "auto" /*, "allow": [...] */ },
   "sandbox": { "enabled": true }
 }
 ```
@@ -80,8 +82,13 @@ These two modes are configured in `.claude/settings.local.json` (gitignored
 If your `.claude/settings.local.json` does not have these set, configure
 them before starting work — Claude cannot toggle either of these mid-session
 via a tool call (both are session-init settings). At session start, confirm
-the spinner shows "auto-accepting edits" / sandbox indicator; if it doesn't,
-update the file and restart the session before proceeding.
+the mode indicator shows auto mode and the sandbox indicator is present;
+if not, update the file and restart the session before proceeding.
+
+`git push` rules are deliberately NOT on the permission allowlist
+(removed 2026-06-09): pushes must surface to the classifier or a prompt
+rather than run silently, so an unattended `/goal` loop can never push
+without scrutiny. Do not re-add them.
 
 If the user explicitly wants a session WITHOUT these defaults (e.g., for a
 risky deploy operation that should re-prompt), they will say so — otherwise
@@ -111,7 +118,8 @@ When asked to work on task `N`:
 6. Implement. Use the `/tdd` skill when the slice has verifiable runtime
    behavior to drive (modules, pure functions, adapters, API endpoints,
    physics math, etc.). Skip TDD for pure scaffolding — slice 1 is the
-   archetype for that exception.
+   archetype for that exception. Steps 6–9 may run under a `/goal` when
+   the task's AC is mechanically verifiable (see "/goal usage" below).
 7. Verify locally before committing (see "Local verification").
 8. Commit on the branch with a descriptive message (see "Commits").
 9. Hand off for local review (see "Review & merge — no PRs"): tell Chai
@@ -120,6 +128,56 @@ When asked to work on task `N`:
     reviewer. After Chai approves the diff, squash-merge to `main` and
     push (this push is pre-authorised by the approval; see "Review &
     merge").
+
+## /goal usage — autonomous inner loop
+
+`/goal <condition>` (Claude Code ≥ 2.1.139; docs:
+https://code.claude.com/docs/en/goal) wraps the implement→verify loop:
+after each turn a small evaluator model checks the condition against the
+conversation and auto-starts the next turn until it holds. Rules for
+this repo:
+
+- Set the goal only AFTER step 5 — branch created, plan agreed.
+- The condition's terminal state is the step-9 **review handoff, never
+  the merge**. Every human gate is a terminal condition, not a step: no
+  merge/push to `main`, no marking Done, no deploys, no `gh` writes, no
+  `backlog` writes from parallel sessions.
+- The evaluator judges only what is shown in the conversation — the
+  condition must demand visible command output, and must include a turn
+  bound ("or stop after N turns").
+- Tasks with visual/feel AC (screenshots, "feels right") are not /goal
+  candidates — they need human eyes mid-flight.
+
+Template (adapt the branch, task number, and turn bound):
+
+```
+/goal On branch <type>/task-NNN-<slug>: task-NNN's acceptance criteria
+are implemented; npm run typecheck, npm run test, and npm run build all
+exit 0 in web/ (output shown); the prerender check passes
+(data-server-rendered in web/dist/index.html); the secret-leak grep from
+CLAUDE.md shows zero matches; all work is committed; a review handoff
+(branch name, what's verified, what to inspect closely) is posted in
+chat. Do NOT merge or push main, do NOT mark the task Done, do NOT
+deploy, do NOT run backlog write commands. Or stop after 25 turns.
+```
+
+### Parallel wave runs (dependency-free tasks only)
+
+1. Main session only: sync `main`, mark each task In Progress (board
+   writes never happen in parallel sessions — ID generation collides).
+2. Per task, from the repo root:
+   `git worktree add ../cp-task-NNN -b <branch> main`, then
+   `mkdir -p ../cp-task-NNN/.claude && cp .claude/settings.local.json
+   ../cp-task-NNN/.claude/` (gitignored, so worktrees don't inherit the
+   sandbox/permission defaults), then `npm install` in the worktree's
+   `web/`.
+3. Kick off each from its worktree root:
+   `claude -p "/goal <template above, prefixed with the task pointer>"`.
+4. Monitor with `claude agents`. Each run terminates at its own review
+   handoff (or its turn bound).
+5. Review each diff as usual; squash-merge serially into `main`,
+   re-running step-7 verification after each merge; update the board
+   from the main session; `git worktree remove` each worktree.
 
 ## Branch naming
 
