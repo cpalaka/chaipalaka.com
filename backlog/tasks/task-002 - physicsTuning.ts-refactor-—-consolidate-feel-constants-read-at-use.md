@@ -1,9 +1,10 @@
 ---
 id: TASK-002
 title: 'physicsTuning.ts refactor — consolidate feel constants, read-at-use'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-05 07:01'
+updated_date: '2026-06-09 18:52'
 labels:
   - claude-generated
   - atelier
@@ -24,11 +25,17 @@ Consolidate scattered physics feel constants into one data literal web/src/physi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All listed constants live in physicsTuning.ts; no consumer captures them at construction
-- [ ] #2 PhysicsWorld test: a mid-simulation gravityY change affects the next tick
-- [ ] #3 Tests import from the module, never copy literals
-- [ ] #4 Site behaves identically (dev smoke: cards spawn/fall/settle as before)
+- [x] #1 All listed constants live in physicsTuning.ts; no consumer captures them at construction
+- [x] #2 PhysicsWorld test: a mid-simulation gravityY change affects the next tick
+- [x] #3 Tests import from the module, never copy literals
+- [x] #4 Site behaves identically (dev smoke: cards spawn/fall/settle as before)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Merged as 98a4abb (squash). All feel constants in physics/physicsTuning.ts, 11 files read-at-use, mid-sim gravity TDD test. Dev smoke done in agent session (spawn/settle + string-cut/pour-in clean) + Chai diff review. Post-merge verify: typecheck 0, 620 pass, build + prerender OK.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

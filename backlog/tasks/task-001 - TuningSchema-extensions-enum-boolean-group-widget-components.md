@@ -1,9 +1,10 @@
 ---
 id: TASK-001
 title: TuningSchema extensions (enum/boolean/group) + widget components
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-05 07:01'
+updated_date: '2026-06-09 18:51'
 labels:
   - claude-generated
   - atelier
@@ -23,10 +24,16 @@ Generalize the SceneParamSchema DSL (web/src/canvas/scenes/paramSchema.ts, ADR-0
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 defaultsOf/fieldsOf tests for enum/boolean/group pass alongside paramSchema.test.ts
-- [ ] #2 Widget components render from a schema using all six field kinds
-- [ ] #3 Existing SceneParamSchema consumers unaffected (typecheck + existing tests green)
+- [x] #1 defaultsOf/fieldsOf tests for enum/boolean/group pass alongside paramSchema.test.ts
+- [x] #2 Widget components render from a schema using all six field kinds
+- [x] #3 Existing SceneParamSchema consumers unaffected (typecheck + existing tests green)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Merged as cd8de43 (squash). TuningSchema DSL in paramSchema.ts (enum/boolean/group + defineTuning/ValuesOf), TuningFields widgets in atelier/widgets.tsx, 12 new tests. Post-merge verify: typecheck 0, 619 pass, build + prerender OK.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

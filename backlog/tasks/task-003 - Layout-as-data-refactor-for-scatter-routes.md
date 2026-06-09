@@ -1,9 +1,10 @@
 ---
 id: TASK-003
 title: Layout-as-data refactor for scatter routes
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-05 07:01'
+updated_date: '2026-06-09 18:53'
 labels:
   - claude-generated
   - atelier
@@ -24,10 +25,16 @@ Move each scatter route's layout to a sibling data file web/src/routes/<route>.l
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each scatter route renders identically from its .layout.ts data file (dev smoke per route)
-- [ ] #2 Fraction anchors resolve via the helper; closure anchors still work
-- [ ] #3 Layout files are pure data literals suitable for whole-file regeneration
+- [x] #1 Each scatter route renders identically from its .layout.ts data file (dev smoke per route)
+- [x] #2 Fraction anchors resolve via the helper; closure anchors still work
+- [x] #3 Layout files are pure data literals suitable for whole-file regeneration
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Merged as 59fd841 (squash). routeLayout.ts helper + Lifelog/Stuff .layout.ts data files; Home/NotFound left in code per spec fence. Rider: api LastFm fixture rename, secret grep now 0 repo-wide. Dev smoke screenshots in agent session + Chai diff review. Post-merge verify: typecheck 0, 625 pass, build + prerender OK, adapter tests 10/10.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
