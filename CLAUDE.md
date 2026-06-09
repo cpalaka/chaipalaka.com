@@ -4,6 +4,10 @@ This file establishes the standing process and conventions for any Claude
 session that works on tasks in this repo. Read this first; then read the
 specific task and `PRD.md` for design context.
 
+## Communication Style
+
+When reporting information to me, be extemely concise and sacrifice grammar for the sake of concision
+
 ## Repo
 
 - GitHub: `https://github.com/cpalaka/chaipalaka.com`
