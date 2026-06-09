@@ -25,8 +25,6 @@ export type ServerConfig = {
 const sharedCache = new CacheLayer();
 const BOOKS_TTL_MS = 24 * 60 * 60_000;
 const NOW_PLAYING_TTL_MS = 3 * 60_000;
-const RECENT_TRACKS_TTL_MS = 5 * 60_000;
-const RECENT_TRACKS_LIMIT = 10;
 const FILMS_TTL_MS = 24 * 60 * 60_000;
 const ACTIVITY_TTL_MS = 5 * 60_000;
 
@@ -81,28 +79,6 @@ export async function handle(
       const error = e instanceof Error ? e.message : String(e);
       console.error('[Server] failed to fetch now-playing', e);
       return Response.json({ track: null, stale: true, error });
-    }
-  }
-
-  if (url.pathname === '/api/recent-tracks') {
-    if (!config.lastfmApiKey || !config.lastfmUser) {
-      return Response.json({ tracks: [], stale: false });
-    }
-    const adapter =
-      config.lastfmAdapter ??
-      new LastFmAdapterImpl({ apiKey: config.lastfmApiKey, user: config.lastfmUser });
-    const cache = config.cache ?? sharedCache;
-    try {
-      const { value, stale } = await cache.get(
-        'recent-tracks',
-        () => adapter.fetchRecentTracks(RECENT_TRACKS_LIMIT),
-        { ttl: RECENT_TRACKS_TTL_MS },
-      );
-      return Response.json({ tracks: value, stale });
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      console.error('[Server] failed to fetch recent-tracks', e);
-      return Response.json({ tracks: [], stale: true, error });
     }
   }
 

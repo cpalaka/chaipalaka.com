@@ -180,63 +180,6 @@ describe('/api/now-playing', () => {
   });
 });
 
-describe('/api/recent-tracks', () => {
-  it('returns { tracks, stale: false } with all adapter results', async () => {
-    const adapter = makeLastFmAdapter();
-    const res = await handle(
-      new Request('http://localhost/api/recent-tracks'),
-      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter },
-    );
-
-    expect(res.status).toBe(200);
-    const body = await res.json() as { tracks: Track[]; stale: boolean };
-    expect(body.stale).toBe(false);
-    expect(body.tracks).toHaveLength(2);
-    expect(body.tracks[0]?.title).toBe('Paranoid Android');
-  });
-
-  it('returns empty tracks (not stale) when lastfmApiKey is absent', async () => {
-    const res = await handle(new Request('http://localhost/api/recent-tracks'), {});
-
-    expect(res.status).toBe(200);
-    const body = await res.json() as { tracks: Track[]; stale: boolean };
-    expect(body.tracks).toEqual([]);
-    expect(body.stale).toBe(false);
-  });
-
-  it('returns { tracks: [], stale: true, error } when adapter throws and cache is cold', async () => {
-    const adapter = makeLastFmAdapter([], true);
-    const { CacheLayer } = await import('./cache/CacheLayer');
-    const res = await handle(
-      new Request('http://localhost/api/recent-tracks'),
-      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache: new CacheLayer() },
-    );
-
-    expect(res.status).toBe(200);
-    const body = await res.json() as { tracks: Track[]; stale: boolean; error: string };
-    expect(body.tracks).toEqual([]);
-    expect(body.stale).toBe(true);
-    expect(body.error).toBeDefined();
-  });
-
-  it('caches: calls fetchRecentTracks once across two requests within TTL', async () => {
-    const adapter = makeLastFmAdapter();
-    const { CacheLayer } = await import('./cache/CacheLayer');
-    const cache = new CacheLayer();
-
-    await handle(
-      new Request('http://localhost/api/recent-tracks'),
-      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache },
-    );
-    await handle(
-      new Request('http://localhost/api/recent-tracks'),
-      { lastfmApiKey: 'key', lastfmUser: 'chai', lastfmAdapter: adapter, cache },
-    );
-
-    expect(adapter.fetchRecentTracks).toHaveBeenCalledTimes(1);
-  });
-});
-
 const FIXTURE_FILMS: Film[] = [
   {
     letterboxdId: '1278965807',

@@ -16,7 +16,7 @@ The PRD resolves the architecture and interaction model that lets all three axes
 
 ## Solution
 
-A statically-generated React site (Vite + `vite-ssg`) deployed to the existing Hetzner box, with a small Bun backend running alongside Caddy to mediate live data sources. The site has two layout shells — a canvas-mode shell that mounts a persistent R3F generative-art background, a matter.js-driven foreground of physics cards, and a persistent **frame bar** (taskbar) at the top or bottom of the viewport, and a plain-mode shell for long-form reading that ships zero WebGL. Every navigation between canvas-mode routes is a physics transition; specific shared-element morphs (portfolio thumbnail growing into the detail page) use the React 19 View Transition API. Live data (last.fm, Letterboxd, GitHub) flows through `/api/*` endpoints proxied to the Bun service, which holds API keys and serves stale-while-revalidate cached responses so the lifelog feels alive even when third parties misbehave. Content (blog posts, books, notes, portfolio metadata) lives as MDX in a `content/` directory in the same git repo. Drafts stay on localhost; production is deployed via a local `make deploy` Makefile that `rsync`s build artifacts to the server. Visual identity is a Swiss-grid restrained brutalism — IBM Plex Sans throughout (16px / line-height 1.3 / letter-spacing −0.01em) with JetBrains Mono reserved for code blocks, a fixed three-color palette with one accent (`#e60000`), 4px solid card borders with 4px radius and a soft drop-shadow, 24px padding/gap. Color mode is a user-toggleable binary (light: `#f8f8f8` / `#000` / `#e60000`; dark: `#0a0a0a` / `#f8f8f8` / `#e60000`) that respects `prefers-color-scheme` on first visit and persists overrides in `localStorage`. Everything remains skinnable through CSS custom properties so the owner can iterate without touching component code.
+A statically-generated React site (Vite + `vite-react-ssg`) deployed to the existing Hetzner box, with a small Bun backend running alongside Caddy to mediate live data sources. The site has two layout shells — a canvas-mode shell that mounts a persistent R3F generative-art background, a matter.js-driven foreground of physics cards, and a persistent **frame bar** (taskbar) at the top or bottom of the viewport, and a plain-mode shell for long-form reading that ships zero WebGL. Every navigation between canvas-mode routes is a physics transition; specific shared-element morphs (portfolio thumbnail growing into the detail page) use the React 19 View Transition API. Live data (last.fm, Letterboxd, GitHub) flows through `/api/*` endpoints proxied to the Bun service, which holds API keys and serves stale-while-revalidate cached responses so the lifelog feels alive even when third parties misbehave. Content (blog posts, books, notes, portfolio metadata) lives as MDX in a `content/` directory in the same git repo. Drafts stay on localhost; production is deployed via a local `make deploy` Makefile that `rsync`s build artifacts to the server. Visual identity is a Swiss-grid restrained brutalism — IBM Plex Sans throughout (16px / line-height 1.3 / letter-spacing −0.01em) with JetBrains Mono reserved for code blocks, a fixed three-color palette with one accent (`#e60000`), 4px solid card borders with 4px radius and a soft drop-shadow, 24px padding/gap. Color mode is a user-toggleable binary (light: `#f8f8f8` / `#000` / `#e60000`; dark: `#0a0a0a` / `#f8f8f8` / `#e60000`) that respects `prefers-color-scheme` on first visit and persists overrides in `localStorage`. Everything remains skinnable through CSS custom properties so the owner can iterate without touching component code.
 
 Daily notes and lifelog annotations appear as first-class cards strung to their parent lifelog card via visible string connectors — they hang or float under gravity, reusing the same physics primitives that make the rest of the site feel alive. The frame bar carries the site name, current-page indicator, section nav, and a settings menu through which the visitor toggles the active background, switches theme, and picks the frame edge (top/bottom). Gravity is always on; each route declares its own gravity direction.
 
@@ -55,7 +55,7 @@ Daily notes and lifelog annotations appear as first-class cards strung to their 
 
 ### Portfolio visitor
 
-27. As a portfolio visitor, I want to find Flash animations at `/portfolio`, so that I can browse the site owner's archived work.
+27. As a portfolio visitor, I want to find Flash animations at `/stuff/flash`, so that I can browse the site owner's archived work.
 28. As a portfolio visitor, I want each animation to play in-browser via Ruffle without me installing anything, so that I can actually watch the work.
 29. As a portfolio visitor, I want each piece to have a dedicated route with description, year, and any retrospective notes, so that I get context, not just the artifact.
 30. As a portfolio visitor, I want clicking a portfolio thumbnail to morph it into the hero of the detail page (shared-element transition), so that the navigation feels deliberate and elegant.
@@ -128,13 +128,13 @@ Daily notes and lifelog annotations appear as first-class cards strung to their 
 
 ### Architecture
 
-- **SSG with client-side hydration.** Vite + React + TypeScript, prerendered via `vite-ssg`. Output is a static `dist/` directory served by Caddy's existing `file_server` block. No SSR runtime.
+- **SSG with client-side hydration.** Vite + React + TypeScript, prerendered via `vite-react-ssg`. Output is a static `dist/` directory served by Caddy's existing `file_server` block. No SSR runtime.
 - **Two layout shells:**
   - `CanvasLayout` — wraps Home, Portfolio, Lifelog, Socials, Blog index, Blog post (canvas variant). Mounts a persistent R3F `<Canvas>` once, a matter.js physics world, and the persistent frame bar (taskbar). Foreground swaps per route; the frame bar and `<Canvas>` do not re-mount across canvas-mode navigations.
   - `PlainLayout` — wraps reader-mode URLs (`/blog/<slug>/read`). No WebGL, no physics. Bundle for these routes excludes Three.js / matter.js entirely via route-level dynamic imports.
 - **Plain-mode links use real `<a>` (not React Router `<Link>`)** to force a document fetch and prevent the canvas-mode JS bundle from ever loading on plain pages.
 - **Persistent canvas across canvas-mode navigations.** The `<Canvas>` lives at the `CanvasLayout` level; navigation between canvas routes does not re-mount it. Foreground cards re-lay out per route.
-- **Conventional URL routing.** Each section is its own route (`/`, `/portfolio`, `/portfolio/<slug>`, `/blog`, `/blog/<slug>`, `/blog/<slug>/read`, `/lifelog`, `/links`). No spatial-canvas / desk-metaphor navigation.
+- **Conventional URL routing.** Each section is its own route (`/`, `/stuff`, `/stuff/flash`, `/stuff/flash/<slug>`, `/blog`, `/blog/<slug>`, `/blog/<slug>/read`, `/lifelog`, `/links`). No spatial-canvas / desk-metaphor navigation.
 
 ### Foreground physics — `PhysicsWorld`, `Card`, `CardLayout`
 
@@ -164,7 +164,7 @@ The frame bar is the persistent app-shell chrome. It replaces the original "cont
 - **Contents, left-to-right (or top-to-bottom on mobile if needed):**
   1. Site name (`chaipalaka`).
   2. Current-page indicator (e.g., `/blog`, `/lifelog/books/<slug>`), updated on route change.
-  3. Section nav (`/`, `/blog`, `/lifelog`, `/portfolio`).
+  3. Section nav (`/`, `/blog`, `/lifelog`, `/stuff`).
   4. Settings menu — dropdown anchored to the right end with: background picker, color-mode toggle, frame-edge toggle.
 - **`FrameBar` component** lives in `CanvasLayout` (canvas-mode shell only). Plain mode does not show a frame bar.
 - **Accessibility.** Frame bar is `<header role="banner">` with `<nav aria-label="Section nav">`. Settings menu is keyboard-navigable; `Esc` closes it.
@@ -278,7 +278,7 @@ Designed 2026-05-12. Slice 21 ships T1/T2/T3 (cross-route); slice 21b ships T4 (
   - `deploy/` — Caddyfile, systemd unit, deploy scripts
   - `assets/` — gitignored; large media synced separately
 - **Side projects** (future): each in its own GitHub repo, deployed to its own `/var/www/<project>/` directory, served via one Caddy block per `<project>.chaipalaka.com` subdomain. No infrastructure built for this in v1.
-- **Deploy via `make deploy`** from the local machine: builds `web` (vite-ssg) + `api` (bun build), `rsync`s artifacts to Hetzner, SSH-restarts the systemd unit. CI/CD via GitHub Actions deferred.
+- **Deploy via `make deploy`** from the local machine: builds `web` (vite-react-ssg) + `api` (bun build), `rsync`s artifacts to Hetzner, SSH-restarts the systemd unit. CI/CD via GitHub Actions deferred.
 - **Secrets:** `/etc/chaipalaka.env` on the server, never in git.
 
 ### Visual identity
@@ -373,7 +373,7 @@ There is no prior art in this repo (it's empty). Tests should be set up with:
 
 ## Further Notes
 
-- The repo currently contains only `grillmedoc.md` (the original brief) and now this `PRD.md`. It is **not yet a git repository**; first task in implementation is `git init` + `gh repo create chaipalaka.com --public`.
+- The repo was bootstrapped at the start of v1 (`git init` + `gh repo create chaipalaka.com --public`); `grillmedoc.md` (the original brief) and this `PRD.md` are committed alongside the implementation.
 - Hetzner CX22 at `<HETZNER_IP>` has Caddy serving `/var/www/chaipalaka` with auto-TLS via Let's Encrypt; no application code is deployed yet. The Caddyfile will need one new `reverse_proxy /api/* localhost:3000` block when the Bun service ships.
 - DNS in Route 53 already has wildcard A record (`*` → `<HETZNER_IP>`), so future side-project subdomains require no DNS changes — only a new Caddy block on the server.
 - The site owner intends to iterate on visual aesthetic personally; the implementation should optimize for re-skinnability over visual polish at handoff.

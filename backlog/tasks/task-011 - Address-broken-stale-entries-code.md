@@ -1,9 +1,10 @@
 ---
 id: TASK-011
 title: Address broken/stale entries + code
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:22'
+updated_date: '2026-06-08 23:22'
 labels: []
 dependencies: []
 priority: high

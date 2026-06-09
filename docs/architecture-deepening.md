@@ -3,9 +3,11 @@
 **Status:** Draft. None of these are committed; this is raw material for the
 `/improve-codebase-architecture` skill's grilling loop.
 **Created:** 2026-05-12, merged 2026-05-13.
-**Scope:** `web/src/` primarily; `api/src/` is largely empty so backend
-candidates from the PRD ("LastFmAdapter", "CacheLayer", etc.) are intentionally
-out of scope until those modules exist.
+**Scope:** `web/src/` primarily; at the time of writing `api/src/` was largely
+empty so backend candidates from the PRD ("LastFmAdapter", "CacheLayer", etc.)
+were out of scope. **(Update 2026-06-08: the backend has since shipped — the
+Goodreads/LastFm/Letterboxd/GitHub adapters and `CacheLayer` now live in
+`api/src/`.)**
 
 This is **not** a plan, ADR, or backlog. Every "Direction" line is a starting
 point to interrogate, not a recommendation. Side effects of grilling — adding
