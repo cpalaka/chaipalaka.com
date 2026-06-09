@@ -1,10 +1,10 @@
 ---
 id: TASK-005
 title: AtelierGate + inspector shell + Tokens axis (live binder)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-06-05 07:02'
-updated_date: '2026-06-09 22:01'
+updated_date: '2026-06-09 23:57'
 labels:
   - claude-generated
   - atelier
@@ -27,11 +27,17 @@ Mounting: CanvasLayout mounts <AtelierGate> — renders null in prod (import.met
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Dev: corner toggle opens the docked inspector on any active route; collapsible
-- [ ] #2 Token edits apply live on a real route; per-field revert removes the inline property
-- [ ] #3 Theme switch drives ThemeController; panel shows and edits the active theme's values
-- [ ] #4 Prod build ships no Atelier code (manual chunk inspection; automated guard is task-010)
+- [x] #1 Dev: corner toggle opens the docked inspector on any active route; collapsible
+- [x] #2 Token edits apply live on a real route; per-field revert removes the inline property
+- [x] #3 Theme switch drives ThemeController; panel shows and edits the active theme's values
+- [x] #4 Prod build ships no Atelier code (manual chunk inspection; automated guard is task-010)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Merged to main as da673b9 (squash of feat/task-005-inspector-shell-tokens-axis). All four ACs browser-verified on /blog with screenshots reviewed by Chai mid-session: corner toggle + collapsible docked inspector; live token edits with dirty-only inline application and per-field revert (removeProperty); theme switch drives production ThemeController with per-theme palette axes; prod chunk grep shows zero atelier bytes. Approved deviations ratified in CONTEXT.md ('Base token') + spec doc: 3 token axes (tokens.base/dark/light), v1 excludes --color-accent/shadows/rgba tokens/font families, write-back wired live against the task-006 endpoint with optimistic Baseline adoption + mirror warnings. Full gate green: typecheck/test (692)/build/prerender + secret grep.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
