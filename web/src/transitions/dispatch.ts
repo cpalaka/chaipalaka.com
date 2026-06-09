@@ -1,3 +1,4 @@
+import { physicsTuning } from '../physics/physicsTuning'
 import type { PageDef } from '../routes/PageDef'
 import type { TransitionId } from './TransitionSpec'
 import type { Direction } from './classifyDirection'
@@ -31,9 +32,6 @@ export interface EdgeConfig {
 export type EdgeTransitions = Record<string, EdgeConfig>
 
 export type PageDefResolver = (path: string) => PageDef | undefined
-
-const DEFAULT_DECOUPLED_OVERLAP_MS = 200
-const DEFAULT_ANCHOR_SLIDE_DURATION_MS = 700
 
 function signFromDirection(direction: Direction): 1 | -1 {
     return direction === 'back' ? -1 : 1
@@ -83,7 +81,7 @@ export function dispatch(
                     primitive: 'anchor-slide',
                     axis: 'vertical',
                     sign,
-                    durationMs: DEFAULT_ANCHOR_SLIDE_DURATION_MS,
+                    durationMs: physicsTuning.anchorSlideDurationMs,
                     sensorEdges,
                 },
             }
@@ -99,7 +97,7 @@ export function dispatch(
                 primitive: 'anchor-slide',
                 axis: edge.axis,
                 sign: edge.sign ?? signFromDirection(direction),
-                durationMs: edge.durationMs ?? DEFAULT_ANCHOR_SLIDE_DURATION_MS,
+                durationMs: edge.durationMs ?? physicsTuning.anchorSlideDurationMs,
             },
         }
     }
@@ -113,7 +111,7 @@ export function dispatch(
             kind: 'decoupled',
             exit: fromExit ?? 'string-cut-drop',
             enter: toEnter ?? 'pour-in-drop',
-            overlapMs: DEFAULT_DECOUPLED_OVERLAP_MS,
+            overlapMs: physicsTuning.decoupledOverlapMs,
         }
     }
 
@@ -126,7 +124,7 @@ export function dispatch(
                 primitive: 'anchor-slide',
                 axis: 'horizontal',
                 sign,
-                durationMs: DEFAULT_ANCHOR_SLIDE_DURATION_MS,
+                durationMs: physicsTuning.anchorSlideDurationMs,
             },
         }
     }
@@ -135,6 +133,6 @@ export function dispatch(
         kind: 'decoupled',
         exit: 'string-cut-drop',
         enter: 'pour-in-drop',
-        overlapMs: DEFAULT_DECOUPLED_OVERLAP_MS,
+        overlapMs: physicsTuning.decoupledOverlapMs,
     }
 }

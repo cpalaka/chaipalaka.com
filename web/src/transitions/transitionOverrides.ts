@@ -8,7 +8,7 @@ import type { EdgeTransitions } from './dispatch'
  *   - primitive: 'anchor-slide'
  *   - axis: 'horizontal'
  *   - sign: derived from `toDef.siblingOrder` (left → -1, otherwise +1)
- *   - durationMs: 700 (DEFAULT_ANCHOR_SLIDE_DURATION_MS)
+ *   - durationMs: physicsTuning.anchorSlideDurationMs
  *
  * Equivalent-to-default entries are noise: a future reader cannot tell
  * tuning intent from cargo-culted scaffolding when both look the same.

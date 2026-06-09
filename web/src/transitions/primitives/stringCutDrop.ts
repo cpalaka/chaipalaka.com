@@ -1,3 +1,4 @@
+import { physicsTuning } from '../../physics/physicsTuning'
 import type { BodyDriver, PhysicsHandle } from '../../physics/BodyDriver'
 import type { Viewport } from '../../physics/PhysicsWorld'
 import type { PrimitiveStep } from './types'
@@ -14,22 +15,18 @@ export interface StringCutDropOpts {
     hardCeilingMs?: number
 }
 
-const DEFAULT_HARD_CEILING_MS = 2000
 // Pad past the viewport edge before a card is considered "cleared". Without
 // this, cards are released the instant their top edge dips below the viewport
 // bottom and the disappear looks abrupt.
 const CLEAR_PAD = 100
-// Velocity kick applied along the buoyancy direction the moment the tether is
-// cut, so exiting cards leave the viewport with momentum rather than slowly
-// peeling away under gravity alone.
-const EXIT_KICK = 10
 
 export function stringCutDrop(
     driver: BodyDriver,
     cardIds: readonly string[],
     opts: StringCutDropOpts,
 ): PrimitiveStep {
-    const hardCeilingMs = opts.hardCeilingMs ?? DEFAULT_HARD_CEILING_MS
+    const hardCeilingMs =
+        opts.hardCeilingMs ?? physicsTuning.stringCutHardCeilingMs
     const { viewport, floorHandle } = opts
 
     let elapsedMs = 0
@@ -74,17 +71,19 @@ export function stringCutDrop(
             // transition, dragging the entire incoming chain downward.
             driver.setSensor(floorHandle, true)
             // Snap-kick: launch each exiting card along its buoyancy axis so
-            // the drop feels deliberate rather than lethargic.
+            // the drop feels deliberate rather than lethargic. The kick
+            // magnitude is read at the cut event, not at construction.
             const g = driver.getGravityVector()
             const gLen = Math.hypot(g.x, g.y)
             const gx = gLen > 0 ? g.x / gLen : 0
             const gy = gLen > 0 ? g.y / gLen : 1
+            const exitKick = physicsTuning.exitKick
             for (const handle of exitingHandles) {
                 const sign = driver.getBuoyancy(handle) === 'balloon' ? -1 : 1
                 const v = driver.getVelocity(handle)
                 driver.setVelocity(handle, {
-                    x: v.x + gx * EXIT_KICK * sign,
-                    y: v.y + gy * EXIT_KICK * sign,
+                    x: v.x + gx * exitKick * sign,
+                    y: v.y + gy * exitKick * sign,
                 })
             }
             initialized = true

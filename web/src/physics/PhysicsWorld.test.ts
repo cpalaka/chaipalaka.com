@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { PhysicsWorld } from './PhysicsWorld'
+import { physicsTuning } from './physicsTuning'
 
 const FIXED_DT_MS = 1000 / 60
 
@@ -65,6 +66,40 @@ describe('PhysicsWorld gravity', () => {
         for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
         const fellTo = world.getPosition(handle)
         expect(fellTo.y).toBeGreaterThan(100)
+    })
+
+    test('a mid-simulation physicsTuning.gravityY change affects the next tick', () => {
+        // Read-at-use: the world must read physicsTuning.gravityY per tick,
+        // never capture it at construction — this is what makes a dev slider
+        // act on a running world.
+        const original = physicsTuning.gravityY
+        try {
+            const world = new PhysicsWorld({
+                viewport: { width: 800, height: 6000 },
+            })
+            const handle = world.registerById(
+                'a',
+                { x: 100, y: 100 },
+                { width: 100, height: 50 },
+            )
+            // Fall under the baseline gravity for a few ticks, then measure
+            // one tick's displacement.
+            for (let i = 0; i < 10; i++) world.tick(FIXED_DT_MS)
+            const before = world.getPosition(handle).y
+            world.tick(FIXED_DT_MS)
+            const baselineStep = world.getPosition(handle).y - before
+
+            // Kill gravity mid-simulation. The very next tick must show a
+            // smaller displacement (velocity persists; acceleration stops).
+            physicsTuning.gravityY = 0
+            const at = world.getPosition(handle).y
+            world.tick(FIXED_DT_MS)
+            const zeroGStep = world.getPosition(handle).y - at
+            expect(zeroGStep).toBeLessThan(baselineStep)
+            expect(world.getGravityVector().y).toBe(0)
+        } finally {
+            physicsTuning.gravityY = original
+        }
     })
 
     test('floor catches a falling body', () => {

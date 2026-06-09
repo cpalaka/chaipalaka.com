@@ -4,6 +4,7 @@ import type {
     TetherSpec,
     Vec2,
 } from '../../physics/BodyDriver'
+import { physicsTuning } from '../../physics/physicsTuning'
 import type { Viewport } from '../../physics/PhysicsWorld'
 import type { CardActivator } from '../../card/CardRegistry'
 import type { PrimitiveStep } from './types'
@@ -21,8 +22,6 @@ export interface PourInDropOpts {
     tweenDurationMs?: number
 }
 
-const DEFAULT_HARD_CEILING_MS = 2500
-const DEFAULT_TWEEN_DURATION_MS = 600
 const ABOVE_VIEWPORT_PAD = 220
 
 interface EntryState {
@@ -42,7 +41,7 @@ function easeOutCubic(t: number): number {
  * position tween**.
  *
  * Why kinematic and not "let gravity + tether do it":
- *   The default tether stiffness in `PhysicsWorld` (`TETHER_STIFFNESS = 1.75e-5`)
+ *   The default tether stiffness (`physicsTuning.tetherStiffness`)
  *   is calibrated for cards hanging at rest with tiny perturbations. It is too
  *   soft to decelerate a card that has free-fallen from above the viewport, so
  *   handing physics the catch produces cards that sail right through their
@@ -69,8 +68,10 @@ export function pourInDrop(
     entries: readonly PourInDropEntry[],
     opts: PourInDropOpts,
 ): PrimitiveStep {
-    const hardCeilingMs = opts.hardCeilingMs ?? DEFAULT_HARD_CEILING_MS
-    const tweenDurationMs = opts.tweenDurationMs ?? DEFAULT_TWEEN_DURATION_MS
+    // Resolved at primitive construction, which happens per transition
+    // event — a tuning change applies from the next navigation on.
+    const hardCeilingMs = opts.hardCeilingMs ?? physicsTuning.pourInHardCeilingMs
+    const tweenDurationMs = opts.tweenDurationMs ?? physicsTuning.pourInTweenMs
 
     let elapsedMs = 0
     let preSpawned = false

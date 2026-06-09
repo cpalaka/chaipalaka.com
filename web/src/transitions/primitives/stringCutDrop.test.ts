@@ -1,9 +1,10 @@
 import { describe, test, expect } from 'vitest'
 import { createFakeBodyDriver } from '../../physics/createFakeBodyDriver'
+import { physicsTuning } from '../../physics/physicsTuning'
 import { stringCutDrop } from './stringCutDrop'
 
 const FIXED_DT_MS = 1000 / 60
-const EXIT_KICK = 10 // mirrors primitive constant
+const EXIT_KICK = physicsTuning.exitKick
 
 function newFake() {
     const fake = createFakeBodyDriver({ gravity: { x: 0, y: 0.7 } })

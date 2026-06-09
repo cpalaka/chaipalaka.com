@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
-import { TETHER_STIFFNESS, Tether, resolveParent } from './Tether'
+import { Tether, resolveParent } from './Tether'
+import { physicsTuning } from './physicsTuning'
 import type { BodyForceSource } from './BodyForceSource'
 import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
 
@@ -248,7 +249,7 @@ describe('Tether applyRopeForces', () => {
         tether.applyRopeForces()
         const f = src.totalForceOn(2)
         expect(f.x).toBeCloseTo(0, 10)
-        expect(f.y).toBeCloseTo(-100 * TETHER_STIFFNESS * 5, 10)
+        expect(f.y).toBeCloseTo(-100 * physicsTuning.tetherStiffness * 5, 10)
     })
 
     test('force direction: child pulled toward parent, parent pulled toward child', () => {
@@ -297,7 +298,7 @@ describe('Tether applyRopeForces', () => {
         tether.applyRopeForces()
         const f = src.totalForceOn(2)
         expect(f.x).toBeCloseTo(0, 10)
-        expect(f.y).toBeCloseTo(-50 * TETHER_STIFFNESS * 5, 10)
+        expect(f.y).toBeCloseTo(-50 * physicsTuning.tetherStiffness * 5, 10)
     })
 
     test('multiple tethers apply independently', () => {

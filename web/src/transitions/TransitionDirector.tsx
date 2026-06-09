@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { useLocation, useNavigationType, type Location } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
+import { physicsTuning } from '../physics/physicsTuning'
 import {
     useCardRegistry,
     type CardActivator,
@@ -29,12 +30,6 @@ import type { PrimitiveStep } from './primitives/types'
 import type { PageDef } from '../routes/PageDef'
 import type { TransitionId } from './TransitionSpec'
 import type { Viewport } from '../physics/PhysicsWorld'
-
-const REDUCED_MOTION_MS = 150
-// Wait this long after the exit primitive starts before any incoming card
-// begins its drop-in. Gives the outgoing cards visible time to clear the
-// viewport before the new ones arrive.
-const POUR_IN_BASE_DELAY_MS = 1000
 
 export interface TransitionDirectorProps {
     pageDefs: Record<string, PageDef>
@@ -123,7 +118,7 @@ export function TransitionDirector({
                 if (layerEl) {
                     await runStep(
                         crossFade(layerEl, registry, toIds, {
-                            durationMs: REDUCED_MOTION_MS,
+                            durationMs: physicsTuning.reducedMotionMs,
                         }),
                     )
                 }
@@ -291,7 +286,7 @@ function buildPrimitive(
                 {
                     axis: 'horizontal',
                     sign: 1,
-                    durationMs: 700,
+                    durationMs: physicsTuning.anchorSlideDurationMs,
                     viewport,
                 },
             )
@@ -299,7 +294,7 @@ function buildPrimitive(
             const el = findPhysicsLayerElement()
             if (!el) return () => true
             return crossFade(el, activator, toIds, {
-                durationMs: REDUCED_MOTION_MS,
+                durationMs: physicsTuning.reducedMotionMs,
             })
         }
     }
@@ -309,10 +304,14 @@ function makePourEntry(
     entry: CardEntry,
     index: number,
 ): PourInDropEntry {
+    // Base delay gives the outgoing cards visible time to clear the viewport
+    // before the new ones arrive. Read-at-use per transition event.
     return {
         id: entry.id,
         layoutAnchor: entry.anchor,
         height: entry.content.height,
-        staggerMs: POUR_IN_BASE_DELAY_MS + index * 80,
+        staggerMs:
+            physicsTuning.pourInBaseDelayMs +
+            index * physicsTuning.pourInStaggerMs,
     }
 }

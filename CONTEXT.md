@@ -47,7 +47,8 @@ _Avoid_: free, floating, loose.
 
 **Cardinal**:
 One of `'down' | 'up' | 'left' | 'right'`. The fixed gravity direction
-declared per route in its **PageDef**. Magnitude is constant (`0.7`).
+declared per route in its **PageDef**. Magnitude comes from
+**PhysicsTuning** (`gravityY`, default `0.7`).
 _Avoid_: direction (too generic), vector (gravity isn't authored as a
 vector — the cardinal compiles to one).
 
@@ -212,6 +213,18 @@ _Avoid_: param schema (the scene-specific three-kind subset keeps the
 **SceneParamSchema** name), tuning config, widget schema.
 
 ### Architecture
+
+**PhysicsTuning**:
+The single flat data literal (`web/src/physics/physicsTuning.ts`) holding
+every physics/transition feel constant — gravity magnitude, buoyancy gain,
+tether stiffness, slack factor, fling, spawn offset, transition timings.
+Governed by the **read-at-use** rule: consumers read `physicsTuning.x` at
+the moment of use (per tick for gravity/stiffness, per event for
+fling/kick/timings), never capture it at construction — this is what lets
+the Atelier physics axis act on a running world. Tests import from the
+module; they never copy its literals.
+_Avoid_: config (too generic), constants file (implies capture-at-import
+is fine — it isn't).
 
 **BodyForceSource**:
 A small adapter interface (`getPosition`, `getMass`, `isStatic`,

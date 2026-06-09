@@ -1,3 +1,4 @@
+import { physicsTuning } from './physicsTuning'
 import type { BodyForceSource } from './BodyForceSource'
 import type { ParentRef } from './PageSpec'
 import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
@@ -54,16 +55,6 @@ export interface TetherRecord {
     length: number
     anchorA?: Vec2
 }
-
-// Per-tick "acceleration scale" used to convert tether overshoot into a force
-// (multiplied by body mass at the apply site). The 1e-9-stiffness matter.js
-// constraint that used to back the tether was vestigial — issue #108 cut it,
-// so this number alone now drives rope physics. The value is hand-tuned to
-// match the behaviour cards exhibited in May 2026; do not change without a
-// matching pendulum-settle regression review.
-export const TETHER_STIFFNESS = 1.75e-5
-
-const SLACK_FACTOR = 0.98
 
 export class Tether {
     private readonly bodies: BodyForceSource
@@ -156,7 +147,7 @@ export class Tether {
                 parentPos,
                 childPos,
                 length: rec.length,
-                slack: dist < rec.length * SLACK_FACTOR,
+                slack: dist < rec.length * physicsTuning.slackFactor,
             })
         }
         return views
@@ -182,7 +173,8 @@ export class Tether {
             const overshoot = d - rec.length
             const nx = dx / d
             const ny = dy / d
-            const a = overshoot * TETHER_STIFFNESS
+            // Read-at-use per tick — see physicsTuning.ts for the tuning notes.
+            const a = overshoot * physicsTuning.tetherStiffness
             if (!this.bodies.isStatic(rec.child)) {
                 const m = this.bodies.getMass(rec.child)
                 this.bodies.applyForce(rec.child, {

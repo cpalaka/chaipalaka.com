@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
+import { physicsTuning } from '../physics/physicsTuning'
 import { resolveParent, wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
@@ -54,11 +55,10 @@ export function CardImpl({ entry }: CardImplProps) {
         const w = width
         const h = height
 
-        const SPAWN_OFFSET = 20
         const { x: gx, y: gy } = computeSpawnOffset(
             anchorRef.current,
             world.getGravityVector(),
-            SPAWN_OFFSET,
+            physicsTuning.spawnOffsetPx,
         )
         const sx = gx + (spawnOffset?.x ?? 0)
         const sy = gy + (spawnOffset?.y ?? 0)
@@ -149,8 +149,6 @@ export function CardImpl({ entry }: CardImplProps) {
         let lastDx = 0
         let lastDy = 0
         let lastDt = 0
-        const FLING_VELOCITY_SCALE = 16
-        const FLING_PAUSE_MS = 50
 
         const onPointerDown = (e: PointerEvent) => {
             if (
@@ -188,10 +186,14 @@ export function CardImpl({ entry }: CardImplProps) {
             if (!dragging) return
             dragging = false
             world.setDragging(handle, false)
+            // Read-at-use per fling event, not captured at mount.
             const impulse = computeFlingImpulse(
                 { dx: lastDx, dy: lastDy, dtMs: lastDt },
                 e.timeStamp - lastT,
-                { scale: FLING_VELOCITY_SCALE, pauseMs: FLING_PAUSE_MS },
+                {
+                    scale: physicsTuning.flingVelocityScale,
+                    pauseMs: physicsTuning.flingPauseMs,
+                },
             )
             world.setVelocity(handle, { x: impulse.vx, y: impulse.vy })
             el.releasePointerCapture(e.pointerId)

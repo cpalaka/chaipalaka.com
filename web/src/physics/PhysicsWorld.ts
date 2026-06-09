@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import { Tether } from './Tether'
+import { physicsTuning } from './physicsTuning'
 import type { BodyForceSource } from './BodyForceSource'
 import type { BodyDriver, TetherSpec } from './BodyDriver'
 
@@ -48,10 +49,8 @@ interface Registration {
     id?: string
 }
 
-const GRAVITY_Y = 0.7
 const BODY_FRICTION_AIR = 0.005
 const FLOOR_THICKNESS = 60
-const BUOYANCY_GAIN = 1.5
 
 export class PhysicsWorld implements BodyForceSource {
     private engine: Matter.Engine
@@ -63,6 +62,7 @@ export class PhysicsWorld implements BodyForceSource {
     private nextId: PhysicsHandle = 1
     private registrations = new Map<PhysicsHandle, Registration>()
     private byId = new Map<string, PhysicsHandle>()
+    private gravityDir: Cardinal = 'down'
 
     readonly floorHandle: PhysicsHandle
     readonly ceilingHandle: PhysicsHandle
@@ -71,8 +71,7 @@ export class PhysicsWorld implements BodyForceSource {
     constructor(opts: PhysicsWorldOptions) {
         this.engine = Matter.Engine.create()
         this.world = this.engine.world
-        this.engine.gravity.x = 0
-        this.engine.gravity.y = GRAVITY_Y // always on, default down
+        this.syncEngineGravity() // always on, default down
 
         const { width, height } = opts.viewport
         const top = opts.insets?.top ?? 0
@@ -240,28 +239,32 @@ export class PhysicsWorld implements BodyForceSource {
     }
 
     setGravityDirection(dir: Cardinal): void {
-        switch (dir) {
+        this.gravityDir = dir
+        this.syncEngineGravity()
+    }
+
+    // Read-at-use: gravity is derived from physicsTuning.gravityY on every
+    // call (and re-synced into the engine each tick), never captured at
+    // construction, so a mid-simulation tuning change takes effect on the
+    // next tick.
+    getGravityVector(): Vec2 {
+        const gy = physicsTuning.gravityY
+        switch (this.gravityDir) {
             case 'down':
-                this.engine.gravity.x = 0
-                this.engine.gravity.y = GRAVITY_Y
-                break
+                return { x: 0, y: gy }
             case 'up':
-                this.engine.gravity.x = 0
-                this.engine.gravity.y = -GRAVITY_Y
-                break
+                return { x: 0, y: -gy }
             case 'left':
-                this.engine.gravity.x = -GRAVITY_Y
-                this.engine.gravity.y = 0
-                break
+                return { x: -gy, y: 0 }
             case 'right':
-                this.engine.gravity.x = GRAVITY_Y
-                this.engine.gravity.y = 0
-                break
+                return { x: gy, y: 0 }
         }
     }
 
-    getGravityVector(): Vec2 {
-        return { x: this.engine.gravity.x, y: this.engine.gravity.y }
+    private syncEngineGravity(): void {
+        const g = this.getGravityVector()
+        this.engine.gravity.x = g.x
+        this.engine.gravity.y = g.y
     }
 
     setViewport(vp: Viewport, insets?: { top: number; bottom: number }): void {
@@ -385,14 +388,15 @@ export class PhysicsWorld implements BodyForceSource {
 
     tick(dtMs: number): void {
         // 1. Apply balloon buoyancy — per-tick force opposing gravity, scaled to match gravity force units
+        this.syncEngineGravity()
         const g = this.getGravityVector()
         const gravScale: number =
             (this.engine.gravity as { scale?: number }).scale ?? 0.001
         for (const reg of this.registrations.values()) {
             if (reg.isStatic || reg.buoyancy !== 'balloon') continue
             Matter.Body.applyForce(reg.body, reg.body.position, {
-                x: -g.x * reg.body.mass * gravScale * BUOYANCY_GAIN,
-                y: -g.y * reg.body.mass * gravScale * BUOYANCY_GAIN,
+                x: -g.x * reg.body.mass * gravScale * physicsTuning.buoyancyGain,
+                y: -g.y * reg.body.mass * gravScale * physicsTuning.buoyancyGain,
             })
         }
 
