@@ -47,6 +47,24 @@ describe('FrameBar', () => {
         expect(screen.getByText('/blog')).toBeInTheDocument()
     })
 
+    // Regression, task-015: Caddy 308-redirects /stuff -> /stuff/, but the
+    // SSG HTML bakes the slash-less route path into the indicator. The
+    // rendered text must be identical for both forms or hydration fails
+    // with React #418.
+    test('trailing-slash pathname renders without the slash (task-015)', () => {
+        renderInRouter('/stuff/')
+        expect(screen.getByText('/stuff')).toBeInTheDocument()
+        expect(screen.queryByText('/stuff/')).not.toBeInTheDocument()
+    })
+
+    test('nav link is active at a trailing-slash URL', () => {
+        renderInRouter('/blog/')
+        expect(screen.getByRole('link', { name: 'blog' })).toHaveAttribute(
+            'data-active',
+            'true',
+        )
+    })
+
     test('blog nav link is active when at /blog', () => {
         renderInRouter('/blog')
         const link = screen.getByRole('link', { name: 'blog' })

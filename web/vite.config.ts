@@ -11,7 +11,7 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import { remarkExtractToc } from './src/blog/remark-extract-toc'
 import { vitePluginFeeds } from './src/blog/vite-plugin-feeds'
 import { readdir, readFile, stat } from 'node:fs/promises'
-import { createReadStream } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { join, resolve, extname } from 'node:path'
 import matter from 'gray-matter'
 import type { Plugin } from 'vite'
@@ -51,6 +51,35 @@ function serveLocalAssets(): Plugin {
                 } catch {
                     next()
                 }
+            })
+        },
+    }
+}
+
+// vite preview serves dist with an SPA fallback: a directory URL without a
+// trailing slash (/stuff) misses dist/stuff/index.html and falls through to
+// dist/index.html — the Home prerender — so hydration fails with React #418.
+// Production Caddy (file_server) instead 308-redirects /stuff -> /stuff/.
+// Mirror that redirect here so preview smoke checks behave like prod
+// (task-015). Preview-only; no effect on dev or build output.
+function previewDirRedirect(): Plugin {
+    return {
+        name: 'preview-dir-redirect',
+        configurePreviewServer(server) {
+            const outDir = resolve(process.cwd(), 'dist')
+            server.middlewares.use((req, res, next) => {
+                const path = req.url?.split('?')[0] ?? ''
+                if (
+                    path === '' ||
+                    path.endsWith('/') ||
+                    extname(path) !== '' ||
+                    !existsSync(join(outDir, path, 'index.html'))
+                ) {
+                    return next()
+                }
+                res.statusCode = 308
+                res.setHeader('Location', path + '/')
+                res.end()
             })
         },
     }
@@ -102,6 +131,7 @@ export default defineConfig({
         react(),
         vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
         serveLocalAssets(),
+        previewDirRedirect(),
     ],
     server: {
         fs: {

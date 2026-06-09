@@ -1,9 +1,10 @@
 ---
 id: TASK-015
 title: 'Fix pre-existing React #418 hydration mismatch on all canvas routes'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-09 03:28'
+updated_date: '2026-06-09 19:38'
 labels:
   - claude-generated
   - bug
@@ -31,6 +32,12 @@ Diagnosis hint: build with non-minified React (dev mode) to read the exact 'Serv
 - [ ] #2 No React #418 (nor any hydration error) in the prod-build browser console on /, /blog, /stuff, /lifelog — verified via vite preview + a real browser
 - [ ] #3 web/: typecheck + test + build green; no regression to the task-012 no-JS fallback (prerendered fallback still present in dist)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Root cause (AC #1, confirmed 2026-06-09 via dev-React build with exact server/client text diff): FrameBar.tsx rendered useLocation().pathname as a text node in span.frame-bar__current-page. SSG bakes the slash-less path into prerendered HTML (server: /stuff) while production Caddy file_server 308-redirects /stuff → /stuff/ (verified live: HTTP/2 308, location: /stuff/), so the client renders /stuff/ — text mismatch → React #418 on /blog/, /stuff/, /lifelog/. A second, preview-only mismatch: vite preview serves dist/index.html (Home prerender) as SPA fallback for slash-less /stuff — structure mismatch (client frame-bar header vs server data-nojs-fallback div); production never hits this path because Caddy redirects first. Correction to the description: / never had a hydration error — the 'all 4 routes' report was a measurement artifact (agent-browser's error buffer accumulates across navigations and errors --clear is a no-op; prod React #418 surfaces via reportError, not console). Fix (commit 7f3f8ad on fix/task-015-canvas-hydration-418): FrameBar strips trailing slashes from pathname once at the top; regression test renders at /stuff/ expecting /stuff; previewDirRedirect() middleware in vite.config.ts mirrors Caddy's 308 so local preview behaves like prod.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

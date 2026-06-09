@@ -18,7 +18,12 @@ export function isActiveRoute(pathname: string, target: string): boolean {
 }
 
 export function FrameBar() {
-    const { pathname } = useLocation()
+    // Caddy's file_server 308-redirects directory URLs to trailing-slash form
+    // (/stuff -> /stuff/), while the SSG HTML bakes the slash-less route path
+    // into the current-page text. Normalize so both render identically —
+    // otherwise hydration fails with React #418 (task-015).
+    const { pathname: rawPathname } = useLocation()
+    const pathname = rawPathname.replace(/\/+$/, '') || '/'
     const [settingsOpen, setSettingsOpen] = useState(false)
     const { active, setActive } = useGallery()
     const { theme, cycleTheme } = useTheme()
