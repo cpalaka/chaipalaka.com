@@ -10,6 +10,7 @@ import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import { remarkExtractToc } from './src/blog/remark-extract-toc'
 import { vitePluginFeeds } from './src/blog/vite-plugin-feeds'
+import { vitePluginAtelier } from './src/atelier/vite-plugin-atelier'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { createReadStream, existsSync } from 'node:fs'
 import { join, resolve, extname } from 'node:path'
@@ -45,7 +46,10 @@ function serveLocalAssets(): Plugin {
                 try {
                     const st = await stat(full)
                     if (!st.isFile()) return next()
-                    res.setHeader('Content-Type', MIME[extname(full)] ?? 'application/octet-stream')
+                    res.setHeader(
+                        'Content-Type',
+                        MIME[extname(full)] ?? 'application/octet-stream',
+                    )
                     res.setHeader('Content-Length', String(st.size))
                     createReadStream(full).pipe(res)
                 } catch {
@@ -130,6 +134,7 @@ export default defineConfig({
         },
         react(),
         vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
+        vitePluginAtelier(),
         serveLocalAssets(),
         previewDirRedirect(),
     ],
@@ -151,12 +156,15 @@ export default defineConfig({
                 `/blog/${slug}`,
                 `/blog/${slug}/read`,
             ])
-            const { TUNABLE_SCENE_IDS } = await import('./src/canvas/scenes/registry')
+            const { TUNABLE_SCENE_IDS } =
+                await import('./src/canvas/scenes/registry')
             const sandboxScenePaths = TUNABLE_SCENE_IDS.map(
                 (id) => `/sandbox/scenes/${id}`,
             )
             return [...paths, ...blogPaths, ...sandboxScenePaths].filter(
-                (p) => !p.startsWith('/sandbox/') || p.startsWith('/sandbox/scenes/'),
+                (p) =>
+                    !p.startsWith('/sandbox/') ||
+                    p.startsWith('/sandbox/scenes/'),
             )
         },
     },

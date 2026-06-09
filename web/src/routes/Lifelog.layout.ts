@@ -4,9 +4,29 @@ import type { RouteLayout } from './routeLayout'
 export const lifelogLayout = {
     gravity: 'down',
     cards: [
-        { id: 'lifelog-books', kind: 'lifelog', parent: 'ceiling', anchor: { fx: 0.5, fy: 0.25 } },
-        { id: 'lifelog-now-playing', kind: 'lifelog', parent: 'ceiling', anchor: { fx: 0.84, fy: 0.1 } },
-        { id: 'lifelog-films', kind: 'lifelog', parent: 'ceiling', anchor: { fx: 0.5, fy: 0.75 } },
-        { id: 'lifelog-activity', kind: 'lifelog', parent: 'ceiling', anchor: { fx: 0.16, fy: 0.5 } },
+        {
+            id: 'lifelog-books',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: { fx: 0.5, fy: 0.25 },
+        },
+        {
+            id: 'lifelog-now-playing',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: { fx: 0.84, fy: 0.1 },
+        },
+        {
+            id: 'lifelog-films',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: { fx: 0.5, fy: 0.75 },
+        },
+        {
+            id: 'lifelog-activity',
+            kind: 'lifelog',
+            parent: 'ceiling',
+            anchor: { fx: 0.16, fy: 0.5 },
+        },
     ],
 } satisfies RouteLayout

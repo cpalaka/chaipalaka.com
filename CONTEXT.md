@@ -258,6 +258,21 @@ _Avoid_: defaults (schema defaults are the stale-data fallback, not the
 **Baseline**), original values, source of truth (everything in `docs/`
 claims that).
 
+**Write-back target**:
+A file the Atelier's dev-serve-only endpoint (`POST /__atelier/write`,
+`web/src/atelier/vite-plugin-atelier.ts`) may modify — a hard whitelist:
+`tokens` (value-only rewrite of `tokens.css`; light values land in BOTH
+light blocks), `physics` (whole-file regen of `physicsTuning.ts`),
+`layout` (whole-file regen of a scatter route's `.layout.ts`); `chain`
+joins the whitelist when task-009 creates `layoutTuning.ts`. Writes are
+all-or-nothing: one unmatched property or invalid payload rejects the
+whole request with files untouched. Editing a mirrored token
+(`--font-body`/`--font-mono` ↔ `fonts.ts`; `--card-padding`/`--card-gap`
+↔ `BlogIndex.measure.ts`) returns **mirror warnings** — v1 warns, never
+auto-edits the TS side.
+_Avoid_: save target, write endpoint (the endpoint is the mechanism; the
+target is the whitelisted file).
+
 ### Architecture
 
 **PhysicsTuning**:
