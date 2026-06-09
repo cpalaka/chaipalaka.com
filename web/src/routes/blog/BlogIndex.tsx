@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Page, type CardContent } from '../../card/Page'
+import { NoJsFallback } from '../../nojs/NoJsFallback'
+import { BlogIndexFallback } from './BlogIndexFallback'
 import { measure } from '../../text/measure'
 import { getPosts } from '../../blog/posts'
 import {
@@ -302,8 +304,14 @@ export default function BlogIndex() {
     }, [sectionIndex])
 
     return (
-        <div data-section-root>
-            <Page pageDef={sectionPageDef} cardContent={sectionContent} />
-        </div>
+        <>
+            <div data-section-root>
+                <Page pageDef={sectionPageDef} cardContent={sectionContent} />
+            </div>
+            <NoJsFallback>
+                <h1>Blog</h1>
+                <BlogIndexFallback posts={posts} />
+            </NoJsFallback>
+        </>
     )
 }

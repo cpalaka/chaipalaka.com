@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +8,12 @@
             content="chaipalaka.com — personal site of Chaitanya Palaka."
         />
         <title>chaipalaka.com</title>
+        <!-- Drop the no-js class before first paint so JS users never see the
+             prerendered no-JS fallback (gated on .no-js in base.css). Runs
+             synchronously during head parse, ahead of the async app bundle. -->
+        <script>
+            document.documentElement.classList.remove('no-js')
+        </script>
     </head>
     <body>
         <div id="root"><!--app-html--></div>

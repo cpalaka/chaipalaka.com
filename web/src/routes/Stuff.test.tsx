@@ -49,7 +49,11 @@ describe('Stuff — render', () => {
 
     test('Flash card contains a link to /stuff/flash', () => {
         const { container } = renderStuff()
-        const flashLink = container.querySelector('a[href="/stuff/flash"]')
+        // Scope to the live card — the no-JS fallback also links to
+        // /stuff/flash, and display:none does not remove it in happy-dom.
+        const flashLink = container.querySelector(
+            'a[href="/stuff/flash"]:not([data-nojs-fallback] *)',
+        )
         expect(flashLink).toBeTruthy()
     })
 

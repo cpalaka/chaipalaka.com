@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Page } from '../card/Page'
+import { NoJsFallback } from '../nojs/NoJsFallback'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 
@@ -89,5 +90,30 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function Stuff() {
-    return <Page pageDef={pageDef} cardContent={cardContent} />
+    return (
+        <>
+            <Page pageDef={pageDef} cardContent={cardContent} />
+            <NoJsFallback>
+                <h1>Stuff</h1>
+                <article>
+                    <h2>
+                        <a href="/stuff/flash">Flash</a>
+                    </h2>
+                    <p>Old Flash animations, restored with Ruffle.</p>
+                </article>
+                <article>
+                    <h2>Digital art</h2>
+                    <p>Coming soon.</p>
+                </article>
+                <article>
+                    <h2>Software</h2>
+                    <p>Coming soon.</p>
+                </article>
+                <article>
+                    <h2>This site</h2>
+                    <p>Coming soon.</p>
+                </article>
+            </NoJsFallback>
+        </>
+    )
 }

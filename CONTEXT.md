@@ -286,6 +286,21 @@ identity, and the two should not be welded.
 _Avoid_: global (suggests ambient mutable state with no owner), module
 state (true but uninformative), instance hack.
 
+**No-JS fallback**:
+The static, prerendered content a canvas route ships for no-JavaScript
+users and non-executing crawlers — section nav + prose (read from the
+synchronous content source, not the effect-driven `CardRegistry`) + the
+default scene's background gradient. Marked `data-nojs-fallback` and
+hidden once JS hydrates via a `.no-js` class-swap on `<html>` (set in
+`index.html`, stripped by an inline head script before first paint, gated
+in `base.css`). A parallel read-only view: it touches none of the
+**Card** / `CardRegistry` / **Director** machinery, and exists to give
+canvas routes a readable floor without prerendering physics. See
+ADR-0004.
+_Avoid_: SSR fallback (there is no SSR runtime — it is prerendered),
+noscript block (the gate is a CSS class-swap, not `<noscript>`),
+no-JS mode (it is not a mode the live app switches into).
+
 ### Text and measurement
 
 **Font**:

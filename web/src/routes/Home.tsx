@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Page } from '../card/Page'
+import { NoJsFallback } from '../nojs/NoJsFallback'
 import { useGallery } from '../canvas/useGallery'
 import { useTheme } from '../controls/useTheme'
 import type { PageDef } from './PageDef'
@@ -180,5 +181,16 @@ export default function Home() {
         }
     }, [])
 
-    return <Page pageDef={runtimePageDef} cardContent={runtimeCardContent} />
+    return (
+        <>
+            <Page pageDef={runtimePageDef} cardContent={runtimeCardContent} />
+            <NoJsFallback>
+                <h1>chaipalaka.com</h1>
+                <p>
+                    Personal site of Chaitanya Palaka — a new version is coming
+                    soon.
+                </p>
+            </NoJsFallback>
+        </>
+    )
 }

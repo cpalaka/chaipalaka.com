@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Page, type CardContent } from '../card/Page'
+import { NoJsFallback } from '../nojs/NoJsFallback'
 import type { PageDef } from './PageDef'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 import './Lifelog.css'
@@ -400,5 +401,17 @@ const cardContent: Record<string, CardContent> = {
 }
 
 export default function Lifelog() {
-    return <Page pageDef={pageDef} cardContent={cardContent} />
+    return (
+        <>
+            <Page pageDef={pageDef} cardContent={cardContent} />
+            <NoJsFallback>
+                <h1>Lifelog</h1>
+                <p>
+                    Books, music, films, and GitHub activity — each fetched
+                    live in the browser, so JavaScript is required to see the
+                    current data.
+                </p>
+            </NoJsFallback>
+        </>
+    )
 }

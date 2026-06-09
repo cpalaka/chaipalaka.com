@@ -49,6 +49,15 @@ function useFadeSwap(active: BackgroundScene): {
     return { current, outgoing }
 }
 
+// The no-JS background baseline is the default scene's gradient — a constant,
+// NOT the gallery's active scene. `active` is read from localStorage on the
+// first client render (useController → useState initialiser), which would
+// differ from the server's always-default value and tear hydration. The
+// default id mirrors useGallery's `defaultId`.
+const NOJS_BASELINE_PNG =
+    getSceneEntry('flow-shader')?.scene.fallbackPng ??
+    '/fallbacks/flow-shader.png'
+
 type Mode = 'pending' | 'webgl' | 'fallback'
 
 interface LayerProps {
@@ -130,18 +139,33 @@ export function BackgroundCanvas() {
     const mode: Mode =
         webglMode === 'pending' ? 'pending' : reduced ? 'fallback' : webglMode
 
-    if (mode === 'pending') return null
-
     const handleContextLost = () => setWebglMode('fallback')
 
     return (
-        <div className="background-canvas-layer" aria-hidden="true">
-            {outgoing && <SceneLayer scene={outgoing} mode={mode} fading />}
-            <SceneLayer
-                scene={current}
-                mode={mode}
-                onContextLost={handleContextLost}
+        <>
+            {/* No-JS baseline: the default scene's static gradient, prerendered
+                so SSG canvas routes are not a blank shell without JS (#85).
+                Hidden once JS hydrates (CSS gated on the no-js <html> class —
+                base.css). A background-image on a display:none element is not
+                fetched, so JS users pay nothing for it. */}
+            <div
+                className="background-canvas-layer background-canvas-nojs"
+                data-nojs-fallback
+                aria-hidden="true"
+                style={{ backgroundImage: `url(${NOJS_BASELINE_PNG})` }}
             />
-        </div>
+            {mode === 'pending' ? null : (
+                <div className="background-canvas-layer" aria-hidden="true">
+                    {outgoing && (
+                        <SceneLayer scene={outgoing} mode={mode} fading />
+                    )}
+                    <SceneLayer
+                        scene={current}
+                        mode={mode}
+                        onContextLost={handleContextLost}
+                    />
+                </div>
+            )}
+        </>
     )
 }

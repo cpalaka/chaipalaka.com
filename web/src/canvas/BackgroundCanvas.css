@@ -27,6 +27,15 @@
     object-fit: cover;
 }
 
+/* No-JS background baseline (BackgroundCanvas emits this with the default
+   scene's gradient as an inline background-image). The display-gate that
+   hides it once JS hydrates lives in base.css. */
+.background-canvas-nojs {
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .background-canvas-layer__layer {
         transition: none;

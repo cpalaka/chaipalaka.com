@@ -43,16 +43,21 @@ async function setupReducedMotion() {
 }
 
 describe('BackgroundCanvas — initial render before post-mount effect', () => {
-    test('returns null on first render (mode is pending)', async () => {
+    test('prerenders a no-JS background baseline, not the live canvas', async () => {
         // renderToStaticMarkup does not run effects, so we observe the
-        // pre-effect render path: useState('pending') → return null.
+        // pre-effect render path (mode is 'pending'). The live canvas/
+        // fallback layers depend on the post-mount effect and so are absent,
+        // but the no-JS baseline IS emitted so SSG canvas routes are not a
+        // blank shell for no-JS users (#85).
         vi.doMock('./detect-webgl', () => ({ detectWebGL: () => false }))
         vi.doMock('../lib/usePrefersReducedMotion', () => ({
             usePrefersReducedMotion: () => false,
         }))
         const { BackgroundCanvas } = await import('./BackgroundCanvas')
         const html = renderToStaticMarkup(<BackgroundCanvas />)
-        expect(html).toBe('')
+        expect(html).not.toContain('background-canvas-layer__layer')
+        expect(html).toContain('data-nojs-fallback')
+        expect(html).toContain('/fallbacks/flow-shader.png')
     })
 })
 
@@ -62,8 +67,10 @@ describe('BackgroundCanvas — fallback path', () => {
             await setupFallback()
         const { container } = render(<BackgroundCanvas />)
 
+        // Scope to the live layer — the no-JS baseline shares the base class
+        // but carries data-nojs-fallback.
         const outer = container.querySelector(
-            'div.background-canvas-layer[aria-hidden="true"]',
+            'div.background-canvas-layer[aria-hidden="true"]:not([data-nojs-fallback])',
         )
         expect(outer).toBeTruthy()
 
@@ -90,8 +97,9 @@ describe('BackgroundCanvas — WebGL path', () => {
         const { render, BackgroundCanvas } = await setupWebGL()
         const { container } = render(<BackgroundCanvas />)
 
+        // Scope to the live layer — the no-JS baseline shares the base class.
         const outer = container.querySelector(
-            'div.background-canvas-layer[aria-hidden="true"]',
+            'div.background-canvas-layer[aria-hidden="true"]:not([data-nojs-fallback])',
         )
         expect(outer).toBeTruthy()
 

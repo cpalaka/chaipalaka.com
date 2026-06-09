@@ -3,9 +3,10 @@ id: TASK-012
 title: >-
   Fix canvas-route prerender + no-JS baseline (#84/#85): cards register in
   useEffect
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-08 23:43'
+updated_date: '2026-06-09 02:06'
 labels:
   - claude-generated
   - bug
