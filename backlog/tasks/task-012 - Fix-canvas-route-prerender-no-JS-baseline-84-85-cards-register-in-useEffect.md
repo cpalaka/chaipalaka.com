@@ -3,10 +3,10 @@ id: TASK-012
 title: >-
   Fix canvas-route prerender + no-JS baseline (#84/#85): cards register in
   useEffect
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-06-08 23:43'
-updated_date: '2026-06-09 02:06'
+updated_date: '2026-06-09 03:28'
 labels:
   - claude-generated
   - bug
@@ -38,10 +38,16 @@ Refs: GitHub issues #84 and #85 (v1 record). Evidence: Card.tsx:75, CardRegistry
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Canvas routes prerender either card content OR a documented graceful no-JS fallback (prose + fallback image); verified in web/dist canvas route HTML
-- [ ] #2 Chosen approach recorded (ADR if it changes Card registration or the SSG strategy)
-- [ ] #3 GitHub issues #84 and #85 resolved
+- [x] #1 Canvas routes prerender either card content OR a documented graceful no-JS fallback (prose + fallback image); verified in web/dist canvas route HTML
+- [x] #2 Chosen approach recorded (ADR if it changes Card registration or the SSG strategy)
+- [x] #3 GitHub issues #84 and #85 resolved
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented Option 3 (CSS-gated no-JS fallback: prose + default-scene background, hidden under .no-js). No changes to card registration/physics/Director. ADR-0004 + CONTEXT.md term. Adversarial review pass; 5 findings fixed. Branch fix/task-012-canvas-prerender-nojs squash-merged as f97ef6c. Pre-existing React #418 on canvas routes split out as a separate task.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
