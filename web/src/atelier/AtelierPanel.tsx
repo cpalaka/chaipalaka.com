@@ -14,13 +14,20 @@ import { useTheme } from '../controls/useTheme'
 import { ATELIER_ONLY_BUNDLE_MARKER } from './atelier-only-marker'
 import { buildTokenEdits } from './tokensBinder'
 import { TokensAxis } from './TokensAxis'
-import { ensureTokensBinding, getAtelierStore, useAtelierState } from './useAtelier'
+import { PhysicsAxis } from './PhysicsAxis'
+import {
+    ensurePhysicsBinding,
+    ensureTokensBinding,
+    getAtelierStore,
+    useAtelierState,
+} from './useAtelier'
 import {
     BASE_TOKEN_BINDINGS,
     THEME_TOKEN_BINDINGS,
     TOKENS_BASE_AXIS,
     tokensThemeAxis,
 } from './schemas/tokens'
+import { PHYSICS_AXIS, physicsPayload } from './schemas/physics'
 import type { TokenBinding } from './schemas/tokens'
 
 type AxisTab = 'tokens' | 'physics' | 'layout'
@@ -123,9 +130,22 @@ const statusColor: Record<WriteStatus['tone'], string> = {
     error: '#e87a7a',
 }
 
+async function postWrite(
+    target: string,
+    payload: unknown,
+): Promise<{ ok: boolean; warnings?: string[]; error?: string }> {
+    const res = await fetch('/__atelier/write', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ target, payload }),
+    })
+    return (await res.json()) as { ok: boolean; warnings?: string[]; error?: string }
+}
+
 export default function AtelierPanel({ open }: { open: boolean }) {
     const store = getAtelierStore()
     ensureTokensBinding()
+    ensurePhysicsBinding()
     const state = useAtelierState()
     const { theme, setTheme } = useTheme()
     const [tab, setTab] = useState<AxisTab>('tokens')
@@ -133,10 +153,12 @@ export default function AtelierPanel({ open }: { open: boolean }) {
     const [writing, setWriting] = useState(false)
     const [status, setStatus] = useState<WriteStatus | null>(null)
 
-    const dirtyCount = TOKEN_AXES.reduce(
+    const tokensDirty = TOKEN_AXES.reduce(
         (n, axis) => n + store.dirtyPaths(axis).length,
         0,
     )
+    const physicsDirty = store.dirtyPaths(PHYSICS_AXIS).length
+    const dirtyCount = tokensDirty + physicsDirty
 
     async function writeBack() {
         const { axes, baselines } = store.get()
@@ -148,33 +170,42 @@ export default function AtelierPanel({ open }: { open: boolean }) {
         setWriting(true)
         setStatus(null)
         try {
-            const res = await fetch('/__atelier/write', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    target: 'tokens',
-                    payload: buildTokenEdits({
+            const written: string[] = []
+            const warnings: string[] = []
+            if (tokensDirty > 0) {
+                const body = await postWrite(
+                    'tokens',
+                    buildTokenEdits({
                         base: snap(TOKENS_BASE_AXIS, BASE_TOKEN_BINDINGS),
                         dark: snap(tokensThemeAxis('dark'), THEME_TOKEN_BINDINGS),
                         light: snap(tokensThemeAxis('light'), THEME_TOKEN_BINDINGS),
                     }),
-                }),
-            })
-            const body = (await res.json()) as {
-                ok: boolean
-                warnings?: string[]
-                error?: string
-            }
-            if (body.ok) {
-                ensureTokensBinding().writeBackReconcile()
-                setStatus(
-                    body.warnings?.length
-                        ? { tone: 'warn', message: body.warnings.join(' · ') }
-                        : { tone: 'ok', message: 'written to tokens.css' },
                 )
-            } else {
-                setStatus({ tone: 'error', message: body.error ?? 'write failed' })
+                if (!body.ok) {
+                    setStatus({ tone: 'error', message: body.error ?? 'write failed' })
+                    return
+                }
+                ensureTokensBinding().writeBackReconcile()
+                warnings.push(...(body.warnings ?? []))
+                written.push('tokens.css')
             }
+            if (physicsDirty > 0) {
+                const body = await postWrite(
+                    'physics',
+                    physicsPayload(axes[PHYSICS_AXIS] ?? {}),
+                )
+                if (!body.ok) {
+                    setStatus({ tone: 'error', message: body.error ?? 'write failed' })
+                    return
+                }
+                ensurePhysicsBinding().writeBackReconcile()
+                written.push('physicsTuning.ts')
+            }
+            setStatus(
+                warnings.length
+                    ? { tone: 'warn', message: warnings.join(' · ') }
+                    : { tone: 'ok', message: `written to ${written.join(', ')}` },
+            )
         } catch (err) {
             setStatus({ tone: 'error', message: String(err) })
         } finally {
@@ -236,9 +267,7 @@ export default function AtelierPanel({ open }: { open: boolean }) {
 
             <div style={bodyStyle}>
                 {tab === 'tokens' && <TokensAxis state={state} theme={theme} />}
-                {tab === 'physics' && (
-                    <p style={{ color: '#5f7a8a' }}>Physics axis lands with task-007.</p>
-                )}
+                {tab === 'physics' && <PhysicsAxis state={state} />}
                 {tab === 'layout' && (
                     <p style={{ color: '#5f7a8a' }}>Layout axis lands with task-008.</p>
                 )}

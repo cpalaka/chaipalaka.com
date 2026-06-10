@@ -10,6 +10,9 @@ import { createAtelierStore, ATELIER_STORAGE_KEY } from './atelierStore'
 import type { AtelierState, AtelierStore } from './atelierStore'
 import { createTokensBinding } from './tokensBinding'
 import type { TokensBinding } from './tokensBinding'
+import { createPhysicsBinding } from './physicsBinding'
+import type { PhysicsBinding } from './physicsBinding'
+import { physicsTuning } from '../physics/physicsTuning'
 import { getThemeController } from '../controls/useTheme'
 
 let storeInstance: AtelierStore | null = null
@@ -52,6 +55,18 @@ export function ensureTokensBinding(): TokensBinding {
         })
     }
     return bindingInstance
+}
+
+let physicsBindingInstance: PhysicsBinding | null = null
+
+export function ensurePhysicsBinding(): PhysicsBinding {
+    if (!physicsBindingInstance) {
+        physicsBindingInstance = createPhysicsBinding({
+            store: getAtelierStore(),
+            tuning: physicsTuning,
+        })
+    }
+    return physicsBindingInstance
 }
 
 export function useAtelierState(): AtelierState {

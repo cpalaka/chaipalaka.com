@@ -100,6 +100,76 @@ describe('TuningFields — onChange', () => {
     })
 })
 
+describe('TuningFields — log-scale range', () => {
+    const LOG_SCHEMA = defineTuning({
+        stiffness: {
+            kind: 'range',
+            scale: 'log',
+            default: 1.75e-5,
+            min: 1e-9,
+            max: 1e-3,
+            step: 0.01,
+            label: 'Tether stiffness',
+        },
+    })
+
+    test('slider operates in log10 space over the curated decades', () => {
+        render(
+            <TuningFields
+                schema={LOG_SCHEMA}
+                values={defaultsOf(LOG_SCHEMA)}
+                onChange={vi.fn()}
+            />,
+        )
+        const slider = screen.getByLabelText(/Tether stiffness/) as HTMLInputElement
+        expect(slider.type).toBe('range')
+        expect(slider.min).toBe('-9')
+        expect(slider.max).toBe('-3')
+        expect(slider.value).toBe(String(Math.log10(1.75e-5)))
+    })
+
+    test('slider minimum produces true near-zero (1e-9), not a clamped 1e-4', () => {
+        const onChange = vi.fn()
+        render(
+            <TuningFields
+                schema={LOG_SCHEMA}
+                values={defaultsOf(LOG_SCHEMA)}
+                onChange={onChange}
+            />,
+        )
+        fireEvent.change(screen.getByLabelText(/Tether stiffness/), {
+            target: { value: '-9' },
+        })
+        expect(onChange).toHaveBeenLastCalledWith({ stiffness: 1e-9 })
+    })
+
+    test('intermediate positions round to 3 significant figures', () => {
+        const onChange = vi.fn()
+        render(
+            <TuningFields
+                schema={LOG_SCHEMA}
+                values={defaultsOf(LOG_SCHEMA)}
+                onChange={onChange}
+            />,
+        )
+        fireEvent.change(screen.getByLabelText(/Tether stiffness/), {
+            target: { value: '-4.5' },
+        })
+        expect(onChange).toHaveBeenLastCalledWith({ stiffness: 3.16e-5 })
+    })
+
+    test('tiny values display in exponential notation', () => {
+        render(
+            <TuningFields
+                schema={LOG_SCHEMA}
+                values={defaultsOf(LOG_SCHEMA)}
+                onChange={vi.fn()}
+            />,
+        )
+        expect(screen.getByText('1.75e-5')).toBeInTheDocument()
+    })
+})
+
 describe('TuningFields — per-field dirty and reset', () => {
     test('dirty fields show a reset control with the dot-joined path; clean fields do not', () => {
         const onReset = vi.fn()

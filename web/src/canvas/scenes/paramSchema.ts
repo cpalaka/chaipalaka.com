@@ -16,6 +16,12 @@ export type SceneFieldDef =
           step: number
           label: string
           remount?: true
+          /**
+           * Log-scale slider: the track spans log10(min)..log10(max), for
+           * fields whose useful regime covers decades (e.g. tetherStiffness,
+           * where "near zero" is 1e-9). `step` is ignored; `min` must be > 0.
+           */
+          scale?: 'log'
       }
     | {
           kind: 'color'

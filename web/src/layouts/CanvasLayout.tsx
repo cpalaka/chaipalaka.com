@@ -13,10 +13,15 @@ import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
 import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/transitionOverrides'
 import { AtelierGate } from '../atelier/AtelierGate'
+import { useController } from '../state/useController'
+import { getRedropKey } from './redropKey'
 import './CanvasLayout.css'
 
 export default function CanvasLayout() {
     const { edge } = useFrameEdge()
+    // Remounts the card layer when the Atelier replays a drop — see
+    // redropKey.ts. Stays 0 in prod.
+    const redropKey = useController(getRedropKey)
 
     useEffect(() => {
         if (typeof localStorage !== 'undefined') {
@@ -35,7 +40,7 @@ export default function CanvasLayout() {
                             data-frame-edge={edge}
                         >
                             <BackgroundCanvas />
-                            <CardLayer />
+                            <CardLayer key={redropKey} />
                             <StringLayer />
                             <FrameBar />
                             <Outlet />

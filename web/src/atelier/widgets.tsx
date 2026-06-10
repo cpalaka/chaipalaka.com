@@ -83,6 +83,21 @@ const inputStyle: CSSProperties = {
     boxSizing: 'border-box',
 }
 
+/** ~100 positions per decade — smooth without float noise in the track. */
+const LOG_SLIDER_STEP = 0.01
+
+/** Slider position (log10 space) → value, rounded to 3 significant figures
+ * so working values and write-back payloads stay human-readable. */
+function logSliderValue(pos: number): number {
+    return Number(Math.pow(10, pos).toPrecision(3))
+}
+
+/** Tiny magnitudes read better in e-notation (same threshold as the
+ * write-back generator's fmtNum). */
+function fmtRangeValue(v: number): string {
+    return v !== 0 && Math.abs(v) < 1e-3 ? v.toExponential() : String(v)
+}
+
 const groupStyle: CSSProperties = {
     border: '1px solid rgba(255,255,255,0.15)',
     borderRadius: 3,
@@ -181,25 +196,36 @@ export function TuningFields({
                                 </div>
                             </label>
                         )
-                    case 'range':
+                    case 'range': {
+                        const log = field.scale === 'log'
                         return (
                             <label key={field.key} style={rowStyle}>
                                 <span style={labelTextStyle}>
                                     {field.label} —{' '}
-                                    <span style={{ color: '#c8dde8' }}>{value as number}</span>
+                                    <span style={{ color: '#c8dde8' }}>
+                                        {fmtRangeValue(value as number)}
+                                    </span>
                                     {reset(path, field.label)}
                                 </span>
                                 <input
                                     type="range"
-                                    min={field.min}
-                                    max={field.max}
-                                    step={field.step}
-                                    value={value as number}
-                                    onChange={(e) => set(field.key, parseFloat(e.target.value))}
+                                    min={log ? Math.log10(field.min) : field.min}
+                                    max={log ? Math.log10(field.max) : field.max}
+                                    step={log ? LOG_SLIDER_STEP : field.step}
+                                    value={log ? Math.log10(value as number) : (value as number)}
+                                    onChange={(e) =>
+                                        set(
+                                            field.key,
+                                            log
+                                                ? logSliderValue(parseFloat(e.target.value))
+                                                : parseFloat(e.target.value),
+                                        )
+                                    }
                                     style={{ width: '100%', accentColor: '#5fb6c4' }}
                                 />
                             </label>
                         )
+                    }
                     case 'number':
                         return (
                             <label key={field.key} style={rowStyle}>

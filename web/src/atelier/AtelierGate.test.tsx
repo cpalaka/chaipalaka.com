@@ -20,13 +20,15 @@ describe('AtelierGate (dev)', () => {
         expect(screen.getByTestId('atelier-panel').style.display).toBe('none')
     })
 
-    test('tabs switch axes — Physics and Layout are stubs until their tasks land', async () => {
+    test('tabs switch axes — Physics renders its sliders, Layout is a stub until task-008', async () => {
         render(<AtelierGate />)
         fireEvent.click(screen.getByRole('button', { name: 'Toggle Atelier' }))
         await screen.findByTestId('atelier-panel')
 
         fireEvent.click(screen.getByRole('tab', { name: 'Physics' }))
-        expect(screen.getByText(/task-007/)).toBeDefined()
+        expect(screen.getByRole('button', { name: 'Re-drop' })).toBeDefined()
+        expect(screen.getByLabelText(/Gravity/)).toBeDefined()
+        expect(screen.getByLabelText(/Stiffness/)).toBeDefined()
 
         fireEvent.click(screen.getByRole('tab', { name: 'Layout' }))
         expect(screen.getByText(/task-008/)).toBeDefined()
