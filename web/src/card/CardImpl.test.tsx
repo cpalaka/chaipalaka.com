@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from './CardRegistry'
 import { CardImpl } from './CardImpl'
+import { setArrangeMode, subscribeArrangeDrag } from './arrangeMode'
+import type { ArrangeDragReport } from './arrangeMode'
 import type { CardEntry } from './CardRegistry'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 
@@ -166,6 +168,78 @@ describe('CardImpl — drag handler install', () => {
         fireRealPointerDown(article)
         expect(article.style.cursor).not.toBe('grabbing')
         expect(setDragging).not.toHaveBeenCalled()
+    })
+})
+
+describe('CardImpl — arrange-mode drag', () => {
+    afterEach(() => {
+        setArrangeMode(false)
+    })
+
+    function fireWindowPointerMove(x: number, y: number) {
+        const ev = new Event('pointermove', { bubbles: true }) as Event & {
+            clientX: number
+            clientY: number
+            timeStamp: number
+        }
+        ev.clientX = x
+        ev.clientY = y
+        window.dispatchEvent(ev)
+    }
+
+    test('in arrange mode, pointerdown reports selection and does not grab the body', () => {
+        setArrangeMode(true)
+        const reports: ArrangeDragReport[] = []
+        const unsubscribe = subscribeArrangeDrag((r) => reports.push(r))
+        const entry = makeEntry({ id: 'arrange-1' })
+        const { container, getWorld } = renderWith(<CardImpl entry={entry} />)
+        const setDragging = vi.spyOn(getWorld(), 'setDragging')
+        const article = container.querySelector(
+            'article.physics-card',
+        ) as HTMLElement
+        article.setPointerCapture = () => {}
+        fireRealPointerDown(article)
+        expect(setDragging).not.toHaveBeenCalled()
+        expect(reports).toEqual([{ id: 'arrange-1', x: 50, y: 50, type: 'down' }])
+        unsubscribe()
+    })
+
+    test('in arrange mode, dragging reports anchor moves instead of moving the body', () => {
+        setArrangeMode(true)
+        const reports: ArrangeDragReport[] = []
+        const unsubscribe = subscribeArrangeDrag((r) => reports.push(r))
+        const entry = makeEntry({ id: 'arrange-2' })
+        const { container, getWorld } = renderWith(<CardImpl entry={entry} />)
+        const setPosition = vi.spyOn(getWorld(), 'setPosition')
+        const setVelocity = vi.spyOn(getWorld(), 'setVelocity')
+        const article = container.querySelector(
+            'article.physics-card',
+        ) as HTMLElement
+        article.setPointerCapture = () => {}
+        article.releasePointerCapture = () => {}
+        fireRealPointerDown(article)
+        fireWindowPointerMove(80, 120)
+        fireEvent.pointerUp(window)
+        expect(setPosition).not.toHaveBeenCalled()
+        expect(setVelocity).not.toHaveBeenCalled()
+        expect(reports).toEqual([
+            { id: 'arrange-2', x: 50, y: 50, type: 'down' },
+            { id: 'arrange-2', x: 80, y: 120, type: 'move' },
+        ])
+        unsubscribe()
+    })
+
+    test('with arrange mode off, dragging drives the body as before', () => {
+        const entry = makeEntry({ id: 'arrange-off' })
+        const { container, getWorld } = renderWith(<CardImpl entry={entry} />)
+        const setPosition = vi.spyOn(getWorld(), 'setPosition')
+        const article = container.querySelector(
+            'article.physics-card',
+        ) as HTMLElement
+        article.setPointerCapture = () => {}
+        fireRealPointerDown(article)
+        fireWindowPointerMove(80, 120)
+        expect(setPosition).toHaveBeenCalled()
     })
 })
 

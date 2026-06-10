@@ -12,6 +12,10 @@ import { createTokensBinding } from './tokensBinding'
 import type { TokensBinding } from './tokensBinding'
 import { createPhysicsBinding } from './physicsBinding'
 import type { PhysicsBinding } from './physicsBinding'
+import { createLayoutBinding } from './layoutBinding'
+import type { LayoutBinding } from './layoutBinding'
+import { LAYOUT_ROUTES } from './schemas/layout'
+import { setLayoutOverride } from '../card/layoutOverride'
 import { physicsTuning } from '../physics/physicsTuning'
 import { getThemeController } from '../controls/useTheme'
 
@@ -67,6 +71,34 @@ export function ensurePhysicsBinding(): PhysicsBinding {
         })
     }
     return physicsBindingInstance
+}
+
+/** One layout binding at a time — switching routes disposes the previous
+ * one (clearing its override) before registering the next. */
+let layoutBindingInstance: { route: string; binding: LayoutBinding } | null =
+    null
+
+export function ensureLayoutBinding(route: string): LayoutBinding {
+    if (layoutBindingInstance && layoutBindingInstance.route !== route) {
+        layoutBindingInstance.binding.dispose()
+        layoutBindingInstance = null
+    }
+    if (!layoutBindingInstance) {
+        const def = LAYOUT_ROUTES[route]
+        if (!def) {
+            throw new Error(`ensureLayoutBinding: "${route}" is not a data-layout route`)
+        }
+        layoutBindingInstance = {
+            route,
+            binding: createLayoutBinding({
+                store: getAtelierStore(),
+                route,
+                layout: def.layout,
+                override: { set: setLayoutOverride },
+            }),
+        }
+    }
+    return layoutBindingInstance.binding
 }
 
 export function useAtelierState(): AtelierState {

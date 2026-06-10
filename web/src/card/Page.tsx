@@ -2,6 +2,8 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Card } from './Card'
 import { buoyancyForKind } from '../physics/PageSpec'
 import { usePageDef } from '../physics/usePageDef'
+import { applyLayoutOverride, getLayoutOverride } from './layoutOverride'
+import { useController } from '../state/useController'
 import type { PageSpec } from '../physics/PageSpec'
 import type { Viewport } from '../physics/PhysicsWorld'
 
@@ -25,12 +27,15 @@ function getViewport(): Viewport {
 }
 
 export function Page({
-    pageDef,
+    pageDef: staticPageDef,
     cardContent,
 }: {
     pageDef: PageSpec
     cardContent: Record<string, CardContent>
 }) {
+    // Atelier arrangement axis — null in prod; see layoutOverride.ts.
+    const override = useController(getLayoutOverride)
+    const pageDef = applyLayoutOverride(staticPageDef, override)
     usePageDef(pageDef)
 
     const [viewport, setViewport] = useState<Viewport>(getViewport)

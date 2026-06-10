@@ -10,12 +10,15 @@
 
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useTheme } from '../controls/useTheme'
 import { ATELIER_ONLY_BUNDLE_MARKER } from './atelier-only-marker'
 import { buildTokenEdits } from './tokensBinder'
 import { TokensAxis } from './TokensAxis'
 import { PhysicsAxis } from './PhysicsAxis'
+import { LayoutAxis } from './LayoutAxis'
 import {
+    ensureLayoutBinding,
     ensurePhysicsBinding,
     ensureTokensBinding,
     getAtelierStore,
@@ -28,6 +31,12 @@ import {
     tokensThemeAxis,
 } from './schemas/tokens'
 import { PHYSICS_AXIS, physicsPayload } from './schemas/physics'
+import {
+    LAYOUT_ROUTES,
+    layoutAxis,
+    layoutFromValues,
+    routeForPathname,
+} from './schemas/layout'
 import type { TokenBinding } from './schemas/tokens'
 
 type AxisTab = 'tokens' | 'physics' | 'layout'
@@ -153,12 +162,22 @@ export default function AtelierPanel({ open }: { open: boolean }) {
     const [writing, setWriting] = useState(false)
     const [status, setStatus] = useState<WriteStatus | null>(null)
 
+    const { pathname } = useLocation()
+    const layoutRoute = routeForPathname(pathname)
+    const layoutAxisKey = layoutRoute ? layoutAxis(layoutRoute) : null
+
     const tokensDirty = TOKEN_AXES.reduce(
         (n, axis) => n + store.dirtyPaths(axis).length,
         0,
     )
     const physicsDirty = store.dirtyPaths(PHYSICS_AXIS).length
-    const dirtyCount = tokensDirty + physicsDirty
+    // The layout axis only registers once the Layout tab has bound this
+    // route — before that there is nothing to be dirty against.
+    const layoutDirty =
+        layoutAxisKey && state.baselines[layoutAxisKey]
+            ? store.dirtyPaths(layoutAxisKey).length
+            : 0
+    const dirtyCount = tokensDirty + physicsDirty + layoutDirty
 
     async function writeBack() {
         const { axes, baselines } = store.get()
@@ -200,6 +219,22 @@ export default function AtelierPanel({ open }: { open: boolean }) {
                 }
                 ensurePhysicsBinding().writeBackReconcile()
                 written.push('physicsTuning.ts')
+            }
+            if (layoutDirty > 0 && layoutRoute && layoutAxisKey) {
+                const working = axes[layoutAxisKey]
+                const body = await postWrite('layout', {
+                    route: layoutRoute,
+                    layout: layoutFromValues(
+                        working ?? {},
+                        LAYOUT_ROUTES[layoutRoute]!.layout,
+                    ),
+                })
+                if (!body.ok) {
+                    setStatus({ tone: 'error', message: body.error ?? 'write failed' })
+                    return
+                }
+                ensureLayoutBinding(layoutRoute).writeBackReconcile()
+                written.push(`${layoutRoute}.layout.ts`)
             }
             setStatus(
                 warnings.length
@@ -268,9 +303,7 @@ export default function AtelierPanel({ open }: { open: boolean }) {
             <div style={bodyStyle}>
                 {tab === 'tokens' && <TokensAxis state={state} theme={theme} />}
                 {tab === 'physics' && <PhysicsAxis state={state} />}
-                {tab === 'layout' && (
-                    <p style={{ color: '#5f7a8a' }}>Layout axis lands with task-008.</p>
-                )}
+                {tab === 'layout' && <LayoutAxis state={state} />}
             </div>
 
             <footer style={footerStyle}>

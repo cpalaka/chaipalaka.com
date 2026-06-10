@@ -1,10 +1,20 @@
 import { describe, test, expect } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { AtelierGate } from './AtelierGate'
+
+// The panel reads the current route (Layout axis) — give it a router.
+function renderGate() {
+    return render(
+        <MemoryRouter>
+            <AtelierGate />
+        </MemoryRouter>,
+    )
+}
 
 describe('AtelierGate (dev)', () => {
     test('renders the corner toggle; the inspector mounts on first open and collapses on re-toggle', async () => {
-        render(<AtelierGate />)
+        renderGate()
 
         const toggle = screen.getByRole('button', { name: 'Toggle Atelier' })
         expect(screen.queryByTestId('atelier-panel')).toBeNull()
@@ -20,8 +30,8 @@ describe('AtelierGate (dev)', () => {
         expect(screen.getByTestId('atelier-panel').style.display).toBe('none')
     })
 
-    test('tabs switch axes — Physics renders its sliders, Layout is a stub until task-008', async () => {
-        render(<AtelierGate />)
+    test('tabs switch axes — Physics renders its sliders, Layout explains non-data-layout routes', async () => {
+        renderGate()
         fireEvent.click(screen.getByRole('button', { name: 'Toggle Atelier' }))
         await screen.findByTestId('atelier-panel')
 
@@ -30,7 +40,9 @@ describe('AtelierGate (dev)', () => {
         expect(screen.getByLabelText(/Gravity/)).toBeDefined()
         expect(screen.getByLabelText(/Stiffness/)).toBeDefined()
 
+        // The gate test mounts at '/' — not a data-layout route, so the
+        // Layout tab explains itself instead of rendering arrange controls.
         fireEvent.click(screen.getByRole('tab', { name: 'Layout' }))
-        expect(screen.getByText(/task-008/)).toBeDefined()
+        expect(screen.getByText(/Not a data-layout route/)).toBeDefined()
     })
 })

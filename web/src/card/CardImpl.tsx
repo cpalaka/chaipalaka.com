@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
 import { physicsTuning } from '../physics/physicsTuning'
+import { getArrangeMode, reportArrangeDrag } from './arrangeMode'
 import { resolveParent, wireTetherFor } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
@@ -143,6 +144,10 @@ export function CardImpl({ entry }: CardImplProps) {
         }
 
         let dragging = false
+        // Arrange-mode drag (Atelier): pointer events report the would-be
+        // anchor position instead of driving the body. Read-at-use at
+        // pointerdown so the Layout tab can flip semantics mid-session.
+        let arranging = false
         let lastX = 0
         let lastY = 0
         let lastT = 0
@@ -158,6 +163,13 @@ export function CardImpl({ entry }: CardImplProps) {
             )
                 return
             e.preventDefault()
+            if (getArrangeMode().get()) {
+                arranging = true
+                reportArrangeDrag({ id, x: e.clientX, y: e.clientY, type: 'down' })
+                el.setPointerCapture(e.pointerId)
+                el.style.cursor = 'move'
+                return
+            }
             dragging = true
             lastX = e.clientX
             lastY = e.clientY
@@ -170,6 +182,10 @@ export function CardImpl({ entry }: CardImplProps) {
             el.style.cursor = 'grabbing'
         }
         const onPointerMove = (e: PointerEvent) => {
+            if (arranging) {
+                reportArrangeDrag({ id, x: e.clientX, y: e.clientY, type: 'move' })
+                return
+            }
             if (!dragging) return
             const dx = e.clientX - lastX
             const dy = e.clientY - lastY
@@ -183,6 +199,12 @@ export function CardImpl({ entry }: CardImplProps) {
             lastT = e.timeStamp
         }
         const onPointerUp = (e: PointerEvent) => {
+            if (arranging) {
+                arranging = false
+                el.releasePointerCapture(e.pointerId)
+                el.style.cursor = 'grab'
+                return
+            }
             if (!dragging) return
             dragging = false
             world.setDragging(handle, false)
