@@ -14,9 +14,15 @@ import { createPhysicsBinding } from './physicsBinding'
 import type { PhysicsBinding } from './physicsBinding'
 import { createLayoutBinding } from './layoutBinding'
 import type { LayoutBinding } from './layoutBinding'
+import { createChainBinding } from './chainBinding'
+import type { ChainBinding } from './chainBinding'
 import { LAYOUT_ROUTES } from './schemas/layout'
 import { setLayoutOverride } from '../card/layoutOverride'
 import { physicsTuning } from '../physics/physicsTuning'
+import {
+    layoutTuning,
+    notifyLayoutTuning,
+} from '../layout/layoutTuning'
 import { getThemeController } from '../controls/useTheme'
 
 let storeInstance: AtelierStore | null = null
@@ -99,6 +105,19 @@ export function ensureLayoutBinding(route: string): LayoutBinding {
         }
     }
     return layoutBindingInstance.binding
+}
+
+let chainBindingInstance: ChainBinding | null = null
+
+export function ensureChainBinding(): ChainBinding {
+    if (!chainBindingInstance) {
+        chainBindingInstance = createChainBinding({
+            store: getAtelierStore(),
+            tuning: layoutTuning,
+            notify: notifyLayoutTuning,
+        })
+    }
+    return chainBindingInstance
 }
 
 export function useAtelierState(): AtelierState {

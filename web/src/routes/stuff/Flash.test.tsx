@@ -18,11 +18,13 @@ import Flash, { buildFlashIndex } from './Flash'
 import { PhysicsProvider } from '../../physics/PhysicsContext'
 import { CardRegistryProvider } from '../../card/CardRegistry'
 import { CardLayer } from '../../card/CardLayer'
+import { layoutTuning } from '../../layout/layoutTuning'
 
-const CHAIN_TOP = 100
+// Chain constants imported, never copied (task-009) — the local
+// CHAIN_TOP=100 copy this replaced had already drifted from the source.
+const { chainTop: CHAIN_TOP, chainGap: CHAIN_GAP } = layoutTuning
 const HEADER_H = 140
 const PIECE_H = 320
-const CHAIN_GAP = 60
 
 function makePiece(slug: string, title = slug): Piece {
     return {

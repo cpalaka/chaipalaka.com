@@ -268,8 +268,113 @@ export function generatePhysicsTuningSource(
 }
 
 /**
+ * The canonical shape of layoutTuning.ts — keys in order with their doc
+ * comments, plus the fixed notify/subscribe footer. Like the physics
+ * generator, after the first write-back this IS the source of truth for
+ * the file's prose; the byte-identical regen test keeps the two aligned.
+ */
+const LAYOUT_TUNING_FIELDS: ReadonlyArray<{ key: string; doc: string }> = [
+    {
+        key: 'chainGap',
+        doc: '    /** Vertical gap between stacked chain cards, edge to edge. */',
+    },
+    {
+        key: 'chainTop',
+        doc: "    /** Y of the first chain card's top edge, below the physics ceiling. */",
+    },
+    {
+        key: 'navCardW',
+        doc: '    /** Inline nav card width. */',
+    },
+    {
+        key: 'navCardH',
+        doc: '    /** Inline nav card height. */',
+    },
+    {
+        key: 'navTopInset',
+        doc: '    /** Back-nav top edge sits this far below the ceiling. */',
+    },
+    {
+        key: 'navBottomInset',
+        doc: '    /** Next-nav bottom edge sits this far above the floor. */',
+    },
+]
+
+const LAYOUT_TUNING_HEADER = `/**
+ * The single home for the chain-layout constants (the Atelier chain axis
+ * regenerates this file whole).
+ *
+ * Shape rules, matching physicsTuning.ts:
+ *   - One flat, mutable data literal — no computed values, no spreads.
+ *   - Read-at-use: consumers read \`layoutTuning.x\` when they partition or
+ *     lay out a chain — never captured into a module-level computed const.
+ *   - Tests import from this module; they never copy these literals.
+ *
+ * Unlike physics (read per tick), chain layout is pull-based: after
+ * mutating values, call notifyLayoutTuning() so chain routes rebuild and
+ * re-partition. Layout spacing guardrail: parent/child spacing must stay
+ * ≥ card height + 60px — tether lengths derive from the layout.
+ */
+`
+
+const LAYOUT_TUNING_FOOTER = `
+export type LayoutTuning = typeof layoutTuning
+
+const listeners = new Set<() => void>()
+
+/** Chain routes re-partition on notify; the Atelier chain binding calls
+ * this after writing new values onto the literal. */
+export function notifyLayoutTuning(): void {
+    for (const listener of listeners) listener()
+}
+
+export function subscribeLayoutTuning(listener: () => void): () => void {
+    listeners.add(listener)
+    return () => {
+        listeners.delete(listener)
+    }
+}
+`
+
+/**
+ * Whole-file regeneration of layoutTuning.ts. The payload must carry
+ * exactly the known keys, all finite numbers — anything else rejects the
+ * write with the file untouched.
+ */
+export function generateLayoutTuningSource(
+    values: Record<string, number>,
+): GenerateResult {
+    const known = new Set(LAYOUT_TUNING_FIELDS.map((f) => f.key))
+    for (const key of Object.keys(values)) {
+        if (!known.has(key)) {
+            return { ok: false, error: `chain: unknown key ${key}` }
+        }
+    }
+    const entries: string[] = []
+    for (const field of LAYOUT_TUNING_FIELDS) {
+        const v = values[field.key]
+        if (v === undefined) {
+            return { ok: false, error: `chain: missing key ${field.key}` }
+        }
+        if (typeof v !== 'number' || !Number.isFinite(v)) {
+            return {
+                ok: false,
+                error: `chain: ${field.key} must be a finite number`,
+            }
+        }
+        entries.push(`${field.doc}\n    ${field.key}: ${fmtNum(v)},`)
+    }
+    const source =
+        LAYOUT_TUNING_HEADER +
+        'export const layoutTuning = {\n' +
+        entries.join('\n') +
+        '\n}\n' +
+        LAYOUT_TUNING_FOOTER
+    return { ok: true, source }
+}
+
+/**
  * Scatter routes whose layout lives in a regenerable `.layout.ts` data file.
- * Chain routes get their `layoutTuning.ts` target registered by task-009.
  */
 const LAYOUT_TARGETS: Record<string, { file: string; exportName: string }> = {
     lifelog: {
@@ -588,8 +693,7 @@ function extractDataLiteral(source: string): unknown {
  * targets. All-or-nothing: any validation failure returns an error with no
  * file touched. The `io` seam exists so tests can prove that.
  *
- * Targets: tokens | physics | layout. The chain target (layoutTuning.ts) is
- * registered by task-009, which creates that file.
+ * Targets: tokens | physics | chain | layout.
  */
 export async function handleAtelierWrite(
     body: unknown,
@@ -636,6 +740,29 @@ export async function handleAtelierWrite(
         }
         await io.writeFile(
             join(root, 'src/physics/physicsTuning.ts'),
+            result.source,
+        )
+        return { ok: true, warnings: [] }
+    }
+
+    if (target === 'chain') {
+        const parsed = physicsPayloadSchema.safeParse(payload)
+        if (!parsed.success) {
+            return {
+                ok: false,
+                error: 'chain: payload must be a map of numbers',
+            }
+        }
+        const result = generateLayoutTuningSource(parsed.data)
+        if (!result.ok) return result
+        if (!deepEqual(extractDataLiteral(result.source), parsed.data)) {
+            return {
+                ok: false,
+                error: 'chain: generated source failed verification',
+            }
+        }
+        await io.writeFile(
+            join(root, 'src/layout/layoutTuning.ts'),
             result.source,
         )
         return { ok: true, warnings: [] }

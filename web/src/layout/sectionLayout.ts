@@ -6,29 +6,25 @@ import type {
 } from '../physics/PageSpec'
 import type { Vec2, Viewport } from '../physics/PhysicsWorld'
 
-export const NAV_CARD_W = 180
-export const NAV_CARD_H = 56
-export const NAV_BREAKPOINT = 600
-export const CHAIN_TOP = 80
-export const CHAIN_GAP = 60
+import { layoutTuning } from './layoutTuning'
 
-// Fixed insets for inline nav cards — back-nav top edge sits NAV_TOP_INSET
-// below the ceiling, next-nav bottom edge sits NAV_BOTTOM_INSET above the
-// floor. Content fills the middle.
-export const NAV_TOP_INSET = 40
-export const NAV_BOTTOM_INSET = 40
+export const NAV_BREAKPOINT = 600
 
 // Reserve vertical budget for inline nav cards (back + next) plus their
 // chain gaps. Slight over-reservation is fine — partitioning never knows
 // up front whether a section will end up at the head or tail of the
-// chain (no back-nav / no next-nav respectively).
-const NAV_RESERVE =
-    NAV_TOP_INSET +
-    NAV_CARD_H +
-    CHAIN_GAP +
-    NAV_CARD_H +
-    NAV_BOTTOM_INSET +
-    24
+// chain (no back-nav / no next-nav respectively). Computed per partition,
+// never at import — layoutTuning is read-at-use.
+function navReserve(): number {
+    return (
+        layoutTuning.navTopInset +
+        layoutTuning.navCardH +
+        layoutTuning.chainGap +
+        layoutTuning.navCardH +
+        layoutTuning.navBottomInset +
+        24
+    )
+}
 
 export interface ChainItem {
     card: CardSpec
@@ -135,7 +131,7 @@ function partitionByOverflow(
     viewport: Viewport,
     maxPerSection?: number,
 ): CardSpec[][] {
-    const usable = viewport.height - CHAIN_TOP - NAV_RESERVE
+    const usable = viewport.height - layoutTuning.chainTop - navReserve()
 
     const sections: CardSpec[][] = []
     let current: CardSpec[] = []
@@ -156,7 +152,7 @@ function partitionByOverflow(
             flush()
         }
 
-        const projected = cursorY + (current.length > 0 ? CHAIN_GAP : 0) + item.height
+        const projected = cursorY + (current.length > 0 ? layoutTuning.chainGap : 0) + item.height
         const overflows = current.length > 0 && projected > usable
         const overMax = maxPerSection !== undefined && current.length >= maxPerSection
 
@@ -165,7 +161,7 @@ function partitionByOverflow(
         }
 
         // Place card in current section
-        cursorY += (current.length > 0 ? CHAIN_GAP : 0) + item.height
+        cursorY += (current.length > 0 ? layoutTuning.chainGap : 0) + item.height
         current.push(item.card)
 
         if (sb === 'after') {

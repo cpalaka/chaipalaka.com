@@ -3,16 +3,21 @@ import { Link } from 'react-router-dom'
 import { Page, type CardContent } from '../../card/Page'
 import { getPiecesByCategory } from '../../stuff/flash/pieces'
 import { getCategoryMeta } from '../../stuff/flash/categories'
+import {
+    layoutTuning,
+    subscribeLayoutTuning,
+} from '../../layout/layoutTuning'
 import type { PageDef } from '../PageDef'
 import type { CardSpec } from '../../physics/PageSpec'
 import type { Viewport } from '../../physics/PhysicsWorld'
 
-const CHAIN_TOP = 100
+// Chain constants come from layoutTuning (task-009 unified this route's
+// local CHAIN_TOP=100 onto the shared chainTop). Card dims stay local —
+// they are route content, not chain constants.
 const HEADER_W = 280
 const HEADER_H = 140
 const PIECE_W = 360
 const PIECE_H = 320
-const CHAIN_GAP = 60
 
 const groupsAtImport = getPiecesByCategory()
 
@@ -23,6 +28,7 @@ export function buildFlashIndex(
     const categoryKeys = Array.from(groups.keys()).sort()
     const cards: CardSpec[] = []
     const cardContent: Record<string, CardContent> = {}
+    const { chainTop, chainGap } = layoutTuning
 
     const chainCount = categoryKeys.length
     categoryKeys.forEach((catKey, ci) => {
@@ -37,7 +43,7 @@ export function buildFlashIndex(
             parent: 'ceiling',
             anchor: (viewport: Viewport) => ({
                 x: viewport.width * xFraction,
-                y: CHAIN_TOP + HEADER_H / 2,
+                y: chainTop + HEADER_H / 2,
             }),
         })
         cardContent[headerId] = {
@@ -52,7 +58,7 @@ export function buildFlashIndex(
             ),
         }
 
-        let y = CHAIN_TOP + HEADER_H + CHAIN_GAP + PIECE_H / 2
+        let y = chainTop + HEADER_H + chainGap + PIECE_H / 2
         let parentId = headerId
         for (const piece of pieces) {
             const id = `flash-piece-${piece.slug}`
@@ -100,7 +106,7 @@ export function buildFlashIndex(
                 ),
             }
             parentId = id
-            y += PIECE_H + CHAIN_GAP
+            y += PIECE_H + chainGap
         }
         void vp
     })
@@ -128,7 +134,13 @@ export default function Flash() {
         }
         update()
         window.addEventListener('resize', update, { passive: true })
-        return () => window.removeEventListener('resize', update)
+        // Atelier chain axis — rebuild when a chain-layout constant changes
+        // (no-op in prod; nothing ever notifies).
+        const unsubscribeTuning = subscribeLayoutTuning(update)
+        return () => {
+            window.removeEventListener('resize', update)
+            unsubscribeTuning()
+        }
     }, [])
 
     return <Page pageDef={page.pageDef} cardContent={page.cardContent} />

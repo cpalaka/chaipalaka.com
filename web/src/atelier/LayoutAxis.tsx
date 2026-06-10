@@ -21,7 +21,11 @@ import {
     subscribeArrangeDrag,
 } from '../card/arrangeMode'
 import type { AtelierState, AxisValues } from './atelierStore'
-import { ensureLayoutBinding, getAtelierStore } from './useAtelier'
+import {
+    ensureChainBinding,
+    ensureLayoutBinding,
+    getAtelierStore,
+} from './useAtelier'
 import {
     DETACHED,
     LAYOUT_ROUTES,
@@ -29,6 +33,9 @@ import {
     layoutAxis,
     routeForPathname,
 } from './schemas/layout'
+import { CHAIN_AXIS, CHAIN_SCHEMA, isChainPathname } from './schemas/chain'
+import { TuningFields } from './widgets'
+import { defaultsOf } from '../canvas/scenes/paramSchema'
 
 const captionStyle: CSSProperties = {
     color: '#5f7a8a',
@@ -87,15 +94,43 @@ const round = (v: number) => Math.round(v * 10000) / 10000
 export function LayoutAxis({ state }: { state: AtelierState }) {
     const { pathname } = useLocation()
     const route = routeForPathname(pathname)
-    if (!route) {
-        return (
-            <p style={{ color: '#5f7a8a', margin: 0 }}>
-                Not a data-layout route — chain constants land with task-009;
-                the / placeholder keeps its computed letter anchors.
-            </p>
-        )
+    if (route) {
+        return <LayoutAxisBody key={route} route={route} state={state} />
     }
-    return <LayoutAxisBody key={route} route={route} state={state} />
+    if (isChainPathname(pathname)) {
+        return <ChainAxisBody state={state} />
+    }
+    return (
+        <p style={{ color: '#5f7a8a', margin: 0 }}>
+            Neither a data-layout route nor a chain route — the / placeholder
+            keeps its computed letter anchors.
+        </p>
+    )
+}
+
+function ChainAxisBody({ state }: { state: AtelierState }) {
+    const store = getAtelierStore()
+
+    // Bind in an effect, not during render — see LayoutAxisBody.
+    useEffect(() => {
+        ensureChainBinding()
+    }, [])
+
+    const values = state.axes[CHAIN_AXIS]
+    if (!values) return null
+
+    return (
+        <>
+            <p style={captionStyle}>chain constants — re-partition live</p>
+            <TuningFields
+                schema={CHAIN_SCHEMA}
+                values={values ?? defaultsOf(CHAIN_SCHEMA)}
+                onChange={(next) => store.setValues(CHAIN_AXIS, next)}
+                isDirty={(path) => store.isDirty(CHAIN_AXIS, path)}
+                onReset={(path) => store.resetField(CHAIN_AXIS, path)}
+            />
+        </>
+    )
 }
 
 function LayoutAxisBody({ route, state }: { route: string; state: AtelierState }) {

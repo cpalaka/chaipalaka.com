@@ -15,12 +15,11 @@ import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { useHashSection } from '../../transitions/useHashSection'
 import { edgeToInsets } from '../../physics/PhysicsContext'
 import { useFrameEdge } from '../../canvas/useFrameEdge'
+import { partitionPageDef } from '../../layout/sectionLayout'
 import {
-    partitionPageDef,
-    NAV_CARD_W,
-    NAV_CARD_H,
-    NAV_TOP_INSET,
-} from '../../layout/sectionLayout'
+    layoutTuning,
+    subscribeLayoutTuning,
+} from '../../layout/layoutTuning'
 import { NavCardContent } from './NavCardContent'
 import type { PageDef } from '../PageDef'
 import type { CardSpec } from '../../physics/PageSpec'
@@ -29,9 +28,7 @@ import type { Viewport } from '../../physics/PhysicsWorld'
 
 const GUTTER = 16
 
-export const CHAIN_GAP = 60
 export const CHAIN_X_FRACTION = 0.5
-export const CHAIN_TOP = 80
 
 const ROUTE_KEY = '/blog'
 const T4_DURATION_MS = 700
@@ -67,21 +64,23 @@ export function layoutSection(
 
     const ceilingY = insets.top
 
+    const { chainGap, chainTop, navCardH, navTopInset } = layoutTuning
+
     const startsWithBackNav = cards.length > 0 && isBackNav(cards[0]!, 0)
     let y = startsWithBackNav
-        ? ceilingY + NAV_TOP_INSET + NAV_CARD_H + CHAIN_GAP
-        : ceilingY + CHAIN_TOP
+        ? ceilingY + navTopInset + navCardH + chainGap
+        : ceilingY + chainTop
 
     return cards.map((card, i) => {
         let capturedY: number
         if (isBackNav(card, i)) {
-            capturedY = ceilingY + NAV_TOP_INSET + NAV_CARD_H / 2
-            y = ceilingY + NAV_TOP_INSET + NAV_CARD_H + CHAIN_GAP
+            capturedY = ceilingY + navTopInset + navCardH / 2
+            y = ceilingY + navTopInset + navCardH + chainGap
         } else {
             const h =
-                heights[card.id] ?? (card.kind === 'nav' ? NAV_CARD_H : 0)
+                heights[card.id] ?? (card.kind === 'nav' ? navCardH : 0)
             capturedY = y + h / 2
-            y += h + CHAIN_GAP
+            y += h + chainGap
         }
         return {
             ...card,
@@ -104,7 +103,7 @@ export function buildChain(
     const cardContent: Record<string, CardContent> = {}
     const heights: Record<string, number> = {}
 
-    let y = CHAIN_TOP
+    let y = layoutTuning.chainTop
 
     for (let i = 0; i < postList.length; i++) {
         const post = postList[i]!
@@ -151,7 +150,7 @@ export function buildChain(
         }
 
         heights[id] = height
-        y += height + CHAIN_GAP
+        y += height + layoutTuning.chainGap
     }
 
     return {
@@ -194,7 +193,13 @@ export default function BlogIndex() {
         }
         update()
         window.addEventListener('resize', update, { passive: true })
-        return () => window.removeEventListener('resize', update)
+        // Atelier chain axis — rebuild + re-partition when a chain-layout
+        // constant changes (no-op in prod; nothing ever notifies).
+        const unsubscribeTuning = subscribeLayoutTuning(update)
+        return () => {
+            window.removeEventListener('resize', update)
+            unsubscribeTuning()
+        }
     }, [])
 
     const sections = useMemo(
@@ -237,8 +242,8 @@ export default function BlogIndex() {
             const targetSectionIndex = isBack ? currentIdx : currentIdx + 2
             out[nav.id] = {
                 text: isBack ? '↑ back' : 'next ↓',
-                width: NAV_CARD_W,
-                height: NAV_CARD_H,
+                width: layoutTuning.navCardW,
+                height: layoutTuning.navCardH,
                 draggable: false,
                 children: (
                     <NavCardContent

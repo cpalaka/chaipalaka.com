@@ -1,5 +1,6 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, afterEach } from 'vitest'
 import { partitionChain, type ChainItem, type PartitionOptions } from './sectionLayout'
+import { layoutTuning } from './layoutTuning'
 import type { CardSpec } from '../physics/PageSpec'
 
 function makeCard(id: string, overrides: Partial<CardSpec> = {}): CardSpec {
@@ -322,5 +323,50 @@ describe('partitionChain', () => {
         for (const nav of sections.flatMap((s) => s.navCards)) {
             expect(nav.kind).toBe('nav')
         }
+    })
+})
+
+describe('partitionChain — read-at-use over layoutTuning', () => {
+    const source = { ...layoutTuning }
+    afterEach(() => {
+        Object.assign(layoutTuning, source)
+    })
+
+    test('a mid-session chainGap change alters the next partition', () => {
+        const opts = (): PartitionOptions => ({
+            viewport: DESKTOP,
+            cards: items([
+                { id: 'a', height: 140 },
+                { id: 'b', height: 140 },
+            ]),
+            routeKey: '/blog',
+        })
+        // Two 150-tall cards fit one section at the source gap:
+        // usable = 700 - chainTop(80) - reserve(276) = 344 ≥ 140+60+140.
+        const before = partitionChain(opts()).length
+        expect(before).toBe(1)
+
+        layoutTuning.chainGap = 2000
+        const after = partitionChain(opts()).length
+
+        expect(after).toBeGreaterThan(before)
+    })
+
+    test('a mid-session navCardH change alters the nav reserve, and so the partition', () => {
+        const opts = (): PartitionOptions => ({
+            viewport: DESKTOP,
+            cards: items([
+                { id: 'a', height: 140 },
+                { id: 'b', height: 140 },
+            ]),
+            routeKey: '/blog',
+        })
+        const before = partitionChain(opts()).length
+
+        // Inflate the reserve until the usable budget can't hold both cards.
+        layoutTuning.navCardH = 300
+        const after = partitionChain(opts()).length
+
+        expect(after).toBeGreaterThan(before)
     })
 })

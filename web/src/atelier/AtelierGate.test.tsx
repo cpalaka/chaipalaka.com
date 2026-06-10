@@ -40,9 +40,11 @@ describe('AtelierGate (dev)', () => {
         expect(screen.getByLabelText(/Gravity/)).toBeDefined()
         expect(screen.getByLabelText(/Stiffness/)).toBeDefined()
 
-        // The gate test mounts at '/' — not a data-layout route, so the
-        // Layout tab explains itself instead of rendering arrange controls.
+        // The gate test mounts at '/' — neither data-layout nor chain, so
+        // the Layout tab explains itself instead of rendering controls.
         fireEvent.click(screen.getByRole('tab', { name: 'Layout' }))
-        expect(screen.getByText(/Not a data-layout route/)).toBeDefined()
+        expect(
+            screen.getByText(/Neither a data-layout route nor a chain route/),
+        ).toBeDefined()
     })
 })

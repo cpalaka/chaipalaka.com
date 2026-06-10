@@ -2,11 +2,12 @@ import { describe, test, expect } from 'vitest'
 import {
     buildChain,
     layoutSection,
-    CHAIN_GAP,
     CHAIN_X_FRACTION,
-    CHAIN_TOP,
 } from './BlogIndex'
-import { NAV_CARD_H, NAV_TOP_INSET } from '../../layout/sectionLayout'
+import { layoutTuning } from '../../layout/layoutTuning'
+
+// Imported, never copied — retuning must not strand stale expectations.
+const { chainGap: CHAIN_GAP, chainTop: CHAIN_TOP, navCardH: NAV_CARD_H, navTopInset: NAV_TOP_INSET } = layoutTuning
 import type { CardSpec } from '../../physics/PageSpec'
 import { measureBlogCard, CARD_PADDING } from './BlogIndex.measure'
 import type { Font } from '../../text/fonts'

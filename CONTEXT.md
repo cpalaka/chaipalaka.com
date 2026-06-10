@@ -281,8 +281,8 @@ A file the Atelier's dev-serve-only endpoint (`POST /__atelier/write`,
 `web/src/atelier/vite-plugin-atelier.ts`) may modify — a hard whitelist:
 `tokens` (value-only rewrite of `tokens.css`; light values land in BOTH
 light blocks), `physics` (whole-file regen of `physicsTuning.ts`),
-`layout` (whole-file regen of a scatter route's `.layout.ts`); `chain`
-joins the whitelist when task-009 creates `layoutTuning.ts`. Writes are
+`chain` (whole-file regen of `layoutTuning.ts`), `layout` (whole-file
+regen of a scatter route's `.layout.ts`). Writes are
 all-or-nothing: one unmatched property or invalid payload rejects the
 whole request with files untouched. Editing a mirrored token
 (`--font-body`/`--font-mono` ↔ `fonts.ts`; `--card-padding`/`--card-gap`
@@ -304,6 +304,19 @@ the Atelier physics axis act on a running world. Tests import from the
 module; they never copy its literals.
 _Avoid_: config (too generic), constants file (implies capture-at-import
 is fine — it isn't).
+
+**LayoutTuning**:
+The chain-layout analog of **PhysicsTuning** — the single flat data
+literal (`web/src/layout/layoutTuning.ts`) holding the chain constants
+(chain gap/top, nav card dims, nav insets), read-at-use by
+`sectionLayout` partitioning and the chain routes' builders. One
+difference from physics: chain layout is pull-based, so the module
+carries a notify/subscribe pair — the Atelier chain binding mutates the
+literal then notifies, and subscribed chain routes (`/blog`,
+`/stuff/flash`) rebuild and re-partition. Tests import from the module;
+they never copy its literals (the pre-task-009 local copies had already
+drifted: Flash's CHAIN_TOP was 100 vs the source 80).
+_Avoid_: chain config, sectionLayout constants (the retired home).
 
 **BodyForceSource**:
 A small adapter interface (`getPosition`, `getMass`, `isStatic`,

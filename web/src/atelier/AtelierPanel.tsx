@@ -18,6 +18,7 @@ import { TokensAxis } from './TokensAxis'
 import { PhysicsAxis } from './PhysicsAxis'
 import { LayoutAxis } from './LayoutAxis'
 import {
+    ensureChainBinding,
     ensureLayoutBinding,
     ensurePhysicsBinding,
     ensureTokensBinding,
@@ -37,6 +38,7 @@ import {
     layoutFromValues,
     routeForPathname,
 } from './schemas/layout'
+import { CHAIN_AXIS, chainPayload } from './schemas/chain'
 import type { TokenBinding } from './schemas/tokens'
 
 type AxisTab = 'tokens' | 'physics' | 'layout'
@@ -171,13 +173,16 @@ export default function AtelierPanel({ open }: { open: boolean }) {
         0,
     )
     const physicsDirty = store.dirtyPaths(PHYSICS_AXIS).length
-    // The layout axis only registers once the Layout tab has bound this
-    // route — before that there is nothing to be dirty against.
+    // The layout/chain axes only register once the Layout tab has bound
+    // them — before that there is nothing to be dirty against.
     const layoutDirty =
         layoutAxisKey && state.baselines[layoutAxisKey]
             ? store.dirtyPaths(layoutAxisKey).length
             : 0
-    const dirtyCount = tokensDirty + physicsDirty + layoutDirty
+    const chainDirty = state.baselines[CHAIN_AXIS]
+        ? store.dirtyPaths(CHAIN_AXIS).length
+        : 0
+    const dirtyCount = tokensDirty + physicsDirty + layoutDirty + chainDirty
 
     async function writeBack() {
         const { axes, baselines } = store.get()
@@ -219,6 +224,18 @@ export default function AtelierPanel({ open }: { open: boolean }) {
                 }
                 ensurePhysicsBinding().writeBackReconcile()
                 written.push('physicsTuning.ts')
+            }
+            if (chainDirty > 0) {
+                const body = await postWrite(
+                    'chain',
+                    chainPayload(axes[CHAIN_AXIS] ?? {}),
+                )
+                if (!body.ok) {
+                    setStatus({ tone: 'error', message: body.error ?? 'write failed' })
+                    return
+                }
+                ensureChainBinding().writeBackReconcile()
+                written.push('layoutTuning.ts')
             }
             if (layoutDirty > 0 && layoutRoute && layoutAxisKey) {
                 const working = axes[layoutAxisKey]

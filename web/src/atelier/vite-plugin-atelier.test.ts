@@ -3,9 +3,11 @@ import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { physicsTuning } from '../physics/physicsTuning'
+import { layoutTuning } from '../layout/layoutTuning'
 import { lifelogLayout } from '../routes/Lifelog.layout'
 import {
     generateLayoutSource,
+    generateLayoutTuningSource,
     generatePhysicsTuningSource,
     handleAtelierWrite,
     mirrorWarnings,
@@ -234,6 +236,44 @@ describe('generatePhysicsTuningSource', () => {
     })
 })
 
+describe('generateLayoutTuningSource', () => {
+    it('regenerating from the current values reproduces layoutTuning.ts byte-identically', () => {
+        const result = generateLayoutTuningSource({ ...layoutTuning })
+        if (!result.ok) throw new Error(result.error)
+        const real = readFileSync(
+            join(here, '..', 'layout', 'layoutTuning.ts'),
+            'utf8',
+        )
+        expect(result.source).toBe(real)
+    })
+
+    it('round-trips: generate → import → deep-equal', async () => {
+        const retuned = { ...layoutTuning, chainGap: 90, chainTop: 120 }
+        const result = generateLayoutTuningSource(retuned)
+        if (!result.ok) throw new Error(result.error)
+        const tmp = join(here, '.roundtrip-chain.gen.ts')
+        writeFileSync(tmp, result.source)
+        try {
+            const mod = await import(/* @vite-ignore */ tmp)
+            expect(mod.layoutTuning).toEqual(retuned)
+        } finally {
+            rmSync(tmp)
+        }
+    })
+
+    it('rejects unknown, missing, and non-finite values', () => {
+        expect(
+            generateLayoutTuningSource({ ...layoutTuning, marginOfError: 1 }).ok,
+        ).toBe(false)
+        const missing: Record<string, number> = { ...layoutTuning }
+        delete missing.chainGap
+        expect(generateLayoutTuningSource(missing).ok).toBe(false)
+        expect(
+            generateLayoutTuningSource({ ...layoutTuning, chainGap: NaN }).ok,
+        ).toBe(false)
+    })
+})
+
 describe('generateLayoutSource', () => {
     it('regenerating from the current data reproduces Lifelog.layout.ts byte-identically', () => {
         const result = generateLayoutSource('lifelog', lifelogLayout)
@@ -439,6 +479,30 @@ describe('handleAtelierWrite', () => {
         expect(writes).toHaveLength(1)
         expect(writes[0]!.path).toBe('/fake/web/src/routes/Lifelog.layout.ts')
         expect(writes[0]!.content).toContain('export const lifelogLayout')
+    })
+
+    it('writes regenerated layoutTuning.ts for a valid chain payload', async () => {
+        const { io, writes } = fakeIo()
+        const result = await handleAtelierWrite(
+            { target: 'chain', payload: { ...layoutTuning, chainGap: 90 } },
+            io,
+            root,
+        )
+        if (!result.ok) throw new Error(result.error)
+        expect(writes).toHaveLength(1)
+        expect(writes[0]!.path).toBe('/fake/web/src/layout/layoutTuning.ts')
+        expect(writes[0]!.content).toContain('chainGap: 90,')
+    })
+
+    it('rejects an invalid chain payload without writing', async () => {
+        const { io, writes } = fakeIo()
+        const result = await handleAtelierWrite(
+            { target: 'chain', payload: { ...layoutTuning, chainGap: 'wide' } },
+            io,
+            root,
+        )
+        expect(result.ok).toBe(false)
+        expect(writes).toHaveLength(0)
     })
 
     it('rejects an invalid physics payload without writing', async () => {
