@@ -1,9 +1,10 @@
 ---
 id: TASK-008
 title: 'Arrange mode — drag anchors, mini-inspector, gravity select'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-10 00:55'
 labels:
   - claude-generated
   - atelier
