@@ -1,10 +1,10 @@
 ---
 id: TASK-009
 title: Chain constants — layoutTuning.ts + live re-partition
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-06-05 07:02'
-updated_date: '2026-06-10 01:43'
+updated_date: '2026-06-10 02:34'
 labels:
   - claude-generated
   - atelier
@@ -27,18 +27,24 @@ Chain routes (/blog, /stuff/flash) get no per-card drag — honest to the comput
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Chain constants single-sourced from layoutTuning.ts (sectionLayout reads from it; tests import, never copy)
-- [ ] #2 Editing a constant re-partitions /blog and /stuff/flash live
-- [ ] #3 Chain target registered in the whitelist; codegen round-trip test (generate → import → deep-equal)
-- [ ] #4 Write-back regenerates layoutTuning.ts; after HMR reload, baselines refresh and dirty flags clear
+- [x] #1 Chain constants single-sourced from layoutTuning.ts (sectionLayout reads from it; tests import, never copy)
+- [x] #2 Editing a constant re-partitions /blog and /stuff/flash live
+- [x] #3 Chain target registered in the whitelist; codegen round-trip test (generate → import → deep-equal)
+- [x] #4 Write-back regenerates layoutTuning.ts; after HMR reload, baselines refresh and dirty flags clear
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Merged to main as 2d48c8e (squash of feat/task-009-chain-constants-layouttuning). layoutTuning.ts single-sources chain constants with notify-based live re-partition on /blog + /stuff/flash; chain target registered in vite-plugin-atelier with byte-identical + round-trip codegen tests; Flash CHAIN_TOP drift (100 vs 80) unified onto the shared value, approved at review. All ACs verified in dev browser; diff approved by Chai 2026-06-09.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->
