@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTheme } from '../controls/useTheme'
+import { ATELIER_ONLY_BUNDLE_MARKER } from './atelier-only-marker'
 import { buildTokenEdits } from './tokensBinder'
 import { TokensAxis } from './TokensAxis'
 import { ensureTokensBinding, getAtelierStore, useAtelierState } from './useAtelier'
@@ -186,6 +187,7 @@ export default function AtelierPanel({ open }: { open: boolean }) {
     return (
         <aside
             data-testid="atelier-panel"
+            data-atelier-marker={ATELIER_ONLY_BUNDLE_MARKER}
             aria-label="Atelier inspector"
             style={{ ...panelStyle, display: open ? 'flex' : 'none' }}
         >

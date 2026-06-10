@@ -1,9 +1,10 @@
 ---
 id: TASK-010
 title: Prod-bundle guard test for Atelier code
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-10 00:03'
 labels:
   - claude-generated
   - atelier

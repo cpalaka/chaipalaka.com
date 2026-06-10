@@ -1,9 +1,10 @@
 import { describe, test, expect, beforeAll } from 'vitest'
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CANVAS_ONLY_BUNDLE_MARKER } from '../lib/canvas-only-marker'
+import { ATELIER_ONLY_BUNDLE_MARKER } from '../atelier/atelier-only-marker'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(here, '../..')
@@ -31,12 +32,20 @@ function chunkPath(url: string): string {
     return join(distDir, url.replace(/^\//, ''))
 }
 
+function ensureBuilt() {
+    if (!existsSync(plainHtmlPath) || !existsSync(canvasHtmlPath)) {
+        execSync('npm run build', { cwd: projectRoot, stdio: 'inherit' })
+    }
+}
+
+function listDistJsFiles(): string[] {
+    return readdirSync(distDir, { recursive: true })
+        .map(String)
+        .filter((path) => path.endsWith('.js'))
+}
+
 describe('route-level bundle splitting', () => {
-    beforeAll(() => {
-        if (!existsSync(plainHtmlPath) || !existsSync(canvasHtmlPath)) {
-            execSync('npm run build', { cwd: projectRoot, stdio: 'inherit' })
-        }
-    }, 120_000)
+    beforeAll(ensureBuilt, 120_000)
 
     test('plain-mode HTML preloads at least one route chunk', () => {
         const html = readFileSync(plainHtmlPath, 'utf8')
@@ -68,5 +77,27 @@ describe('route-level bundle splitting', () => {
             found,
             'expected canvas-only marker in some canvas-mode chunk',
         ).toBe(true)
+    })
+})
+
+// Stronger than the canvas guard above: the canvas marker may live in a lazy
+// chunk, but Atelier code must not ship AT ALL — AtelierGate's
+// import.meta.env.DEV guard makes the panel import dead code in prod, so the
+// marker must appear in NO emitted chunk, not merely outside the entry.
+describe('atelier prod-bundle guard', () => {
+    beforeAll(ensureBuilt, 120_000)
+
+    test('build emits at least one JS chunk', () => {
+        expect(listDistJsFiles().length).toBeGreaterThan(0)
+    })
+
+    test('no emitted prod chunk contains the atelier-only marker', () => {
+        for (const path of listDistJsFiles()) {
+            const content = readFileSync(join(distDir, path), 'utf8')
+            expect(
+                content.includes(ATELIER_ONLY_BUNDLE_MARKER),
+                `chunk ${path} unexpectedly contains atelier-only marker`,
+            ).toBe(false)
+        }
     })
 })

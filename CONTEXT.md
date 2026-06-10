@@ -219,7 +219,8 @@ declaration produces the values type (`ValuesOf`), the defaults
 (`defaultsOf`), and the field descriptors the Atelier widgets
 (`atelier/widgets.tsx`) auto-render (`fieldsOf`). The DSL stays in
 production code so the dev-only Atelier imports prod code, never the
-reverse — the future prod-bundle guard depends on that direction. See
+reverse — the prod-bundle guard (`web/src/__tests__/bundle-splitting.test.ts`)
+depends on that direction. See
 `docs/superpowers/specs/2026-06-04-atelier-design-tool-design.md`.
 _Avoid_: param schema (the scene-specific three-kind subset keeps the
 **SceneParamSchema** name), tuning config, widget schema.

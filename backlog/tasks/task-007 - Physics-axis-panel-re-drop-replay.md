@@ -1,9 +1,10 @@
 ---
 id: TASK-007
 title: Physics axis panel + re-drop replay
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-10 00:03'
 labels:
   - claude-generated
   - atelier
