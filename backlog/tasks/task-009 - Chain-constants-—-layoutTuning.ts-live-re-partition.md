@@ -1,9 +1,10 @@
 ---
 id: TASK-009
 title: Chain constants — layoutTuning.ts + live re-partition
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-05 07:02'
+updated_date: '2026-06-10 01:43'
 labels:
   - claude-generated
   - atelier
