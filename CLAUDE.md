@@ -326,6 +326,11 @@ triggers — in particular:
   ambiguity (rare, since the PRD is detailed; but possible for additions).
 - **`/grill-with-docs`** — use when a slice introduces new domain language
   or an architectural decision worth promoting into an ADR.
+- **`agent-browser`** — use for the real-browser UI verification pass
+  (screenshot + drive the page) before calling any visual or interactive
+  slice done. Unit tests and DOM-class checks miss actual render bugs (CSS
+  collisions, invisible text, wrong-state UI); only a rendered screenshot
+  catches them.
 
 The cost of invoking a skill that turns out not to apply is one tool call.
 The cost of skipping one that did apply is a code review round-trip or a
