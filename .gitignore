@@ -47,3 +47,8 @@ NOTES.md
 # Claude session artifacts — local only
 .claude/
 .superpowers/
+
+# CodeGraph local index — never commit (public repo; per-machine SQLite graph)
+.codegraph/
+# CodeGraph MCP wiring — project-local opt-in, per-machine (not imposed on clones)
+.mcp.json
