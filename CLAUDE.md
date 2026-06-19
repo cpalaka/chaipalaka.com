@@ -12,15 +12,16 @@ When reporting information to me, be extemely concise and sacrifice grammar for 
 
 - GitHub: `https://github.com/cpalaka/chaipalaka.com`
 - Default branch: `main`
-- **All work is tracked on the in-repo backlog.md board** (see "Task
-  tracking" below). GitHub issues (#1–#150) are the historical record of
-  v1 development — read them for context when relevant, but do not create
-  or reopen issues for new work.
+- **All work is tracked on the in-repo Backlog.md board (the `backlog/`
+  directory — there is no `backlog.md` file)** (see "Task tracking" below).
+  GitHub issues (#1–#150) are the historical record of v1 development —
+  read them for context when relevant, but do not create or reopen issues
+  for new work.
 - `PRD.md` and `grillmedoc.md` are committed to the repo and are the
   authoritative design record. When a slice's design changes during a
-  session, update the relevant `PRD.md` section in the same PR.
+  session, update the relevant `PRD.md` section in the same branch/commit.
 
-## Task tracking — backlog.md
+## Task tracking — Backlog.md (`backlog/`)
 
 ALL future work on this project is tracked on the in-repo board under
 `backlog/` (Backlog.md, pinned v1.45.2, CLI-only — no MCP, no generated
@@ -43,16 +44,41 @@ system; design docs/specs stay in `docs/` (backlog's `decisions/` and
 - **AC = task-specific verification** (typecheck/test/build green, dev
   smoke of the affected route, screenshot where visual). Standing gates
   live in the Definition of Done defaults (`backlog/config.yml`), not AC.
-- Multi-task slices keep a plan doc in `docs/superpowers/plans/` linked
+- **Propagate downstream findings to dependent tasks.** When a task —
+  especially a spike or any decision-bearing task — produces a result that
+  constrains or informs tasks that depend on it, do not leave the finding
+  only in an ADR / spec / spike doc: **pin it onto each dependent task as
+  part of the producing task's own completion** (before marking it Done).
+  Add the concrete constraint as an **acceptance criterion** (a Done-gate)
+  when it's a hard requirement, or at minimum a description note / appended
+  note pointing to the authoritative doc — the dependent task's own
+  AC/description is what a future session reads first; an ADR it might never
+  open is not enough. Use `--ac` for Done-gating constraints and
+  `--append-notes` for pointers — **not `--desc`/`--notes`, which replace the
+  whole field**; name the source task and doc in the text.
+  (Precedent: task-018 pinned guardrails G1–G6 onto tasks 020/023/024/027 as
+  ACs; task-019 pinned its chosen morph mechanism onto task-025, referencing
+  ADR-0007.)
+- Multi-task slices keep a plan doc under `docs/superpowers/` (specs live in
+  `docs/superpowers/specs/`; `plans/` is created lazily on first use) linked
   via `--doc`, with a `Tracked by: task-NNN` header — **board status/AC
   is the single source of progress; plan checkboxes are in-session
   scratch** (completed plans get a STATUS banner instead). Single-session
   tasks plan in-task via `--plan`.
-- **On completion**: `backlog task edit <id> --check-ac N … --notes
-  "<summary + commit hash>" -s Done`; task-file changes ride along with
-  code commits (`auto_commit` is false). **Done requires explicit user
-  sign-off — never auto-close on AC/DoD pass.** Mark Done only after
-  Chai confirms.
+- **On completion — mark Done ON THE BRANCH, before the squash-merge.**
+  Once Chai signs off on the diff, run `backlog task edit <id> --check-ac N …
+  --check-dod 1 --check-dod 2 … --notes "<summary, NO commit hash>" -s Done`
+  *on the feature branch* and commit the task-file change there (the 6
+  standing Definition-of-Done items live in `backlog/config.yml` and are
+  separate from per-task AC — stamp both at completion); the squash-merge then folds code +
+  Done into one commit on `main` (see "Review & merge"). Do **not** put a
+  commit SHA in `--notes` — it doesn't exist yet and forces a separate
+  post-merge commit (the exact noise this avoids); the `<area>/task-019`
+  subject scope + a `Refs task-019` footer carry traceability
+  (`git log --grep "task-019"`) — see "Commits" for the subject format.
+  `auto_commit` stays false so the edit batches with code. **Done requires
+  explicit user sign-off — never auto-close on AC/DoD pass.** Mark Done only
+  after Chai confirms.
 - **Milestones = phases**; **labels = free-form** (multiple via `-l a,b`),
   added organically as themes emerge. Every task Claude creates carries
   the `claude-generated` label.
@@ -90,6 +116,17 @@ if not, update the file and restart the session before proceeding.
 rather than run silently, so no autonomous loop or subagent can ever
 push without scrutiny. Do not re-add them.
 
+For the same reason, keep the allowlist free of `gh` **write** globs.
+A broad pattern like `Bash(gh pr *)` or `Bash(gh issue *)` pre-authorizes
+the destructive writes (`gh pr create`/`merge`, `gh issue create`/`edit`)
+the "Confirm first" policy requires a human to gate — not just the reads it
+was added for, since the `*` glob can't tell a read from a write. The
+allowlist overrides the classifier, so such an entry silently defeats the
+retired-PRs/issues policy in every session and subagent. Allowlist only the
+specific read subcommands you actually need (`gh pr view`, `gh issue list`,
+…); let every `gh` write fall through to the classifier. (PRs/issues are
+retired, so writes should be rare anyway.)
+
 If the user explicitly wants a session WITHOUT these defaults (e.g., for a
 risky deploy operation that should re-prompt), they will say so — otherwise
 treat the defaults as the standing expectation.
@@ -104,7 +141,10 @@ When asked to work on task `N`:
    may have been merged since the previous session ended, and branching
    from a stale base wastes everyone's time. Do not skip this step.
 2. Read the task: `backlog task <N> --plain` (the task file lives under
-   `backlog/tasks/`).
+   `backlog/tasks/`), and set it `In Progress`
+   (`backlog task edit <N> -s "In Progress"`) — the board is the single
+   source of progress, so the To-Do→In-Progress transition is part of the
+   process, not optional.
 3. Re-read the relevant section(s) of `PRD.md` for design context, plus
    `CONTEXT.md` for the domain glossary + current architecture overview, and
    any relevant entries in `docs/adr/` for ratified architectural decisions.
@@ -124,48 +164,22 @@ When asked to work on task `N`:
 9. Hand off for local review (see "Review & merge — no PRs"): tell Chai
    the branch is ready and how to view the diff.
 10. Report back: branch name, what's verified, what's left for the human
-    reviewer. After Chai approves the diff, squash-merge to `main` and
-    push (this push is pre-authorised by the approval; see "Review &
-    merge").
+    reviewer. After Chai approves the diff: mark the task Done on the
+    branch (see "On completion" under "Task tracking"), then squash-merge to
+    `main` and push —
+    one commit carries code + Done (this push is pre-authorised by the
+    approval; see "Review & merge").
 
 ## Parallel wave runs — in-session subagents (dependency-free tasks only)
 
-`/goal` headless runs are retired for waves (decided 2026-06-09): Chai
-is at the terminal during work sessions, and in-session subagents give
-live progress in the UI and mid-flight steering that detached
-`claude -p` processes cannot. The main session is the orchestrator and
-re-verifies everything itself, which is stronger than `/goal`'s
-transcript-judging evaluator anyway.
+For multiple dependency-free tasks, fan out one background subagent per
+task in pre-made worktrees; the main session orchestrates, re-verifies
+every handoff itself, and does all board writes / merges. `/goal` headless
+runs are retired for waves (2026-06-09). Tasks with visual/feel AC don't
+belong in waves — run them solo in-session.
 
-1. Main session only: sync `main`, mark each task In Progress (board
-   writes never happen in subagents — ID generation collides).
-2. Per task, from the repo root:
-   `git worktree add ../cp-task-NNN -b <branch> main`, then
-   `npm install` in the worktree's `web/`. (No settings copy — subagents
-   inherit the main session's permission mode and sandbox.)
-3. Spawn one background subagent per task, all in a single message so
-   they run concurrently. Each subagent's prompt must include: work ONLY
-   inside its own worktree; read the task (`backlog/tasks/`, read-only),
-   `PRD.md`, `CONTEXT.md`, `docs/adr/`, and the relevant spec first; TDD
-   per this file; run the full verification gate (typecheck/test/build
-   exit 0 in `web/`, prerender check, secret-leak grep) and include the
-   output in its report; commit all work on the branch; end with a
-   review handoff (branch, what's verified, what to inspect closely).
-   Hard limits, verbatim in every prompt: no merge/push to `main`, no
-   marking Done, no deploys, no `backlog` write commands, no `gh`
-   writes.
-4. Monitor live in the session UI. Steer a drifting subagent with
-   SendMessage rather than respawning it (a respawn loses its context).
-5. On each handoff, the MAIN session independently re-runs the
-   verification gate in that worktree before relaying the handoff to
-   Chai — never pass on a subagent's claims unverified.
-6. Review each diff as usual; squash-merge serially into `main`,
-   re-running step-7 verification after each merge; update the board
-   from the main session; `git worktree remove` each worktree and delete
-   merged branches.
-
-Tasks with visual/feel AC (screenshots, "feels right") don't belong in
-waves — they need human eyes mid-flight; run them solo in-session.
+**Full recipe (worktree setup, subagent prompt template, hard limits,
+serial-merge sequence): `docs/process/parallel-work.md`.**
 
 ## Branch naming
 
@@ -173,8 +187,11 @@ Conventional-commits-style prefix, then the backlog task number, then a
 short kebab-case description:
 
 ```
-<type>/task-<N>-<short-description>
+<type>/task-<NNN>-<short-description>
 ```
+
+(`<NNN>` is the backlog ID zero-padded to 3 digits, matching the task file
+IDs and the commit-subject scope — `task-003`, never `task-3`.)
 
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`. Pick the one that
 matches the dominant change. Examples:
@@ -188,12 +205,25 @@ you'll see both in history.)
 
 ## Commits
 
-- Subject line: imperative, ~70 chars, leads with the slice or scope.
+- **Subject line — `<type>(<area>/task-NNN): <imperative summary>`.**
+  Always put the owning task in the scope as `<area>/task-NNN` so the task
+  shows on every `git log --oneline` line — e.g.
+  `chore(spike/task-019): choose View Transitions for the hero morph`
+  (65 chars incl. scope — under the ~72 ceiling).
+  `<area>` is the slice/subsystem (`spike`, `atelier`, `canvas`,
+  `api`, `backlog`, …); `task-NNN` is the backlog ID, **zero-padded to 3
+  digits** to match the file IDs (`task-019`, never `task-19`). Keep the whole
+  subject ≤~72 chars including the scope — tighten the summary, never drop the
+  task. Pure board grooming not owned by one task keeps a plain area scope
+  (`chore(backlog): …`) with no `task-NNN`.
 - Body: what changed and **why**; mention notable deviations from the PRD
   (and why) so the reviewer is not surprised.
-- End with `Refs task-N`. Merging never auto-closes a backlog task —
-  the task is marked Done via `backlog task edit` only after merge AND
-  Chai's explicit sign-off.
+- End with `Refs task-NNN` (zero-padded) in the footer too; together with
+  the subject scope it is the task↔commit link (`git log --grep "task-NNN"`),
+  which replaces a SHA in the task notes. Merging never auto-closes a backlog
+  task — the task is marked Done via `backlog task edit` only after Chai's
+  explicit sign-off, on the branch just before the squash-merge so it rides
+  the same commit (see "On completion" under "Task tracking").
 - One logical change per commit when possible. Multiple commits on a branch
   are fine; squash-merging is the integration story.
 - Never amend commits already pushed to `origin/<branch>` without confirming.
@@ -212,9 +242,15 @@ VS Code; integration is a local squash-merge to `main`.
   (`main` ↔ branch), or the squash-merge pause
   (`git checkout main && git merge --squash <branch>` → review staged
   changes → commit or `git reset --merge`).
-- After explicit approval of the diff: squash-merge to `main`, write the
-  squash commit message per "Commits" (summary + why + `Refs task-N`),
-  and push `main`. The approval IS the authorisation for that one push.
+- After explicit approval of the diff: mark the task Done on the branch
+  (`backlog task edit … -s Done`, no SHA in notes) and commit it there,
+  then squash-merge to `main` so code + Done collapse into **one** commit,
+  write the squash commit message per "Commits" (`<type>(<area>/task-NNN):`
+  subject + why + `Refs task-NNN`), and push `main`. The approval IS the authorisation for
+  that one push. (Pure board grooming not tied to a feature branch — new
+  milestones, drafts, cross-task guardrail pins — is the one expected
+  class of standalone `chore(backlog):` commits; batch those rather than
+  one-per-edit.)
 - Never push to `main` without that per-branch approval; never merge a
   branch Chai hasn't reviewed.
 - Delete the feature branch after merge (local; remote too if it was
@@ -263,30 +299,14 @@ The user has authorised these without per-call confirmation:
 
 ## Local verification before committing
 
-Run these in `web/` (or the relevant package directory):
+The gate (run in `web/`): `npm run typecheck` → `npm run test` →
+`npm run build` (confirms `vite-react-ssg` prerender) → `npm run dev` smoke,
+then a repo-root secret-leak grep (expect zero matches). All must pass before
+committing. Secrets live in `/etc/chaipalaka.env` on the server (see
+`deploy/SECRETS.md`); never in the repo or `web/` runtime.
 
-```sh
-npm run typecheck
-npm run test
-npm run build      # confirms vite-react-ssg prerender still works
-npm run dev        # smoke check the route renders, then kill it
-```
-
-For the prerender check, look for `data-server-rendered="true"` and the
-expected route HTML inside `<div id="root">` in `web/dist/index.html`.
-
-Then a secret-leak scan from the repo root:
-
-```sh
-grep -rniE '(api[_-]?key|secret|token|password)\s*[:=]\s*["'\''][^"'\'']{8,}' \
-  --include='*.ts' --include='*.tsx' --include='*.js' \
-  --include='*.json' --include='*.md' --include='Makefile' \
-  --exclude-dir=node_modules --exclude-dir=dist \
-  --exclude-dir=.git --exclude-dir=assets .
-```
-
-Expect zero matches. Secrets live in `/etc/chaipalaka.env` on the server
-(see `deploy/SECRETS.md`); never in the repo, never in `web/` runtime.
+**Exact commands, prerender check, and the secret-scan grep:
+`docs/process/local-verification.md`.**
 
 ## Skills to use
 
@@ -304,26 +324,32 @@ triggers — in particular:
   data fetching. Default skill for any React touchpoint in this repo.
 - **`vercel-composition-patterns`** — invoke when designing or refactoring
   reusable component APIs (compound components, render props, context
-  providers). Highly relevant for the physics-card primitives in slice 5+
-  (`PhysicsCard`, `CardLayout`, `NotesChain`).
-- **`vercel-react-view-transitions`** — invoke when working on
-  `<ViewTransition>`, route-level animations, or shared-element morphs.
-  Slice 6+ (the portfolio thumbnail → detail hero morph is the canonical
-  use case in this repo).
+  providers). Highly relevant for the physics-card primitives
+  (`Card`, `CardLayout`, `StringLayer`).
+- **`vercel-react-view-transitions`** — invoke for the v2 hero morph and
+  route-level animations. Per ADR-0007 the chosen mechanism is
+  **react-router-dom 6.30 `viewTransition` / `useViewTransitionState`**
+  (browser-native `document.startViewTransition` + a CSS `view-transition-name`
+  on the shared element) — **not** React's `<ViewTransition>` component
+  (rejected: needs react@canary, breaks the `vite-react-ssg` pins). Use the
+  skill for its CSS view-transition-pseudo-element / naming guidance; treat
+  its `<ViewTransition>`-component sections as not applicable here.
 
 ### Process / discipline
 
 - **`/tdd`** — use when implementing any module, adapter, pure function,
   API endpoint, or other code with verifiable runtime behaviour. The PRD's
-  "Testing Decisions" section names the modules with required test
-  coverage (`PhysicsWorld`, `CardLayout`, `NotesChain`, `TransitionDirector`,
-  `PretextRegistry`, `CacheLayer`, the adapters, the content readers).
-  These are red-green-refactor candidates; do not write the implementation
-  before the failing test.
-- **`/diagnose`** — use for any non-obvious bug or test failure before
+  "### Modules with tests" section is the authoritative roster of
+  required-coverage modules (`PhysicsWorld`, `CardLayout`, `Tether`/
+  `StringLayer`, `TransitionDirector`, `TextMeasure`, `CacheLayer`, the
+  adapters, the content readers) — defer to that list rather than this
+  parenthetical if they ever diverge. These are red-green-refactor
+  candidates; do not write the implementation before the failing test.
+- **`diagnosing-bugs`** — use for any non-obvious bug or test failure before
   proposing a fix; do not skip the reproduce → minimise → hypothesise loop.
-- **`/brainstorming`** — use when a slice's PRD section leaves real design
-  ambiguity (rare, since the PRD is detailed; but possible for additions).
+- **`superpowers:brainstorming`** — use when a slice's PRD section leaves real
+  design ambiguity (rare, since the PRD is detailed; but possible for
+  additions). Per the global note, ask before invoking it.
 - **`/grill-with-docs`** — use when a slice introduces new domain language
   or an architectural decision worth promoting into an ADR.
 - **`agent-browser`** — use for the real-browser UI verification pass
@@ -338,55 +364,24 @@ shipped regression. Default to invoking.
 
 ## Code intelligence — CodeGraph (opt-in, per-machine)
 
-This repo is wired for **CodeGraph** (`colbymchenry/codegraph`), a local
-SQLite knowledge graph of every symbol/edge/file under `web/`. Adopted in
-task-016 (trial: ~19% fewer tool calls than grep/read on structural queries,
-correctness on par). It is **opt-in and per-machine** — the index
-(`.codegraph/`), the MCP wiring (`.mcp.json`), and the install are all
-gitignored, so a fresh clone has none of it until a developer initializes it.
-This section travels with the repo; the tooling does not.
-
 **When a `.codegraph/` directory exists at the repo root**, reach for CodeGraph
-BEFORE grep/find or reading files to understand or locate code:
+(`codegraph_explore` / `codegraph_node`, or the `codegraph` shell CLI) BEFORE
+grep/find or reading files to locate or understand code. **If there is no
+`.codegraph/` directory, skip it entirely** — the index, `.mcp.json`, and
+install are all gitignored and per-machine. Caveat: `impact`/`affected`
+over-report (structural upper bound).
 
-- **MCP tools** (after a Claude Code restart following install): `codegraph_explore`
-  answers most code questions in one call — the relevant symbols' verbatim
-  source plus the call paths between them. `codegraph_node` returns one symbol's
-  source + callers, or reads a whole file with line numbers. If the tools are
-  listed but deferred, load them by name via tool search.
-- **Shell** (always works, no restart needed): `codegraph explore "<symbols or
-  question>"` and `codegraph node <symbol-or-file>` print the same output.
-  Other verbs: `callers`, `callees`, `impact`, `affected`, `query`, `files`,
-  `status`. The watcher daemon auto-syncs the index ~1s behind edits and idles
-  out after ~5 min (auto-restarts on next use); `codegraph init` rebuilds it.
-- **Caveat — `impact`/`affected` OVER-REPORT.** They follow import edges
-  structurally (an upper bound, not semantic). Treat the output as a *candidate*
-  set and confirm a symbol actually crosses each dependent's public interface
-  before trusting it. For whole-directory surveys, grep is often cheaper.
-
-**If there is no `.codegraph/` directory, skip CodeGraph entirely** — indexing
-is the developer's choice. To opt in on a new machine/clone: install the CLI
-(`npm i -g @colbymchenry/codegraph` or the curl installer), `codegraph install`
-(wires the project-local `.mcp.json`; then restart Claude Code so the MCP tools
-load), and `codegraph init` at the repo root (builds the index). Nothing about
-this is committed except this guidance.
+**Usage, MCP-vs-shell, and per-machine opt-in steps:
+`docs/process/codegraph.md`.**
 
 ## Toolchain pins (do not change without checking peer deps)
 
-These are constrained by `vite-react-ssg`'s peer-dependency declarations
-as of the slice 1 install. Bumping past them is a separate slice — verify
-compatibility before changing:
+`vite`, `react-router-dom`, `vite-react-ssg`, `react`/`react-dom`, and
+`typescript` are pinned by `vite-react-ssg`'s peer deps as of the slice 1
+install. **Do not bump any of them without checking compatibility** — that's a
+separate slice.
 
-| Package           | Pinned at      | Why                                  |
-|-------------------|----------------|--------------------------------------|
-| `vite`            | `^7.3.3`       | `vite-react-ssg` peer deps cap at v7 |
-| `react-router-dom`| `^6.30.0`      | `vite-react-ssg` peer deps require v6|
-| `vite-react-ssg`  | `^0.9.1-beta.1`| Latest available                     |
-| `react`/`react-dom`| `^19.2.0`     | Per PRD                              |
-| `typescript`      | `^5.9.3`       | TS 6 too fresh; revisit later        |
-
-**PRD vs reality:** the PRD says `vite-ssg`, but that package is Vue-only.
-The React equivalent is `vite-react-ssg`. Treat them as the same intent.
+**The pin table + rationale: `docs/process/toolchain-pins.md`.**
 
 ## Things that are off-limits in code
 
@@ -395,7 +390,8 @@ The React equivalent is `vite-react-ssg`. Treat them as the same intent.
   developing, remove before commit).
 - Hardcoded server paths or IPs in frontend code. The Hetzner IP lives in
   DNS / SSH config; the frontend talks to `/api/*` only.
-- New top-level dependencies without justification in the PR body.
+- New top-level dependencies without justification in the squash commit
+  message / review handoff.
 - Files larger than ~1 MB committed to git — those go in `assets/` (gitignored)
   and ship via `make assets-sync`.
 
