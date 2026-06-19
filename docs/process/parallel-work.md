@@ -41,3 +41,32 @@ is stronger than `/goal`'s transcript-judging evaluator anyway.
 
 Tasks with visual/feel AC (screenshots, "feels right") don't belong in waves —
 they need human eyes mid-flight; run them solo in-session.
+
+## Solo parallel sessions — worktrees (hands-on, 2+ tasks at once)
+
+Distinct from the background waves above: this is the recipe for when Chai is
+at the terminal driving 2+ tasks concurrently in separate worktrees (the
+summary + decision rule live in `CLAUDE.md` under "Solo parallel sessions —
+worktrees"; this is the step-by-step).
+
+Each interactive worktree session is the **main session for its own task** — so
+`task edit` / status writes are fine per-session; only `task create` stays
+main-repo-only (ID generation is a max+1 scan that collides under concurrency;
+see `CLAUDE.md` "Task tracking").
+
+Setup:
+
+- Use `EnterWorktree` (or
+  `git worktree add ../cp-task-NNN-<slug> -b <branch> origin/main`).
+- Branching off fresh `origin/main` satisfies the standing-process step-1 sync,
+  so don't re-run `git checkout main && git pull` inside the worktree.
+
+**Footgun (also pinned in `CLAUDE.md`):** unlike a subagent (which inherits the
+parent's mode), a fresh interactive worktree session does **not** get
+sandbox+auto — `.claude/settings.local.json` is gitignored, so copy it in first
+(`cp .claude/settings.local.json ../cp-task-NNN-<slug>/.claude/`) or the
+session silently runs without the defaults.
+
+Decision rule: **one task → Standing process; Chai driving 2+ hands-on → solo
+worktrees (this section); dependency-free fan-out → background waves (above).**
+
