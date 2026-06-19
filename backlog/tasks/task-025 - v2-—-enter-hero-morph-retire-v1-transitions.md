@@ -4,7 +4,7 @@ title: v2 — enter / hero morph + retire v1 transitions
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 09:39'
 labels:
   - claude-generated
   - v2
@@ -32,7 +32,10 @@ Navigation (spec section 10, ADR-0007). Implement the hero morph via the spiked 
 - [ ] #2 The v1 Director/primitive transition system is removed (barrel gone; build green)
 - [ ] #3 Focus lands on the destination heading and the route change is announced to SR
 - [ ] #4 Reduced-motion path (crossfade) verified
+- [ ] #5 Honors task-019 spike decision (see ADR-0007 § Spike result): hero morph uses the browser-native View Transitions API via react-router 6.30 <Link viewTransition> + useViewTransitionState (shared view-transition-name on the clicked card and dest box). Do NOT adopt react@experimental <ViewTransition> (requires react@canary, breaks the vite-react-ssg pins); canvas/flip.ts FLIP is a fallback option only. Unsupported browsers (no document.startViewTransition) fall back to plain client nav. The data router does NOT auto-announce route changes (no announcer exists today) — ship a real SR route announcer; reduced-motion disables ::view-transition-* in CSS (no central Director, ADR-0008).
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
