@@ -1,10 +1,10 @@
 ---
 id: TASK-018
 title: v2 spike — word-anchor scroll stability
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-06-19 07:53'
-updated_date: '2026-06-19 08:26'
+updated_date: '2026-06-19 09:13'
 labels:
   - claude-generated
   - v2
@@ -26,10 +26,16 @@ Throwaway spike gating the v2 word-anchored-card design (spec section 5). Prove 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A pinned word-anchored card tracks a fast fling + momentum scroll with no tether blow-up or NaN
-- [ ] #2 The word-to-edge auto-park hand-off is visually smooth
-- [ ] #3 A written go/no-go recommendation + chosen approach (or fallback) is recorded
+- [x] #1 A pinned word-anchored card tracks a fast fling + momentum scroll with no tether blow-up or NaN
+- [x] #2 The word-to-edge auto-park hand-off is visually smooth
+- [x] #3 A written go/no-go recommendation + chosen approach (or fallback) is recorded
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+GO. Spike GREEN, merged to main b873559. translate-pair is primary+sufficient; anchor-delta clamp dropped; velocity-damping must be clamped (frictionAir<=~0.2, else inverts->NaN past ~827px/frame@dt50). Force-spring never NaNs alone. Doc: docs/spikes/2026-06-19-word-anchor-scroll-stability.md (G1-G6); ADR-0006 decision #3 rewritten.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
