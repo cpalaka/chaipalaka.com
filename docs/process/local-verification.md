@@ -27,3 +27,16 @@ grep -rniE '(api[_-]?key|secret|token|password)\s*[:=]\s*["'\''][^"'\'']{8,}' \
 
 Expect zero matches. Secrets live in `/etc/chaipalaka.env` on the server
 (see `deploy/SECRETS.md`); never in the repo, never in `web/` runtime.
+
+Also part of the gate (not just exit 0):
+
+- **Clean output** — investigate warnings / noise rather than ignoring them;
+  a green run with new warnings is not a pass.
+- **Docs synced** — `PRD.md` / `CONTEXT.md` / `docs/adr/` updated for any new
+  domain language or decisions before the commit (this is also a standing
+  Definition-of-Done item in `backlog/config.yml`).
+- **Executing a written plan** means faithful to its *logic and values*, not
+  to latent antipatterns that fail on this toolchain — batch any systemic
+  plan-code concern into ONE up-front decision rather than re-litigating it
+  per task. Prefer throwaway probes/spikes; promote only stable invariants
+  into permanent tests.

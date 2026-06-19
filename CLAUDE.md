@@ -149,12 +149,23 @@ When asked to work on task `N`:
    `CONTEXT.md` for the domain glossary + current architecture overview, and
    any relevant entries in `docs/adr/` for ratified architectural decisions.
    These three together are the authoritative design record — read them
-   before planning, not just before code review.
+   before planning, not just before code review. (`CONTEXT.md` is **not**
+   auto-loaded the way `CLAUDE.md` is, so reading it at task start is
+   mandatory; refresh it with `/refresh-context` after work that changes
+   domain language or architecture.)
 4. Create the feature branch: `git checkout -b <branch-name>` (see naming
    below). You should already be on freshly-pulled `main` from step 1.
-5. Plan briefly in the chat (1–5 bullets is fine). Ask only the questions that
-   actually require a decision; do not ask before running standard local commands
-   (see "Autonomy" below).
+5. Plan briefly in the chat (1–5 bullets is fine), and **get the plan
+   approved before writing code** for any non-trivial scope — the gate chain
+   is pick → plan approval → implement → verify → sign-off. One-line fixes,
+   token tweaks, and doc edits skip the approval round and go straight to
+   terse execution (don't bloat trivial work with ceremony). Match the
+   planning method to the uncertainty: fuzzy idea → `superpowers:brainstorming`;
+   data-model / state-machine doubt → `/prototype`; feel/look doubt → build
+   minimal + an `agent-browser` screenshot loop; codebase-bound, clear-what /
+   unclear-how → plan mode. Ask only the questions that actually require a
+   decision; do not ask before running standard local commands (see
+   "Autonomy" below).
 6. Implement. Use the `/tdd` skill when the slice has verifiable runtime
    behavior to drive (modules, pure functions, adapters, API endpoints,
    physics math, etc.). Skip TDD for pure scaffolding — slice 1 is the
@@ -180,6 +191,27 @@ belong in waves — run them solo in-session.
 
 **Full recipe (worktree setup, subagent prompt template, hard limits,
 serial-merge sequence): `docs/process/parallel-work.md`.**
+
+## Solo parallel sessions — worktrees (hands-on, 2+ tasks at once)
+
+Distinct from background waves above: when Chai is at the terminal driving
+2+ tasks concurrently in separate worktrees, each interactive session is the
+**main session for its own task** — so `task edit` / status writes are fine
+per-session; only `task create` stays main-repo-only (ID generation is a
+max+1 scan that collides under concurrency). Use `EnterWorktree` (or
+`git worktree add ../cp-task-NNN-<slug> -b <branch> origin/main`); branching
+off fresh `origin/main` satisfies the step-1 sync, so don't re-run
+checkout/pull inside the worktree.
+
+**Footgun:** unlike a subagent (which inherits the parent's mode), a fresh
+interactive worktree session does **not** get sandbox+auto —
+`.claude/settings.local.json` is gitignored, so copy it in first
+(`cp .claude/settings.local.json ../cp-task-NNN-<slug>/.claude/`) or the
+session silently runs without the defaults.
+
+Decision rule: **one task → Standing process; Chai driving 2+ hands-on →
+solo worktrees (this section); dependency-free fan-out → background waves
+(above).**
 
 ## Branch naming
 
@@ -302,8 +334,10 @@ The user has authorised these without per-call confirmation:
 The gate (run in `web/`): `npm run typecheck` → `npm run test` →
 `npm run build` (confirms `vite-react-ssg` prerender) → `npm run dev` smoke,
 then a repo-root secret-leak grep (expect zero matches). All must pass before
-committing. Secrets live in `/etc/chaipalaka.env` on the server (see
-`deploy/SECRETS.md`); never in the repo or `web/` runtime.
+committing — and the output must be **clean** (not just exit 0), with docs
+(`PRD.md`/`CONTEXT.md`/`docs/adr/`) synced for any new language or decisions.
+Secrets live in `/etc/chaipalaka.env` on the server (see `deploy/SECRETS.md`);
+never in the repo or `web/` runtime.
 
 **Exact commands, prerender check, and the secret-scan grep:
 `docs/process/local-verification.md`.**
@@ -335,6 +369,11 @@ triggers — in particular:
   skill for its CSS view-transition-pseudo-element / naming guidance; treat
   its `<ViewTransition>`-component sections as not applicable here.
 
+**Design sequencing (v2 art-direction).** Build the functional spine first on
+placeholder, token-separable styling; then do ONE impeccable design + polish
+pass over the working whole as its own capstone task — don't push a design
+system up front. Reach for `impeccable` / `frontend-design` for that capstone.
+
 ### Process / discipline
 
 - **`/tdd`** — use when implementing any module, adapter, pure function,
@@ -352,11 +391,19 @@ triggers — in particular:
   additions). Per the global note, ask before invoking it.
 - **`/grill-with-docs`** — use when a slice introduces new domain language
   or an architectural decision worth promoting into an ADR.
+- **Spec hygiene** — when authoring a spec or plan in-session, tag every
+  "reuse the existing X" claim `[reuse]` / `[extend]` / `[new]` and verify
+  each against `web/src` (grep / CodeGraph) before acting on it; AI specs
+  systematically over-claim reuse (task-017: 5 false reuse premises caught by
+  review). Give a substantial spec an adversarial review pass before handoff.
 - **`agent-browser`** — use for the real-browser UI verification pass
   (screenshot + drive the page) before calling any visual or interactive
   slice done. Unit tests and DOM-class checks miss actual render bugs (CSS
   collisions, invisible text, wrong-state UI); only a rendered screenshot
-  catches them.
+  catches them. Do the visual check **yourself** — don't punt "eyeball this"
+  to Chai — and run it in the **main session**: a subagent's screenshot is
+  never returned to the orchestrator, so a visually-AC'd wave task would pass
+  unverified (this is why visual/feel tasks run solo, not in waves).
 
 The cost of invoking a skill that turns out not to apply is one tool call.
 The cost of skipping one that did apply is a code review round-trip or a
