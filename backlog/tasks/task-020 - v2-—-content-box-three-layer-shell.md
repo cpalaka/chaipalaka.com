@@ -4,7 +4,7 @@ title: v2 — content box + three-layer shell
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:53'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 09:17'
 labels:
   - claude-generated
   - v2
@@ -29,7 +29,10 @@ Build the v2 content box (spec sections 6/8/11/14): one fixed, solid, scrollable
 - [ ] #2 The box rect acts as physics walls (a test card collides with / can tether to its edges)
 - [ ] #3 No-JS/prerender renders the box prose statically (ADR-0004 floor preserved)
 - [ ] #4 Styling is token-separable (no hardcoded colors/spacing in components)
+- [ ] #5 Honors task-018 spike guardrail G6 (static-edge/i111): when setViewport moves the box floor/ceiling edge bodies on RESIZE, clamp the per-frame move or translate-pair edge-anchored cards so anchorA-relative tethers don't yank them. Box edges are viewport-fixed so this is resize-only, not scroll. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

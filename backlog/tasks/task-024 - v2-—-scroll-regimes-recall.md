@@ -4,7 +4,7 @@ title: v2 — scroll regimes + recall
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 09:17'
 labels:
   - claude-generated
   - v2
@@ -32,7 +32,10 @@ Pinned-card scroll behavior (spec section 5). Two regimes: word-anchored (tracks
 - [ ] #2 Recall: scrolling the word back shows a discoverable highlight; clicking brings the card home with no yo-yo
 - [ ] #3 A first-time user can recall a parked card without instruction
 - [ ] #4 Reduced-motion path verified (instant park/recall)
+- [ ] #5 Honors task-018 spike guardrails for scroll stability: G1 translate-pair (anchor tracks word, no anchor-delta clamp); G2 if velocity-coupled damping is used, clamp frictionAir <= ~0.2 (unclamped it inverts into a velocity amplifier -> NaN past ~827px/frame at dt=50ms); G3 auto-park is one-way (hysteresis) and the parked re-tether length eases to taut, never left slack; G4 finite-check getBoundingClientRect. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

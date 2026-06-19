@@ -4,7 +4,7 @@ title: v2 — recursion (one level)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 09:17'
 labels:
   - claude-generated
   - v2
@@ -29,7 +29,10 @@ One level of ladder nesting (spec section 9). A link inside a pinned card's cont
 - [ ] #1 A link inside a pinned card pins as a child card tethered to its parent card
 - [ ] #2 Nesting is capped at one level (a child's content does not spawn further pins)
 - [ ] #3 Uses the generic card-parent Tether (no NotesChain)
+- [ ] #4 Honors task-018 spike guardrail G5: translate-pair must move the whole bonded SUBTREE (pinned parent AND all descendant cards) by the scroll delta; pairing only the parent yanks an un-paired child off its card-to-card rope. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

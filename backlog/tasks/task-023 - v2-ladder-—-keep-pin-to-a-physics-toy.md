@@ -4,7 +4,7 @@ title: v2 ladder — keep (pin to a physics toy)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 09:17'
 labels:
   - claude-generated
   - v2
@@ -32,7 +32,10 @@ The pin rung (spec sections 4/5, ADR-0006). Rewrite the CardImpl pointer state m
 - [ ] #2 Click vs press-hold disambiguation works on a small card (no accidental enter/drag)
 - [ ] #3 The tethered word wobbles (transform-only; SR/selection/copy unaffected); the bonded trio highlights on hover
 - [ ] #4 Reduced-motion path verified (instant pin, static highlight, no wobble)
+- [ ] #5 Honors task-018 spike guardrails: G1 word-anchor tracking uses translate-pair (anchor tracks the real word; card body translated by the same scroll delta; NO anchor-delta clamp) and G4 finite-check getBoundingClientRect before feeding scrollDelta. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
