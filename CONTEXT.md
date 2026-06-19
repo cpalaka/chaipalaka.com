@@ -449,6 +449,85 @@ _Avoid_: pretext (leaks the implementation library into the domain),
 font registry (the older shape, retired by this term — see drift bug
 in `text/registry.ts` discovered 2026-05-13).
 
+### v2 — gwern × physics ladder (Portal/Pocket)
+
+These describe the **v2** interaction model (the link ladder + content box). They
+supersede the v1 "page is a card swarm" framing for content routes. Full design:
+`docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md` (ADRs 0005–0008).
+
+**Content box**:
+The fixed, solid, scrollable prose surface that is the protagonist of a v2 route —
+gwern-style dense reading content, floating over the background shader, with
+**Card**s in a foreground plane above it. Fixed DOM (not a physics body), but its
+edges participate in physics (cards collide with / tether to them).
+_Avoid_: panel, reader pane, article (the box is the whole reading surface, not
+one element in it).
+
+**Ladder**:
+The single v2 interaction: any meaningful link is one object at three escalating
+commitment levels — **peek** → **keep** → **enter**. "Sub-page vs hanging card" is
+not authored; it is how far the visitor pushed the same object.
+_Avoid_: popup system, link menu.
+
+**Peek / Keep / Enter**:
+The three **Ladder** rungs. **Peek** = hover/tap spawns an ephemeral **preview
+card**. **Keep** = pin it into a persistent **pinned card**. **Enter** = navigate
+to the page (**hero morph**).
+_Avoid_: open/expand/pin-unpin as the canonical verbs — these three are the
+vocabulary.
+
+**Portal**:
+A **Ladder** link that has a destination page — the full rung (peek → keep →
+enter).
+_Avoid_: Type-1; internal-link (a Portal may be internal or, later, an authored
+external annotation).
+
+**Pocket**:
+A **Ladder** link with no page — a footnote / aside / definition whose **Card**
+*is* the content (peek → keep, no enter). Its static floor is a real inline
+disclosure.
+_Avoid_: Type-2; footnote (a footnote is one kind of Pocket; the term is broader);
+tooltip.
+
+**Preview card**:
+The **peek**-state **Card**: ephemeral, stiff-anchored beside its source word,
+side-positioned, dismissed by a physical fall. Not yet a full-physics toy.
+_Avoid_: popup, tooltip, hovercard.
+
+**Pinned card**:
+A kept **preview card** — now a persistent full-physics **Card** strung to its
+source word via a **runtime-created Tether** (the first user-created tether; v1's
+were authored per **PageDef**, see ADR-0001 §3 / ADR-0006).
+_Avoid_: locked card (no padlock; ADR-0001), saved card.
+
+**Word-anchored / Edge-anchored**:
+The two anchor regimes of a **pinned card**. **Word-anchored** = tethered to its
+source word, tracking scroll. **Edge-anchored** = tethered to a top/bottom viewport
+edge (the parked state, reusing the ceiling/floor parent **Tether**).
+_Avoid_: floating/fixed (ambiguous), docked.
+
+**Auto-park / Recall**:
+The two regime transitions. **Auto-park** = the automatic word→edge transition when
+a **pinned card**'s source word scrolls past the fold (it parks at the edge the
+word exited through). **Recall** = the manual edge→word return: scroll the word
+back (it keeps a persistent highlight), click it to bring the **Card** home with a
+hysteresis ease. Recall is never automatic — no yo-yo.
+_Avoid_: collapse/dock (for auto-park), restore/un-park (for recall).
+
+**Bonded trio**:
+The visually-linked unit of a **pinned card**: source word + **Tether** + **Card**.
+Hovering any of the three highlights all three.
+_Avoid_: group, cluster.
+
+**Hero morph / Physical default**:
+The two v2 navigation transitions (replacing the retired v1 transition system,
+ADR-0007). **Hero morph** = a clicked **Card** expands/reflows into the destination
+**content box** (View Transition / FLIP). **Physical default** = a lightweight
+directional box slide/crossfade for chrome-originated nav (frame bar, back/forward,
+direct URL) where there is no source **Card** to morph from.
+_Avoid_: page transition (too generic); the retired primitive names (anchor-slide,
+pour-in-drop, etc.).
+
 ## Relationships
 
 - A **Card** has at most one **Tether** to a parent; multiple **Card**s can

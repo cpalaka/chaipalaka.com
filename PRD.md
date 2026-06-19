@@ -2,6 +2,27 @@
 
 Synthesized from the design grilling captured in `grillmedoc.md`. Ready for implementation.
 
+---
+
+## ⟶ v2 redesign (2026-06-19) — read the v2 spec first
+
+The site is moving to **v2**, a substantial redesign that merges gwern.net's
+reading-craft with the physics-toy identity. The **authoritative v2 design record
+is [`docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md`](docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md)**,
+ratified by ADRs [0005](docs/adr/0005-link-ladder-content-box.md)–[0008](docs/adr/0008-progressive-enhancement-escalation.md).
+
+In v2 each route is a fixed, solid **content box** (gwern-style prose) over the
+generative shader; play relocates from a page-filling card swarm into a **link
+ladder** — *peek* (hover preview card) → *keep* (pin a physics toy strung to its
+source word) → *enter* (hero-morph to the page). Links are **Portal** (has a page)
+or **Pocket** (a self-contained note). The v1 sections below still describe the
+content/utility axes (blog, lifelog, portfolio, RSS, the no-JS floor) and the
+physics primitives v2 reuses — but the v1 "every page is a card swarm" interaction
+model and the route-transition system are **superseded** by the v2 spec. This
+banner is only a pointer; plan v2 work from the spec.
+
+---
+
 ## Problem Statement
 
 The site owner wants a personal home on the internet at `chaipalaka.com` that doubles as a portfolio of frontend craft. Existing personal-site frameworks treat the page as a passive document; the owner wants the site to *be* an artifact — visibly experimental, physics-driven, generative — without sacrificing the everyday utility of a blog, a portfolio, and a public lifelog. Hosting and DNS are already provisioned (Hetzner CX22 at `<HETZNER_IP>`, AWS Route 53 for DNS, Caddy serving `/var/www/chaipalaka` with automatic TLS), but no application code exists yet.
