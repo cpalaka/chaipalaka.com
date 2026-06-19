@@ -4,10 +4,12 @@ title: v2 — content box + three-layer shell
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:53'
+updated_date: '2026-06-19 08:14'
 labels:
   - claude-generated
   - v2
   - content
+milestone: v2
 dependencies: []
 documentation:
   - docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md

@@ -4,11 +4,13 @@ title: v2 — enter / hero morph + retire v1 transitions
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
+updated_date: '2026-06-19 08:14'
 labels:
   - claude-generated
   - v2
   - transitions
   - a11y
+milestone: v2
 dependencies:
   - TASK-022
   - TASK-019

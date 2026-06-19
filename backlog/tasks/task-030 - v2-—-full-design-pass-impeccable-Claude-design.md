@@ -4,10 +4,12 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
+updated_date: '2026-06-19 08:14'
 labels:
   - claude-generated
   - v2
   - design
+milestone: v2
 dependencies:
   - TASK-020
   - TASK-021

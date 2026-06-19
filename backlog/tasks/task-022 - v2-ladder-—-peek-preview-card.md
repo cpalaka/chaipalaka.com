@@ -4,11 +4,13 @@ title: v2 ladder — peek (preview card)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
+updated_date: '2026-06-19 08:14'
 labels:
   - claude-generated
   - v2
   - ladder
   - a11y
+milestone: v2
 dependencies:
   - TASK-020
   - TASK-021
