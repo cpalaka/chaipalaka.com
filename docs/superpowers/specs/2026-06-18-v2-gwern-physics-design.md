@@ -539,7 +539,9 @@ per-slice via the Atelier):
   a clean rectangle); reconcile with the card foreground plane that shares the edge
   space (§6).
 
-Noted, none in the core v2 slices.
+Noted, none in the core v2 slices. **Tracked as backlog drafts DRAFT-002
+(card fragment shaders), DRAFT-003 (background-shader overhaul), DRAFT-004
+(asymmetric wide media)** — split out of the capstone TASK-030 (2026-06-19).
 
 ## 17. Open risks & spikes
 

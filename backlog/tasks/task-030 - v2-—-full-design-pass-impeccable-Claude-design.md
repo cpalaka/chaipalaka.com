@@ -4,7 +4,7 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-19 08:19'
 labels:
   - claude-generated
   - v2
@@ -30,15 +30,16 @@ ordinal: 20010
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The capstone visual design pass over the working v2 spine (spec sections 15/16), decided after the mechanics work so the aesthetic is chosen with full context. One coherent impeccable + Claude-design run. Owns: card chrome (title bar, body, outline, highlight states), preview / Portal / Pocket styling, content-box type/color/spacing, and the motion vocabulary (the section 15 easing/duration bands). Plus the deferred section 16 art-direction: card fragment-shader effects (foreground R3F layer tracking card rects; SVG/Houdini fallback; no backdrop-blur) and the background-shader overhaul. Restyles the token-separable spine without touching behavior. Owner-driven.
+The capstone visual design pass over the working v2 spine (spec section 15), decided after the mechanics work so the aesthetic is chosen with full context. One coherent impeccable + Claude-design run. Owns: card chrome (title bar, body, outline, highlight states), preview / Portal / Pocket styling, content-box type/color/spacing, and the motion vocabulary (the section 15 easing/duration bands). Restyles the token-separable spine without touching behavior. Owner-driven. NOTE: the section 16 art-direction follow-ups are split into separate drafts (out of this task's scope): DRAFT-002 (card fragment shaders), DRAFT-003 (background-shader overhaul), DRAFT-004 (asymmetric wide media).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A coherent visual design system applied across the v2 spine (card chrome, preview, box, motion), replacing the v1 placeholder styling
-- [ ] #2 Card fragment-shader effects + background-shader overhaul landed (or explicitly re-deferred)
-- [ ] #3 Restyle touches styling/tokens only, no behavior regressions (spine tests green)
+- [ ] #2 Restyle touches styling/tokens only, no behavior regressions (spine tests green)
 <!-- AC:END -->
+
+
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
