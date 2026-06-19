@@ -179,6 +179,36 @@ export const routes: RouteRecord[] = [
         },
     },
     {
+        // task-019 throwaway spike — hero-morph mechanism proof. Delete with the spike.
+        path: '/spike/morph',
+        lazy: async () => {
+            const { default: SpikeLayout } =
+                await import('./routes/spike/SpikeLayout')
+            return { Component: SpikeLayout }
+        },
+        entry: 'src/routes/spike/SpikeLayout.tsx',
+        children: [
+            {
+                index: true,
+                lazy: async () => {
+                    const { default: MorphList } =
+                        await import('./routes/spike/MorphList')
+                    return { Component: MorphList }
+                },
+                entry: 'src/routes/spike/MorphList.tsx',
+            },
+            {
+                path: ':id',
+                lazy: async () => {
+                    const { default: MorphDetail } =
+                        await import('./routes/spike/MorphDetail')
+                    return { Component: MorphDetail }
+                },
+                entry: 'src/routes/spike/MorphDetail.tsx',
+            },
+        ],
+    },
+    {
         path: '/blog/:slug/read',
         lazy: async () => {
             const { default: PlainLayout } =

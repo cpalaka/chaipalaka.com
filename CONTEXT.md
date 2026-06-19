@@ -522,9 +522,13 @@ _Avoid_: group, cluster.
 **Hero morph / Physical default**:
 The two v2 navigation transitions (replacing the retired v1 transition system,
 ADR-0007). **Hero morph** = a clicked **Card** expands/reflows into the destination
-**content box** (View Transition / FLIP). **Physical default** = a lightweight
-directional box slide/crossfade for chrome-originated nav (frame bar, back/forward,
-direct URL) where there is no source **Card** to morph from.
+**content box**, via the **browser-native View Transitions API** driven by
+`react-router`'s `viewTransition` Link prop + `useViewTransitionState` (the
+task-019 spike chose this over `react@experimental` `<ViewTransition>` and the
+`canvas/flip.ts` FLIP — see ADR-0007); unsupported browsers fall back to a plain
+client nav. **Physical default** = a lightweight directional box slide/crossfade
+for chrome-originated nav (frame bar, back/forward, direct URL) where there is no
+source **Card** to morph from.
 _Avoid_: page transition (too generic); the retired primitive names (anchor-slide,
 pour-in-drop, etc.).
 

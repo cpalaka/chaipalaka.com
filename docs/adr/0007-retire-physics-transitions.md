@@ -62,3 +62,55 @@ with no source card, without the card-swarm machinery.
   physical default must each carry their own reduced-motion paths (ADR-0008).
 - Replaces, in CONTEXT.md, the transition-primitive vocabulary with **hero morph**
   / **physical default**.
+
+---
+
+## Spike result — hero-morph mechanism (task-019, 2026-06-19)
+
+**Chosen: (a) the browser-native View Transitions API**, driven by
+`react-router-dom` 6.30's stable `viewTransition` Link prop + `useViewTransitionState`
+hook (it calls `document.startViewTransition` internally and guards on support).
+The clicked card and the destination content box share a `view-transition-name`
+(set on the card only while its nav is in flight, via `useViewTransitionState`, so
+sibling cards never collide on the name); the browser captures old/new snapshots
+and morphs one into the other.
+
+**Why this over the alternatives:**
+- **(b) `react@experimental` `<ViewTransition>` — rejected.** Verified: React
+  19.2.6 stable exports neither `ViewTransition` nor `unstable_ViewTransition`.
+  Adopting it requires `react@canary`/`react-dom@canary` — a toolchain-pin change
+  that collides with the `vite-react-ssg` peer-dep discipline (CLAUDE.md), and
+  canary's React runtime drives the SSG prerender itself. Disproportionate cost
+  for one morph when (a) gives the same shared-element capability with no React
+  dependency.
+- **(c) `canvas/flip.ts` FLIP — kept as a fallback option, not the primary.** It
+  is a *single-element* rect-tween (position/scale/opacity) and cannot crossfade
+  two *different* contents (card vs box). It works on every browser, so it remains
+  available as an enhanced fallback if a future slice wants animation on non-VT
+  browsers; for now the plain-nav fallback is sufficient.
+
+**Verified in the spike** (`web/src/routes/spike/`, throwaway — delete with the
+slice; routes `/spike/morph` + `/spike/morph/:id`), against the **prod
+`vite-react-ssg` build** served via `vite preview`, in Chromium:
+- Card→box morph runs on a real react-router client navigation
+  (`document.startViewTransition` fires once per nav; dest box carries the shared
+  `view-transition-name`). Prerender-safe — VT is runtime-only, post-hydration;
+  the spike index prerenders (`dist/spike/morph/index.html`).
+- **Fallback**: with `document.startViewTransition` removed (simulating an
+  unsupported browser), react-router degrades to a plain client nav — destination
+  renders, no morph, no error.
+- **Focus + SR**: focus moves to the destination content-box `<h1>` (mirrors
+  `BlogIndex`'s focus-follow); a **persistent** `aria-live="polite"` region in the
+  route layer announces the route change. Both survive the morph (the VT snapshot
+  is a visual overlay; the a11y tree reads the live DOM) **and** the fallback path.
+  Note: the data router does **not** auto-announce navigations — the retirement/
+  build-out slice must ship a real route announcer (none exists in the app today).
+
+**Implications for the retirement/build-out slice:**
+- `prefers-reduced-motion` is handled per-motion in CSS
+  (`@media (prefers-reduced-motion: reduce) { ::view-transition-* { animation: none } }`),
+  per ADR-0008 — there is no central `TransitionDirector` to host it.
+- Use `react-router`'s `<Link>` directly (the codebase convention); the
+  `viewTransition` prop requires the data router, which `vite-react-ssg` already uses.
+- `router.back()` / browser back-forward do **not** trigger view transitions
+  (popstate is synchronous) — the physical default covers those navs anyway.
