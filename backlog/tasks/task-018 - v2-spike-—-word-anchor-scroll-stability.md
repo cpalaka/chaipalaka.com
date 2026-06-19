@@ -1,10 +1,10 @@
 ---
 id: TASK-018
 title: v2 spike — word-anchor scroll stability
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-19 07:53'
-updated_date: '2026-06-19 08:13'
+updated_date: '2026-06-19 08:26'
 labels:
   - claude-generated
   - v2

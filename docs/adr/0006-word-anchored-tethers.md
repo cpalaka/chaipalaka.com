@@ -1,8 +1,9 @@
 # ADR 0006: Word-anchored tethers, runtime tether creation, and scroll regimes
 
 **Date:** 2026-06-19
-**Status:** Accepted (design — gated by a stability spike before build)
-**Task:** task-017
+**Status:** Accepted — **stability spike GREEN (task-018), priority of defenses
+revised** (see decision #3 and `docs/spikes/2026-06-19-word-anchor-scroll-stability.md`)
+**Task:** task-017 (design); task-018 (spike)
 **Spec:** `docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md` §5
 
 ---
@@ -35,11 +36,31 @@ codebase facts make this load-bearing *and* risky:
    scroll, the word wobbles) ↔ **edge-anchored** (top/bottom viewport edge, the
    parked state, reusing the ceiling/floor tether) — with **auto-park** on
    scroll-off and manual **recall**.
-3. **Scroll stability is gated by a throwaway spike before any production
-   word-anchor code.** Approach to validate: a **per-frame anchor-delta clamp**
-   (primary defense), translate the anchor+body pair together (keep overshoot
-   ~constant), and scroll-velocity-coupled damping (feel + cushion). Fallback if
-   the spike fails: lock vertical position during active scroll, sway only at rest.
+3. **Scroll stability — spike GREEN (task-018); the defense priority is
+   REVISED from this ADR's original draft.** The full result + numbers live in
+   `docs/spikes/2026-06-19-word-anchor-scroll-stability.md`; the load-bearing
+   reversals:
+   - **`translate-pair` is the primary (and sufficient) mechanism** — anchor
+     tracks the real word exactly and the card body is translated by the same
+     per-frame scroll delta, so the rope vector is scroll-invariant (overshoot
+     stays at rest values at any scroll speed). This replaces the
+     "per-frame anchor-delta clamp = primary" claim originally drafted here.
+   - **The anchor-delta clamp is DROPPED from the word-anchored regime** — it
+     does not help and it makes the rope-top visibly lag its own word. It keeps
+     one role only: clamping floor/ceiling moves on **resize** (the i111 case).
+   - **Velocity-coupled damping is optional feel polish and MUST be clamped**
+     (`frictionAir ≤ ~0.2`); unclamped, it inverts into a velocity amplifier
+     past ~827 px/frame at the dt=50ms clamp → NaN. This was the spike's most
+     important catch.
+   - The one-sided force-spring **never numerically explodes on its own** (NaN-
+     free even undefended); the i111 "explosion" is a visual yank + boundary
+     jam, handled by auto-park. The rAF `dt ≤ 50ms` clamp is a feel guard, not a
+     stability guard.
+   - Carries forward into the build (spec slices 4/5/8): one-way **hysteresis**
+     auto-park with the parked length eased to taut; **finite-check** the
+     `getBoundingClientRect` read; recursion translates the **whole subtree**.
+   The original fallback (lock vertical during scroll, sway at rest) is **not
+   needed** and is retired.
 
 ---
 
@@ -61,8 +82,9 @@ commitment is gated on proof, not faith.
 
 ## Consequences
 
-- A stability spike is the first slice (spec §18.0); the design does not ship if
-  the spike fails without the documented fallback.
+- The stability spike (first slice, spec §18.0) is **done and GREEN** — the
+  design ships, with the revised defense priority in decision #3. Six guardrails
+  (G1–G6) for slices 1/4/5/8 are enumerated in the spike doc.
 - New: the runtime-tether lifecycle, the DOM-rect word anchor (viewport-space),
   the scroll-regime transitions, recall, and per-word wobble.
 - Reduced-motion must newly gate the physics sim (nothing does today) — ADR-0008,
