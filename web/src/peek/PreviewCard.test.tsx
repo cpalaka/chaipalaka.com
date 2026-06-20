@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { PhysicsProvider } from '../physics/PhysicsContext'
+import { PinProvider } from '../pin/PinContext'
 import { PeekProvider } from './PeekContext'
 import { PreviewCard } from './PreviewCard'
 import type { PreviewEntry } from './PeekStore'
@@ -8,9 +9,11 @@ import type { PreviewEntry } from './PeekStore'
 function renderCard(entry: PreviewEntry) {
     return render(
         <PhysicsProvider>
-            <PeekProvider>
-                <PreviewCard entry={entry} />
-            </PeekProvider>
+            <PinProvider>
+                <PeekProvider>
+                    <PreviewCard entry={entry} />
+                </PeekProvider>
+            </PinProvider>
         </PhysicsProvider>,
     )
 }

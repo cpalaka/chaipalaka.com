@@ -15,6 +15,8 @@ import { ContentBox } from '../contentbox/ContentBox'
 import { PeekProvider } from '../peek/PeekContext'
 import { PeekLayer } from '../peek/PeekLayer'
 import { PeekTriggers } from '../peek/PeekTriggers'
+import { PinProvider } from '../pin/PinContext'
+import { PinLayer } from '../pin/PinLayer'
 import './ContentBoxLayout.css'
 
 /**
@@ -33,18 +35,21 @@ export default function ContentBoxLayout() {
                 <PageDefRegistryProvider>
                     <TransitionDirector pageDefs={pageDefs} edges={edges}>
                         <PeekProvider>
-                            <div data-layout="contentbox" data-frame-edge={edge}>
-                                <BackgroundCanvas />
-                                <ContentBox>
-                                    <Outlet />
-                                </ContentBox>
-                                <CardLayer />
-                                <PeekLayer />
-                                <StringLayer />
-                                <FrameBar />
-                                <PeekTriggers />
-                                <AtelierGate />
-                            </div>
+                            <PinProvider>
+                                <div data-layout="contentbox" data-frame-edge={edge}>
+                                    <BackgroundCanvas />
+                                    <ContentBox>
+                                        <Outlet />
+                                    </ContentBox>
+                                    <CardLayer />
+                                    <PinLayer />
+                                    <PeekLayer />
+                                    <StringLayer />
+                                    <FrameBar />
+                                    <PeekTriggers />
+                                    <AtelierGate />
+                                </div>
+                            </PinProvider>
                         </PeekProvider>
                     </TransitionDirector>
                 </PageDefRegistryProvider>

@@ -99,3 +99,18 @@ commitment is gated on proof, not faith.
   spike-proven primary mechanism is the right fit. Box edges are viewport-fixed,
   so this fires on resize only, never on scroll; the scroll case (G6 for the
   viewport floor/ceiling under word-anchored cards) remains slice 5's.
+- **Runtime word-anchored tether built (task-023, slice 4 / Keep).** Decision #1
+  is realized as the **`web/src/pin/` subsystem** (parallel to `peek/`, **not** a
+  `CardImpl` change — see the spec §4 slice-4 resolved note). Three additive
+  `PhysicsWorld` primitives carry the regime: **`registerAnchor(pos)`** creates a
+  tiny **static word-anchor proxy** body (the tether parent — a word is not a
+  body, so the rope hangs off a proxy placed at the word); **`translate`**
+  (velocity-preserving, 2-arg matter `Body.translate`) is the G1 translate-pair
+  move; **`onBeforeTick`** runs the per-frame tracking *before* `applyRopeForces`
+  so the pair lands before the rope resolves (the spike's ordering). Each frame:
+  read the word's `getBoundingClientRect` (finite-checked, **G4**), set the proxy
+  to the word centre, translate the card by the same delta (**G1**, no clamp).
+  Browser-verified: a 400px scroll moves the card 405px with no overshoot spike.
+  Per-word **wobble** is velocity-driven (≈0 at rest), a transform-only spring on
+  a single span — not pretext (trade-off above). Auto-park/recall + the clamped
+  velocity-damping (G2/G3) remain slice 5's (task-024).

@@ -15,6 +15,8 @@ export type PeekPhase = 'held' | 'falling'
 export interface PreviewSpec {
     /** Identity of the source word/link — the dedup key. */
     sourceId: string
+    /** The source word/link element — handed to Keep to anchor the pinned card. */
+    sourceEl?: Element
     kind: PeekKind
     /** Card-centre placement in viewport space, and which side of the word. */
     center: { x: number; y: number }

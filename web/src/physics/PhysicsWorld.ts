@@ -77,6 +77,7 @@ export class PhysicsWorld implements BodyForceSource {
     private registrations = new Map<PhysicsHandle, Registration>()
     private byId = new Map<string, PhysicsHandle>()
     private gravityDir: Cardinal = 'down'
+    private preTick = new Set<(dtMs: number) => void>()
     private contentBox: {
         top: ContentBoxEdge
         bottom: ContentBoxEdge
@@ -201,6 +202,48 @@ export class PhysicsWorld implements BodyForceSource {
 
     getHandleById(cardId: string): PhysicsHandle | undefined {
         return this.byId.get(cardId)
+    }
+
+    /**
+     * Register a runtime **word-anchor proxy**: a tiny static body the v2
+     * word-anchored regime places at a source word's viewport-space centre and
+     * repositions each frame (via {@link setPosition}) to track it. Static, so
+     * gravity/forces never move it — it exists only to be a tether parent that
+     * follows a DOM word (ADR-0006: the first runtime-created tether topology,
+     * pinning; reuses the card-parent tether kind, no `anchorA`).
+     */
+    registerAnchor(pos: Vec2): PhysicsHandle {
+        const body = Matter.Bodies.rectangle(pos.x, pos.y, 1, 1, {
+            isStatic: true,
+        })
+        Matter.Composite.add(this.world, body)
+        const id = this.nextId++
+        this.registrations.set(id, {
+            body,
+            anchor: { ...pos },
+            isStatic: true,
+            width: 1,
+            height: 1,
+            buoyancy: 'heavy',
+        })
+        return id
+    }
+
+    /**
+     * Translate a body by a delta **preserving its velocity** — the translate-pair
+     * primitive (spike G1). Each frame the word-anchored card is shifted by the
+     * same delta as its word anchor, so the rope vector stays scroll-invariant and
+     * the sway survives — unlike {@link setPosition}, which teleports and zeroes
+     * velocity.
+     */
+    translate(handle: PhysicsHandle, delta: Vec2): void {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        // 2-arg translate (updateVelocity omitted/falsy) shifts positionPrev with
+        // position, so the move injects NO implied (Verlet) velocity — a per-frame
+        // translate-pair must carry the card with its word, not accelerate it.
+        // (Same call shape as the content-box edge translate-pair, G6.)
+        Matter.Body.translate(reg.body, delta)
     }
 
     unregister(handle: PhysicsHandle): void {
@@ -543,7 +586,24 @@ export class PhysicsWorld implements BodyForceSource {
         this.tether.add(spec.parent, spec.child, spec.length, spec.anchorA)
     }
 
+    /**
+     * Register a callback run at the **start of every tick**, before any force is
+     * applied (buoyancy/tether) and before `Engine.update`. The word-anchored
+     * regime uses this to translate-pair its card to its word *before* the rope
+     * force resolves (spike G1 ordering), so a fast scroll never spikes overshoot.
+     * Returns an unsubscribe.
+     */
+    onBeforeTick(cb: (dtMs: number) => void): () => void {
+        this.preTick.add(cb)
+        return () => {
+            this.preTick.delete(cb)
+        }
+    }
+
     tick(dtMs: number): void {
+        // 0. Pre-tick steps (word-anchor translate-pair) — before any force.
+        for (const cb of this.preTick) cb(dtMs)
+
         // 1. Apply balloon buoyancy — per-tick force opposing gravity, scaled to match gravity force units
         this.syncEngineGravity()
         const g = this.getGravityVector()

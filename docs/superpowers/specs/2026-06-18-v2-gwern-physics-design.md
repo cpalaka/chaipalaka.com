@@ -195,6 +195,43 @@ disambiguation). Reuse is the *header DOM slot*; the interaction role is new.
 > - Demoed on **`/test/box`** (the only live content-box route today); the `/blog`
 >   rollout is task-026.
 
+> **Resolved — slice 4 / task-023 (Keep, shipped).** Built as a self-contained
+> `web/src/pin/` subsystem **parallel to `peek/`**, **not** a `CardImpl` rewrite —
+> reversing this section's earlier "rewrite the card's pointer state machine" /
+> "convert a preview into a real `CardEntry`" plan (Chai's call, 2026-06-20). A
+> global inversion of `CardImpl`'s pointer machine would break every v1 chain
+> route (which still body-drags), and slice 3 already set the precedent of a
+> separate subsystem. **`CardImpl` is untouched.**
+> - The pinned card is a `PinnedCard` renderer (reuses the `.physics-card` chrome,
+>   token-separable), held in a `PinStore` Controller (`PinContext`/`PinLayer`),
+>   mirroring the peek stack. Pure, TDD'd cores: **`pinGesture`** (press-hold→arm /
+>   click / abort / drag — AC#2 click-vs-press-hold), **`wordAnchor`** (translate-
+>   pair G1 + finite-check G4 — AC#5), **`wobble`** (transform-only damped
+>   oscillator). One shared `PinGesture` drives both the preview's keep-initiation
+>   and a pinned card's re-drag.
+> - **Runtime tether (ADR-0006).** Three additive `PhysicsWorld` primitives:
+>   `registerAnchor(pos)` (a tiny **static word-anchor proxy** body), `translate`
+>   (velocity-preserving, the translate-pair move), and `onBeforeTick` (runs the
+>   per-frame word-tracking *before* the rope force, the spike's G1 ordering). The
+>   tether connects card → anchor proxy; the proxy is set to the word's
+>   `getBoundingClientRect` centre each frame (finite-checked, G4) and the card is
+>   translate-paired by the same delta — the card tracks its word across scroll
+>   with no clamp and no explosion (verified: scroll 400px → card follows 405px).
+> - **Wobble** is **velocity-driven** (≈0 at rest — no permanent text lean; a few-px
+>   jiggle on a swing), on a single `inline-block <span>` wrapping the word's
+>   contents; the `<a>` is measured **un-wobbled** (no feedback) and the real text
+>   nodes are untouched (SR/selection/copy unaffected). **Not** pretext.
+> - **Bonded-trio highlight**: hovering the card or word lights card + word +
+>   tether (StringLayer paths now carry `data-tether-handle`).
+> - **Reduced-motion** (AC#4): instant pin, the card is **placed** (frozen static,
+>   still scroll-tracks its word), no wobble, static highlight.
+> - **Enter** (body click) = plain navigation for now; the hero-morph upgrade is
+>   slice 6 (task-025). Auto-park/recall (word↔edge) is slice 5 (task-024).
+> - **Feel tunables** live in `web/src/pin/pinTuning.ts` (Atelier-safe, like
+>   `peekTuning.ts`). Peek hands off via a `sourceEl` added to `PreviewSpec`:
+>   `PreviewCard`'s title bar runs the keep gesture and on drop calls
+>   `usePin().pin(...)`, then removes the preview. Demoed on `/test/box`.
+
 ## 5. Anchoring & scroll regimes
 
 ### Word-anchoring + per-word wobble — **[new] wobble, [reuse] pretext for geometry only**

@@ -63,6 +63,7 @@ export function StringLayer() {
             {records.map((rec, i) => (
                 <path
                     key={rec.handle}
+                    data-tether-handle={String(rec.handle)}
                     ref={(el) => {
                         if (el) pathRefs.current.set(String(i), el)
                         else pathRefs.current.delete(String(i))

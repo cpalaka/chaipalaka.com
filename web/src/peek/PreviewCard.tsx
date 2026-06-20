@@ -1,11 +1,20 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
+import { physicsTuning } from '../physics/physicsTuning'
+import { computeFlingImpulse } from '../card/flingImpulse'
+import { usePin } from '../pin/PinContext'
+import { PinGesture } from '../pin/pinGesture'
+import { pinTuning } from '../pin/pinTuning'
 import { usePeek } from './PeekContext'
 import { peekTuning } from './peekTuning'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { PreviewEntry } from './PeekStore'
 import './Peek.css'
+
+function inRect(x: number, y: number, r: DOMRect): boolean {
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
+}
 
 // Pad past the viewport edge before a falling preview is considered "cleared".
 const CLEAR_PAD = 100
@@ -23,6 +32,7 @@ const CLEAR_PAD = 100
 export function PreviewCard({ entry }: { entry: PreviewEntry }) {
     const world = usePhysicsWorld()
     const peek = usePeek()
+    const pin = usePin()
     const reduced = usePrefersReducedMotion()
     const elRef = useRef<HTMLElement | null>(null)
     const handleRef = useRef<PhysicsHandle | null>(null)
@@ -34,6 +44,132 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
         const h = el.offsetHeight
         el.style.transform = `translate(${entry.center.x - entry.width / 2}px, ${entry.center.y - h / 2}px)`
     }, [entry.phase, entry.center.x, entry.center.y, entry.width])
+
+    // The **Keep** gesture (spec §4): press-hold the title bar to arm, drag the
+    // preview into the page, release to pin it into a persistent `PinnedCard`
+    // strung to its source word. A quick release (before arm) enters; sliding off
+    // the bar before arm aborts. Click-vs-press-hold is the `PinGesture`'s job.
+    useEffect(() => {
+        const el = elRef.current
+        if (entry.phase !== 'held' || !el) return
+        const bar = el.querySelector<HTMLElement>('[data-card-header]')
+        if (!bar) return
+
+        let armed = false
+        let barRect: DOMRect | null = null
+        let tx = 0
+        let ty = 0
+        let lastX = 0
+        let lastY = 0
+        let lastT = 0
+        let lastDx = 0
+        let lastDy = 0
+        let lastDt = 0
+        let upT = 0
+
+        const enter = () => {
+            if (entry.kind === 'portal' && entry.href) window.location.href = entry.href
+        }
+
+        const gesture = new PinGesture({
+            armPressMs: pinTuning.armPressMs,
+            armMovePx: pinTuning.armMovePx,
+            onArm: () => {
+                armed = true
+                el.classList.add('peek-preview--keeping')
+                tx = entry.center.x - entry.width / 2
+                ty = entry.center.y - el.offsetHeight / 2
+            },
+            onDrag: (dx, dy) => {
+                tx += dx
+                ty += dy
+                el.style.transform = `translate(${tx}px, ${ty}px)`
+            },
+            onDrop: () => {
+                const rect = el.getBoundingClientRect()
+                const impulse = reduced
+                    ? { vx: 0, vy: 0 }
+                    : computeFlingImpulse(
+                          { dx: lastDx, dy: lastDy, dtMs: lastDt },
+                          upT - lastT,
+                          {
+                              scale: physicsTuning.flingVelocityScale,
+                              pauseMs: physicsTuning.flingPauseMs,
+                          },
+                      )
+                if (entry.sourceEl) {
+                    pin.pin({
+                        sourceEl: entry.sourceEl,
+                        kind: entry.kind,
+                        center: {
+                            x: rect.left + rect.width / 2,
+                            y: rect.top + rect.height / 2,
+                        },
+                        width: entry.width,
+                        height: rect.height,
+                        vx: impulse.vx,
+                        vy: impulse.vy,
+                        title: entry.title,
+                        lead: entry.lead,
+                        href: entry.href,
+                        bodyHtml: entry.bodyHtml,
+                    })
+                }
+                peek.remove(entry.id)
+            },
+            onClick: () => enter(),
+            onAbort: () => el.classList.remove('peek-preview--keeping'),
+        })
+
+        const onBarDown = (e: PointerEvent) => {
+            if ((e.target as Element | null)?.closest('a, button')) return
+            e.preventDefault()
+            barRect = bar.getBoundingClientRect()
+            armed = false
+            lastX = e.clientX
+            lastY = e.clientY
+            lastT = e.timeStamp
+            lastDx = lastDy = lastDt = 0
+            try {
+                el.setPointerCapture(e.pointerId)
+            } catch {
+                /* pointer may not be capturable; the gesture works regardless */
+            }
+            gesture.down(e.clientX, e.clientY)
+        }
+        const onMove = (e: PointerEvent) => {
+            lastDx = e.clientX - lastX
+            lastDy = e.clientY - lastY
+            lastDt = e.timeStamp - lastT
+            lastX = e.clientX
+            lastY = e.clientY
+            lastT = e.timeStamp
+            if (!armed && barRect && !inRect(e.clientX, e.clientY, barRect)) {
+                gesture.leaveBar()
+                return
+            }
+            gesture.move(e.clientX, e.clientY)
+        }
+        const onUp = (e: PointerEvent) => {
+            upT = e.timeStamp
+            try {
+                el.releasePointerCapture(e.pointerId)
+            } catch {
+                /* capture may already be released */
+            }
+            gesture.up()
+        }
+
+        bar.addEventListener('pointerdown', onBarDown)
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        return () => {
+            gesture.cancel()
+            bar.removeEventListener('pointerdown', onBarDown)
+            window.removeEventListener('pointermove', onMove)
+            window.removeEventListener('pointerup', onUp)
+        }
+    }, [entry, peek, pin, reduced])
 
     useEffect(() => {
         if (entry.phase !== 'falling') return

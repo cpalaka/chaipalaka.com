@@ -517,8 +517,21 @@ _Avoid_: popup, tooltip, hovercard.
 **Pinned card**:
 A kept **preview card** — now a persistent full-physics **Card** strung to its
 source word via a **runtime-created Tether** (the first user-created tether; v1's
-were authored per **PageDef**, see ADR-0001 §3 / ADR-0006).
+were authored per **PageDef**, see ADR-0001 §3 / ADR-0006). Built (task-023) as a
+self-contained **`web/src/pin/`** subsystem parallel to `peek/` — a `PinnedCard`
+renderer + `PinStore`, **not** a `CardImpl`/`CardRegistry` card (so the v1 pointer
+machine is untouched). The tether's parent is a **word-anchor proxy**.
 _Avoid_: locked card (no padlock; ADR-0001), saved card.
+
+**Word-anchor proxy**:
+The tiny **static** physics body a **pinned card**'s **Tether** actually hangs
+from (a word is a DOM element, not a body). Created at runtime by
+`PhysicsWorld.registerAnchor`, it is repositioned to the source word's
+`getBoundingClientRect` centre every frame (finite-checked) while the card is
+translate-paired by the same delta — the spike's G1 mechanism (ADR-0006), so the
+rope vector stays scroll-invariant.
+_Avoid_: word body (it is a proxy for the word, not the word), anchor (too generic
+— `anchor` already names a **Card**'s layout position).
 
 **Word-anchored / Edge-anchored**:
 The two anchor regimes of a **pinned card**. **Word-anchored** = tethered to its

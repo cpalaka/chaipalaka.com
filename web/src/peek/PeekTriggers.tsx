@@ -73,6 +73,7 @@ function buildSpec(trigger: HTMLElement, mobile: boolean): PreviewSpec | null {
         const lead = resolvePortalLead(href, posts)
         return {
             sourceId,
+            sourceEl: trigger,
             kind: 'portal',
             center,
             side,
@@ -87,7 +88,16 @@ function buildSpec(trigger: HTMLElement, mobile: boolean): PreviewSpec | null {
     if (!pocketId) return null
     const body = liftPocketBody(pocketId)
     if (!body) return null
-    return { sourceId, kind: 'pocket', center, side, width, bodyHtml: body.bodyHtml, title: 'Note' }
+    return {
+        sourceId,
+        sourceEl: trigger,
+        kind: 'pocket',
+        center,
+        side,
+        width,
+        bodyHtml: body.bodyHtml,
+        title: 'Note',
+    }
 }
 
 /**

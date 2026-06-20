@@ -1,0 +1,93 @@
+/*
+ * Pinned-card styling (the v2 Keep rung). Builds on the v1 `.physics-card` chrome
+ * (bg, border, shadow, typography — all CSS custom properties) so the capstone
+ * design pass (§15) is a clean reskin, not a rewrite. Only the pin-specific
+ * overrides, the word-wobble host, and the bonded-trio highlight live here.
+ *
+ * Position is driven imperatively (per-frame physics → inline transform), so this
+ * file animates nothing positional.
+ */
+
+.pin-card {
+    /* A real foreground card: same plane as CardLayer (z-index 10 from .physics-card). */
+    cursor: default;
+}
+
+/* The title bar is the grab handle (the v2 inversion: body reads, bar drags). */
+.pin-card__bar {
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    cursor: grab;
+    /* An invisible hit-pad so a small card's bar isn't a sliver (spec §4). */
+    min-height: var(--pin-bar-hit, 28px);
+}
+.pin-card__bar:active {
+    cursor: grabbing;
+}
+
+/* The body is the read / click-to-enter zone. */
+.pin-card__body {
+    display: block;
+    overflow-y: auto;
+    user-select: text;
+    font-size: var(--font-size-base, 15px);
+    line-height: 1.45;
+    color: var(--color-fg);
+}
+a.pin-card__body {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-fg);
+}
+a.pin-card__body:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+.pin-card[data-pin-kind='pocket'] .pin-card__body {
+    cursor: default;
+}
+.pin-card__body > :first-child {
+    margin-top: 0;
+}
+.pin-card__body > :last-child {
+    margin-bottom: 0;
+}
+
+/* Bonded-trio: card highlight on hover of any member. */
+.pin-card--hot {
+    border-color: var(--color-accent, var(--color-fg));
+}
+
+/*
+ * Word-wobble host: a single inline-block span wrapping the source word's text.
+ * inline-block so a transform applies (transforms are ignored on inline boxes);
+ * the wrapped text nodes are untouched, so SR / selection / copy see real text.
+ */
+.pin-wobble {
+    display: inline-block;
+    will-change: transform;
+}
+
+/* The bonded source word: a subtle persistent marker that a card hangs off it. */
+.pin-word {
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--color-accent, currentColor);
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+}
+/* Transient emphasis while the trio is hovered. */
+.pin-word--hot {
+    background: color-mix(in srgb, var(--color-accent, currentColor) 18%, transparent);
+    border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Wobble is JS-gated off under reduced motion; this is belt-and-braces so any
+     * residual transform on the host doesn't animate. The persistent .pin-word
+     * marker stays (it is an affordance, not motion). */
+    .pin-wobble {
+        transform: none !important;
+        will-change: auto;
+    }
+}

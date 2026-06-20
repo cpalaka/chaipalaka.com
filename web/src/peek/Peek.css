@@ -27,10 +27,12 @@
     transform-origin: right center;
 }
 
-/* Title bar reuses [data-card-header] from Card.css; just tighten the label. */
+/* Title bar reuses [data-card-header] from Card.css; just tighten the label.
+ * It is also the Keep grab handle, so signal grab. */
 .peek-preview__bar {
     letter-spacing: 0.02em;
     text-transform: lowercase;
+    cursor: grab;
 }
 
 .peek-preview__body {
@@ -62,6 +64,15 @@ a.peek-preview__body:hover {
 }
 .peek-preview__body > :last-child {
     margin-bottom: 0;
+}
+
+/* Armed: the preview has come loose from the word and is being dragged to pin. */
+.peek-preview--keeping,
+.peek-preview--keeping .peek-preview__bar {
+    cursor: grabbing;
+}
+.peek-preview--keeping {
+    z-index: 21;
 }
 
 /* While falling it is no longer interactive. */

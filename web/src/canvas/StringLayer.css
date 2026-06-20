@@ -14,3 +14,11 @@
     stroke-width: 1;
     opacity: 0.4;
 }
+
+/* Bonded-trio highlight: the tether of a pinned card whose card or word is
+ * hovered (toggled by PinnedCard via the path's data-tether-handle). */
+.string-layer__string--hot {
+    stroke: var(--color-accent, var(--color-fg));
+    stroke-width: 1.75;
+    opacity: 0.9;
+}
