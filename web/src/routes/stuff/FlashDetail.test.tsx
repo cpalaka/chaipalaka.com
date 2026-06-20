@@ -38,13 +38,6 @@ vi.mock('../../card/Page', async () => {
     }
 })
 
-const registered: { def: PageDef | null } = { def: null }
-vi.mock('../../transitions/PageDefRegistry', () => ({
-    useRegisterPageDef: (def: PageDef) => {
-        registered.def = def
-    },
-}))
-
 const piecesByCategory = new Map<string, Piece[]>()
 const piecesBySlug = new Map<string, Piece>()
 vi.mock('../../stuff/flash/pieces', () => ({
@@ -75,7 +68,6 @@ function makePiece(slug: string): Piece {
 
 function renderAt(path: string) {
     physicsPageCalls.length = 0
-    registered.def = null
     let location = ''
     function LocationProbe() {
         location = useLocation().pathname
@@ -152,13 +144,6 @@ describe('FlashDetail — slug match', () => {
             expect(content[id]).toBeTruthy()
             expect(content[id]!.draggable).toBe(false)
         }
-    })
-
-    test('useRegisterPageDef is invoked with the built pageDef', () => {
-        setup()
-        expect(registered.def).not.toBeNull()
-        // The same object passed to Page is the one registered.
-        expect(registered.def).toBe(physicsPageCalls[0]!.pageDef)
     })
 
     test('flash-back children contain a Link to /stuff/flash with "← Flash" text', () => {

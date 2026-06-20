@@ -8,6 +8,7 @@ import { PinGesture } from '../pin/pinGesture'
 import { pinTuning } from '../pin/pinTuning'
 import { usePeek } from './PeekContext'
 import { peekTuning } from './peekTuning'
+import { useMorphSource, HERO_NAME } from '../nav/morph'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { PreviewEntry } from './PeekStore'
 import './Peek.css'
@@ -36,6 +37,15 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
     const reduced = usePrefersReducedMotion()
     const elRef = useRef<HTMLElement | null>(null)
     const handleRef = useRef<PhysicsHandle | null>(null)
+    // Enter = the top ladder rung: a client-side hero morph into the destination
+    // box (ADR-0007). Held in a ref so the gesture's onClick closure always calls
+    // the latest navigator without re-running the gesture effect.
+    const { isMorphing, enter, onBodyClick } = useMorphSource(
+        entry.kind,
+        entry.href,
+    )
+    const enterRef = useRef(enter)
+    enterRef.current = enter
 
     // Centre the held card on its anchor (measure height once it has rendered).
     useLayoutEffect(() => {
@@ -66,10 +76,6 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
         let lastDy = 0
         let lastDt = 0
         let upT = 0
-
-        const enter = () => {
-            if (entry.kind === 'portal' && entry.href) window.location.href = entry.href
-        }
 
         const gesture = new PinGesture({
             armPressMs: pinTuning.armPressMs,
@@ -117,7 +123,7 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
                 }
                 peek.remove(entry.id)
             },
-            onClick: () => enter(),
+            onClick: () => enterRef.current(),
             onAbort: () => el.classList.remove('peek-preview--keeping'),
         })
 
@@ -248,13 +254,20 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
             data-peek-id={entry.id}
             data-peek-kind={entry.kind}
             data-peek-side={entry.side}
-            style={{ width: entry.width }}
+            style={{
+                width: entry.width,
+                viewTransitionName: isMorphing ? HERO_NAME : undefined,
+            }}
         >
             <div data-card-header className="peek-preview__bar">
                 {entry.kind === 'portal' ? (entry.title ?? 'Link') : 'Note'}
             </div>
             {entry.kind === 'portal' ? (
-                <a className="peek-preview__body" href={entry.href}>
+                <a
+                    className="peek-preview__body"
+                    href={entry.href}
+                    onClick={onBodyClick}
+                >
                     {entry.lead ?? entry.title}
                 </a>
             ) : (

@@ -1,8 +1,7 @@
 // Public surface of the card subsystem.
 //
-// Consumers in `routes/`, `layouts/`, and `transitions/` should import
-// from this barrel — it is the declared seam. Direct file imports inside
-// `card/` itself are fine.
+// Consumers in `routes/` and `layouts/` should import from this barrel — it is
+// the declared seam. Direct file imports inside `card/` itself are fine.
 //
 // Internals deliberately NOT re-exported: CardImpl, CardRegistryStore,
 // RegisterArgs, CardRegistryAPI, useCardRegistryEntries. Reach for those

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { PinProvider } from '../pin/PinContext'
 import { PeekProvider } from './PeekContext'
@@ -7,15 +8,26 @@ import { PreviewCard } from './PreviewCard'
 import type { PreviewEntry } from './PeekStore'
 
 function renderCard(entry: PreviewEntry) {
-    return render(
-        <PhysicsProvider>
-            <PinProvider>
-                <PeekProvider>
-                    <PreviewCard entry={entry} />
-                </PeekProvider>
-            </PinProvider>
-        </PhysicsProvider>,
+    // useViewTransitionState (via useMorphSource in PreviewCard) needs a data
+    // router — the same kind vite-react-ssg uses in prod.
+    const router = createMemoryRouter(
+        [
+            {
+                path: '/',
+                element: (
+                    <PhysicsProvider>
+                        <PinProvider>
+                            <PeekProvider>
+                                <PreviewCard entry={entry} />
+                            </PeekProvider>
+                        </PinProvider>
+                    </PhysicsProvider>
+                ),
+            },
+        ],
+        { initialEntries: ['/'] },
     )
+    return render(<RouterProvider router={router} />)
 }
 
 const base = {

@@ -66,6 +66,15 @@ export class PinStore {
         if (this.entries.delete(id)) this.invalidate()
     }
 
+    /** Drop every pinned card — used to reset the ladder on a route change (a
+     * pin is strung to a source word on the page being left; persisted per-route
+     * pins are a future enhancement, task-028). */
+    clear(): void {
+        if (this.entries.size === 0) return
+        this.entries.clear()
+        this.invalidate()
+    }
+
     private invalidate(): void {
         this.cached = null
         this.listeners.forEach((cb) => cb())

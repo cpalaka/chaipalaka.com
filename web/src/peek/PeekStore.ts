@@ -81,6 +81,14 @@ export class PeekStore {
         if (this.entries.delete(id)) this.invalidate()
     }
 
+    /** Drop every preview — used to reset the ladder on a route change (the
+     * source words belong to the page being left). */
+    clear(): void {
+        if (this.entries.size === 0) return
+        this.entries.clear()
+        this.invalidate()
+    }
+
     private invalidate(): void {
         this.cached = null
         this.listeners.forEach((cb) => cb())

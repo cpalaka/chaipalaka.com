@@ -8,6 +8,7 @@ import { trackWord } from './wordAnchor'
 import { stepRegime, type Regime } from './scrollRegime'
 import { stepWobble, REST, type WobbleState } from './wobble'
 import { pinTuning } from './pinTuning'
+import { useMorphSource, HERO_NAME } from '../nav/morph'
 import type { PinEntry } from './PinStore'
 import './Pin.css'
 
@@ -56,6 +57,15 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
     const world = usePhysicsWorld()
     const reduced = usePrefersReducedMotion()
     const elRef = useRef<HTMLElement | null>(null)
+    // Enter = hero morph into the destination box (ADR-0007). Ref-held so the
+    // gesture's onClick closure calls the latest navigator without re-running the
+    // (physics-heavy) gesture effect.
+    const { isMorphing, enter, onBodyClick } = useMorphSource(
+        entry.kind,
+        entry.href,
+    )
+    const enterRef = useRef(enter)
+    enterRef.current = enter
 
     useEffect(() => {
         const el = elRef.current
@@ -294,10 +304,6 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         }
         word.addEventListener('click', onWordClick, true)
 
-        const enter = () => {
-            if (entry.kind === 'portal' && entry.href) window.location.href = entry.href
-        }
-
         // Title-bar re-drag gesture (press-hold to grab, body-click to enter).
         const bar = el.querySelector<HTMLElement>('[data-card-header]')
         let barRect: DOMRect | null = null
@@ -353,7 +359,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 )
                 world.setVelocity(cardHandle, { x: impulse.vx, y: impulse.vy })
             },
-            onClick: () => enter(),
+            onClick: () => enterRef.current(),
             onAbort: () => {
                 el.style.cursor = ''
             },
@@ -437,12 +443,17 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             className="physics-card pin-card"
             data-pin-id={entry.id}
             data-pin-kind={entry.kind}
+            style={isMorphing ? { viewTransitionName: HERO_NAME } : undefined}
         >
             <div data-card-header className="pin-card__bar">
                 {entry.kind === 'portal' ? (entry.title ?? 'Link') : 'Note'}
             </div>
             {entry.kind === 'portal' ? (
-                <a className="pin-card__body" href={entry.href}>
+                <a
+                    className="pin-card__body"
+                    href={entry.href}
+                    onClick={onBodyClick}
+                >
                     {entry.lead ?? entry.title}
                 </a>
             ) : (

@@ -11,8 +11,7 @@ import {
     CARD_PADDING,
     type MeasureFn,
 } from './BlogIndex.measure'
-import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
-import { useHashSection } from '../../transitions/useHashSection'
+import { useHashSection } from './hashSection'
 import { edgeToInsets } from '../../physics/PhysicsContext'
 import { useFrameEdge } from '../../canvas/useFrameEdge'
 import { partitionPageDef } from '../../layout/sectionLayout'
@@ -182,8 +181,6 @@ export default function BlogIndex() {
     const { sectionIndex, goToSection } = useHashSection()
     const { edge } = useFrameEdge()
     const insets = useMemo(() => edgeToInsets(edge), [edge])
-
-    useRegisterPageDef(chain.pageDef)
 
     useEffect(() => {
         function update() {

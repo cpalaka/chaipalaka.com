@@ -37,7 +37,10 @@ export function ReadingSubstrate({
             </nav>
 
             <article className="reader__body">
-                <h1>{title}</h1>
+                {/* tabIndex=-1 so the hero-morph focus-follow (ContentBox) can
+                    land focus on the destination heading without adding it to
+                    the tab order. */}
+                <h1 tabIndex={-1}>{title}</h1>
                 {meta}
                 {children}
             </article>

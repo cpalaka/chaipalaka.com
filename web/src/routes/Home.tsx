@@ -52,8 +52,7 @@ const BALLOON_W = 200
 const BALLOON_H = 80
 const BALLOON_REST_FRAC = 0.72
 
-// Stable, exported pageDef — the transitions registry in routes/pageDefs.ts
-// imports this by reference, so its identity must be module-scoped. Anchor
+// Stable, module-scoped pageDef (exported for the route's own test). Anchor
 // rest-y is uniform at LETTERS_REST_FRAC here; the component below substitutes
 // per-letter y jitter at runtime so SSR/hydration stays deterministic.
 export const pageDef: PageDef = {

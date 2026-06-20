@@ -54,4 +54,17 @@ describe('PinStore', () => {
         store.unpin(id)
         expect(cb).toHaveBeenCalledTimes(2)
     })
+
+    it('clear drops every pin and notifies once; a no-op when empty', () => {
+        const store = new PinStore()
+        store.pin(spec())
+        store.pin(spec({ kind: 'pocket', bodyHtml: '<p>n</p>' }))
+        const cb = vi.fn()
+        store.subscribe(cb)
+        store.clear()
+        expect(store.snapshot()).toHaveLength(0)
+        expect(cb).toHaveBeenCalledTimes(1)
+        store.clear()
+        expect(cb).toHaveBeenCalledTimes(1) // empty → no notify
+    })
 })

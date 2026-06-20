@@ -1,7 +1,6 @@
 import { describe, test, expect, vi } from 'vitest'
 import { render, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import type { PageDef } from '../PageDef'
 
 vi.mock('../../canvas/flip', () => ({
     flipMorph: vi.fn(),
@@ -38,21 +37,12 @@ vi.mock('../../blog/posts', () => ({
     ],
 }))
 
-// Capture the pageDef passed to useRegisterPageDef.
-const registered: { def: PageDef | null } = { def: null }
-vi.mock('../../transitions/PageDefRegistry', () => ({
-    useRegisterPageDef: (def: PageDef) => {
-        registered.def = def
-    },
-}))
-
 import { PhysicsProvider } from '../../physics/PhysicsContext'
 import { CardRegistryProvider } from '../../card/CardRegistry'
 import { CardLayer } from '../../card/CardLayer'
 import BlogPost from './BlogPost'
 
 function renderAt(path: string) {
-    registered.def = null
     return render(
         <MemoryRouter initialEntries={[path]}>
             <PhysicsProvider>
@@ -115,14 +105,6 @@ describe('BlogPost — slug match', () => {
         const plainLink = container.querySelector('a.plain-mode-link')
         expect(plainLink).toBeTruthy()
         expect(plainLink!.getAttribute('href')).toBe('/blog/hello/read')
-    })
-
-    test('useRegisterPageDef called with a PageDef containing one card id=post-{slug}', () => {
-        renderAt('/blog/hello')
-        expect(registered.def).not.toBeNull()
-        const def = registered.def!
-        expect(def.cards).toHaveLength(1)
-        expect(def.cards[0]!.id).toBe('post-hello')
     })
 
     test('renders the stubbed MDX body component', () => {

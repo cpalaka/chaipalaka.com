@@ -53,23 +53,26 @@ _Avoid_: direction (too generic), vector (gravity isn't authored as a
 vector — the cardinal compiles to one).
 
 **PageDef**:
-A route's declarative spec — the composition of a **PageSpec** and a
-**TransitionSpec**. Routes author the intersection; subsystems read
-only the half they need.
+A route's declarative spec. Since task-025 (ADR-0007) this is just an alias of
+**PageSpec** (gravity + cards + optional sections) — the **TransitionSpec** half
+was retired with the v1 transition subsystem. The name is kept because routes
+reference `PageDef` widely.
 _Avoid_: page config, route schema, layout def.
 
 **PageSpec**:
 A route's declared content — its **Cardinal** gravity, **CardSpec**
-list, and optional **SectionsConfig**. The "what the route is" half
-of a **PageDef**. Physics-side consumers (`PhysicsPage`, `usePageDef`,
-`partitionPageDef`) read **PageSpec**, never the transitions half.
+list, and optional **SectionsConfig**. Physics-side consumers (`PhysicsPage`,
+`usePageDef`, `partitionPageDef`) read **PageSpec**, which since task-025 is the
+whole of a **PageDef** (the transitions half was retired).
 _Avoid_: page config, route schema.
 
-**TransitionSpec**:
-A route's declared transition behaviour — preferred exit/enter
-**Primitive**s and sibling-axis order. The "how the route moves" half
-of a **PageDef**. The **Director** and `dispatch()` read the
-transitions half off a **PageDef** when computing a **TransitionPlan**.
+**TransitionSpec** _(RETIRED — task-025 / ADR-0007)_:
+Was a route's declared transition behaviour — preferred exit/enter
+**Primitive**s and sibling-axis order, the "how the route moves" half of a
+**PageDef**, read by the **Director** and `dispatch()`. Deleted with the v1
+transition subsystem; v2 navigation is the **Hero morph** / **Physical default**
+rule, which no route declares. Retained here only to explain the term in older
+notes and the v1 PRD section.
 _Avoid_: transition config, transition def.
 
 **CardSpec**:
@@ -345,15 +348,17 @@ spec is plain data and re-applying it produces an equivalent tether.
 _Avoid_: tether config, tether record (records exist in `PhysicsWorld`
 internals).
 
-**Director**:
-The single coordinator that arms route transitions on navigation,
-advances **Card**s through their **CardLifecycle**, dispatches
-**Primitive**s, and releases exiting cards. Today: `TransitionDirector.tsx`.
-The **Director** is the only thing that drives lifecycle transitions
-other than the registry's default-policy auto-activate on initial mount.
+**Director** _(RETIRED — task-025 / ADR-0007)_:
+Was the single coordinator that armed route transitions on navigation, advanced
+**Card**s through their **CardLifecycle**, dispatched **Primitive**s, and
+released exiting cards (`TransitionDirector.tsx`). Deleted with the v1 transition
+subsystem. With it gone, the `CardRegistry`'s default-policy auto-activate on
+register is now the only thing that drives lifecycle (cards go
+**Spawning** → **Active**; nothing arms the registry or marks cards **Exiting**
+any more). v2 navigation uses the **Hero morph** / **Physical default** rule
+instead of a coordinator.
 _Avoid_: transition manager (drift), router controller (routing belongs
-to react-router-dom; the **Director** consumes location changes, doesn't
-own routing).
+to react-router-dom).
 
 **CardLayer**:
 The React layer mounted once at app root (inside `CanvasLayout`) that
@@ -365,11 +370,11 @@ selector-stability reasons; the React component is `CardLayer`.
 _Avoid_: card list, card portal, physics layer (the prior name; misread
 the component as a layer of physics rather than a layer of cards).
 
-**Primitive**:
-A named animation step that runs during a route transition. Each is a
-`PrimitiveStep` — a per-tick function returning whether it has
-completed. Composed by the **Director** per the route's **PageDef**.
-Two families share the type:
+**Primitive** _(RETIRED — task-025 / ADR-0007)_:
+Was a named animation step that ran during a v1 route transition — a
+`PrimitiveStep` per-tick function composed by the **Director**. Deleted with the
+v1 transition subsystem. Documented here for older notes; v2 has no transition
+primitives. Two families shared the type:
 
 - **Body primitive** — drives **Card** bodies through the
   **BodyDriver** seam. Examples: `pour-in-drop`, `string-cut-drop`,
@@ -560,13 +565,19 @@ _Avoid_: group, cluster.
 **Hero morph / Physical default**:
 The two v2 navigation transitions (replacing the retired v1 transition system,
 ADR-0007). **Hero morph** = a clicked **Card** expands/reflows into the destination
-**content box**, via the **browser-native View Transitions API** driven by
-`react-router`'s `viewTransition` Link prop + `useViewTransitionState` (the
-task-019 spike chose this over `react@experimental` `<ViewTransition>` and the
-`canvas/flip.ts` FLIP — see ADR-0007); unsupported browsers fall back to a plain
-client nav. **Physical default** = a lightweight directional box slide/crossfade
-for chrome-originated nav (frame bar, back/forward, direct URL) where there is no
-source **Card** to morph from.
+**content box**, via the **browser-native View Transitions API**
+(`navigate(href, { viewTransition: true })`; the task-019 spike chose this over
+`react@experimental` `<ViewTransition>` and the `canvas/flip.ts` FLIP — see
+ADR-0007). The shared `view-transition-name` is driven by an explicit
+**morph-target signal** (`nav/morph.ts`), NOT `useViewTransitionState` — that hook
+matches a transition's from- AND to-location and so can't tell the morph's source
+box from its destination (the duplicate name aborts the transition). Unsupported
+browsers fall back to a plain client nav. **Physical default** = a lightweight
+crossfade (a directional slide is parked for the task-030 capstone) for any nav
+with no source **Card** to morph from — chrome-originated nav (frame bar,
+back/forward, direct URL) and a **direct Portal word-click** (`PortalNav`
+upgrades the raw prose `<a>` from a full reload to a client crossfade nav; the
+morph stays the Card's "enter").
 _Avoid_: page transition (too generic); the retired primitive names (anchor-slide,
 pour-in-drop, etc.).
 

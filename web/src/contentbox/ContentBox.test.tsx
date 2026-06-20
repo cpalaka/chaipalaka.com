@@ -1,8 +1,19 @@
 import { describe, test, expect, beforeAll } from 'vitest'
 import { render } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { PhysicsProvider, usePhysicsWorld } from '../physics/PhysicsContext'
 import type { PhysicsWorld } from '../physics/PhysicsWorld'
 import { ContentBox } from './ContentBox'
+
+// ContentBox uses useLocation/useViewTransitionState (hero-morph destination
+// naming + focus), which need a data router — the kind vite-react-ssg uses.
+function renderRouted(node: React.ReactNode) {
+    const router = createMemoryRouter(
+        [{ path: '/', element: <>{node}</> }],
+        { initialEntries: ['/'] },
+    )
+    return render(<RouterProvider router={router} />)
+}
 
 // jsdom/happy-dom give every element a zero rect; give the box a real one so the
 // edge bodies it registers are non-degenerate.
@@ -27,7 +38,7 @@ function renderInWorld(ui: React.ReactNode) {
         world = usePhysicsWorld()
         return null
     }
-    const utils = render(
+    const utils = renderRouted(
         <PhysicsProvider>
             <Capture />
             {ui}
@@ -72,7 +83,7 @@ describe('ContentBox', () => {
             world = usePhysicsWorld()
             return null
         }
-        const { unmount } = render(
+        const { unmount } = renderRouted(
             <PhysicsProvider>
                 <Capture />
                 <ContentBox>

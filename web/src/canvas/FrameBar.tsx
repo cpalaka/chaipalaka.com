@@ -64,6 +64,7 @@ export function FrameBar() {
             <div className="frame-bar__title">
                 <Link
                     to="/"
+                    viewTransition
                     className="frame-bar__site-name"
                     data-active={pathname === '/' ? 'true' : 'false'}
                 >
@@ -81,6 +82,7 @@ export function FrameBar() {
                     <Link
                         key={s.path}
                         to={s.path}
+                        viewTransition
                         className="frame-bar__nav-btn"
                         data-active={isActiveRoute(pathname, s.path) ? 'true' : 'false'}
                     >

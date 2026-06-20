@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Page, type CardContent } from '../../card/Page'
-import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { ReadingSubstrate } from '../../contentbox/ReadingSubstrate'
 import { CONTENT_BOX_HEIGHT } from '../../contentbox/ContentBox'
 import type { PageDef } from '../PageDef'
@@ -61,7 +60,6 @@ export default function BoxTest() {
         }),
         [],
     )
-    useRegisterPageDef(pageDef)
 
     return (
         <>
@@ -150,6 +148,14 @@ export default function BoxTest() {
                         </a>
                     </sup>{' '}
                     is a Pocket: its card is the whole note, with nowhere to enter.
+                </p>
+                <p>
+                    A Portal has somewhere to go. Pin{' '}
+                    <a data-link-type="portal" href="/test/box-b">
+                        the destination box
+                    </a>{' '}
+                    and click its card to take the last rung — enter — and watch
+                    the card expand and reflow into the page it was previewing.
                 </p>
 
                 <h2 id="regimes">Two regimes</h2>

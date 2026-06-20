@@ -4,12 +4,11 @@ import { PhysicsProvider } from '../physics/PhysicsContext'
 import { FrameBar } from '../canvas/FrameBar'
 import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
-import { TransitionDirector } from '../transitions/TransitionDirector'
 import { CardLayer } from '../card/CardLayer'
 import { CardRegistryProvider } from '../card/CardRegistry'
-import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
-import { pageDefs } from '../routes/pageDefs'
-import { edges } from '../transitions/transitionOverrides'
+import { RouteAnnouncer } from '../nav/RouteAnnouncer'
+import { LadderReset } from '../nav/LadderReset'
+import { PortalNav } from '../nav/PortalNav'
 import { AtelierGate } from '../atelier/AtelierGate'
 import { ContentBox } from '../contentbox/ContentBox'
 import { PeekProvider } from '../peek/PeekContext'
@@ -24,7 +23,8 @@ import './ContentBoxLayout.css'
  * shader (BackgroundCanvas) / content box (ContentBox, wrapping the route's
  * prose) / foreground cards (CardLayer + StringLayer). Mirrors CanvasLayout's
  * provider stack; the route's prose renders inside the fixed box via the Outlet.
- * (The v1 TransitionDirector is reused as-is for now; slice 6 retires it.)
+ * Navigation transitions are the v2 hero morph / physical default (ADR-0007) —
+ * the retired v1 TransitionDirector is gone.
  */
 export default function ContentBoxLayout() {
     const { edge } = useFrameEdge()
@@ -32,27 +32,26 @@ export default function ContentBoxLayout() {
     return (
         <PhysicsProvider>
             <CardRegistryProvider>
-                <PageDefRegistryProvider>
-                    <TransitionDirector pageDefs={pageDefs} edges={edges}>
-                        <PeekProvider>
-                            <PinProvider>
-                                <div data-layout="contentbox" data-frame-edge={edge}>
-                                    <BackgroundCanvas />
-                                    <ContentBox>
-                                        <Outlet />
-                                    </ContentBox>
-                                    <CardLayer />
-                                    <PinLayer />
-                                    <PeekLayer />
-                                    <StringLayer />
-                                    <FrameBar />
-                                    <PeekTriggers />
-                                    <AtelierGate />
-                                </div>
-                            </PinProvider>
-                        </PeekProvider>
-                    </TransitionDirector>
-                </PageDefRegistryProvider>
+                <PeekProvider>
+                    <PinProvider>
+                        <div data-layout="contentbox" data-frame-edge={edge}>
+                            <BackgroundCanvas />
+                            <ContentBox>
+                                <Outlet />
+                            </ContentBox>
+                            <CardLayer />
+                            <PinLayer />
+                            <PeekLayer />
+                            <StringLayer />
+                            <FrameBar />
+                            <PeekTriggers />
+                            <PortalNav />
+                            <AtelierGate />
+                            <RouteAnnouncer />
+                            <LadderReset />
+                        </div>
+                    </PinProvider>
+                </PeekProvider>
             </CardRegistryProvider>
         </PhysicsProvider>
     )

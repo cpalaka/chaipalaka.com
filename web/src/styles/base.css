@@ -375,3 +375,43 @@ a[data-link-type='external']::after {
     font-size: 0.85em;
     color: var(--color-fg-faint);
 }
+
+/* ── v2 navigation transitions: hero morph + physical default (ADR-0007) ──────
+   View Transitions live in base.css (head-loaded on every route): the
+   ::view-transition pseudo-elements only resolve from a global, non-code-split
+   stylesheet — a component sheet would load too late for the transition overlay.
+   The transitions are runtime-only (post-hydration), so prerender is unaffected.
+
+   Hero morph: a clicked Portal card and the destination content box share the
+   `morph-hero` view-transition-name (set in JS only while that nav is in flight,
+   so sibling cards never collide), and the UA tweens the group between them.
+   Timing matches canvas/flip.ts (340ms / the standard ease) so v2 motion is of
+   a piece. */
+::view-transition-group(morph-hero) {
+    animation-duration: 340ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Physical default: chrome-originated nav (frame bar, browser back/forward,
+   direct URL) has no source card to morph from, so the whole page takes a light
+   crossfade — v1's transition spirit without the card-swarm machinery. On a hero
+   morph the card/box are pulled out as their own group, so this crossfades only
+   the surrounding chrome/background. (popstate back/forward is synchronous and
+   does not trigger a view transition; this covers in-app Link nav. The richer
+   directional slide is deferred to the capstone design pass, task-030.) */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reduced motion: no morph, no crossfade — content swaps instantly (same
+   content, no disorienting movement). Per ADR-0008 this is the per-motion CSS
+   gate; with the v1 Director retired there is no central place to host it. */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}

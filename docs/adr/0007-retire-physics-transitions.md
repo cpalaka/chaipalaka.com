@@ -1,7 +1,7 @@
 # ADR 0007: Retire the v1 physics route-transition system
 
 **Date:** 2026-06-19
-**Status:** Accepted (design — implementation not started)
+**Status:** Accepted — implemented in task-025 (2026-06-20)
 **Task:** task-017
 **Spec:** `docs/superpowers/specs/2026-06-18-v2-gwern-physics-design.md` §10
 **Supersedes:** the route-transition designs from issues #21 / #81 / #22
@@ -114,3 +114,51 @@ slice; routes `/spike/morph` + `/spike/morph/:id`), against the **prod
   `viewTransition` prop requires the data router, which `vite-react-ssg` already uses.
 - `router.back()` / browser back-forward do **not** trigger view transitions
   (popstate is synchronous) — the physical default covers those navs anyway.
+
+---
+
+## Implementation (task-025, 2026-06-20)
+
+Shipped exactly the spike approach:
+
+- **Retired** the whole `web/src/transitions/` subsystem (Director, dispatch,
+  classifyDirection, PageDefRegistry, the four primitives, `transitionOverrides`,
+  `TransitionSpec`, + tests). `PageDef` collapsed to `= PageSpec`; both layouts
+  dropped the Director + registry; the four routes dropped `useRegisterPageDef`.
+  Blog section pagination's `useHashSection`/`parseSectionHash` were *relocated*
+  (not deleted) to `routes/blog/hashSection.ts`, decoupled from the Director — a
+  section change now just re-renders the chain (no animation). The orphaned
+  `routes/pageDefs.ts` aggregation went too.
+- **Hero morph** (`web/src/nav/morph.ts` → `useMorphSource` /
+  `useMorphDestination`): `PreviewCard` / `PinnedCard` swapped
+  `window.location.href` for `navigate(href, { viewTransition: true })`.
+  **Key subtlety (cost a debugging round):** the shared
+  `view-transition-name: morph-hero` is NOT driven by `useViewTransitionState` —
+  that hook matches a transition's *from* AND *to* location, so the **source**
+  content box (path = the from-location) claims the name alongside the clicked
+  card at the old snapshot → two elements, one name → Chrome aborts the
+  transition and swaps instantly. Instead an explicit **morph-target signal** (a
+  module `Controller` holding the path being morphed into) names source vs
+  destination unambiguously: the card is named only while it has not yet arrived
+  (`target === to && pathname !== to`, old snapshot only), the box only when it
+  IS the target (`target === pathname`, new snapshot only); `enter()` `flushSync`s
+  the card's name on before navigating. The target is never cleared on the route
+  change — every clear races the destination snapshot capture (a route-change
+  effect fires inside react-router's `flushSync`; a `requestAnimationFrame` fires
+  mid-transition — both before the new snapshot) — it is overwritten by the next
+  `enter`. Verified in-browser that the morph-hero group animates its full
+  (slowed) duration and `transition.ready` resolves.
+- **Physical default**: `viewTransition` on the FrameBar chrome links → a root
+  crossfade in `base.css` (the directional slide is deferred to the task-030
+  capstone). Reduced-motion + morph timing (340ms, matching `flip.ts`) are CSS in
+  head-loaded `base.css`. A **direct Portal word-click** also takes the physical
+  default: `PortalNav` (`web/src/nav/PortalNav.tsx`) delegates clicks on raw
+  prose `<a data-link-type="portal">`, upgrading the unmodified desktop left-click
+  from a full reload to `usePhysicalNav` (a client crossfade) — the `<a href>`
+  stays real for no-JS / crawlers / open-in-new-tab, and touch tap still peeks.
+- **A11y**: a persistent `RouteAnnouncer` (aria-live) mounted in both layouts;
+  `ContentBox` moves focus to the destination `<h1>` (`tabIndex=-1`) on route
+  change. Both verified to survive the morph and the no-VT fallback.
+- The task-019 spike (`routes/spike/*`, `/spike/morph`) was deleted with the slice.
+- Demo surface: a second content-box route `/test/box-b` is the morph destination
+  for `/test/box` (the `/blog` content-box rollout is task-026).

@@ -1,5 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { usePhysicsWorld } from '../physics/PhysicsContext'
+import { HERO_NAME, useMorphDestination } from '../nav/morph'
 import './ContentBox.css'
 
 // Fixed pixel size, shared with the foreground card anchor math so cards can be
@@ -22,6 +24,33 @@ interface ContentBoxProps {
 export function ContentBox({ children }: ContentBoxProps) {
     const world = usePhysicsWorld()
     const ref = useRef<HTMLDivElement>(null)
+    const { pathname } = useLocation()
+
+    // The box claims the shared hero name ONLY while it is the in-flight morph
+    // destination (the page just arrived at) — never on the source page, where
+    // it would collide with the clicked card's name (both are the same persistent
+    // ContentBox element). The browser then pairs the old clicked-card snapshot
+    // with the new box snapshot and morphs. (`useViewTransitionState` can't be
+    // used here — it matches both the from- and to-location; see nav/morph.ts.)
+    const isMorphDestination = useMorphDestination()
+
+    // Focus-follow: on a route change (NOT the initial load — don't steal focus)
+    // move focus to the destination box's heading, mirroring the spike. Runs one
+    // frame after the route commits so the new prose is in the DOM. preventScroll
+    // keeps the focus call from fighting the morph animation.
+    const firstMount = useRef(true)
+    useEffect(() => {
+        if (firstMount.current) {
+            firstMount.current = false
+            return
+        }
+        const raf = requestAnimationFrame(() => {
+            ref.current
+                ?.querySelector<HTMLHeadingElement>('h1')
+                ?.focus({ preventScroll: true })
+        })
+        return () => cancelAnimationFrame(raf)
+    }, [pathname])
 
     useEffect(() => {
         const el = ref.current
@@ -51,7 +80,11 @@ export function ContentBox({ children }: ContentBoxProps) {
             ref={ref}
             className="content-box"
             data-content-box
-            style={{ width: CONTENT_BOX_WIDTH, height: CONTENT_BOX_HEIGHT }}
+            style={{
+                width: CONTENT_BOX_WIDTH,
+                height: CONTENT_BOX_HEIGHT,
+                viewTransitionName: isMorphDestination ? HERO_NAME : undefined,
+            }}
         >
             <div className="content-box__scroll">{children}</div>
         </div>

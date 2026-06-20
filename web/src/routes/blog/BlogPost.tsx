@@ -1,10 +1,8 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { Card } from '../../card/Card'
-import { useRegisterPageDef } from '../../transitions/PageDefRegistry'
 import { getPosts } from '../../blog/posts'
 import { mdxComponents } from '../../blog/components/mdx-components'
-import type { PageDef } from '../PageDef'
 import './BlogPost.css'
 
 const posts = getPosts()
@@ -22,22 +20,6 @@ export default function BlogPost() {
     const { slug } = useParams<{ slug: string }>()
     const post = posts.find((p) => p.slug === slug)
     const [dims, setDims] = useState<CardDims | null>(null)
-
-    const pageDef = useMemo<PageDef>(
-        () => ({
-            gravity: 'down',
-            cards: [
-                {
-                    id: `post-${slug}`,
-                    kind: 'blog',
-                    parent: null,
-                    anchor: (vp) => ({ x: vp.width / 2, y: vp.height / 2 }),
-                },
-            ],
-        }),
-        [slug],
-    )
-    useRegisterPageDef(pageDef)
 
     useEffect(() => {
         const update = () => {

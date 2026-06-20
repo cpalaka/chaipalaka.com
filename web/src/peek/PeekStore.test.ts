@@ -63,4 +63,17 @@ describe('PeekStore', () => {
         s.open(portal('b'))
         expect(cb).toHaveBeenCalledTimes(3)
     })
+
+    it('clear drops every entry and notifies once; a no-op when empty', () => {
+        const s = new PeekStore()
+        s.open(portal('a'))
+        s.open(portal('b'))
+        const cb = vi.fn()
+        s.subscribe(cb)
+        s.clear()
+        expect(s.snapshot()).toHaveLength(0)
+        expect(cb).toHaveBeenCalledTimes(1)
+        s.clear()
+        expect(cb).toHaveBeenCalledTimes(1) // empty → no notify
+    })
 })

@@ -218,6 +218,19 @@ The frame bar is the persistent app-shell chrome. It replaces the original "cont
 
 ### Route transitions — `TransitionDirector`
 
+> **SUPERSEDED (task-025 / ADR-0007).** The v1 `TransitionDirector` + primitive
+> system described below was **retired** in task-025 (the `transitions/` subsystem
+> was deleted). v2 navigation is one rule at nav time: if a clicked Portal **Card**
+> is the source, a **hero morph** — the card expands/reflows into the destination
+> **content box** via the browser-native View Transitions API (react-router's
+> `viewTransition` Link prop + `useViewTransitionState`, a shared
+> `view-transition-name`); otherwise (chrome-originated nav — frame bar,
+> back/forward, direct URL) a lightweight **physical default** (root crossfade).
+> Reduced-motion is a per-motion CSS gate in `base.css` (no central Director); a
+> persistent SR route announcer ships in each layout; unsupported browsers fall
+> back to plain client nav. The text below is retained as the v1 historical
+> record. Canonical v2 design: ADR-0005–0008 + the v2 spec §10.
+
 Designed 2026-05-12. Slice 21 ships T1/T2/T3 (cross-route); slice 21b ships T4 (within-page sections); slice 22 ships `shared-element-morph`.
 
 - **Hybrid mechanism per case.** Not a single transition system:

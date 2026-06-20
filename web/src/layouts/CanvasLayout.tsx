@@ -6,12 +6,9 @@ import { PhysicsProvider } from '../physics/PhysicsContext'
 import { FrameBar } from '../canvas/FrameBar'
 import { StringLayer } from '../canvas/StringLayer'
 import { useFrameEdge } from '../canvas/useFrameEdge'
-import { TransitionDirector } from '../transitions/TransitionDirector'
 import { CardLayer } from '../card/CardLayer'
 import { CardRegistryProvider } from '../card/CardRegistry'
-import { PageDefRegistryProvider } from '../transitions/PageDefRegistry'
-import { pageDefs } from '../routes/pageDefs'
-import { edges } from '../transitions/transitionOverrides'
+import { RouteAnnouncer } from '../nav/RouteAnnouncer'
 import { AtelierGate } from '../atelier/AtelierGate'
 import { useController } from '../state/useController'
 import { getRedropKey } from './redropKey'
@@ -32,22 +29,19 @@ export default function CanvasLayout() {
     return (
         <PhysicsProvider>
             <CardRegistryProvider>
-                <PageDefRegistryProvider>
-                    <TransitionDirector pageDefs={pageDefs} edges={edges}>
-                        <div
-                            data-layout="canvas"
-                            data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
-                            data-frame-edge={edge}
-                        >
-                            <BackgroundCanvas />
-                            <CardLayer key={redropKey} />
-                            <StringLayer />
-                            <FrameBar />
-                            <Outlet />
-                            <AtelierGate />
-                        </div>
-                    </TransitionDirector>
-                </PageDefRegistryProvider>
+                <div
+                    data-layout="canvas"
+                    data-canvas-marker={CANVAS_ONLY_BUNDLE_MARKER}
+                    data-frame-edge={edge}
+                >
+                    <BackgroundCanvas />
+                    <CardLayer key={redropKey} />
+                    <StringLayer />
+                    <FrameBar />
+                    <Outlet />
+                    <AtelierGate />
+                    <RouteAnnouncer />
+                </div>
             </CardRegistryProvider>
         </PhysicsProvider>
     )

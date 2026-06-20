@@ -2,7 +2,16 @@ import { describe, test, expect } from 'vitest'
 import { render, act } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import { useHashSection } from './useHashSection'
+import { parseSectionHash, useHashSection } from './hashSection'
+
+describe('parseSectionHash', () => {
+    test('#sN → N; absent / unrecognised → 1', () => {
+        expect(parseSectionHash('#s3')).toBe(3)
+        expect(parseSectionHash('')).toBe(1)
+        expect(parseSectionHash('#nope')).toBe(1)
+        expect(parseSectionHash('#s0')).toBe(1)
+    })
+})
 
 function Capture({
     onAPI,

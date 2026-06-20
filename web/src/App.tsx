@@ -199,32 +199,24 @@ export const routes: RouteRecord[] = [
         },
     },
     {
-        // task-019 throwaway spike — hero-morph mechanism proof. Delete with the spike.
-        path: '/spike/morph',
+        // Second content-box route — the hero-morph destination demoed against
+        // /test/box (a Portal card there morphs into this box). The /blog rollout
+        // onto the content box is task-026.
+        path: '/test/box-b',
         lazy: async () => {
-            const { default: SpikeLayout } =
-                await import('./routes/spike/SpikeLayout')
-            return { Component: SpikeLayout }
+            const { default: ContentBoxLayout } =
+                await import('./layouts/ContentBoxLayout')
+            return { Component: ContentBoxLayout }
         },
-        entry: 'src/routes/spike/SpikeLayout.tsx',
+        entry: 'src/layouts/ContentBoxLayout.tsx',
         children: [
             {
                 index: true,
                 lazy: async () => {
-                    const { default: MorphList } =
-                        await import('./routes/spike/MorphList')
-                    return { Component: MorphList }
+                    const { default: BoxB } = await import('./routes/test/BoxB')
+                    return { Component: BoxB }
                 },
-                entry: 'src/routes/spike/MorphList.tsx',
-            },
-            {
-                path: ':id',
-                lazy: async () => {
-                    const { default: MorphDetail } =
-                        await import('./routes/spike/MorphDetail')
-                    return { Component: MorphDetail }
-                },
-                entry: 'src/routes/spike/MorphDetail.tsx',
+                entry: 'src/routes/test/BoxB.tsx',
             },
         ],
     },

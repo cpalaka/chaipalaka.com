@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { PinnedCard } from './PinnedCard'
 import type { PinEntry } from './PinStore'
@@ -16,11 +17,22 @@ function makeWord(text = 'source word'): HTMLAnchorElement {
 }
 
 function renderPin(entry: PinEntry) {
-    return render(
-        <PhysicsProvider>
-            <PinnedCard entry={entry} />
-        </PhysicsProvider>,
+    // useViewTransitionState (via useMorphSource in PinnedCard) needs a data
+    // router — the same kind vite-react-ssg uses in prod.
+    const router = createMemoryRouter(
+        [
+            {
+                path: '/',
+                element: (
+                    <PhysicsProvider>
+                        <PinnedCard entry={entry} />
+                    </PhysicsProvider>
+                ),
+            },
+        ],
+        { initialEntries: ['/'] },
     )
+    return render(<RouterProvider router={router} />)
 }
 
 const base = {
