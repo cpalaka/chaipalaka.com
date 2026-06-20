@@ -498,8 +498,14 @@ external annotation).
 
 **Pocket**:
 A **Ladder** link with no page — a footnote / aside / definition whose **Card**
-*is* the content (peek → keep, no enter). Its static floor is a real inline
-disclosure.
+*is* the content (peek → keep, no enter). Its static floor (task-021) is a real
+inline disclosure: an authored GFM footnote (`[^1]`) is rewritten by
+`rehype-pocket-footnotes` into a `<details class="pocket" data-pocket-id="…">`
+(zero-JS toggle, native SR disclosure semantics). The `data-pocket-id` + the
+`.pocket__body` content is the **card-lift hook** — the DOM seam the **Ladder**
+reads to lift a Pocket into a **preview/pinned card**. The same plugin runs in the
+page MDX pipeline and the RSS generator, so one footnote renders one disclosure
+everywhere.
 _Avoid_: Type-2; footnote (a footnote is one kind of Pocket; the term is broader);
 tooltip.
 

@@ -62,3 +62,20 @@ clean source to transclude from.
   layer, and the reduced-motion gate on the sim.
 - Reuses: the no-JS prerender path and the `/blog/:slug/read` reader (ADR-0004),
   generalized into the content-box static substrate.
+
+## Implementation (task-021, the static-floor pipeline)
+
+Decisions 1 + 3 above are shipped (no physics yet):
+
+- **Footnotes:** `remark-gfm` parses `[^1]` syntax; a custom `rehype-pocket-footnotes`
+  plugin rewrites each definition into a `<details class="pocket" data-pocket-id>`
+  disclosure. The `data-pocket-id` + `.pocket__body` is the **card-lift hook** the
+  ladder reads from the DOM. `<details>/<summary>` chosen over `<button aria-expanded>`
+  so the floor toggles with zero JS (SR exposes native expanded state).
+- **Links:** `rehype-link-types` marks prose `<a>` as `portal` (internal) or
+  `external` (absolute http(s), gets `target=_blank rel=noopener noreferrer` + icon).
+- **RSS:** option (a) — `vite-plugin-feeds` compiles the MDX body to HTML via the same
+  two rehype plugins, so footnotes render in `content:encoded`. MDX **JSX components**
+  (`Callout`, `Figure`) are not evaluated in the feed and drop out (known limitation).
+- The same two rehype plugins run in both the page MDX pipeline (`vite.config.ts`) and
+  the feed generator — one authored footnote → one disclosure everywhere.

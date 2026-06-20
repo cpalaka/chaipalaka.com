@@ -1,10 +1,10 @@
 ---
 id: TASK-021
 title: v2 — Portal/Pocket content model + static floor
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-20 12:42'
 labels:
   - claude-generated
   - v2
@@ -27,18 +27,24 @@ The authored content model + accessible static floor (spec sections 3/11/13, ADR
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An MDX post with Portal links + Pocket footnotes renders correct accessible static HTML (real anchors; disclosure with aria-expanded)
-- [ ] #2 Pocket footnote content appears as rendered HTML in RSS (not raw MDX)
-- [ ] #3 Each Pocket exposes the card-lift data hook for the ladder
-- [ ] #4 Keyboard + SR: Portal navigates, Pocket toggles inline (verified)
+- [x] #1 An MDX post with Portal links + Pocket footnotes renders correct accessible static HTML (real anchors; disclosure with aria-expanded)
+- [x] #2 Pocket footnote content appears as rendered HTML in RSS (not raw MDX)
+- [x] #3 Each Pocket exposes the card-lift data hook for the ladder
+- [x] #4 Keyboard + SR: Portal navigates, Pocket toggles inline (verified)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Portal/Pocket static-floor pipeline shipped. remark-gfm + rehype-pocket-footnotes (<details data-pocket-id> disclosure, card-lift hook) + rehype-link-types (portal/external), shared by the page MDX pipeline and the RSS generator (compileBodyToHtml). <details> over button (zero-JS floor). RSS renders footnotes, omits MDX JSX components (known limitation). All 4 ACs verified incl. agent-browser keyboard/disclosure pass. Card-lift hook pinned to task-022.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->

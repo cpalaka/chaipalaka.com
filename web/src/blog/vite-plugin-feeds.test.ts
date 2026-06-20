@@ -29,16 +29,16 @@ describe('escapeXml', () => {
 describe('buildRss', () => {
     const base = 'https://example.com'
 
-    it('emits an empty channel when given no posts', () => {
-        const xml = buildRss([], base)
+    it('emits an empty channel when given no posts', async () => {
+        const xml = await buildRss([], base)
         expect(xml).toContain('<channel>')
         expect(xml).toContain('<title>chaipalaka.com</title>')
         expect(xml).toContain(`<link>${base}</link>`)
         expect(xml).not.toContain('<item>')
     })
 
-    it('renders one item with escaped fields for a single post', () => {
-        const xml = buildRss(
+    it('renders the post body as HTML (not raw markdown) in content:encoded', async () => {
+        const xml = await buildRss(
             [
                 {
                     slug: 'hello',
@@ -56,7 +56,27 @@ describe('buildRss', () => {
             `<pubDate>${new Date('2026-01-15').toUTCString()}</pubDate>`,
         )
         expect(xml).toContain('<guid isPermaLink="true">')
-        expect(xml).toContain('<content:encoded><![CDATA[# body]]>')
+        expect(xml).toContain('<content:encoded><![CDATA[<h1>body</h1>]]>')
+    })
+
+    it('renders Pocket footnotes as disclosure HTML in the feed', async () => {
+        const xml = await buildRss(
+            [
+                {
+                    slug: 'fn',
+                    title: 'Notes',
+                    description: 'd',
+                    date: '2026-01-15',
+                    body: 'A claim[^1].\n\n[^1]: The note body.\n',
+                },
+            ],
+            base,
+        )
+        expect(xml).toContain('<details')
+        expect(xml).toContain('data-pocket-id="1"')
+        expect(xml).toContain('The note body.')
+        // raw footnote markdown must not survive into the feed
+        expect(xml).not.toContain('[^1]')
     })
 })
 

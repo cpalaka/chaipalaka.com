@@ -398,6 +398,32 @@ architectural change worth its own ADR (§20).
   static highlight only; morph = crossfade; snap-to-edge/dwell/arm/dissolve =
   instant. A new reduced-motion short-circuit in the sim is required.
 
+> **Resolved — slice 2 / task-021 (the static-floor pipeline, shipped).** The
+> "pick one" choices above are decided and built:
+> - **Footnote parsing:** `remark-gfm` (GFM `[^1]` syntax) added to the MDX
+>   `remarkPlugins`. A custom **`rehype-pocket-footnotes`** plugin then rewrites
+>   the footnote hast into the Pocket floor: each definition becomes a
+>   `<details class="pocket" data-pocket-id="…">` disclosure (the inline `<sup>`
+>   reference anchor is preserved). `data-pocket-id` + `.pocket__body` is the
+>   **card-lift hook** slice 4's ladder reads from the DOM.
+> - **Disclosure mechanism:** `<details>/<summary>` (chosen over `<button
+>   aria-expanded>`) — it toggles with **zero JS**, so the no-JS source-of-truth
+>   floor is fully functional; SR exposes native `DisclosureTriangle [expanded]`
+>   state. (AC#1's "aria-expanded" = "announces expanded state," met natively.)
+> - **Link types:** a custom **`rehype-link-types`** plugin classifies prose
+>   `<a>` by href — internal → `data-link-type="portal"`; absolute http(s) →
+>   `data-link-type="external"` + `target=_blank rel="noopener noreferrer"` + an
+>   out-arrow icon. In-page `#` anchors (TOC/heading/footnote) are left alone.
+> - **RSS:** option **(a)** — `vite-plugin-feeds` now compiles the MDX body to
+>   HTML (`compileBodyToHtml`, the *same* two rehype plugins) for
+>   `content:encoded`, so footnotes render as disclosures in the feed. Custom MDX
+>   **JSX components** (`Callout`, `Figure`, …) are **not** evaluated in the feed
+>   (no React runtime there) — they drop out rather than ship as raw source.
+>   Known limitation; a future follow-up if feed-rendered callouts are wanted.
+> - **Responsive sidenote split:** the inline `<details>` floor is the baseline;
+>   the desktop margin-sidenote *visual* fidelity is deferred to the capstone
+>   design pass (§15), with `.pocket` as the restyle seam.
+
 ### Focus & SR semantics (review P1 — was entirely missing)
 
 The interaction model's hardest a11y question. Minimum decisions (the codebase

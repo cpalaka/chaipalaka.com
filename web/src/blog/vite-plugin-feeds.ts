@@ -2,6 +2,34 @@ import type { Plugin } from 'vite'
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import matter from 'gray-matter'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
+import remarkRehype from 'remark-rehype'
+import { toHtml } from 'hast-util-to-html'
+import type { Root } from 'hast'
+import { rehypePocketFootnotes } from './rehype-pocket-footnotes'
+import { rehypeLinkTypes } from './rehype-link-types'
+
+const mdProcessor = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypePocketFootnotes)
+    .use(rehypeLinkTypes)
+
+/**
+ * Compiles a post's markdown body to HTML for the RSS `<content:encoded>`, using
+ * the SAME Pocket-footnote + link-type transforms as the page (spec §11) so one
+ * authored footnote renders one disclosure everywhere. MDX JSX components
+ * (`<Callout>`, `<Figure>`, …) are not evaluated here — a feed reader has no React
+ * runtime — so they drop out rather than ship as raw source. Footnotes and links,
+ * being plain markdown, survive as real HTML.
+ */
+export async function compileBodyToHtml(body: string): Promise<string> {
+    const tree = (await mdProcessor.run(mdProcessor.parse(body))) as Root
+    return toHtml(tree)
+}
 
 interface FeedsOptions {
     baseUrl: string
@@ -50,22 +78,28 @@ async function collectPosts(
     )
 }
 
-export function buildRss(posts: PostMeta[], baseUrl: string): string {
-    const items = posts
-        .map((p) => {
-            const link = `${baseUrl}/blog/${p.slug}`
-            const pubDate = new Date(p.date).toUTCString()
-            return `
+export async function buildRss(
+    posts: PostMeta[],
+    baseUrl: string,
+): Promise<string> {
+    const items = (
+        await Promise.all(
+            posts.map(async (p) => {
+                const link = `${baseUrl}/blog/${p.slug}`
+                const pubDate = new Date(p.date).toUTCString()
+                const content = await compileBodyToHtml(p.body)
+                return `
   <item>
     <title>${escapeXml(p.title)}</title>
     <link>${link}</link>
     <description>${escapeXml(p.description)}</description>
     <pubDate>${pubDate}</pubDate>
     <guid isPermaLink="true">${link}</guid>
-    <content:encoded><![CDATA[${p.body}]]></content:encoded>
+    <content:encoded><![CDATA[${content}]]></content:encoded>
   </item>`
-        })
-        .join('')
+            }),
+        )
+    ).join('')
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -113,7 +147,7 @@ export function vitePluginFeeds(options: FeedsOptions): Plugin {
 
             await writeFile(
                 join(outDir, 'rss.xml'),
-                buildRss(posts, options.baseUrl),
+                await buildRss(posts, options.baseUrl),
                 'utf-8',
             )
             await writeFile(

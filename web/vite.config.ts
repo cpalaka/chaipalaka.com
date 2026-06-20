@@ -5,10 +5,13 @@ import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 import remarkMdxImages from 'remark-mdx-images'
+import remarkGfm from 'remark-gfm'
 import rehypePrettyCode from 'rehype-pretty-code'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import { remarkExtractToc } from './src/blog/remark-extract-toc'
+import { rehypePocketFootnotes } from './src/blog/rehype-pocket-footnotes'
+import { rehypeLinkTypes } from './src/blog/rehype-link-types'
 import { vitePluginFeeds } from './src/blog/vite-plugin-feeds'
 import { vitePluginAtelier } from './src/atelier/vite-plugin-atelier'
 import { readdir, readFile, stat } from 'node:fs/promises'
@@ -123,12 +126,15 @@ export default defineConfig({
                     remarkFrontmatter,
                     remarkMdxFrontmatter,
                     remarkMdxImages,
+                    remarkGfm,
                     remarkExtractToc,
                 ],
                 rehypePlugins: [
                     rehypeSlug,
                     [rehypeAutolinkHeadings, { behavior: 'wrap' }] as any,
                     [rehypePrettyCode, { theme: 'github-dark' }] as any,
+                    rehypePocketFootnotes,
+                    rehypeLinkTypes,
                 ],
             }),
         },

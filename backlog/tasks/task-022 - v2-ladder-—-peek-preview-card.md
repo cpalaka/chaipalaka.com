@@ -4,7 +4,7 @@ title: v2 ladder — peek (preview card)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-20 12:34'
 labels:
   - claude-generated
   - v2
@@ -33,6 +33,12 @@ The first ladder rung end-to-end (spec section 4). Desktop: hover-dwell (~200-30
 - [ ] #3 Keyboard users can open + read a preview via focus/Enter
 - [ ] #4 Reduced-motion path verified (instant placed preview, no fall)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Card-lift hook from task-021 (shipped): Pocket footnotes render in the DOM as <details class="pocket" data-pocket-id="…"> with the note content in .pocket__body. Peek lifts a Pocket by reading these from the static DOM (querySelectorAll('details.pocket[data-pocket-id]')). Plugins: web/src/blog/rehype-pocket-footnotes.ts (+ rehype-link-types.ts for Portal/external). See ADR-0008 §Implementation + spec §11 Resolved.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
