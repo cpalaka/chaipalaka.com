@@ -118,6 +118,54 @@ describe('PhysicsWorld.setContentBox — resize (G6 translate-pair / i111)', () 
     })
 })
 
+describe('PhysicsWorld.setContentBox — auto-park ease hand-off (task-024)', () => {
+    test('a card edge-tethered seamlessly then eased to taut settles held just below the edge, finite and bounded', () => {
+        // Mirrors PinnedCard.parkAt: on auto-park, swap to an edge tether started
+        // at the card's live distance (overshoot ≈ 0, spike finding 4) then ease
+        // the rest length down to taut (spike G3). Sensor-isolated so the rope/
+        // ease is measured without bottom-wall contact (the spike's method).
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 1200 } })
+        world.setContentBox(BOX) // bottom edge anchor at {400, 300}
+        // Auto-park fires while the card is still tracking its word at the fold
+        // boundary, so it starts *near* the edge it exits through — not far away.
+        const card = world.registerById(
+            'parked',
+            { x: 400, y: 360 },
+            { width: 120, height: 80 },
+        )
+        world.setSensor(card, true)
+
+        const edge = world.contentBoxBottomHandle!
+        const edgePos = world.getPosition(edge)
+        const edgeAnchor = world.getAnchor(edge) // {400, 300}
+        const seamless = Math.abs(360 - edgeAnchor.y) // 60 — overshoot ≈ 0 at swap
+        const th = world.tether.add(edge, card, seamless, {
+            x: 400 - edgePos.x,
+            y: edgeAnchor.y - edgePos.y,
+        })
+
+        const parkRest = 80 / 2 + 8 // h/2 + pinTuning.parkGapPx = 48
+        let len = seamless
+        let maxDist = 0
+        for (let i = 0; i < 400; i++) {
+            len += (parkRest - len) * 0.2 // pinTuning.snapEaseRate at 60fps
+            world.tether.setLength(th, len)
+            world.tick(DT)
+            const p = world.getPosition(card)
+            expect(Number.isFinite(p.x) && Number.isFinite(p.y)).toBe(true)
+            maxDist = Math.max(maxDist, Math.abs(p.y - edgeAnchor.y))
+        }
+
+        const dist = world.getPosition(card).y - edgeAnchor.y
+        // Hangs below the edge (positive), held taut near the eased rest length —
+        // the soft one-sided rope sags a bounded amount below `parkRest`, never
+        // the thousands of px a slack/free-falling rope would (spike F2).
+        expect(dist).toBeGreaterThanOrEqual(parkRest)
+        expect(dist).toBeLessThan(parkRest + 160)
+        expect(maxDist).toBeLessThan(400) // pulled up and held; never flung off
+    })
+})
+
 describe('PhysicsWorld.setContentBox(null) — teardown', () => {
     test('clearing removes the edges; handles go away and a body falls through', () => {
         const world = makeWorld()

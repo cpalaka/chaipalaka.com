@@ -82,6 +82,41 @@ a.pin-card__body:hover {
     border-radius: 2px;
 }
 
+/*
+ * Recallable: the word of a *parked* card is back in the fold, so clicking it
+ * recalls the card. This needs a distinct, click-suggesting treatment separate
+ * from the transient hover emphasis above — a bare highlight reads as emphasis,
+ * not a button (spec §5 review P1). Placeholder, token-separable (the capstone,
+ * §15, refines the look): a pointer cursor, a small tether-stub dot trailing the
+ * word ("a rope hangs here"), and a brief one-shot pulse on each scroll-back.
+ */
+.pin-word--recallable {
+    cursor: pointer;
+    background: color-mix(in srgb, var(--color-accent, currentColor) 14%, transparent);
+    border-radius: 2px;
+    text-decoration-thickness: 2px;
+    animation: pin-recall-pulse 1.1s ease-out 2;
+}
+.pin-word--recallable::after {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-left: 0.28em;
+    vertical-align: 0.08em;
+    border-radius: 50%;
+    background: var(--color-accent, currentColor);
+}
+@keyframes pin-recall-pulse {
+    from {
+        box-shadow: 0 0 0 0
+            color-mix(in srgb, var(--color-accent, currentColor) 45%, transparent);
+    }
+    to {
+        box-shadow: 0 0 0 7px transparent;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     /* Wobble is JS-gated off under reduced motion; this is belt-and-braces so any
      * residual transform on the host doesn't animate. The persistent .pin-word
@@ -89,5 +124,10 @@ a.pin-card__body:hover {
     .pin-wobble {
         transform: none !important;
         will-change: auto;
+    }
+    /* The recall affordance stays discoverable (cursor + dot), but its pulse —
+     * the only motion — is gated off (AC#4). */
+    .pin-word--recallable {
+        animation: none;
     }
 }

@@ -535,15 +535,20 @@ _Avoid_: word body (it is a proxy for the word, not the word), anchor (too gener
 
 **Word-anchored / Edge-anchored**:
 The two anchor regimes of a **pinned card**. **Word-anchored** = tethered to its
-source word, tracking scroll. **Edge-anchored** = tethered to a top/bottom viewport
-edge (the parked state, reusing the ceiling/floor parent **Tether**).
+source word, tracking scroll. **Edge-anchored** = tethered to the **content box**'s
+top/bottom edge (the parked state; reuses the ceiling/floor edge-tether kind via the
+`box-top`/`box-bottom` parent, not the viewport floor/ceiling). The per-card regime
+machine is the pure `pin/scrollRegime.ts` (task-024).
 _Avoid_: floating/fixed (ambiguous), docked.
 
 **Auto-park / Recall**:
 The two regime transitions. **Auto-park** = the automatic word→edge transition when
-a **pinned card**'s source word scrolls past the fold (it parks at the edge the
-word exited through). **Recall** = the manual edge→word return: scroll the word
-back (it keeps a persistent highlight), click it to bring the **Card** home with a
+a **pinned card**'s source word scrolls past the fold (the content box's visible
+region; it parks at the edge the word exited through). Dragging the card past an edge
+parks it the same way (manual drag-to-edge). The swap is one-way (hysteresis): the
+edge tether starts at the card's live distance then eases to taut (ADR-0006 G3).
+**Recall** = the manual edge→word return: scroll the word back (it keeps a distinct,
+click-suggesting persistent highlight), click it to bring the **Card** home with a
 hysteresis ease. Recall is never automatic — no yo-yo.
 _Avoid_: collapse/dock (for auto-park), restore/un-park (for recall).
 

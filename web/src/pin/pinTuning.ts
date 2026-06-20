@@ -28,6 +28,18 @@ export const pinTuning = {
     /** Clamp on the wobble drive so a hard fling can't over-throw the word
      * (≈ wobbleMaxDrive/wobbleStiffness px steady-state ceiling). */
     wobbleMaxDrive: 900,
+
+    /** Scroll regimes (slice 5 — task-024). */
+    /** Hysteresis deadband (px) past a fold edge before a card auto-parks, so a
+     * word straddling the edge can't thrash the regime (spike G3 / scrollRegime). */
+    foldMarginPx: 24,
+    /** Gap (px) added below the parked rest length so the card hangs just clear of
+     * the box edge it docks to (parked rest = card half-height + this). */
+    parkGapPx: 8,
+    /** Per-16.7ms exponential factor for easing a tether length to taut on
+     * auto-park and on recall — the snap-to-edge / ease-home motion. ~0.2
+     * settles in ~250ms (the spec's 200–300ms band). Reduced-motion skips it. */
+    snapEaseRate: 0.2,
 }
 
 export type PinTuning = typeof pinTuning

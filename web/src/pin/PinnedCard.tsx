@@ -5,6 +5,7 @@ import { physicsTuning } from '../physics/physicsTuning'
 import { computeFlingImpulse } from '../card/flingImpulse'
 import { PinGesture } from './pinGesture'
 import { trackWord } from './wordAnchor'
+import { stepRegime, type Regime } from './scrollRegime'
 import { stepWobble, REST, type WobbleState } from './wobble'
 import { pinTuning } from './pinTuning'
 import type { PinEntry } from './PinStore'
@@ -39,8 +40,17 @@ function inRect(x: number, y: number, r: DOMRect): boolean {
  * pretext; real DOM text untouched). Title-bar press-hold re-drags the card; the
  * body click enters; hovering the card or word lights the whole **bonded trio**.
  *
+ * **Two anchor regimes (slice 5, §5):** while the source word is inside the
+ * content box's fold the card is *word-anchored* (above); when the word scrolls
+ * past the fold it **auto-parks** to the edge it exited through — a one-way
+ * (hysteresis) swap to an edge tether started seamlessly then eased taut (spike
+ * G3); a card dragged past an edge parks the same way. **Recall** is *manual*:
+ * scrolling the word back lights a distinct click-suggesting highlight on it, and
+ * clicking it eases the card home — never automatic, so cards never yo-yo.
+ *
  * Reduced-motion: the card is placed (frozen, no sway) but still tracks its word
- * on scroll; no wobble, static highlight (spec §11; AC#4).
+ * on scroll; park/recall are instant (no ease), no wobble, static highlight
+ * (spec §11; AC#4).
  */
 export function PinnedCard({ entry }: { entry: PinEntry }) {
     const world = usePhysicsWorld()
@@ -72,17 +82,19 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             world.setVelocity(cardHandle, { x: entry.vx ?? 0, y: entry.vy ?? 0 })
         }
 
-        // Word-anchor proxy + runtime tether (anchor = the word's centre).
+        // Word-anchor proxy + runtime tether (anchor = the word's centre). The
+        // tether handle and its live length are mutable: auto-park / recall swap
+        // the rope between the word and a box edge and ease its rest length.
         const first = trackWord(null, word.getBoundingClientRect())
         const startAnchor = first
             ? first.anchor
             : { x: entry.center.x, y: entry.center.y - h }
         const anchorHandle = world.registerAnchor(startAnchor)
-        const length = Math.hypot(
+        const wordRest = Math.hypot(
             entry.center.x - startAnchor.x,
             entry.center.y - startAnchor.y,
         )
-        const tetherHandle = world.tether.add(anchorHandle, cardHandle, length)
+        let tetherHandle = world.tether.add(anchorHandle, cardHandle, wordRest)
 
         // Wobble host: wrap the word's contents in a single inline-block span so a
         // transform animates without touching the real text (SR/selection/copy)
@@ -98,16 +110,147 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         // Reduced motion: place the card (frozen, no sway); it still tracks scroll.
         if (reduced) world.setDragging(cardHandle, true)
 
-        // Per-frame, before forces: translate-pair (G1) + wobble.
+        // --- Scroll-regime state (slice 5 — task-024) ------------------------
+        // Plain closures, kept off the React render path (transient per-frame
+        // values): `regime` is the word ⇄ edge anchor state, `prevAnchor` feeds
+        // the translate-pair, `curLen` the live tether rest length, `easeTarget`
+        // its goal while a snap/recall ease runs (null = settled), `recallable`
+        // whether the parked word is back in the fold, `hot` the hover state.
+        const boxEl = document.querySelector('[data-content-box]')
+        let regime: Regime = 'word'
         let prevAnchor = first ? first.anchor : null
+        let curLen = wordRest
+        let easeTarget: number | null = null
+        let recallable = false
+        let hot = false
+
+        // The fold is the content box's visible region (viewport space); absent
+        // (no box) or non-finite (mid-transform, G4) → no parking this frame.
+        const readFold = (): { top: number; bottom: number } | null => {
+            const r = boxEl?.getBoundingClientRect()
+            return r && Number.isFinite(r.top) && Number.isFinite(r.bottom)
+                ? { top: r.top, bottom: r.bottom }
+                : null
+        }
+        const ropePath = () =>
+            document.querySelector(`path[data-tether-handle="${tetherHandle}"]`)
+
+        // Auto-park / drag-to-edge: swap the word tether for an edge tether,
+        // started at the card's live distance (seamless, overshoot ≈ 0 — spike
+        // finding 4) then eased to taut (G3). Reduced-motion teleports the frozen
+        // card instead, since a static body can't be pulled by the rope.
+        const parkAt = (next: 'parked-top' | 'parked-bottom'): void => {
+            const edgeHandle =
+                next === 'parked-top'
+                    ? world.contentBoxTopHandle
+                    : world.contentBoxBottomHandle
+            if (edgeHandle === undefined) return // no box edge → stay word-anchored
+            const cardPos = world.getPosition(cardHandle)
+            const edgePos = world.getPosition(edgeHandle)
+            const edgeAnchor = world.getAnchor(edgeHandle)
+            world.tether.remove(tetherHandle)
+            curLen = Math.abs(cardPos.y - edgeAnchor.y)
+            tetherHandle = world.tether.add(edgeHandle, cardHandle, curLen, {
+                x: cardPos.x - edgePos.x,
+                y: edgeAnchor.y - edgePos.y,
+            })
+            regime = next
+            const parkRest = h / 2 + pinTuning.parkGapPx
+            if (reduced) {
+                world.setPosition(cardHandle, {
+                    x: cardPos.x,
+                    y: edgeAnchor.y + parkRest,
+                })
+                curLen = parkRest
+                world.tether.setLength(tetherHandle, curLen)
+                easeTarget = null
+            } else {
+                easeTarget = parkRest
+            }
+            if (hot) ropePath()?.classList.add('string-layer__string--hot')
+        }
+
+        // Recall (manual, hysteresis): only when parked AND the word is back in
+        // the fold. Re-anchor to the word and ease home; reduced-motion snaps.
+        const recall = (): void => {
+            if (regime === 'word' || !recallable) return
+            const t = trackWord(null, word.getBoundingClientRect())
+            if (!t) return
+            world.tether.remove(tetherHandle)
+            world.setPosition(anchorHandle, t.anchor)
+            const cardPos = world.getPosition(cardHandle)
+            curLen = Math.hypot(cardPos.x - t.anchor.x, cardPos.y - t.anchor.y)
+            tetherHandle = world.tether.add(anchorHandle, cardHandle, curLen)
+            regime = 'word'
+            prevAnchor = t.anchor
+            recallable = false
+            word.classList.remove('pin-word--recallable')
+            if (reduced) {
+                world.setPosition(cardHandle, {
+                    x: t.anchor.x,
+                    y: t.anchor.y + wordRest,
+                })
+                curLen = wordRest
+                world.tether.setLength(tetherHandle, curLen)
+                easeTarget = null
+            } else {
+                easeTarget = wordRest
+            }
+            if (hot) ropePath()?.classList.add('string-layer__string--hot')
+        }
+
+        // Per-frame, before forces: regime step → translate-pair (G1) while
+        // word-anchored, or a parked hold; then the length ease and the wobble.
         const stopTick = world.onBeforeTick((dt) => {
             const tracked = trackWord(prevAnchor, word.getBoundingClientRect())
             if (tracked) {
-                world.setPosition(anchorHandle, tracked.anchor)
-                if (tracked.delta.x !== 0 || tracked.delta.y !== 0) {
-                    world.translate(cardHandle, tracked.delta)
+                const fold = readFold()
+                if (regime === 'word') {
+                    // Word-anchored: translate-pair (G1, no anchor-delta clamp).
+                    world.setPosition(anchorHandle, tracked.anchor)
+                    if (tracked.delta.x !== 0 || tracked.delta.y !== 0) {
+                        world.translate(cardHandle, tracked.delta)
+                    }
+                    prevAnchor = tracked.anchor
+                    if (fold) {
+                        const step = stepRegime(
+                            regime,
+                            tracked.anchor.y,
+                            fold,
+                            pinTuning.foldMarginPx,
+                        )
+                        if (step.justParked) {
+                            parkAt(step.regime as 'parked-top' | 'parked-bottom')
+                        }
+                    }
+                } else {
+                    // Parked: the card hangs from the edge — do NOT translate it.
+                    // Keep prevAnchor fresh so a later recall re-bootstraps cleanly
+                    // and offer recall once the word scrolls back into the fold.
+                    prevAnchor = tracked.anchor
+                    if (fold) {
+                        const step = stepRegime(
+                            regime,
+                            tracked.anchor.y,
+                            fold,
+                            pinTuning.foldMarginPx,
+                        )
+                        if (step.recallable !== recallable) {
+                            recallable = step.recallable
+                            word.classList.toggle('pin-word--recallable', recallable)
+                        }
+                    }
                 }
-                prevAnchor = tracked.anchor
+            }
+            // Snap-to-edge / ease-home: relax the tether length toward its goal.
+            if (easeTarget !== null) {
+                const k = Math.min(1, pinTuning.snapEaseRate * (dt / 16.667))
+                curLen += (easeTarget - curLen) * k
+                if (Math.abs(curLen - easeTarget) < 0.5) {
+                    curLen = easeTarget
+                    easeTarget = null
+                }
+                world.tether.setLength(tetherHandle, curLen)
             }
             if (!reduced && world.has(cardHandle)) {
                 const vel = world.getVelocity(cardHandle)
@@ -128,11 +271,10 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
 
         // Bonded-trio highlight: hovering the card OR the word lights all three.
         const setHot = (on: boolean) => {
+            hot = on
             el.classList.toggle('pin-card--hot', on)
             word.classList.toggle('pin-word--hot', on)
-            document
-                .querySelector(`path[data-tether-handle="${tetherHandle}"]`)
-                ?.classList.toggle('string-layer__string--hot', on)
+            ropePath()?.classList.toggle('string-layer__string--hot', on)
         }
         const onEnter = () => setHot(true)
         const onLeave = () => setHot(false)
@@ -140,6 +282,17 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         el.addEventListener('pointerleave', onLeave)
         word.addEventListener('pointerenter', onEnter)
         word.addEventListener('pointerleave', onLeave)
+
+        // Clicking a recallable word recalls its parked card. Capture-phase so it
+        // pre-empts the link's navigation / the peek trigger; a no-op otherwise.
+        const onWordClick = (e: MouseEvent) => {
+            if (regime !== 'word' && recallable) {
+                e.preventDefault()
+                e.stopPropagation()
+                recall()
+            }
+        }
+        word.addEventListener('click', onWordClick, true)
 
         const enter = () => {
             if (entry.kind === 'portal' && entry.href) window.location.href = entry.href
@@ -176,6 +329,20 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                     return
                 }
                 world.setDragging(cardHandle, false)
+                // Drag-to-edge: releasing the card past a fold edge re-anchors it
+                // there — the manual counterpart of auto-park (spec §5).
+                const fold = readFold()
+                if (regime === 'word' && fold) {
+                    const pos = world.getPosition(cardHandle)
+                    if (pos.y < fold.top - pinTuning.foldMarginPx) {
+                        parkAt('parked-top')
+                        return
+                    }
+                    if (pos.y > fold.bottom + pinTuning.foldMarginPx) {
+                        parkAt('parked-bottom')
+                        return
+                    }
+                }
                 const impulse = computeFlingImpulse(
                     { dx: lastDx, dy: lastDy, dtMs: lastDt },
                     upT - lastT,
@@ -246,6 +413,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             el.removeEventListener('pointerleave', onLeave)
             word.removeEventListener('pointerenter', onEnter)
             word.removeEventListener('pointerleave', onLeave)
+            word.removeEventListener('click', onWordClick, true)
             setHot(false)
             world.tether.remove(tetherHandle)
             if (world.has(cardHandle)) world.unregister(cardHandle)
@@ -255,7 +423,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 word.insertBefore(wobbleSpan.firstChild, wobbleSpan)
             }
             wobbleSpan.remove()
-            word.classList.remove('pin-word', 'pin-word--hot')
+            word.classList.remove('pin-word', 'pin-word--hot', 'pin-word--recallable')
         }
         // entry.id is the stable identity; other entry fields are captured once at pin.
         // eslint-disable-next-line react-hooks/exhaustive-deps

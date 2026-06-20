@@ -73,6 +73,31 @@ describe('PeekTriggers — desktop dwell', () => {
     })
 })
 
+describe('PeekTriggers — already-pinned word is inert (task-024)', () => {
+    // A word that already has a pinned card must not re-peek: a fresh preview on
+    // it can be kept again, double-pinning the same word (two tethers + nested
+    // wobble spans). PinnedCard marks the source word with `pin-word`.
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('does NOT open a preview on dwell when the word is already pinned', () => {
+        mockMatchMedia(true)
+        renderBox()
+        portalLink().classList.add('pin-word')
+        fireEvent.pointerOver(portalLink(), { clientX: 100, clientY: 100 })
+        vi.advanceTimersByTime(300)
+        expect(store.snapshot()).toHaveLength(0)
+    })
+
+    it('does NOT open a preview on tap when the word is already pinned', () => {
+        mockMatchMedia(false)
+        renderBox()
+        portalLink().classList.add('pin-word')
+        fireEvent.pointerDown(portalLink())
+        expect(store.snapshot()).toHaveLength(0)
+    })
+})
+
 describe('PeekTriggers — mobile tap', () => {
     it('a tap on the link opens a preview (no hover/dwell)', () => {
         mockMatchMedia(false)

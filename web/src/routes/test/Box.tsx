@@ -15,6 +15,8 @@ const toc: TocEntry[] = [
     { depth: 2, text: 'Three planes of depth', slug: 'planes' },
     { depth: 2, text: 'Edges that hold', slug: 'edges' },
     { depth: 2, text: 'The ladder starts here', slug: 'ladder' },
+    { depth: 2, text: 'Two regimes', slug: 'regimes' },
+    { depth: 2, text: 'Parking and recall', slug: 'recall' },
 ]
 
 const cardContent: Record<string, CardContent> = {
@@ -70,7 +72,12 @@ export default function BoxTest() {
                     itself was the toy. v2 keeps the toy but relocates it from
                     the substrate into the interaction. Each route is now a
                     fixed, readable surface floating over the shader, and the
-                    play moves into the links.
+                    play moves into the act of{' '}
+                    <a data-link-type="portal" href="/blog/hello-world">
+                        following a link
+                    </a>
+                    . Pin that link and scroll: its card rides along, then parks
+                    at an edge once the word leaves the fold.
                 </p>
 
                 <h2 id="relocation">The relocation</h2>
@@ -143,6 +150,51 @@ export default function BoxTest() {
                         </a>
                     </sup>{' '}
                     is a Pocket: its card is the whole note, with nowhere to enter.
+                </p>
+
+                <h2 id="regimes">Two regimes</h2>
+                <p>
+                    A pinned card lives in one of two states. While its source
+                    word is on screen it is word-anchored: the rope hangs from
+                    the word and the whole card rides the scroll, swinging a
+                    little as the column moves. The word itself wobbles, a small
+                    transform-only spring, so the bond reads as physical rather
+                    than incidental.
+                </p>
+                <p>
+                    The other state is edge-anchored — parked. When the word
+                    scrolls out of the box the card cannot sensibly follow it off
+                    screen, so it re-homes to the edge the word left through and
+                    hangs there, viewport-fixed, waiting. The hand-off is meant
+                    to be quiet: the rope re-aims at the edge and settles taut
+                    without a lurch.
+                </p>
+
+                <h2 id="recall">Parking and recall</h2>
+                <p>
+                    Parking is automatic and one-way. Recall is not: a parked
+                    card never comes back on its own, because a card that
+                    yo-yoed across the fold on every small scroll would be
+                    unbearable. Instead you scroll the word back into view, where
+                    it picks up a distinct, click-suggesting mark, and you click
+                    it. The card eases home along its rope.
+                </p>
+                <p>
+                    That asymmetry — leave on a threshold, return on a deliberate
+                    click — is the whole trick. It keeps a wall of parked cards
+                    from accumulating noise while still making every one of them
+                    reachable. Try it: pin{' '}
+                    <a data-link-type="portal" href="/blog/draft-second-card">
+                        this link
+                    </a>
+                    , scroll until it parks at the bottom, then scroll back and
+                    click the word to bring it home.
+                </p>
+                <p>
+                    None of this is the final look. The surface is placeholder
+                    typography on token-separable styling; the one impeccable
+                    design pass comes last, over the working whole, so the
+                    mechanism is proven before a single colour is chosen.
                 </p>
 
                 <div className="pocket-notes">

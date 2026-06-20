@@ -77,6 +77,43 @@ describe('Tether add/remove', () => {
     })
 })
 
+describe('Tether setLength', () => {
+    test('mutates the rest length used by applyRopeForces', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 200 }, 5)
+        const tether = new Tether(src)
+        const h = tether.add(1, 2, 200) // taut at exactly length → no force
+        tether.applyRopeForces()
+        expect(src.forces).toHaveLength(0)
+
+        tether.setLength(h, 100) // shorten → overshoot 100 → pull-only force
+        tether.applyRopeForces()
+        const f = src.totalForceOn(2)
+        expect(f.y).toBeCloseTo(-100 * physicsTuning.tetherStiffness * 5, 10)
+    })
+
+    test('setLength of an unknown handle is a no-op', () => {
+        const src = new FakeBodyForceSource()
+        const tether = new Tether(src)
+        expect(() => tether.setLength(999, 50)).not.toThrow()
+    })
+
+    test('setLength does NOT notify structural subscribers (per-frame ease is off the React path)', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 200 }, 5)
+        const tether = new Tether(src)
+        const h = tether.add(1, 2, 200)
+        let fired = 0
+        tether.subscribeChange(() => {
+            fired++
+        })
+        tether.setLength(h, 100)
+        expect(fired).toBe(0)
+    })
+})
+
 describe('Tether subscribeChange', () => {
     test('callback fires on add', () => {
         const src = new FakeBodyForceSource()

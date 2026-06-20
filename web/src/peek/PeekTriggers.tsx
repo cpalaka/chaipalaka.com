@@ -147,6 +147,10 @@ function attach(store: PeekStore): () => void {
     }
 
     function openFor(trigger: HTMLElement) {
+        // A word that already has a pinned card must not re-peek (task-024): a
+        // fresh preview could be kept again, double-pinning the same word — two
+        // tethers + nested wobble spans. PinnedCard marks its source `pin-word`.
+        if (trigger.classList.contains('pin-word')) return
         const spec = buildSpec(trigger, !hoverable)
         if (!spec) return
         trigger.classList.remove('peek-dwelling')
@@ -175,6 +179,7 @@ function attach(store: PeekStore): () => void {
         const target = (e.target as Element | null)?.closest<HTMLElement>(TRIGGER_SELECTOR)
         if (!target || target === dwellTrigger) return
         if (heldTrigger === target) return // already showing for this source
+        if (target.classList.contains('pin-word')) return // already pinned — no re-peek
         dwellTrigger = target
         dwell.start(e.clientX, e.clientY)
     }

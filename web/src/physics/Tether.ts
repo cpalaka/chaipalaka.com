@@ -104,6 +104,19 @@ export class Tether {
     }
 
     /**
+     * Set a tether's rest length in place — used by the auto-park / recall ease
+     * (spike G3: relax the parked length to taut). Deliberately does **not**
+     * `invalidate()`: `length` is read live per-frame by `list()`/
+     * `applyRopeForces`, while `subscribeChange` exists only to re-render the
+     * StringLayer when the *set* of tethers changes — easing length every frame
+     * must not churn React. Unknown handle is a no-op.
+     */
+    setLength(handle: TetherHandle, length: number): void {
+        const rec = this.records_.get(handle)
+        if (rec) rec.length = length
+    }
+
+    /**
      * Drop every tether record that references `body` as either parent or
      * child, returning the number removed. Called by `PhysicsWorld.unregister`
      * to enforce the invariant that no tether may reference a body the world

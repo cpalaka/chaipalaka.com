@@ -4,7 +4,7 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-20 11:46'
+updated_date: '2026-06-20 20:34'
 labels:
   - claude-generated
   - v2
@@ -43,6 +43,8 @@ The capstone visual design pass over the working v2 spine (spec section 15), dec
 
 <!-- SECTION:NOTES:BEGIN -->
 Token-name bug to fix during the reskin (found in task-020): ReadingSubstrate.css (and BlogPost.css) reference --text-sm/--text-xs/--text-2xl/--text-3xl, which do not exist in tokens.css (real names are --font-size-*). They resolve to nothing → those font-sizes inherit. Carried verbatim during the task-020 reader extraction to keep /blog/:slug/read byte-identical; correct to --font-size-* here.
+
+Parked/edge-anchored card *feel* is being reworked — see DRAFT-006 (high-priority, grill-first). task-024 shipped parking as a card that hangs/swings off the content-box edge (spec §6/ADR-0006); Chai wants a calmer parked representation. Coordinate the capstone visuals with that redesign, don't polish the current dangle.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
