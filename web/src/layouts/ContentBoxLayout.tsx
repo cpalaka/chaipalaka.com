@@ -12,6 +12,9 @@ import { pageDefs } from '../routes/pageDefs'
 import { edges } from '../transitions/transitionOverrides'
 import { AtelierGate } from '../atelier/AtelierGate'
 import { ContentBox } from '../contentbox/ContentBox'
+import { PeekProvider } from '../peek/PeekContext'
+import { PeekLayer } from '../peek/PeekLayer'
+import { PeekTriggers } from '../peek/PeekTriggers'
 import './ContentBoxLayout.css'
 
 /**
@@ -29,16 +32,20 @@ export default function ContentBoxLayout() {
             <CardRegistryProvider>
                 <PageDefRegistryProvider>
                     <TransitionDirector pageDefs={pageDefs} edges={edges}>
-                        <div data-layout="contentbox" data-frame-edge={edge}>
-                            <BackgroundCanvas />
-                            <ContentBox>
-                                <Outlet />
-                            </ContentBox>
-                            <CardLayer />
-                            <StringLayer />
-                            <FrameBar />
-                            <AtelierGate />
-                        </div>
+                        <PeekProvider>
+                            <div data-layout="contentbox" data-frame-edge={edge}>
+                                <BackgroundCanvas />
+                                <ContentBox>
+                                    <Outlet />
+                                </ContentBox>
+                                <CardLayer />
+                                <PeekLayer />
+                                <StringLayer />
+                                <FrameBar />
+                                <PeekTriggers />
+                                <AtelierGate />
+                            </div>
+                        </PeekProvider>
                     </TransitionDirector>
                 </PageDefRegistryProvider>
             </CardRegistryProvider>

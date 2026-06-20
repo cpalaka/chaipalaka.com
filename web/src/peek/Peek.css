@@ -1,0 +1,109 @@
+/*
+ * Peek preview styling. Builds on the v1 `.physics-card` chrome (bg, border,
+ * shadow, typography — all CSS custom properties) so the capstone design pass is
+ * a clean reskin, not a rewrite (spec §15). Only the peek-specific overrides and
+ * the entrance motion live here.
+ *
+ * The card's *position* is driven imperatively (held: a centred transform;
+ * falling: per-frame physics), so the entrance animates `scale`/`opacity` only —
+ * animating `transform` here would fight the inline transform.
+ */
+
+.peek-preview {
+    /* Above the content box and pinned cards; previews are the top plane. */
+    z-index: 20;
+    /* A preview is read/clicked, not grabbed — undo the card's grab affordances. */
+    cursor: default;
+    user-select: auto;
+    max-height: min(60vh, 420px);
+    transform-origin: center;
+    animation: peek-in 200ms cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+}
+
+.peek-preview[data-peek-side='right'] {
+    transform-origin: left center;
+}
+.peek-preview[data-peek-side='left'] {
+    transform-origin: right center;
+}
+
+/* Title bar reuses [data-card-header] from Card.css; just tighten the label. */
+.peek-preview__bar {
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+}
+
+.peek-preview__body {
+    display: block;
+    overflow-y: auto;
+    user-select: text;
+    font-size: var(--font-size-base, 15px);
+    line-height: 1.45;
+    color: var(--color-fg);
+}
+
+/* Portal body is the click/read zone — a real link to the destination. */
+a.peek-preview__body {
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-fg);
+}
+a.peek-preview__body:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+/* Pocket note body: inert reading region, scrollable when it overflows. */
+.peek-preview[data-peek-kind='pocket'] .peek-preview__body {
+    cursor: default;
+}
+.peek-preview__body > :first-child {
+    margin-top: 0;
+}
+.peek-preview__body > :last-child {
+    margin-bottom: 0;
+}
+
+/* While falling it is no longer interactive. */
+.peek-preview--falling {
+    pointer-events: none;
+}
+
+/* The "keep hovering" dwell hint on the source word — barely-there. */
+.peek-dwelling {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--color-accent, currentColor);
+    text-underline-offset: 0.2em;
+}
+
+@keyframes peek-in {
+    from {
+        opacity: 0;
+        scale: 0.96;
+    }
+    60% {
+        opacity: 1;
+        scale: 1.015;
+    }
+    to {
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+/* Reduced motion: instant placed preview, no entrance (spec §11). The fall is
+ * short-circuited in PreviewCard; this kills the entrance + the dwell hint. */
+.peek-preview--reduced,
+.peek-preview--reduced.peek-preview {
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .peek-preview {
+        animation: none;
+    }
+    .peek-dwelling {
+        text-decoration: none;
+    }
+}

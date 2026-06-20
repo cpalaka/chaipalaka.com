@@ -168,6 +168,33 @@ must **rewrite the card's pointer state machine** (title bar becomes the
 press-hold/arm/drag zone; body becomes a click-to-enter target with click-vs-drag
 disambiguation). Reuse is the *header DOM slot*; the interaction role is new.
 
+> **Resolved — slice 3 / task-022 (Peek, shipped).** The first rung is built as a
+> self-contained `web/src/peek/` subsystem (tested pure modules `peekGeometry`,
+> `peekContent`, `dwell` + a `PeekStore` Controller, `PeekContext`, `PeekLayer`,
+> `PreviewCard`, `PeekTriggers`), deliberately **separate from `CardRegistry`/
+> `CardImpl`** so slice 4's pointer-machine rewrite doesn't entangle it; Keep will
+> convert a preview into a real `CardEntry`.
+> - **Held preview = positioned DOM, no physics body** — it "holds still" (full
+>   physics only at pin, slice 4). **Dismiss** spawns a transient **sensor** body at
+>   the card's rect, kicks it along the route's cardinal gravity, and despawns it on
+>   viewport-clear or `peekTuning.fallMs` — the `stringCutDrop` cut→kick→fall pattern
+>   reused. **No runtime tether / `setDragging` hold is used**, so ADR-0006's
+>   runtime-tether-creation work stays in slice 4 as planned.
+> - **Portal lead** = the target post's `frontmatter.description` + title (the
+>   available one-line summary; blog-slug Portals only — non-blog Portals show
+>   title-only). No new frontmatter/pipeline field was added. **Pocket** lifts
+>   `details.pocket[data-pocket-id] .pocket__body` (the task-021 card-lift hook).
+> - **Mobile** = a single non-reflow bottom overlay (tap-to-open, tap-outside-
+>   dismiss); the multi-preview **bottom rail collects with the pinned cards**, so it
+>   is deferred to the Keep / scroll-regime slices.
+> - **Reduced-motion** = a local branch (instant placed preview, no entrance bounce,
+>   no fall), reusing `usePrefersReducedMotion`.
+> - **Feel tunables** (dwell, still-threshold, bridge grace, fall lifetime/kick) live
+>   in `web/src/peek/peekTuning.ts`, **not** `physicsTuning.ts` — the Atelier
+>   regenerates `physicsTuning.ts` whole and would drop unknown fields.
+> - Demoed on **`/test/box`** (the only live content-box route today); the `/blog`
+>   rollout is task-026.
+
 ## 5. Anchoring & scroll regimes
 
 ### Word-anchoring + per-word wobble — **[new] wobble, [reuse] pretext for geometry only**

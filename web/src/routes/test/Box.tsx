@@ -14,6 +14,7 @@ const toc: TocEntry[] = [
     { depth: 2, text: 'The relocation', slug: 'relocation' },
     { depth: 2, text: 'Three planes of depth', slug: 'planes' },
     { depth: 2, text: 'Edges that hold', slug: 'edges' },
+    { depth: 2, text: 'The ladder starts here', slug: 'ladder' },
 ]
 
 const cardContent: Record<string, CardContent> = {
@@ -123,6 +124,43 @@ export default function BoxTest() {
                     edges are viewport-fixed, so scrolling the prose inside the
                     box leaves them exactly where they are.
                 </p>
+
+                <h2 id="ladder">The ladder starts here</h2>
+                <p>
+                    Hover{' '}
+                    <a data-link-type="portal" href="/blog/hello-world">
+                        the first post
+                    </a>{' '}
+                    to peek its lead, or{' '}
+                    <a data-link-type="portal" href="/blog/draft-second-card">
+                        a second piece
+                    </a>{' '}
+                    beside it — a preview card spawns next to the word and holds
+                    still until you move away, when it falls. A footnote
+                    <sup>
+                        <a href="#user-content-fn-1" id="user-content-fnref-1">
+                            1
+                        </a>
+                    </sup>{' '}
+                    is a Pocket: its card is the whole note, with nowhere to enter.
+                </p>
+
+                <div className="pocket-notes">
+                    <details
+                        className="pocket"
+                        data-pocket-id="1"
+                        id="user-content-fn-1"
+                    >
+                        <summary className="pocket__summary">1</summary>
+                        <div className="pocket__body">
+                            <p>
+                                A Pocket has nowhere to step through to — the note
+                                itself is the content, lifted from this static
+                                disclosure into a preview card on peek.
+                            </p>
+                        </div>
+                    </details>
+                </div>
             </ReadingSubstrate>
             <Page pageDef={pageDef} cardContent={cardContent} />
         </>

@@ -1,10 +1,10 @@
 ---
 id: TASK-022
 title: v2 ladder — peek (preview card)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-20 12:34'
+updated_date: '2026-06-20 13:32'
 labels:
   - claude-generated
   - v2
@@ -28,24 +28,26 @@ The first ladder rung end-to-end (spec section 4). Desktop: hover-dwell (~200-30
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Hovering/tapping a link shows a readable preview (Portal lead / Pocket note) without occluding the source line; dismiss falls physically
-- [ ] #2 Dwell + safe-triangle bridge make the card reliably reachable; sweeping many links does not litter
-- [ ] #3 Keyboard users can open + read a preview via focus/Enter
-- [ ] #4 Reduced-motion path verified (instant placed preview, no fall)
+- [x] #1 Hovering/tapping a link shows a readable preview (Portal lead / Pocket note) without occluding the source line; dismiss falls physically
+- [x] #2 Dwell + safe-triangle bridge make the card reliably reachable; sweeping many links does not litter
+- [x] #3 Keyboard users can open + read a preview via focus/Enter
+- [x] #4 Reduced-motion path verified (instant placed preview, no fall)
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Card-lift hook from task-021 (shipped): Pocket footnotes render in the DOM as <details class="pocket" data-pocket-id="…"> with the note content in .pocket__body. Peek lifts a Pocket by reading these from the static DOM (querySelectorAll('details.pocket[data-pocket-id]')). Plugins: web/src/blog/rehype-pocket-footnotes.ts (+ rehype-link-types.ts for Portal/external). See ADR-0008 §Implementation + spec §11 Resolved.
+
+Peek rung shipped as a self-contained web/src/peek/ subsystem (peekGeometry/peekContent/dwell/PeekStore + PeekContext/PeekLayer/PreviewCard/PeekTriggers). Held preview = DOM, dismiss = transient sensor fall under route gravity (no runtime tether — slice-4 owns that). Portal lead = frontmatter.description+title; Pocket lift = details.pocket[data-pocket-id]. Mobile single overlay; reduced-motion local branch; tunables in peek/peekTuning.ts (separate from Atelier-regenerated physicsTuning). Decisions in spec §4 'Resolved — slice 3'. Demoed on /test/box (/blog rollout = task-026). Verified: typecheck + 819 tests + build (prerender) + secret-scan + agent-browser pass (all 4 ACs).
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->
