@@ -4,7 +4,7 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:19'
+updated_date: '2026-06-20 11:46'
 labels:
   - claude-generated
   - v2
@@ -39,7 +39,11 @@ The capstone visual design pass over the working v2 spine (spec section 15), dec
 - [ ] #2 Restyle touches styling/tokens only, no behavior regressions (spine tests green)
 <!-- AC:END -->
 
+## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
+Token-name bug to fix during the reskin (found in task-020): ReadingSubstrate.css (and BlogPost.css) reference --text-sm/--text-xs/--text-2xl/--text-3xl, which do not exist in tokens.css (real names are --font-size-*). They resolve to nothing → those font-sizes inherit. Carried verbatim during the task-020 reader extraction to keep /blog/:slug/read byte-identical; correct to --font-size-* here.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

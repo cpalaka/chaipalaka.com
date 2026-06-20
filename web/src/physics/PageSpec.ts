@@ -2,7 +2,15 @@ import type { Vec2, Viewport } from './PhysicsWorld'
 
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
 export type Buoyancy = 'heavy' | 'balloon'
-export type ParentRef = 'ceiling' | 'floor' | string | null
+// 'ceiling'/'floor' = the viewport edges; 'box-top'/'box-bottom' = the v2
+// content-box edges (the edge-anchored regime); any other string = a card id.
+export type ParentRef =
+    | 'ceiling'
+    | 'floor'
+    | 'box-top'
+    | 'box-bottom'
+    | string
+    | null
 export type CardKind =
     | 'lifelog'
     | 'blog'

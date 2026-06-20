@@ -89,3 +89,13 @@ commitment is gated on proof, not faith.
   the scroll-regime transitions, recall, and per-word wobble.
 - Reduced-motion must newly gate the physics sim (nothing does today) — ADR-0008,
   spec §11.
+- **G6 implemented for the content-box edges via `translate-pair`, not the
+  clamp (task-020, slice 1).** `PhysicsWorld.setContentBox` registers the box
+  rectangle as static edge walls (top/bottom tetherable, the edge regime) and,
+  on a resize move, translates every edge-anchored card by the same per-frame
+  delta as its edge. Translate-pair (not the clamp G6's other option) was chosen
+  because `setViewport`/`setContentBox` apply the edge move as a single
+  positional jump — there is no per-frame ramp to clamp — so the lower-scope,
+  spike-proven primary mechanism is the right fit. Box edges are viewport-fixed,
+  so this fires on resize only, never on scroll; the scroll case (G6 for the
+  viewport floor/ceiling under word-anchored cards) remains slice 5's.

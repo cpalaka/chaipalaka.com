@@ -13,6 +13,18 @@ export function resolveParent(
 ): { handle: PhysicsHandle; kind: TetherParentKind } | null {
     if (ref === 'ceiling') return { handle: world.ceilingHandle, kind: 'ceiling' }
     if (ref === 'floor') return { handle: world.floorHandle, kind: 'floor' }
+    // v2 content-box edges — the edge-anchored regime. Top is ceiling-like (a
+    // card hangs below it), bottom is floor-like; both reuse the static-edge
+    // branch of `wireTetherFor`. Null until a box is registered, so a card
+    // declared with a box parent retries (like a not-yet-registered card).
+    if (ref === 'box-top') {
+        const h = world.contentBoxTopHandle
+        return h !== undefined ? { handle: h, kind: 'ceiling' } : null
+    }
+    if (ref === 'box-bottom') {
+        const h = world.contentBoxBottomHandle
+        return h !== undefined ? { handle: h, kind: 'floor' } : null
+    }
     const h = world.getHandleById(ref)
     return h !== undefined ? { handle: h, kind: 'card' } : null
 }

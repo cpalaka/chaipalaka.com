@@ -459,9 +459,23 @@ supersede the v1 "page is a card swarm" framing for content routes. Full design:
 The fixed, solid, scrollable prose surface that is the protagonist of a v2 route —
 gwern-style dense reading content, floating over the background shader, with
 **Card**s in a foreground plane above it. Fixed DOM (not a physics body), but its
-edges participate in physics (cards collide with / tether to them).
+edges participate in physics (cards collide with / tether to them). Its rectangle
+is registered into the **PhysicsWorld** as four static walls via `setContentBox`
+(top/bottom are tetherable handles, the **Edge-anchored** regime; `'box-top'` /
+`'box-bottom'` **ParentRef**s resolve to them); on resize the box recentres and
+its edge-anchored cards are translate-paired with their edge (ADR-0006 G6).
 _Avoid_: panel, reader pane, article (the box is the whole reading surface, not
 one element in it).
+
+**Reading substrate**:
+The generic, presentational gwern-style reading shell — a sticky table of
+contents beside a prose column (`ReadingSubstrate`, the `.reader` grid). Effect-
+free so it prerenders as the no-JS floor. Generalised out of the blog plain
+reader so the **Content box** and the `/blog/:slug/read` plain reader share one
+substrate; the box supplies the chrome (fixed, solid, scrollable), the substrate
+supplies the reading layout.
+_Avoid_: reader (ambiguous with the route), plain reader (that is one consumer of
+the substrate, not the substrate).
 
 **Ladder**:
 The single v2 interaction: any meaningful link is one object at three escalating

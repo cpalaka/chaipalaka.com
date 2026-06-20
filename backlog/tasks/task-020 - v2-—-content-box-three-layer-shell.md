@@ -1,10 +1,10 @@
 ---
 id: TASK-020
 title: v2 — content box + three-layer shell
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-19 07:53'
-updated_date: '2026-06-19 09:17'
+updated_date: '2026-06-20 11:54'
 labels:
   - claude-generated
   - v2
@@ -25,21 +25,25 @@ Build the v2 content box (spec sections 6/8/11/14): one fixed, solid, scrollable
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A route renders gwern-style prose in a fixed solid scrollable box over the shader, with three planes of depth
-- [ ] #2 The box rect acts as physics walls (a test card collides with / can tether to its edges)
-- [ ] #3 No-JS/prerender renders the box prose statically (ADR-0004 floor preserved)
-- [ ] #4 Styling is token-separable (no hardcoded colors/spacing in components)
-- [ ] #5 Honors task-018 spike guardrail G6 (static-edge/i111): when setViewport moves the box floor/ceiling edge bodies on RESIZE, clamp the per-frame move or translate-pair edge-anchored cards so anchorA-relative tethers don't yank them. Box edges are viewport-fixed so this is resize-only, not scroll. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
+- [x] #1 A route renders gwern-style prose in a fixed solid scrollable box over the shader, with three planes of depth
+- [x] #2 The box rect acts as physics walls (a test card collides with / can tether to its edges)
+- [x] #3 No-JS/prerender renders the box prose statically (ADR-0004 floor preserved)
+- [x] #4 Styling is token-separable (no hardcoded colors/spacing in components)
+- [x] #5 Honors task-018 spike guardrail G6 (static-edge/i111): when setViewport moves the box floor/ceiling edge bodies on RESIZE, clamp the per-frame move or translate-pair edge-anchored cards so anchorA-relative tethers don't yank them. Box edges are viewport-fixed so this is resize-only, not scroll. See docs/spikes/2026-06-19-word-anchor-scroll-stability.md
 <!-- AC:END -->
 
+## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
+Shipped slice 1: PhysicsWorld.setContentBox static-wall API + G6 translate-pair on resize; Tether resolveParent box-top/box-bottom; ReadingSubstrate extraction (BlogPostReader consumes it, /blog/:slug/read byte-identical); ContentBox chrome + ContentBoxLayout + /test/box demo. Full gate green (778 tests, prerender ok, secret-scan clean); agent-browser visual pass confirmed 3 planes + collision + edge-tether + resize tracking. Pre-existing --text-* token bug flagged to task-030.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->

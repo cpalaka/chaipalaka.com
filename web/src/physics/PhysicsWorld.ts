@@ -21,6 +21,13 @@ export interface Viewport {
     height: number
 }
 
+export interface Rect {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 export interface PhysicsWorldOptions {
     viewport: Viewport
     insets?: { top: number; bottom: number }
@@ -49,6 +56,13 @@ interface Registration {
     id?: string
 }
 
+// One edge of the v2 content box's static-wall rectangle. Top/bottom edges are
+// registered (so they have a tetherable `handle`); side edges are collision-only.
+interface ContentBoxEdge {
+    body: Matter.Body
+    handle?: PhysicsHandle
+}
+
 const BODY_FRICTION_AIR = 0.005
 const FLOOR_THICKNESS = 60
 
@@ -63,6 +77,12 @@ export class PhysicsWorld implements BodyForceSource {
     private registrations = new Map<PhysicsHandle, Registration>()
     private byId = new Map<string, PhysicsHandle>()
     private gravityDir: Cardinal = 'down'
+    private contentBox: {
+        top: ContentBoxEdge
+        bottom: ContentBoxEdge
+        left: ContentBoxEdge
+        right: ContentBoxEdge
+    } | null = null
 
     readonly floorHandle: PhysicsHandle
     readonly ceilingHandle: PhysicsHandle
@@ -281,6 +301,143 @@ export class PhysicsWorld implements BodyForceSource {
             x: vp.width + hw,
             y: vp.height / 2,
         })
+    }
+
+    /**
+     * Register, move, or clear the v2 content box as a rectangle of static
+     * physics walls. The box is fixed DOM (not a simulated body), but its four
+     * edges are static collision walls and its top/bottom edges are tetherable
+     * parents (the edge-anchored regime — reusing the ceiling/floor branch in
+     * `wireTetherFor`). Pass `null` to remove it.
+     *
+     * Box edges are viewport-fixed, so this fires on mount and on resize, never
+     * on scroll. On a resize move, edge-anchored cards are translate-paired with
+     * their edge so the body-relative tether anchor does not yank them
+     * (guardrail G6 / the i111 regression — see {@link updateEdge}). The box is
+     * a fixed pixel size, so only its position changes; size-responsive boxes
+     * are a later slice's concern.
+     */
+    setContentBox(rect: Rect | null): void {
+        if (rect === null) {
+            if (this.contentBox) this.removeContentBox()
+            return
+        }
+        if (this.contentBox) {
+            this.moveContentBox(rect)
+        } else {
+            this.createContentBox(rect)
+        }
+    }
+
+    get contentBoxTopHandle(): PhysicsHandle | undefined {
+        return this.contentBox?.top.handle
+    }
+
+    get contentBoxBottomHandle(): PhysicsHandle | undefined {
+        return this.contentBox?.bottom.handle
+    }
+
+    // The four edge bars for a box rect. Horizontal top/bottom bars sit just
+    // inside the box (outer face on the box edge, surface anchor on the edge
+    // line); vertical side bars are collision-only.
+    private contentBoxEdges(rect: Rect) {
+        const hw = FLOOR_THICKNESS / 2
+        const cx = rect.x + rect.width / 2
+        const cy = rect.y + rect.height / 2
+        const right = rect.x + rect.width
+        const bottom = rect.y + rect.height
+        return {
+            top: { center: { x: cx, y: rect.y + hw }, anchor: { x: cx, y: rect.y } },
+            bottom: {
+                center: { x: cx, y: bottom - hw },
+                anchor: { x: cx, y: bottom },
+            },
+            left: { center: { x: rect.x + hw, y: cy } },
+            right: { center: { x: right - hw, y: cy } },
+            hSize: { width: rect.width, height: FLOOR_THICKNESS },
+            vSize: { width: FLOOR_THICKNESS, height: rect.height },
+        }
+    }
+
+    private createContentBox(rect: Rect): void {
+        const g = this.contentBoxEdges(rect)
+        this.contentBox = {
+            top: this.addEdge(g.top.center, g.hSize, g.top.anchor),
+            bottom: this.addEdge(g.bottom.center, g.hSize, g.bottom.anchor),
+            left: this.addEdge(g.left.center, g.vSize),
+            right: this.addEdge(g.right.center, g.vSize),
+        }
+    }
+
+    private moveContentBox(rect: Rect): void {
+        const cb = this.contentBox!
+        const g = this.contentBoxEdges(rect)
+        this.updateEdge(cb.top, g.top.center, g.top.anchor)
+        this.updateEdge(cb.bottom, g.bottom.center, g.bottom.anchor)
+        this.updateEdge(cb.left, g.left.center)
+        this.updateEdge(cb.right, g.right.center)
+    }
+
+    // Add one static edge bar. With an `anchor` it is registered (tetherable);
+    // without, it is collision-only (no handle), like the persistent side walls.
+    private addEdge(center: Vec2, size: CardSize, anchor?: Vec2): ContentBoxEdge {
+        const body = Matter.Bodies.rectangle(
+            center.x,
+            center.y,
+            size.width,
+            size.height,
+            { isStatic: true },
+        )
+        Matter.Composite.add(this.world, body)
+        if (!anchor) return { body }
+        const handle = this.nextId++
+        this.registrations.set(handle, {
+            body,
+            anchor: { ...anchor },
+            isStatic: true,
+            width: size.width,
+            height: size.height,
+            buoyancy: 'heavy',
+        })
+        return { body, handle }
+    }
+
+    private updateEdge(edge: ContentBoxEdge, center: Vec2, anchor?: Vec2): void {
+        if (edge.handle !== undefined) {
+            const dx = center.x - edge.body.position.x
+            const dy = center.y - edge.body.position.y
+            // G6 / i111: this edge is a static tether parent and the tether's
+            // `anchorA` is body-relative, so moving the edge by (dx,dy) shifts
+            // every child's rope origin by the same delta — a one-frame
+            // overshoot spike that would yank the child. Translate-pair: move
+            // each tethered child by the same delta so the rope vector stays
+            // invariant. (Box edges move on resize only, never on scroll.)
+            if (dx !== 0 || dy !== 0) {
+                for (const rec of this.tether.records()) {
+                    if (rec.parent !== edge.handle) continue
+                    const childReg = this.registrations.get(rec.child)
+                    if (childReg) {
+                        Matter.Body.translate(childReg.body, { x: dx, y: dy })
+                    }
+                }
+            }
+        }
+        Matter.Body.setPosition(edge.body, center)
+        if (edge.handle !== undefined && anchor) {
+            this.registrations.get(edge.handle)!.anchor = { ...anchor }
+        }
+    }
+
+    private removeContentBox(): void {
+        const cb = this.contentBox!
+        for (const edge of [cb.top, cb.bottom, cb.left, cb.right]) {
+            if (edge.handle !== undefined) {
+                this.tether.removeReferencing(edge.handle)
+                this.registrations.delete(edge.handle)
+            }
+            Matter.Composite.remove(this.world, edge.body)
+        }
+        this.contentBox = null
     }
 
     setBuoyancy(handle: PhysicsHandle, b: 'heavy' | 'balloon'): void {

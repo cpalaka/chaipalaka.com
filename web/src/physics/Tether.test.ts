@@ -351,10 +351,14 @@ describe('resolveParent', () => {
         ceilingHandle: PhysicsHandle
         floorHandle: PhysicsHandle
         registered: ReadonlyMap<string, PhysicsHandle>
+        contentBoxTopHandle?: PhysicsHandle
+        contentBoxBottomHandle?: PhysicsHandle
     }): PhysicsWorld {
         return {
             ceilingHandle: opts.ceilingHandle,
             floorHandle: opts.floorHandle,
+            contentBoxTopHandle: opts.contentBoxTopHandle,
+            contentBoxBottomHandle: opts.contentBoxBottomHandle,
             getHandleById: (id: string) => opts.registered.get(id),
         } as unknown as PhysicsWorld
     }
@@ -402,5 +406,42 @@ describe('resolveParent', () => {
             registered: new Map(),
         })
         expect(resolveParent(world, 'never-registered')).toBeNull()
+    })
+
+    test("'box-top' resolves to world.contentBoxTopHandle with kind 'ceiling'", () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+            contentBoxTopHandle: 11,
+            contentBoxBottomHandle: 12,
+        })
+        expect(resolveParent(world, 'box-top')).toEqual({
+            handle: 11,
+            kind: 'ceiling',
+        })
+    })
+
+    test("'box-bottom' resolves to world.contentBoxBottomHandle with kind 'floor'", () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+            contentBoxTopHandle: 11,
+            contentBoxBottomHandle: 12,
+        })
+        expect(resolveParent(world, 'box-bottom')).toEqual({
+            handle: 12,
+            kind: 'floor',
+        })
+    })
+
+    test("'box-bottom' resolves to null when no content box is registered", () => {
+        const world = makeWorldStub({
+            ceilingHandle: 7,
+            floorHandle: 8,
+            registered: new Map(),
+        })
+        expect(resolveParent(world, 'box-bottom')).toBeNull()
     })
 })

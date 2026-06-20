@@ -1,0 +1,24 @@
+/* The middle depth plane: a solid, opaque box centred over the shader. Width and
+   height are set inline (shared with the card anchor math). Styling is
+   token-separable — the capstone design pass reskins via these tokens. */
+.content-box {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    background: var(--color-bg);
+    border: var(--card-border-width) solid var(--color-fg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    /* Above the shader (z 0), below the strings (z 2) and cards (z 10) so
+       foreground cards overlap the box edges for depth. No transform / filter /
+       backdrop-filter: any of those would form a stacking context that traps
+       the cards behind the box. */
+    z-index: 1;
+}
+
+.content-box__scroll {
+    height: 100%;
+    overflow-y: auto;
+    padding: var(--space-5);
+}

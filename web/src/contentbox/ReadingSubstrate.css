@@ -1,3 +1,9 @@
+/* NOTE (pre-existing, carried verbatim from the blog plain reader during the
+   task-020 extraction): the font-size rules below reference `--text-sm` /
+   `--text-xs` / `--text-3xl`, which do NOT exist in tokens.css (the real tokens
+   are `--font-size-*`). They resolve to nothing, so those font-sizes inherit.
+   Left as-is so /blog/:slug/read stays byte-identical; fix in the capstone
+   design pass (task-030), which reskins this substrate. */
 .reader {
     display: grid;
     grid-template-columns: 220px 1fr;
