@@ -1,114 +1,41 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Page } from '../card/Page'
-import { NoJsFallback } from '../nojs/NoJsFallback'
+import { useEffect, useRef } from 'react'
+import { ReadingSubstrate } from '../contentbox/ReadingSubstrate'
+import { usePageDef } from '../physics/usePageDef'
+import { useAmbientPins } from '../pin/useAmbientPins'
 import { useGallery } from '../canvas/useGallery'
 import { useTheme } from '../controls/useTheme'
 import type { PageDef } from './PageDef'
-import type { CardContent } from '../card/Page'
-import type { CardSpec } from '../physics/PageSpec'
+import type { AmbientPinSpec } from '../pin/ambientPins'
 
-const TEXT = 'chaipalaka.com'
-
-// Letter cards — responsive sizing. On narrow viewports the row would
-// otherwise overflow (14 letters × 70 px desktop spacing ≈ 980 px wide),
-// so both spacing and per-card size scale down with vp.width. Bounds:
-//   spacing — viewport-fit, capped at LETTER_SPACING_MAX
-//   size    — fraction of spacing, clamped to [MIN, MAX]
-//   font    — proportional to size so the glyph keeps breathing room
-const LETTER_SPACING_MAX = 70
-const LETTER_SIZE_MAX = 48
-const LETTER_SIZE_MIN = 20
-const LETTER_SIZE_RATIO = 0.75
-const LETTER_FONT_RATIO = 0.5
-const LETTER_ROW_H_PADDING = 16
-
-function letterMetrics(vpWidth: number): {
-    spacing: number
-    size: number
-    fontSize: number
-} {
-    const available = Math.max(0, vpWidth - 2 * LETTER_ROW_H_PADDING)
-    const spacing = Math.min(LETTER_SPACING_MAX, available / TEXT.length)
-    const size = Math.max(
-        LETTER_SIZE_MIN,
-        Math.min(LETTER_SIZE_MAX, Math.round(spacing * LETTER_SIZE_RATIO)),
-    )
-    const fontSize = Math.max(10, Math.round(size * LETTER_FONT_RATIO))
-    return { spacing, size, fontSize }
-}
-
-const LETTERS_REST_FRAC = 0.2
-// Small ± fraction added to LETTERS_REST_FRAC per letter; keep this low so
-// the row reads as a single horizontal band with subtle vertical variance.
-const LETTERS_JITTER_FRAC = 0.025
-// Each letter spawns off its taut anchor by ±LETTERS_SPAWN_RANGE_PX on
-// both axes, so the row visibly settles into place under physics on load
-// rather than appearing pre-settled.
-const LETTERS_SPAWN_RANGE_PX_X = 30
-const LETTERS_SPAWN_RANGE_PX_Y = 10
-
-// Balloon card: deterministic position, reverse-gravity via balloon buoyancy.
-const BALLOON_W = 200
-const BALLOON_H = 80
-const BALLOON_REST_FRAC = 0.72
-
-// Stable, module-scoped pageDef (exported for the route's own test). Anchor
-// rest-y is uniform at LETTERS_REST_FRAC here; the component below substitutes
-// per-letter y jitter at runtime so SSR/hydration stays deterministic.
+/**
+ * The v2 home: a populated bespoke landing (spec §8). It rests POPULATED — a card
+ * is already pinned to a section link on arrival (the "ambient teacher", §12),
+ * teaching the *keep* rung by example — and uses UP gravity so foreground cards
+ * read as balloons (§8). It has no v1 PageDef cards; the only card is the runtime
+ * ambient pin. The prose is the no-JS floor (ReadingSubstrate prerenders), so it
+ * carries no NoJsFallback. Final look is the capstone pass (task-030); this is the
+ * functional landing on token-separable placeholder styling.
+ */
 export const pageDef: PageDef = {
-    gravity: 'down',
-    cards: [
-        ...TEXT.split('').map(
-            (_ch, i): CardSpec => ({
-                id: `letter-${i}`,
-                kind: 'headline',
-                parent: 'ceiling',
-                anchor: (vp) => ({
-                    x:
-                        vp.width / 2 +
-                        (i - (TEXT.length - 1) / 2) * letterMetrics(vp.width).spacing,
-                    y: vp.height * LETTERS_REST_FRAC,
-                }),
-            }),
-        ),
-        {
-            id: 'balloon',
-            kind: 'note',
-            parent: 'floor',
-            anchor: (vp) => ({ x: vp.width / 2, y: vp.height * BALLOON_REST_FRAC }),
-        },
-    ],
+    gravity: 'up',
+    resting: 'populated',
+    cards: [],
 }
 
-function buildCardContent(
-    letterSize: number,
-    letterFontSize: number,
-): Record<string, CardContent> {
-    return {
-        ...Object.fromEntries(
-            TEXT.split('').map((ch, i) => [
-                `letter-${i}`,
-                {
-                    text: ch,
-                    width: letterSize,
-                    height: letterSize,
-                    variant: 'letter',
-                    style: { fontSize: `${letterFontSize}px` },
-                },
-            ]),
-        ),
-        balloon: {
-            text: 'coming soon',
-            width: BALLOON_W,
-            height: BALLOON_H,
-            variant: 'balloon',
-        },
-    }
-}
-
-function getInitialVpWidth(): number {
-    return typeof window !== 'undefined' ? window.innerWidth : 1024
-}
+// One ambient pin, strung to the "writing" section link and floating above it
+// (balloon, up gravity). Stable module const so the seeding effect runs once.
+const AMBIENT: AmbientPinSpec[] = [
+    {
+        selector: 'a[data-link-type="portal"][href="/blog"]',
+        kind: 'portal',
+        title: 'Writing',
+        lead: 'Essays, notes, and longer pieces — the reading heartland.',
+        href: '/blog',
+        width: 240,
+        height: 130,
+        offset: { x: 40, y: -150 }, // float above the word (balloon)
+    },
+]
 
 export default function Home() {
     const { setActive } = useGallery()
@@ -123,73 +50,39 @@ export default function Home() {
         setThemeRef.current('light')
     }, [])
 
-    // Track viewport width so cardContent (which feeds the physics body's
-    // width/height) can rescale on resize. Page already listens to resize
-    // independently for its own anchor recomputation — having one more
-    // listener here is cheap and keeps Home self-contained.
-    const [vpWidth, setVpWidth] = useState(getInitialVpWidth)
-    useEffect(() => {
-        if (typeof window === 'undefined') return
-        const onResize = () => setVpWidth(window.innerWidth)
-        onResize()
-        window.addEventListener('resize', onResize, { passive: true })
-        return () => window.removeEventListener('resize', onResize)
-    }, [])
-
-    const { size: letterSize, fontSize: letterFontSize } = letterMetrics(vpWidth)
-    const runtimeCardContent = useMemo(
-        () => buildCardContent(letterSize, letterFontSize),
-        [letterSize, letterFontSize],
-    )
-
-    // Per-page-load jitter for letters:
-    // - rest-y: small ± fraction so tether lengths vary
-    //   (wireTetherFor derives length from distance(parentAnchor, layoutPos)).
-    // - spawnOffset: ±LETTERS_SPAWN_RANGE_PX on both axes so letters
-    //   visibly pendulum-settle into their taut positions rather than
-    //   materialising pre-settled.
-    // Computed once on mount so SSR's deterministic first paint isn't
-    // contradicted by the client's jittered values.
-    const runtimePageDef = useMemo<PageDef>(() => {
-        const letterCount = pageDef.cards.filter((c) =>
-            c.id.startsWith('letter-'),
-        ).length
-        const jitter = Array.from({ length: letterCount }, () => ({
-            dy: (Math.random() - 0.5) * 2 * LETTERS_JITTER_FRAC,
-            sx: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX_X,
-            sy: (Math.random() - 0.5) * 2 * LETTERS_SPAWN_RANGE_PX_Y,
-        }))
-        let j = 0
-        return {
-            ...pageDef,
-            cards: pageDef.cards.map((spec) => {
-                if (!spec.id.startsWith('letter-')) return spec
-                const { dy, sx, sy } = jitter[j++] ?? { dy: 0, sx: 0, sy: 0 }
-                return {
-                    ...spec,
-                    anchor: (vp) => {
-                        const base = spec.anchor(vp)
-                        return {
-                            x: base.x,
-                            y: vp.height * (LETTERS_REST_FRAC + dy),
-                        }
-                    },
-                    spawnOffset: { x: sx, y: sy },
-                }
-            }),
-        }
-    }, [])
+    // Up gravity (balloons) + seed the ambient teacher pin on arrival.
+    usePageDef(pageDef)
+    useAmbientPins(pageDef.resting, AMBIENT)
 
     return (
-        <>
-            <Page pageDef={runtimePageDef} cardContent={runtimeCardContent} />
-            <NoJsFallback>
-                <h1>chaipalaka.com</h1>
-                <p>
-                    Personal site of Chaitanya Palaka — a new version is coming
-                    soon.
-                </p>
-            </NoJsFallback>
-        </>
+        <ReadingSubstrate title="chaipalaka.com" toc={[]}>
+            <p>
+                Personal site of Chaitanya Palaka. The new version moves the play
+                out of the page and into the act of following a link: hover a
+                link to <em>peek</em> it, drag its card loose to <em>keep</em> it
+                strung to the word, or click through to <em>enter</em>.
+            </p>
+            <p>
+                Start with the{' '}
+                <a data-link-type="portal" href="/blog">
+                    writing
+                </a>
+                , poke around the{' '}
+                <a data-link-type="portal" href="/stuff">
+                    stuff
+                </a>{' '}
+                I&rsquo;ve made, or see what I&rsquo;m reading, playing, and
+                watching in the{' '}
+                <a data-link-type="portal" href="/lifelog">
+                    lifelog
+                </a>
+                .
+            </p>
+            <p>
+                The card already floating here is the ambient teacher — it loaded
+                pinned to a word so the <em>keep</em> rung shows itself. Grab its
+                title bar to move it, or click its body to follow it through.
+            </p>
+        </ReadingSubstrate>
     )
 }

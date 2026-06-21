@@ -48,8 +48,15 @@ export type SectionsConfig =
     | { mode: 'author'; sections: readonly AuthorSectionDef[] }
     | { mode: 'auto-chain'; chainRoot?: string; maxPerSection?: number }
 
+// v2 per-route resting state (spec §7). 'quiet' = the box + inline links only;
+// 'populated' = ambient cards seeded on arrival (the "ambient teacher"). Absent
+// ⇒ 'quiet', so every pre-v2 PageSpec stays valid. The populated behaviour is
+// driven by `useAmbientPins` reading this field; see pin/ambientPins.ts.
+export type Resting = 'quiet' | 'populated'
+
 export interface PageSpec {
     gravity: Cardinal
+    resting?: Resting
     cards: CardSpec[]
     sections?: SectionsConfig
 }

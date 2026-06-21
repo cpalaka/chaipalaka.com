@@ -13,6 +13,11 @@
     padding: var(--space-8) var(--space-4);
 }
 
+/* List / landing pages (blog index, home) carry no toc — single column. */
+.reader--no-toc {
+    grid-template-columns: 1fr;
+}
+
 @media (max-width: 640px) {
     .reader {
         grid-template-columns: 1fr;

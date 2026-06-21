@@ -2,13 +2,14 @@ import type { RouteRecord } from 'vite-react-ssg'
 
 export const routes: RouteRecord[] = [
     {
+        // Home is a v2 content-box route now (populated landing) — task-026.
         path: '/',
         lazy: async () => {
-            const { default: CanvasLayout } =
-                await import('./layouts/CanvasLayout')
-            return { Component: CanvasLayout }
+            const { default: ContentBoxLayout } =
+                await import('./layouts/ContentBoxLayout')
+            return { Component: ContentBoxLayout }
         },
-        entry: 'src/layouts/CanvasLayout.tsx',
+        entry: 'src/layouts/ContentBoxLayout.tsx',
         children: [
             {
                 index: true,
@@ -17,14 +18,6 @@ export const routes: RouteRecord[] = [
                     return { Component: Home }
                 },
                 entry: 'src/routes/Home.tsx',
-            },
-            {
-                path: '*',
-                lazy: async () => {
-                    const { default: NotFound } =
-                        await import('./routes/NotFound')
-                    return { Component: NotFound }
-                },
             },
         ],
     },
@@ -147,13 +140,17 @@ export const routes: RouteRecord[] = [
         ],
     },
     {
+        // /blog is a v2 content-box route now (task-026): a quiet listing at the
+        // index, each post a content-box reading surface at :slug. The single-card
+        // BlogPost is retired; /blog/:slug renders the same BlogPostReader as the
+        // /read floor, but inside the box with the link ladder.
         path: '/blog',
         lazy: async () => {
-            const { default: CanvasLayout } =
-                await import('./layouts/CanvasLayout')
-            return { Component: CanvasLayout }
+            const { default: ContentBoxLayout } =
+                await import('./layouts/ContentBoxLayout')
+            return { Component: ContentBoxLayout }
         },
-        entry: 'src/layouts/CanvasLayout.tsx',
+        entry: 'src/layouts/ContentBoxLayout.tsx',
         children: [
             {
                 index: true,
@@ -167,11 +164,11 @@ export const routes: RouteRecord[] = [
             {
                 path: ':slug',
                 lazy: async () => {
-                    const { default: BlogPost } =
-                        await import('./routes/blog/BlogPost')
-                    return { Component: BlogPost }
+                    const { default: BlogPostReader } =
+                        await import('./routes/blog/BlogPostReader')
+                    return { Component: BlogPostReader }
                 },
-                entry: 'src/routes/blog/BlogPost.tsx',
+                entry: 'src/routes/blog/BlogPostReader.tsx',
             },
         ],
     },
@@ -237,6 +234,28 @@ export const routes: RouteRecord[] = [
                     return { Component: BlogPostReader }
                 },
                 entry: 'src/routes/blog/BlogPostReader.tsx',
+            },
+        ],
+    },
+    {
+        // 404 stays bespoke (floaty, up-gravity) under the canvas layout — a
+        // pathless layout route whose splat child catches every URL no other
+        // route matched. (Home moved off CanvasLayout to the content box, so the
+        // catch-all needed its own layout parent.)
+        lazy: async () => {
+            const { default: CanvasLayout } =
+                await import('./layouts/CanvasLayout')
+            return { Component: CanvasLayout }
+        },
+        entry: 'src/layouts/CanvasLayout.tsx',
+        children: [
+            {
+                path: '*',
+                lazy: async () => {
+                    const { default: NotFound } =
+                        await import('./routes/NotFound')
+                    return { Component: NotFound }
+                },
             },
         ],
     },

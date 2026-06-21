@@ -1,10 +1,10 @@
 ---
 id: TASK-026
 title: v2 — per-route resting state + sitemap rollout
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-21 00:11'
 labels:
   - claude-generated
   - v2
@@ -28,17 +28,23 @@ Roll v2 across the site (spec sections 7/8). Add the per-route resting-state fie
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 PageDef declares per-route resting state (quiet/populated); both render correctly
-- [ ] #2 Home loads as a populated bespoke landing; blog/about rest quiet; /stuff + 404 keep bespoke treatment
-- [ ] #3 A populated route shows the ambient-teacher effect (a pinned card visible on arrival)
+- [x] #1 PageDef declares per-route resting state (quiet/populated); both render correctly
+- [x] #2 Home loads as a populated bespoke landing; blog/about rest quiet; /stuff + 404 keep bespoke treatment
+- [x] #3 A populated route shows the ambient-teacher effect (a pinned card visible on arrival)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Heartland-first rollout (Chai-approved trim 2026-06-20): shipped resting-state field + ambient-teacher mechanism, home populated landing, /blog index list + /blog/:slug content-box; /stuff + 404 unchanged-bespoke. AC#2 'about' + lifelog deferred to task-034 / task-033. Verified: typecheck/736 tests/build+prerender/secret-scan + agent-browser. layout/sectionLayout.ts + PageSpec.sections now prod-unused but kept (Atelier layoutOverride infra).
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->

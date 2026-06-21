@@ -68,3 +68,12 @@ art) while making the reading genuinely calm.
   and the static-body world (ADR-0001) are **reused** as the physics substrate.
 - Companion decisions: ADR-0006 (word-anchored tethers), ADR-0007 (retire
   transitions), ADR-0008 (progressive-enhancement escalation).
+- **Per-route resting state (task-026).** A route's arrival behaviour is one
+  declarative field on `PageSpec` — `resting?: 'quiet' | 'populated'` (absent ⇒
+  quiet; spec §7). *Quiet* = box + inline links only; *populated* = an **ambient
+  teacher** (a `pinned card` seeded on arrival, strung to a source word, so *keep*
+  teaches itself — spec §12). Ambient pins are seeded through the same
+  `PinStore.pin` path a user gesture uses (`pin/ambientPins.ts` +
+  `useAmbientPins`), deferred one frame so they survive `LadderReset`'s nav-clear.
+  The v2 sitemap rollout (home + /blog onto the box) rides this field; lifelog and
+  about are phased follow-ups.

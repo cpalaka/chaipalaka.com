@@ -23,18 +23,25 @@ export function ReadingSubstrate({
     meta,
     children,
 }: ReadingSubstrateProps) {
+    // List / landing pages (blog index, home) have no headings, so they pass an
+    // empty toc — collapse to a single prose column rather than show an empty
+    // "Contents" rail.
+    const hasToc = toc.length > 0
+
     return (
-        <main className="reader">
-            <nav className="reader__toc" aria-label="Table of contents">
-                <h2>Contents</h2>
-                <ol>
-                    {toc.map((entry) => (
-                        <li key={entry.slug} data-depth={entry.depth}>
-                            <a href={`#${entry.slug}`}>{entry.text}</a>
-                        </li>
-                    ))}
-                </ol>
-            </nav>
+        <main className={hasToc ? 'reader' : 'reader reader--no-toc'}>
+            {hasToc && (
+                <nav className="reader__toc" aria-label="Table of contents">
+                    <h2>Contents</h2>
+                    <ol>
+                        {toc.map((entry) => (
+                            <li key={entry.slug} data-depth={entry.depth}>
+                                <a href={`#${entry.slug}`}>{entry.text}</a>
+                            </li>
+                        ))}
+                    </ol>
+                </nav>
+            )}
 
             <article className="reader__body">
                 {/* tabIndex=-1 so the hero-morph focus-follow (ContentBox) can

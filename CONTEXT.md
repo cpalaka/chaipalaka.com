@@ -60,10 +60,11 @@ reference `PageDef` widely.
 _Avoid_: page config, route schema, layout def.
 
 **PageSpec**:
-A route's declared content — its **Cardinal** gravity, **CardSpec**
-list, and optional **SectionsConfig**. Physics-side consumers (`PhysicsPage`,
-`usePageDef`, `partitionPageDef`) read **PageSpec**, which since task-025 is the
-whole of a **PageDef** (the transitions half was retired).
+A route's declared content — its **Cardinal** gravity, an optional **Resting
+state**, a **CardSpec** list, and optional **SectionsConfig**. Physics-side
+consumers (`PhysicsPage`, `usePageDef`, `partitionPageDef`) read **PageSpec**,
+which since task-025 is the whole of a **PageDef** (the transitions half was
+retired).
 _Avoid_: page config, route schema.
 
 **TransitionSpec** _(RETIRED — task-025 / ADR-0007)_:
@@ -580,6 +581,25 @@ upgrades the raw prose `<a>` from a full reload to a client crossfade nav; the
 morph stays the Card's "enter").
 _Avoid_: page transition (too generic); the retired primitive names (anchor-slide,
 pour-in-drop, etc.).
+
+**Resting state**:
+A route's v2 per-route arrival behaviour, declared on its **PageSpec**
+(`resting?: 'quiet' | 'populated'`, absent ⇒ quiet; spec §7). **Quiet** = the
+**content box** + inline links only, nothing pinned (essay/reading routes — blog
+index, blog posts). **Populated** = one or two **Ambient pin**s already strung on
+arrival (index/playful routes — the home landing). Orthogonal to **Cardinal**
+gravity, which still decides balloons (up) vs hanging cards (down).
+_Avoid_: idle state, default cards.
+
+**Ambient teacher / Ambient pin**:
+The **populated** **Resting state**'s payload (spec §12): a **pinned card** seeded
+on arrival, strung to a source word, so the *keep* rung teaches itself by example
+(a card is already there, gently swinging). Declared as `AmbientPinSpec`s and
+seeded by `useAmbientPins` via the same `PinStore.pin` path a user gesture uses —
+deferred one frame so the seed survives `LadderReset`'s nav-clear and the source
+word is laid out first. Removed on route unmount; re-seeded each arrival (no
+persistence — that is task-028).
+_Avoid_: starter card, default pin, pre-pinned card.
 
 ## Relationships
 

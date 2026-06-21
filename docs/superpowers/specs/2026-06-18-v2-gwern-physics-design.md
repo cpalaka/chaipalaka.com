@@ -363,6 +363,43 @@ i111 regression in the spike doc.
 **Balloons vs cards** is just **per-route cardinal gravity** (`up` = balloons,
 `down` = hanging cards) plus skin — already a PageDef field.
 
+> **Resolved — slice 7 / §7+§8 / task-026 (resting state + heartland rollout,
+> shipped).** Scope was trimmed to the *reading heartland* (Chai's call,
+> 2026-06-20): this slice rolls the content box onto **home + /blog + /blog/:slug**
+> and ships the resting-state mechanism; **lifelog and the (greenfield) about page
+> are deferred to their own follow-up tasks** — the §8 table's intent stands, the
+> rollout is just phased.
+> - **Resting state is a [new] field**, not the reuse the spec implied: only
+>   `gravity` existed on `PageSpec`. Added `resting?: 'quiet' | 'populated'`
+>   (absent ⇒ quiet) + a `Resting` type. Gravity (balloons vs cards) was the
+>   pre-existing field; the quiet/populated enum is net-new.
+> - **Ambient teacher** = a [new] on-arrival pin path (pinning was gesture-only).
+>   `pin/ambientPins.ts` (pure, TDD'd `buildAmbientPinSpecs` — gate on populated +
+>   geometry) + `pin/useAmbientPins.ts` seed via the existing `PinStore.pin`,
+>   **deferred one rAF** so the seed survives `LadderReset`'s nav-clear (this
+>   route's mount effect runs *before* LadderReset's) and the source word is laid
+>   out before measuring. Re-seeded each arrival; removed on unmount (persistence
+>   = task-028).
+> - **Home** = a populated bespoke landing under `ContentBoxLayout` (peek/pin only
+>   attach where `[data-content-box]` exists), `gravity: 'up'` (balloons),
+>   `resting: 'populated'`, no v1 PageDef cards — the only card is the runtime
+>   ambient pin (one Portal pin floating above the "writing" section link). The
+>   v1 letters+balloon placeholder is retired. Landing prose lives *in* the fixed
+>   box for now; a full-bleed bespoke shell is a capstone (task-030) call.
+> - **/blog** = a quiet content-box listing (`ReadingSubstrate`, empty toc → new
+>   `reader--no-toc` single column) of post **Portal** links — the v1 paginated
+>   physics card-chain (`buildChain`/`layoutSection`/`useHashSection`/
+>   `NavCardContent`/`BlogIndexFallback`/`BlogIndex.measure`) is **retired**.
+>   **/blog/:slug** now renders the same `BlogPostReader` (`ReadingSubstrate`)
+>   *inside* the box — the single-card `BlogPost` is retired; `/blog/:slug/read`
+>   stays the plain no-JS floor. (`layout/sectionLayout.ts` + `PageSpec.sections`
+>   are now production-unused but kept — tested infra wired into the Atelier
+>   `layoutOverride`; a separate cleanup if ever wanted.)
+> - **404 stays bespoke** (`gravity: 'up'`, floaty) — it moved to its own pathless
+>   `CanvasLayout` catch-all route since home left `CanvasLayout` for the box.
+> - **Reduced-motion**: the ambient pin inherits `PinnedCard`'s existing gating
+>   (placed/frozen, no wobble, still scroll-tracks) — no new gate needed.
+
 ## 9. Transclusion, recursion, external links
 
 - **Transclusion depth** — Portal preview = a **lead/summary**; Pocket card = the

@@ -1,0 +1,31 @@
+/* Placeholder, token-separable styling for the v2 /blog listing — the capstone
+   design pass (task-030) reskins via these classes. */
+.blog-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.blog-list__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.blog-list__title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.blog-list__date {
+    font-size: var(--font-size-sm);
+    color: color-mix(in srgb, var(--color-fg) 55%, transparent);
+}
+
+.blog-list__desc {
+    margin: 0;
+    color: color-mix(in srgb, var(--color-fg) 80%, transparent);
+}
