@@ -4,6 +4,7 @@ title: 'v2 canvas — SDF metaball card auras (DRAFT-009 #1, WebGPU/TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-21 21:28'
+updated_date: '2026-06-21 21:57'
 labels:
   - claude-generated
   - threejs
@@ -45,6 +46,8 @@ HARD PARTS: fill-rate (per-pixel march x proximity loop -> half-res + capped ste
 
 <!-- SECTION:NOTES:BEGIN -->
 Prototype: prototypes/lava-metaball.html (verified defaults k~46, aura~34, mercury palette). Cross-refs: DRAFT-009 #1 (this) + #3 (sibling tethers task), ADR-0009 (WebGPU-exclusive), task-037 (boot spike). Plus fat-line tethers sibling = task-039 if created.
+
+Physics-rewrite dependency is now DRAFT-010 (v2 — top-down drift graph physics, high-priority). Starts only after DRAFT-010 is grilled, promoted, and built.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

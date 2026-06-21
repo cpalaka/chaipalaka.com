@@ -4,6 +4,7 @@ title: 'v2 canvas — fat-line tethers (DRAFT-009 #3, TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-21 21:50'
+updated_date: '2026-06-21 21:57'
 labels:
   - claude-generated
   - threejs
@@ -46,6 +47,8 @@ DEPENDENCY (tracked by Chai, not a board task): gated on the gravity -> top-down
 
 <!-- SECTION:NOTES:BEGIN -->
 Prototype: prototypes/fat-tethers.html (width+color confirmed, dash-crawl rejected, ~60fps). Cross-refs: DRAFT-009 #3, sibling task-038 (likely shared SDF renderer per fork A), ADR-0009, task-037. Open tuning (build-time): slack-edge visibility floor — lean toward keeping slack faintly legible. Verify-at-build: TSL line approach (Line2 dead), StringLayer survival.
+
+Physics-rewrite dependency is now DRAFT-010 (v2 — top-down drift graph physics, high-priority). Starts only after DRAFT-010 is grilled, promoted, and built.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
