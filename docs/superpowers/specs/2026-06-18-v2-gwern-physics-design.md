@@ -417,6 +417,30 @@ i111 regression in the spike doc.
   *enter* opens the URL in a new tab; visually distinct. Built **after** internal
   transclusion. (Link-rot/archiving is out of scope for now — see §13.)
 
+> **Resolved — slice 10 / task-029 (External-link annotation cards, shipped).**
+> The "authored annotation" is **derived from the link itself** (Chai's call,
+> 2026-06-20) — **no new build plugin, frontmatter field, or sidecar**. The three
+> card fields come from the rendered `<a>`: **note** = the markdown link title
+> (`[text](url "note")` → `<a title="…">`, verified to round-trip through
+> `rehype-link-types`), **title** = the link text, **source** = the bare hostname
+> (`externalSourceLabel` in `peek/peekContent.ts`). So the prose link stays a real
+> `<a>` — RSS- and no-JS-safe — and only the note is hand-authored; the capstone
+> (§15) may enrich later. Rejected: an `<Ext>` MDX component (JSX drops out of the
+> RSS feed) and a gwern-style annotations map (most infra, decoupled from use-site).
+> - **`external` is a third `PeekKind`/`PinKind`**, not an overloaded Portal — so
+>   `useMorphSource` naturally no-ops (no react-router morph to an off-site URL).
+>   The whole `peek/`→`pin/` lifecycle, keep gesture, runtime tether, wobble, and
+>   scroll-regime are content-agnostic and reused unchanged; only the trigger
+>   branch (`PeekTriggers.buildSpec`), the two card render branches, and a `source`
+>   spec field are new.
+> - **Enter = new tab.** The card body is a real `<a target="_blank"
+>   rel="noopener noreferrer">` (a plain click opens natively; keyboard uses the
+>   word's own `target=_blank` href); the pointer "enter" (title-bar quick click)
+>   calls `window.open(href, '_blank', 'noopener,noreferrer')`. Never a morph.
+> - **Visually distinct (AC#3)** = the in-prose out-arrow on
+>   `a[data-link-type="external"]` (already in head-loaded `base.css`, task-021)
+>   plus a `↗ hostname` source line on the card. Final aesthetics = capstone.
+
 ## 10. Navigation transitions — retire & replace
 
 The v1 physics route-transition system — **[reuse-verified present]**

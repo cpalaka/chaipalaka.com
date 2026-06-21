@@ -10,7 +10,7 @@
  * (`PreviewCard` → `usePin().pin(...)`) and removed on dismiss/unmount.
  */
 
-export type PinKind = 'portal' | 'pocket'
+export type PinKind = 'portal' | 'pocket' | 'external'
 
 export interface PinSpec {
     /** The source word/link element — the word-anchor target + wobble/highlight host. */
@@ -27,10 +27,14 @@ export interface PinSpec {
     /** Drop velocity (fling) imparted by the keep-drag, if any. */
     vx?: number
     vy?: number
-    /** Portal: target title + transcluded lead + href. */
+    /** Portal: target title + transcluded lead + href.
+     * External (task-029): title = link text, lead = authored note, href = the
+     * off-site URL opened in a new tab. */
     title?: string
     lead?: string
     href?: string
+    /** External: the attribution line — the target's bare hostname (§9). */
+    source?: string
     /** Pocket: the lifted note html (trusted authored content). */
     bodyHtml?: string
 }

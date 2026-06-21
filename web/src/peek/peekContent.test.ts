@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { resolvePortalLead, liftPocketBody, pocketIdFromHref } from './peekContent'
+import {
+    resolvePortalLead,
+    liftPocketBody,
+    pocketIdFromHref,
+    externalSourceLabel,
+} from './peekContent'
 
 const posts = [
     { slug: 'hello-world', title: 'Hello, World', description: 'The first post.' },
@@ -40,6 +45,19 @@ describe('pocketIdFromHref', () => {
     })
     it('returns null for a non-footnote anchor', () => {
         expect(pocketIdFromHref('#planes')).toBeNull()
+    })
+})
+
+describe('externalSourceLabel', () => {
+    it('reduces an external href to its bare hostname (strips www.)', () => {
+        expect(externalSourceLabel('https://www.gwern.net/about')).toBe('gwern.net')
+        expect(externalSourceLabel('http://example.com')).toBe('example.com')
+    })
+    it('handles a protocol-relative href', () => {
+        expect(externalSourceLabel('//dataintensive.net/x')).toBe('dataintensive.net')
+    })
+    it('falls back to the raw href when it cannot be parsed', () => {
+        expect(externalSourceLabel('not a url')).toBe('not a url')
     })
 })
 

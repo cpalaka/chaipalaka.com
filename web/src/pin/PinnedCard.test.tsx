@@ -69,6 +69,27 @@ describe('PinnedCard', () => {
         ).toHaveAttribute('href', '/blog/hello')
     })
 
+    it('renders an External pinned card: link-text title, note, hostname source, safe new-tab link (task-029)', () => {
+        const sourceEl = makeWord('src-term')
+        renderPin({
+            ...base,
+            id: 'pin-ext',
+            sourceEl,
+            kind: 'external',
+            title: 'Gwern Branwen',
+            lead: 'the reading-craft note',
+            href: 'https://gwern.net',
+            source: 'gwern.net',
+        })
+        expect(screen.getByText('Gwern Branwen')).toBeInTheDocument()
+        expect(screen.getByText('the reading-craft note')).toBeInTheDocument()
+        expect(screen.getByText('gwern.net')).toBeInTheDocument()
+        const link = screen.getByRole('link', { name: /reading-craft note/ })
+        expect(link).toHaveAttribute('href', 'https://gwern.net')
+        expect(link).toHaveAttribute('target', '_blank')
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
     it('wraps the source word in a transform-only span and marks it bonded, leaving text intact', () => {
         const sourceEl = makeWord('anchored term')
         renderPin({

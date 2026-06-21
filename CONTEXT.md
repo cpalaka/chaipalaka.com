@@ -515,6 +515,20 @@ everywhere.
 _Avoid_: Type-2; footnote (a footnote is one kind of Pocket; the term is broader);
 tooltip.
 
+**External annotation**:
+A cross-origin **Ladder** link (`data-link-type="external"`) — Portal-shaped (peek →
+keep) but its **Card** is an *authored annotation*, not a transcluded lead. The three
+fields are **derived from the rendered `<a>`** (task-029, spec §9; no build plugin /
+frontmatter / sidecar): **title** = the link text, **note** = the markdown link title
+(`[text](url "note")` → `<a title="…">`), **source** = the bare hostname
+(`externalSourceLabel` in `peek/peekContent.ts`). The prose link stays a real new-tab
+`<a target="_blank" rel="noopener noreferrer">` (RSS-/no-JS-safe). **Enter** opens the
+URL in a new tab (`window.open`, or the body link natively), **never** a **hero morph**
+(cross-origin — nothing to morph into). Carried by its own `external` **PeekKind** /
+**PinKind**; the rest of the peek→pin lifecycle (gesture, tether, wobble, regimes) is
+reused unchanged.
+_Avoid_: external Portal (it shares the Portal *shape* but enters off-site, not by morph).
+
 **Preview card**:
 The **peek**-state **Card**: ephemeral, stiff-anchored beside its source word,
 side-positioned, dismissed by a physical fall. Not yet a full-physics toy.

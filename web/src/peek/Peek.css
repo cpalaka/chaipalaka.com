@@ -66,6 +66,18 @@ a.peek-preview__body:hover {
     margin-bottom: 0;
 }
 
+/* External annotation body (task-029): the authored note over a hostname source
+   line — a real new-tab link, distinct from a Portal lead. Final look = capstone. */
+.peek-preview__source {
+    display: block;
+    margin-top: var(--space-2, 8px);
+    font-size: 0.85em;
+    color: var(--color-fg-faint);
+}
+.peek-preview__source::before {
+    content: '↗ ';
+}
+
 /* Armed: the preview has come loose from the word and is being dragged to pin. */
 .peek-preview--keeping,
 .peek-preview--keeping .peek-preview__bar {

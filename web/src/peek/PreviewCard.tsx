@@ -44,8 +44,13 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
         entry.kind,
         entry.href,
     )
+    // External (task-029): enter opens the off-site URL in a new tab rather than
+    // morphing into a content box (cross-origin — nothing to morph into).
     const enterRef = useRef(enter)
-    enterRef.current = enter
+    enterRef.current =
+        entry.kind === 'external' && entry.href
+            ? () => window.open(entry.href, '_blank', 'noopener,noreferrer')
+            : enter
 
     // Centre the held card on its anchor (measure height once it has rendered).
     useLayoutEffect(() => {
@@ -119,6 +124,7 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
                         title: entry.title,
                         lead: entry.lead,
                         href: entry.href,
+                        source: entry.source,
                         bodyHtml: entry.bodyHtml,
                     })
                 }
@@ -261,9 +267,23 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
             }}
         >
             <div data-card-header className="peek-preview__bar">
-                {entry.kind === 'portal' ? (entry.title ?? 'Link') : 'Note'}
+                {entry.kind === 'pocket' ? 'Note' : (entry.title ?? 'Link')}
             </div>
-            {entry.kind === 'portal' ? (
+            {entry.kind === 'external' ? (
+                // A real new-tab anchor: a plain click follows the href natively
+                // (no morph); target/rel keep it safe (AC#2 / AC#3).
+                <a
+                    className="peek-preview__body peek-preview__body--external"
+                    href={entry.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    {entry.lead ? (
+                        <span className="peek-preview__note">{entry.lead}</span>
+                    ) : null}
+                    <span className="peek-preview__source">{entry.source}</span>
+                </a>
+            ) : entry.kind === 'portal' ? (
                 <a
                     className="peek-preview__body"
                     href={entry.href}

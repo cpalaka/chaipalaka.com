@@ -37,6 +37,22 @@ export function resolvePortalLead(
     return post ? { title: post.title, description: post.description } : null
 }
 
+/**
+ * The attribution label for an **external** annotation card: the target's bare
+ * hostname (`https://www.gwern.net/x` → `gwern.net`). External links carry no
+ * frontmatter to transclude, so the source line is derived from the URL itself
+ * (task-029); the authored note rides the markdown link title. Unparseable hrefs
+ * fall back to the raw string.
+ */
+export function externalSourceLabel(href: string): string {
+    try {
+        const url = new URL(href.startsWith('//') ? `https:${href}` : href)
+        return url.hostname.replace(/^www\./, '')
+    } catch {
+        return href
+    }
+}
+
 /** The footnote id behind a Pocket reference href (`#user-content-fn-N` → `N`). */
 export function pocketIdFromHref(href: string): string | null {
     const m = href.match(/^#user-content-fn-(.+)$/)

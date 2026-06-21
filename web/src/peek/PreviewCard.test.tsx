@@ -53,6 +53,28 @@ describe('PreviewCard (held)', () => {
         expect(link).toHaveAttribute('href', '/blog/hello-world')
     })
 
+    it('renders an External annotation preview: link-text title, note, hostname source, safe new-tab link (task-029)', () => {
+        renderCard({
+            ...base,
+            id: 'e1',
+            sourceId: 'x',
+            kind: 'external',
+            title: 'Gwern Branwen',
+            lead: 'the reading-craft this design borrows from',
+            href: 'https://gwern.net',
+            source: 'gwern.net',
+        })
+        expect(screen.getByText('Gwern Branwen')).toBeInTheDocument()
+        expect(
+            screen.getByText('the reading-craft this design borrows from'),
+        ).toBeInTheDocument()
+        expect(screen.getByText('gwern.net')).toBeInTheDocument()
+        const link = screen.getByRole('link')
+        expect(link).toHaveAttribute('href', 'https://gwern.net')
+        expect(link).toHaveAttribute('target', '_blank')
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
     it('renders a Pocket preview: the lifted note body', () => {
         renderCard({
             ...base,

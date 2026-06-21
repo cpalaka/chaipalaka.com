@@ -9,7 +9,7 @@
  * the `PreviewCard` consumes.
  */
 
-export type PeekKind = 'portal' | 'pocket'
+export type PeekKind = 'portal' | 'pocket' | 'external'
 export type PeekPhase = 'held' | 'falling'
 
 export interface PreviewSpec {
@@ -26,10 +26,14 @@ export interface PreviewSpec {
     center: { x: number; y: number }
     side: 'left' | 'right'
     width: number
-    /** Portal: target title + transcluded lead + href. */
+    /** Portal: target title + transcluded lead + href.
+     * External (task-029): title = the link text, lead = the authored note (the
+     * markdown link title), href = the off-site URL opened in a new tab. */
     title?: string
     lead?: string
     href?: string
+    /** External: the attribution line — the target's bare hostname (§9). */
+    source?: string
     /** Pocket: the lifted note html (trusted authored content). */
     bodyHtml?: string
 }

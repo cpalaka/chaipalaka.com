@@ -41,6 +41,16 @@ function renderBox() {
                             <a data-link-type="portal" href="/blog/hello-world">
                                 the first post
                             </a>
+                            , or{' '}
+                            <a
+                                data-link-type="external"
+                                href="https://www.gwern.net"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="the reading-craft this design borrows from"
+                            >
+                                gwern.net
+                            </a>
                             .
                         </p>
                     </div>
@@ -53,6 +63,10 @@ function renderBox() {
 
 function portalLink(): HTMLAnchorElement {
     return document.querySelector('a[data-link-type="portal"]')!
+}
+
+function externalLink(): HTMLAnchorElement {
+    return document.querySelector('a[data-link-type="external"]')!
 }
 
 afterEach(() => vi.restoreAllMocks())
@@ -70,6 +84,23 @@ describe('PeekTriggers — desktop dwell', () => {
         const entries = store.snapshot()
         expect(entries).toHaveLength(1)
         expect(entries[0]).toMatchObject({ kind: 'portal', phase: 'held' })
+    })
+
+    it('opens an external annotation preview: link text title, link-title note, hostname source (task-029)', () => {
+        mockMatchMedia(true)
+        renderBox()
+        fireEvent.pointerOver(externalLink(), { clientX: 120, clientY: 120 })
+        vi.advanceTimersByTime(300)
+        const entries = store.snapshot()
+        expect(entries).toHaveLength(1)
+        expect(entries[0]).toMatchObject({
+            kind: 'external',
+            phase: 'held',
+            title: 'gwern.net',
+            lead: 'the reading-craft this design borrows from',
+            href: 'https://www.gwern.net',
+            source: 'gwern.net',
+        })
     })
 })
 

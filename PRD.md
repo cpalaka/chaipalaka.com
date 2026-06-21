@@ -14,8 +14,9 @@ ratified by ADRs [0005](docs/adr/0005-link-ladder-content-box.md)–[0008](docs/
 In v2 each route is a fixed, solid **content box** (gwern-style prose) over the
 generative shader; play relocates from a page-filling card swarm into a **link
 ladder** — *peek* (hover preview card) → *keep* (pin a physics toy strung to its
-source word) → *enter* (hero-morph to the page). Links are **Portal** (has a page)
-or **Pocket** (a self-contained note). The v1 sections below still describe the
+source word) → *enter* (hero-morph to the page). Links are **Portal** (has a page),
+**Pocket** (a self-contained note), or **external** (cross-origin — a Portal-shaped
+authored annotation card whose *enter* opens the URL in a new tab). The v1 sections below still describe the
 content/utility axes (blog, lifelog, portfolio, RSS, the no-JS floor) and the
 physics primitives v2 reuses — but the v1 "every page is a card swarm" interaction
 model and the route-transition system are **superseded** by the v2 spec. This

@@ -4,14 +4,19 @@ import { usePeek } from './PeekContext'
 import { DwellTracker } from './dwell'
 import { peekTuning } from './peekTuning'
 import { sidePositionFor, pointerBridged, type Box, type Side } from './peekGeometry'
-import { resolvePortalLead, liftPocketBody, pocketIdFromHref } from './peekContent'
+import {
+    resolvePortalLead,
+    liftPocketBody,
+    pocketIdFromHref,
+    externalSourceLabel,
+} from './peekContent'
 import { resolvePinHost } from '../pin/recursion'
 import type { PeekStore, PreviewSpec } from './PeekStore'
 
-// Portal links + Pocket footnote references are the only peek triggers. External
-// links (annotation cards) are deferred to task-029; in-page anchors never peek.
+// Portal links, external annotation links (task-029), and Pocket footnote
+// references are the peek triggers; in-page anchors never peek.
 const TRIGGER_SELECTOR =
-    'a[data-link-type="portal"], a[href^="#user-content-fn-"]'
+    'a[data-link-type="portal"], a[data-link-type="external"], a[href^="#user-content-fn-"]'
 
 // Nominal preview height for the side-placement clamp; the card measures and
 // re-centres its true height once rendered.
@@ -86,6 +91,25 @@ function buildSpec(
             href,
             title: lead?.title ?? trigger.textContent?.trim() ?? 'Link',
             lead: lead?.description,
+            parentId,
+        }
+    }
+
+    if (trigger.dataset.linkType === 'external') {
+        // No frontmatter to transclude (cross-origin): the card is an authored
+        // annotation (spec §9) — title = the link text, note = the markdown link
+        // title, source = the bare hostname. Enter opens the URL in a new tab.
+        return {
+            sourceId,
+            sourceEl: trigger,
+            kind: 'external',
+            center,
+            side,
+            width,
+            href,
+            title: trigger.textContent?.trim() || externalSourceLabel(href),
+            lead: trigger.getAttribute('title') ?? undefined,
+            source: externalSourceLabel(href),
             parentId,
         }
     }

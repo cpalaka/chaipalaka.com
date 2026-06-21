@@ -32,6 +32,15 @@ describe('rehypeLinkTypes', () => {
         expect(html).toContain('target="_blank"')
     })
 
+    it('preserves a markdown link title — the authored note an external card reads (task-029)', async () => {
+        const html = await render(
+            'See [gwern.net](https://gwern.net "the reading-craft this borrows from").\n',
+        )
+        expect(html).toContain('data-link-type="external"')
+        // The peek layer lifts the note from the title attribute (Option C):
+        expect(html).toContain('title="the reading-craft this borrows from"')
+    })
+
     it('leaves in-page anchors (TOC, footnote refs) unclassified', async () => {
         const html = await render(
             'See [section](#intro) and a note[^1].\n\n[^1]: n.\n',

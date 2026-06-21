@@ -157,6 +157,21 @@ export default function BoxTest() {
                     and click its card to take the last rung — enter — and watch
                     the card expand and reflow into the page it was previewing.
                 </p>
+                <p>
+                    Not every Portal points inward. Peek{' '}
+                    <a
+                        data-link-type="external"
+                        href="https://gwern.net"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="The reading-craft this redesign borrows from — dense, hover-previewed, link-first."
+                    >
+                        Gwern&rsquo;s site
+                    </a>{' '}
+                    — an external link is Portal-shaped but cross-origin, so its
+                    card is an authored annotation (note + source) and entering
+                    opens the site in a new tab instead of morphing into a box.
+                </p>
 
                 <h2 id="regimes">Two regimes</h2>
                 <p>

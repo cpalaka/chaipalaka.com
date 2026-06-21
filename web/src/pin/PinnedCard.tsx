@@ -69,8 +69,13 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         entry.kind,
         entry.href,
     )
+    // External (task-029): enter opens the off-site URL in a new tab rather than
+    // morphing into a content box (cross-origin — nothing to morph into).
     const enterRef = useRef(enter)
-    enterRef.current = enter
+    enterRef.current =
+        entry.kind === 'external' && entry.href
+            ? () => window.open(entry.href, '_blank', 'noopener,noreferrer')
+            : enter
 
     useEffect(() => {
         const el = elRef.current
@@ -504,9 +509,23 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             style={isMorphing ? { viewTransitionName: HERO_NAME } : undefined}
         >
             <div data-card-header className="pin-card__bar">
-                {entry.kind === 'portal' ? (entry.title ?? 'Link') : 'Note'}
+                {entry.kind === 'pocket' ? 'Note' : (entry.title ?? 'Link')}
             </div>
-            {entry.kind === 'portal' ? (
+            {entry.kind === 'external' ? (
+                // A real new-tab anchor: a plain click follows the href natively
+                // (no morph); target/rel keep it safe (AC#2 / AC#3).
+                <a
+                    className="pin-card__body pin-card__body--external"
+                    href={entry.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    {entry.lead ? (
+                        <span className="pin-card__note">{entry.lead}</span>
+                    ) : null}
+                    <span className="pin-card__source">{entry.source}</span>
+                </a>
+            ) : entry.kind === 'portal' ? (
                 <a
                     className="pin-card__body"
                     href={entry.href}
