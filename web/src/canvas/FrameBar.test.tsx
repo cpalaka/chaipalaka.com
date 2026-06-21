@@ -1,9 +1,12 @@
 import { describe, test, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FrameBar } from './FrameBar'
 import { getFrameEdgeController } from './useFrameEdge'
+import { PinProvider, usePin } from '../pin/PinContext'
+import { saveRoute } from '../pin/pinPersistence'
+import type { PinStore } from '../pin/PinStore'
 
 // Default to /blog: per issue #148, FrameBar self-suppresses at `/`
 // (placeholder route). Tests that need to inspect FrameBar internals must
@@ -196,5 +199,60 @@ describe('FrameBar', () => {
         // mousedown outside the settings container
         await userEvent.pointer({ target: document.body, keys: '[MouseLeft>]' })
         expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    })
+
+    // --- Clear-pinned-cards escape hatch (task-028) --------------------------
+
+    test('"Clear pinned cards" is absent without a PinProvider (v1 canvas layout)', async () => {
+        renderInRouter()
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        expect(
+            screen.queryByRole('button', { name: /clear pinned cards/i }),
+        ).not.toBeInTheDocument()
+    })
+
+    test('"Clear pinned cards" drops live pins and wipes saved state', async () => {
+        let store!: PinStore
+        function Cap() {
+            store = usePin()
+            return null
+        }
+        render(
+            <MemoryRouter initialEntries={['/blog']}>
+                <PinProvider>
+                    <Cap />
+                    <FrameBar />
+                </PinProvider>
+            </MemoryRouter>,
+        )
+        act(() => {
+            store.pin({
+                sourceEl: document.createElement('a'),
+                kind: 'portal',
+                center: { x: 0, y: 0 },
+                width: 240,
+                height: 130,
+                locator: { href: '/blog/x', nth: 0 },
+            })
+        })
+        saveRoute('/blog', [
+            {
+                locator: { href: '/blog/x', nth: 0 },
+                kind: 'portal',
+                regime: 'word',
+                offset: { dx: 0, dy: 120 },
+                width: 240,
+                height: 130,
+            },
+        ])
+        expect(store.snapshot()).toHaveLength(1)
+
+        await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
+        await userEvent.click(
+            screen.getByRole('button', { name: /clear pinned cards/i }),
+        )
+
+        expect(store.snapshot()).toHaveLength(0)
+        expect(localStorage.getItem('chaipalaka.pins:/blog')).toBeNull()
     })
 })

@@ -6,6 +6,7 @@ import {
     loadRoute,
     saveRoute,
     hasRoute,
+    clearAllRoutes,
     type PersistedPin,
 } from './pinPersistence'
 import type { PinEntry, PinRuntime } from './PinStore'
@@ -152,5 +153,15 @@ describe('per-route localStorage IO', () => {
         saveRoute('/blog', serializePins([entry()], () => rt()))
         expect(loadRoute('/stuff')).toEqual([])
         expect(hasRoute('/stuff')).toBe(false)
+    })
+
+    it('clearAllRoutes removes every pin key, leaving unrelated keys (escape hatch)', () => {
+        saveRoute('/blog', serializePins([entry()], () => rt()))
+        saveRoute('/stuff', serializePins([entry()], () => rt()))
+        localStorage.setItem('chaipalaka.theme', 'dark')
+        clearAllRoutes()
+        expect(hasRoute('/blog')).toBe(false)
+        expect(hasRoute('/stuff')).toBe(false)
+        expect(localStorage.getItem('chaipalaka.theme')).toBe('dark')
     })
 })

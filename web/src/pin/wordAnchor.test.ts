@@ -22,8 +22,9 @@ describe('trackWord (translate-pair G1 + finite-check G4)', () => {
     })
 
     it('does NOT clamp the per-frame delta (G1: a fling reads as its full movement)', () => {
-        const prev = { x: 0, y: 0 }
-        const r = trackWord(prev, rect(0, 5000, 0, 0))
+        // word centre when at top=0 (default size 40×20) → a 5000px jump.
+        const prev = { x: 20, y: 10 }
+        const r = trackWord(prev, rect(0, 5000))
         expect(r?.delta).toEqual({ x: 0, y: 5000 })
     })
 
@@ -34,5 +35,12 @@ describe('trackWord (translate-pair G1 + finite-check G4)', () => {
 
     it('returns null on a NaN rect (G4)', () => {
         expect(trackWord({ x: 0, y: 0 }, rect(NaN, 0))).toBeNull()
+    })
+
+    it('returns null on a zero-size rect (detached / display:none word — task-028)', () => {
+        // A word removed on nav collapses to all-zeros; a zero-size rect at any
+        // position is unmeasurable, so the frame is skipped (no fling, no offset poison).
+        expect(trackWord({ x: 120, y: 210 }, rect(0, 0, 0, 0))).toBeNull()
+        expect(trackWord({ x: 120, y: 210 }, rect(50, 5000, 0, 0))).toBeNull()
     })
 })

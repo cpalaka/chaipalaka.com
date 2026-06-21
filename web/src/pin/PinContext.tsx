@@ -20,6 +20,13 @@ export function usePin(): PinStore {
     return store
 }
 
+/** Like {@link usePin} but returns null instead of throwing when there is no
+ * `PinProvider` — for shared chrome (the FrameBar settings menu) that renders in
+ * both the v2 content-box layout (has pins) and the v1 canvas layout (no pins). */
+export function usePinOptional(): PinStore | null {
+    return use(PinContext)
+}
+
 export function usePinEntries(): readonly PinEntry[] {
     const store = usePin()
     return useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot)

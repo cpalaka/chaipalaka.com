@@ -633,7 +633,9 @@ the word and lets physics re-settle (not pixel-exact); stale pins drop silently;
 saved routes suppress their [[Ambient teacher / Ambient pin|ambient teacher]]
 (persisted wins). `pin/pinPersistence.ts` (codec + storage) + `pin/usePersistedPins.ts`
 (the save→clear→restore lifecycle, in `LadderReset`); each [[Pinned card]] reports
-its live runtime via a `PinStore` **describer** pulled at save time.
+its live runtime via a `PinStore` **describer** pulled at save time. The FrameBar
+settings menu carries a **"Clear pinned cards"** escape hatch (`clearAllRoutes` +
+`pin.clear`) to wipe a wedged arrangement.
 _Avoid_: saved state, cache, session pins.
 
 ## Relationships

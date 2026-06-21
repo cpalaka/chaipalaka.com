@@ -80,3 +80,28 @@ ambient-seed restore path.
   `PinnedCard` (cache runtime + describer + restore-into-parked), `PreviewCard`
   (compute a locator on keep), `useAmbientPins` (persisted-wins guard). `LadderReset`
   delegates the pin half of the nav reset to the hook; peek stays ephemeral.
+
+## Review fixes (task-028 diff review)
+
+Two bugs found in review, both fixed here:
+
+1. **Detached-word offset corruption (Decision 2 hardening).** On nav-away the source
+   word detaches; `getBoundingClientRect()` then returns an all-zeros rect, which is
+   *finite*, so the describer was caching `cardPos − (0,0)` = the card's **absolute**
+   position instead of a word-relative offset (and the live translate-pair flung the
+   card by the full `prev→0` delta). Fix: `trackWord` now rejects a **zero-size** rect
+   (detached / `display:none`) as unmeasurable and skips the frame — so the cached
+   offset holds its last good value across a nav. The physics world ticks on its own
+   rAF, independent of React's save effect, so without this guard the corruption was a
+   race (intermittent).
+2. **No recovery from a wedged arrangement.** Because save fires on every exit and
+   there is no dismiss gesture, a broken live position re-persists on each reload.
+   Added an **escape hatch**: `pinPersistence.clearAllRoutes()` + a "Clear pinned
+   cards" item in the FrameBar settings menu (gated by `usePinOptional`, since FrameBar
+   also renders on the v1 canvas layout) that drops live pins and wipes all saved
+   routes.
+
+Out of scope (deferred to **task-035**): word-anchored pins are flaky under fast
+scroll (the task-018 spike's predicted-but-uncaught failure) and parked cards can land
+below the viewport; the parked-card offset is not word-meaningful (restore relies on
+`parkAt`). That is auto-park/recall regime physics (task-024), not persistence.

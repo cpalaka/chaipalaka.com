@@ -164,3 +164,15 @@ export function saveRoute(pathname: string, pins: PersistedPin[]): void {
         JSON.stringify({ v: SCHEMA_VERSION, pins }),
     )
 }
+
+/** Remove every persisted route — the settings-menu escape hatch (task-028) so a
+ * user can wipe a wedged arrangement. Leaves unrelated `localStorage` keys. */
+export function clearAllRoutes(): void {
+    if (typeof localStorage === 'undefined') return
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k?.startsWith(KEY_PREFIX)) keys.push(k)
+    }
+    keys.forEach((k) => localStorage.removeItem(k))
+}

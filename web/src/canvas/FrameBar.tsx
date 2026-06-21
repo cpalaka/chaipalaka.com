@@ -4,6 +4,8 @@ import { useGallery } from './useGallery'
 import { useTheme } from '../controls/useTheme'
 import { useFrameEdge } from './useFrameEdge'
 import { BACKGROUND_SCENES } from './scenes/registry'
+import { usePinOptional } from '../pin/PinContext'
+import { clearAllRoutes } from '../pin/pinPersistence'
 import './FrameBar.css'
 
 const SECTIONS = [
@@ -28,6 +30,9 @@ export function FrameBar() {
     const { active, setActive } = useGallery()
     const { theme, cycleTheme } = useTheme()
     const { edge, setEdge } = useFrameEdge()
+    // Null on the v1 canvas layout (no PinProvider); present on v2 content-box
+    // routes — gates the "clear pinned cards" escape hatch (task-028).
+    const pin = usePinOptional()
 
     const settingsContainerRef = useRef<HTMLDivElement>(null)
     const settingsBtnRef = useRef<HTMLButtonElement>(null)
@@ -174,6 +179,34 @@ export function FrameBar() {
                             </select>
                         </div>
 
+                        {pin ? (
+                            <div
+                                role="group"
+                                aria-labelledby="fb-pins-label"
+                                className="frame-bar__menu-group"
+                            >
+                                <span
+                                    id="fb-pins-label"
+                                    className="frame-bar__menu-label"
+                                >
+                                    Pinned cards
+                                </span>
+                                <button
+                                    type="button"
+                                    className="frame-bar__menu-toggle"
+                                    onClick={() => {
+                                        // Escape hatch: drop this route's live pins
+                                        // now + wipe every saved arrangement so a
+                                        // wedged card can't restore (task-028).
+                                        pin.clear()
+                                        clearAllRoutes()
+                                        setSettingsOpen(false)
+                                    }}
+                                >
+                                    Clear pinned cards
+                                </button>
+                            </div>
+                        ) : null}
                     </div>
                 ) : null}
             </div>
