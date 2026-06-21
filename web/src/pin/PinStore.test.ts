@@ -67,4 +67,53 @@ describe('PinStore', () => {
         store.clear()
         expect(cb).toHaveBeenCalledTimes(1) // empty → no notify
     })
+
+    it('carries a locator and initialRegime through to the snapshot (task-028)', () => {
+        const store = new PinStore()
+        store.pin(
+            spec({
+                locator: { href: '/blog', nth: 0 },
+                initialRegime: 'parked-bottom',
+            }),
+        )
+        const e = store.snapshot()[0]!
+        expect(e.locator).toEqual({ href: '/blog', nth: 0 })
+        expect(e.initialRegime).toBe('parked-bottom')
+    })
+
+    it('registers a describer and pulls its runtime via describe(id)', () => {
+        const store = new PinStore()
+        const id = store.pin(spec())
+        expect(store.describe(id)).toBeNull() // none registered yet
+        store.setDescriber(id, () => ({
+            regime: 'parked-top',
+            offset: { dx: 5, dy: -10 },
+        }))
+        expect(store.describe(id)).toEqual({
+            regime: 'parked-top',
+            offset: { dx: 5, dy: -10 },
+        })
+    })
+
+    it('drops describers on unpin and clear', () => {
+        const store = new PinStore()
+        const a = store.pin(spec())
+        const b = store.pin(spec())
+        store.setDescriber(a, () => ({ regime: 'word', offset: { dx: 0, dy: 0 } }))
+        store.setDescriber(b, () => ({ regime: 'word', offset: { dx: 0, dy: 0 } }))
+        store.unpin(a)
+        expect(store.describe(a)).toBeNull()
+        store.clear()
+        expect(store.describe(b)).toBeNull()
+    })
+
+    it('describing across all entries does not notify subscribers (no re-render)', () => {
+        const store = new PinStore()
+        const id = store.pin(spec())
+        store.setDescriber(id, () => ({ regime: 'word', offset: { dx: 1, dy: 2 } }))
+        const cb = vi.fn()
+        store.subscribe(cb)
+        store.describe(id)
+        expect(cb).not.toHaveBeenCalled()
+    })
 })

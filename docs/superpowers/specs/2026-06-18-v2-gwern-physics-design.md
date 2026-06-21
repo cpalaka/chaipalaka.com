@@ -342,10 +342,26 @@ i111 regression in the spike doc.
   **quiet**; index/playful routes rest **populated**. Per-route cardinal gravity
   does the rest.
 - **Persistence (phased):**
-  - **Now (v2.0): ephemeral, session + per-route** — pins live only on that route
-    this visit; reload returns to the PageDef resting state.
-  - **Fast-follow (v2.1): persisted per-route** (localStorage) — each route
-    remembers the arrangement. Deferred because that is where staleness bugs live.
+  - **v2.0: ephemeral, session + per-route** — pins lived only on that route this
+    visit; reload returned to the PageDef resting state.
+  - **v2.1: persisted per-route (SHIPPED, task-028)** — each route remembers its
+    kept arrangement in `localStorage` under `chaipalaka.pins:<pathname>`, restored
+    on reload and return visits. Design (ADR-0009):
+    - **What persists:** root pins only (child/recursion pins re-keep inside a
+      restored parent). Each record stores a **pin locator** (the source word's
+      `href` + occurrence index — both Portal and Pocket sources are `<a href>`),
+      the regime, the card's word-relative offset, size, and payload.
+    - **Re-settle, not pixel-exact:** a restored pin re-hangs at its word + saved
+      offset (regime via the existing auto-park path) and lets physics settle —
+      robust across viewport sizes.
+    - **Staleness:** a pin whose source word no longer resolves is **dropped
+      silently** (no crash, no edge-park).
+    - **Persisted wins:** a route with saved pins suppresses its **ambient
+      teacher**; the teacher only seeds routes with no saved arrangement.
+    - **How:** each `PinnedCard` reports a cached runtime via a store *describer*,
+      pulled at save time so saving works mid-navigation (when source words have
+      already left the DOM). Save fires on nav-away and `pagehide`/visibility-hidden
+      (reload, tab-close); `usePersistedPins` owns the save→clear→restore lifecycle.
 
 ## 8. Sitemap & route archetypes
 
@@ -723,7 +739,8 @@ feel deliverable (§15). Ordering:
    bespoke landing; route archetypes; balloons via cardinal gravity.
 8. **Recursion (one level)** — child pins via the **card-parent Tether** (not
    NotesChain), over the runtime-creation path.
-9. **v2.1: persisted per-route pins** (localStorage) — fast-follow.
+9. **v2.1: persisted per-route pins** (localStorage) — *shipped (task-028)*; see §7
+   + ADR-0009.
 10. **External-link annotation cards** — authored previews.
 11. **Full v2 design pass (capstone)** — impeccable + Claude design over the
    working spine: card chrome, preview/Portal/Pocket styling, box type/color/

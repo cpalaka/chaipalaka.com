@@ -1,10 +1,10 @@
 ---
 id: TASK-028
 title: v2.1 — persisted per-route pins
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-21 01:25'
 labels:
   - claude-generated
   - v2

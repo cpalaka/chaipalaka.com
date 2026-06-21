@@ -1,19 +1,24 @@
 import { describe, test, expect } from 'vitest'
 import { render } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import Home, { pageDef } from './Home'
 import { PhysicsProvider } from '../physics/PhysicsContext'
 import { CardRegistryProvider } from '../card/CardRegistry'
 import { PinProvider } from '../pin/PinContext'
 
 function renderHome() {
+    // Home runs useAmbientPins → useLocation (task-028), so it needs a Router —
+    // as it always has in the app (it is a route element).
     return render(
-        <PhysicsProvider>
-            <CardRegistryProvider>
-                <PinProvider>
-                    <Home />
-                </PinProvider>
-            </CardRegistryProvider>
-        </PhysicsProvider>,
+        <MemoryRouter>
+            <PhysicsProvider>
+                <CardRegistryProvider>
+                    <PinProvider>
+                        <Home />
+                    </PinProvider>
+                </CardRegistryProvider>
+            </PhysicsProvider>
+        </MemoryRouter>,
     )
 }
 

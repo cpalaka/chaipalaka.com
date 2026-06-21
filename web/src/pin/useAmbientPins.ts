@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { usePin } from './PinContext'
 import {
     buildAmbientPinSpecs,
     type AmbientPinSpec,
     type Resolved,
 } from './ambientPins'
+import { hasRoute } from './pinPersistence'
 import type { Resting } from '../physics/PageSpec'
 
 /**
@@ -26,10 +28,14 @@ export function useAmbientPins(
     specs: readonly AmbientPinSpec[],
 ): void {
     const pin = usePin()
+    const { pathname } = useLocation()
 
     useEffect(() => {
         let ids: string[] = []
         const raf = requestAnimationFrame(() => {
+            // Persisted pins own this route — suppress the teacher (task-028,
+            // "persisted wins"); the user's saved arrangement restores instead.
+            if (hasRoute(pathname)) return
             const box = document.querySelector('[data-content-box]') ?? document
             const built = buildAmbientPinSpecs(resting, specs, (selector) => {
                 const el = box.querySelector(selector)
@@ -49,5 +55,5 @@ export function useAmbientPins(
             cancelAnimationFrame(raf)
             ids.forEach((id) => pin.unpin(id))
         }
-    }, [pin, resting, specs])
+    }, [pin, resting, specs, pathname])
 }

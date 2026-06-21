@@ -609,10 +609,32 @@ The **populated** **Resting state**'s payload (spec §12): a **pinned card** see
 on arrival, strung to a source word, so the *keep* rung teaches itself by example
 (a card is already there, gently swinging). Declared as `AmbientPinSpec`s and
 seeded by `useAmbientPins` via the same `PinStore.pin` path a user gesture uses —
-deferred one frame so the seed survives `LadderReset`'s nav-clear and the source
-word is laid out first. Removed on route unmount; re-seeded each arrival (no
-persistence — that is task-028).
+deferred one frame so the seed survives the nav-clear and the source word is laid
+out first. Removed on route unmount; re-seeded each arrival **unless the route has
+[[Persisted per-route pins]]** — then the teacher is suppressed (persisted wins,
+task-028). Ambient pins carry no [[Pin locator]], so they never persist themselves.
 _Avoid_: starter card, default pin, pre-pinned card.
+
+**Pin locator**:
+The serializable identity of a [[Pinned card]]'s source word — its `href` plus an
+occurrence index among same-href Ladder triggers in the [[Content box]] (both
+Portal and Pocket sources are `<a href>`). Lets a [[Persisted per-route pins|persisted pin]]
+re-resolve its word on reload; a locator that no longer resolves is **stale** and
+the pin is dropped. Pure `pin/pinLocator.ts` (`locate` / `resolve`); the candidate
+set is the shared `peek/triggerSelector.ts` `LADDER_TRIGGER_SELECTOR` (task-028).
+_Avoid_: selector, id, key (too generic).
+
+**Persisted per-route pins**:
+The v2.1 fast-follow (spec §7; ADR-0009): a route's user-**kept** pins saved to
+`localStorage` (`chaipalaka.pins:<pathname>`) and restored on reload + return
+visits — the [[Word-anchored / Edge-anchored|regime]], a word-relative offset, and
+payload per pin, keyed by [[Pin locator]]. **Root pins only**; restore re-hangs at
+the word and lets physics re-settle (not pixel-exact); stale pins drop silently;
+saved routes suppress their [[Ambient teacher / Ambient pin|ambient teacher]]
+(persisted wins). `pin/pinPersistence.ts` (codec + storage) + `pin/usePersistedPins.ts`
+(the save→clear→restore lifecycle, in `LadderReset`); each [[Pinned card]] reports
+its live runtime via a `PinStore` **describer** pulled at save time.
+_Avoid_: saved state, cache, session pins.
 
 ## Relationships
 

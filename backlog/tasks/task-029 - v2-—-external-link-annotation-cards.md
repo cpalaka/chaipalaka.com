@@ -4,7 +4,7 @@ title: v2 — external-link annotation cards
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-06-21 02:13'
 labels:
   - claude-generated
   - v2
@@ -30,6 +30,12 @@ Authored previews for external (cross-origin) links, which cannot be live-transc
 - [ ] #2 Enter opens the external URL in a new tab
 - [ ] #3 External links are visually distinct from internal Portal/Pocket links
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+task-028: the Ladder trigger set is now a single shared const — web/src/peek/triggerSelector.ts (LADDER_TRIGGER_SELECTOR). For external-link annotation cards to peek/keep AND persist (v2.1 per-route pins, ADR-0009), add their selector there; pin persistence keys on the source <a href> via pin/pinLocator.ts, so external <a href> sources persist for free once they match the trigger selector.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

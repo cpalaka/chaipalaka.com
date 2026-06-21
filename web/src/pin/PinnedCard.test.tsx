@@ -103,6 +103,86 @@ describe('PinnedCard', () => {
     })
 })
 
+// --- Persistence describer (task-028) ----------------------------------------
+
+function mockReducedEarly(on: boolean) {
+    vi.spyOn(window, 'matchMedia').mockImplementation(
+        (q: string) =>
+            ({
+                matches: /prefers-reduced-motion/.test(q) ? on : false,
+                media: q,
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+                addListener: vi.fn(),
+                removeListener: vi.fn(),
+                dispatchEvent: vi.fn(),
+                onchange: null,
+            }) as unknown as MediaQueryList,
+    )
+}
+
+function rectEarly(left: number, top: number, width = 40, height = 16): DOMRect {
+    return {
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+        x: left,
+        y: top,
+        toJSON: () => ({}),
+    } as DOMRect
+}
+
+describe('PinnedCard — persistence describer (task-028)', () => {
+    it('reports its regime and word-relative offset via the store describer', () => {
+        mockReducedEarly(true) // freeze the body so the offset is deterministic
+        const { world, store } = renderTree()
+        const word = makeWord('term')
+        word.getBoundingClientRect = vi.fn(() => rectEarly(100, 100)) // centre (120,108)
+        let id = ''
+        act(() => {
+            id = store.pin({
+                sourceEl: word,
+                kind: 'portal',
+                center: { x: 300, y: 300 },
+                width: 300,
+                height: 160,
+                href: '/blog/hello',
+                locator: { href: '/blog/hello', nth: 0 },
+            })
+        })
+        act(() => world.tick(16))
+        const rt = store.describe(id)
+        expect(rt).not.toBeNull()
+        expect(rt!.regime).toBe('word')
+        expect(rt!.offset.dx).toBeCloseTo(180, 0) // 300 - 120
+        expect(rt!.offset.dy).toBeCloseTo(192, 0) // 300 - 108
+    })
+
+    it('accepts a parked initialRegime without crashing when no box edges exist', () => {
+        const { store } = renderTree()
+        const word = makeWord('term')
+        word.getBoundingClientRect = vi.fn(() => rectEarly(100, 100))
+        expect(() =>
+            act(() => {
+                store.pin({
+                    sourceEl: word,
+                    kind: 'portal',
+                    center: { x: 300, y: 300 },
+                    width: 300,
+                    height: 160,
+                    href: '/blog/hello',
+                    locator: { href: '/blog/hello', nth: 0 },
+                    initialRegime: 'parked-bottom',
+                })
+            }),
+        ).not.toThrow()
+        expect(document.querySelector('[data-pin-kind="portal"]')).not.toBeNull()
+    })
+})
+
 // --- Recursion (task-027): a child pin ropes to its parent card ---------------
 
 function mockReduced(on: boolean) {

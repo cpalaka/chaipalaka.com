@@ -5,6 +5,7 @@ import { physicsTuning } from '../physics/physicsTuning'
 import { computeFlingImpulse } from '../card/flingImpulse'
 import { usePin } from '../pin/PinContext'
 import { PinGesture } from '../pin/pinGesture'
+import { locate } from '../pin/pinLocator'
 import { pinTuning } from '../pin/pinTuning'
 import { usePeek } from './PeekContext'
 import { peekTuning } from './peekTuning'
@@ -104,10 +105,17 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
                           },
                       )
                 if (entry.sourceEl) {
+                    // Locate the source word against the content box so this keep
+                    // can persist + restore per-route (task-028). Root keeps in
+                    // the box resolve to a locator; a child link inside a parent
+                    // card resolves to null (children never persist).
+                    const box =
+                        document.querySelector('[data-content-box]') ?? document
                     pin.pin({
                         sourceEl: entry.sourceEl,
                         kind: entry.kind,
                         parentId: entry.parentId,
+                        locator: locate(entry.sourceEl, box) ?? undefined,
                         center: {
                             x: rect.left + rect.width / 2,
                             y: rect.top + rect.height / 2,

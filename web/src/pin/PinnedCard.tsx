@@ -13,7 +13,7 @@ import { usePin } from './PinContext'
 import { childHandlesOf } from './recursion'
 import { wireTetherFor, type TetherHandle } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
-import type { PinEntry } from './PinStore'
+import type { PinEntry, PinRuntime } from './PinStore'
 import './Pin.css'
 
 interface Vec2 {
@@ -162,6 +162,21 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         let easeTarget: number | null = null
         let recallable = false
         let hot = false
+
+        // Persistence (task-028): cache this card's regime + word-relative offset
+        // each valid frame so the store describer can report it at save time —
+        // even mid-nav, when the source words have already left the DOM. Roots
+        // only (children carry no locator and never persist).
+        let lastRuntime: PinRuntime = {
+            regime,
+            offset: prevAnchor
+                ? {
+                      dx: entry.center.x - prevAnchor.x,
+                      dy: entry.center.y - prevAnchor.y,
+                  }
+                : { dx: 0, dy: 0 },
+        }
+        if (!isChild) pin.setDescriber(entry.id, () => lastRuntime)
 
         // The fold is the content box's visible region (viewport space); absent
         // (no box) or non-finite (mid-transform, G4) → no parking this frame.
@@ -326,6 +341,18 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 })
                 wobbleSpan.style.transform = `translate(${wob.x}px, ${wob.y}px)`
             }
+            // Cache for the persistence describer (task-028): card centre minus
+            // the live word centre — scroll-invariant while word-anchored.
+            if (tracked && world.has(cardHandle)) {
+                const cp = world.getPosition(cardHandle)
+                lastRuntime = {
+                    regime,
+                    offset: {
+                        dx: cp.x - tracked.anchor.x,
+                        dy: cp.y - tracked.anchor.y,
+                    },
+                }
+            }
         })
 
         // Bonded-trio highlight: hovering the card OR the word lights all three.
@@ -460,6 +487,18 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         bar?.addEventListener('pointerdown', onBarDown)
         window.addEventListener('pointermove', onMove)
         window.addEventListener('pointerup', onUp)
+
+        // Restore (task-028): a pin persisted while parked re-parks to the same
+        // edge on mount, reusing the auto-park path. If the box edges aren't
+        // registered yet parkAt no-ops (card stays word-anchored) and the next
+        // off-fold frame auto-parks it.
+        if (
+            !isChild &&
+            (entry.initialRegime === 'parked-top' ||
+                entry.initialRegime === 'parked-bottom')
+        ) {
+            parkAt(entry.initialRegime)
+        }
 
         return () => {
             stopTick()

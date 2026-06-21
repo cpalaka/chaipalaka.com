@@ -6,12 +6,10 @@ import { peekTuning } from './peekTuning'
 import { sidePositionFor, pointerBridged, type Box, type Side } from './peekGeometry'
 import { resolvePortalLead, liftPocketBody, pocketIdFromHref } from './peekContent'
 import { resolvePinHost } from '../pin/recursion'
+import { LADDER_TRIGGER_SELECTOR } from './triggerSelector'
 import type { PeekStore, PreviewSpec } from './PeekStore'
 
-// Portal links + Pocket footnote references are the only peek triggers. External
-// links (annotation cards) are deferred to task-029; in-page anchors never peek.
-const TRIGGER_SELECTOR =
-    'a[data-link-type="portal"], a[href^="#user-content-fn-"]'
+const TRIGGER_SELECTOR = LADDER_TRIGGER_SELECTOR
 
 // Nominal preview height for the side-placement clamp; the card measures and
 // re-centres its true height once rendered.
