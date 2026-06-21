@@ -1,0 +1,202 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #3 "fat-line tethers".
+  Question it answers: do tension-carrying fat-line graph edges read well, and
+  how should width / dash-crawl / color map to tension on a top-down drift graph?
+
+  NOT production. Canvas2D for speed (the real thing is a TSL node-material fat-line
+  per ADR-0009 — NOT WebGL2 Line2, whose LineMaterial is a ShaderMaterial that
+  WebGPURenderer rejects; that's task-039's first-step spike). The LOOK is what this
+  validates. Open directly: `open prototypes/fat-tethers.html`. Screenshots gitignored.
+
+  Assumptions (stated per prototype rules): edges are gentle SPRINGS with a rest length
+  so tension is real (drag a node away → its edges tauten); auras (#1) intentionally
+  omitted to isolate the line question.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>fat-tethers prototype — DRAFT-009 #3</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .card { position:fixed; transform:translate(-50%,-50%); user-select:none; cursor:grab;
+    background:#fbfaf6; border:1.5px solid var(--ink); border-radius:5px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; letter-spacing:.02em; font-weight:500; box-shadow:0 1px 0 rgba(0,0,0,.15);
+    z-index:2; }
+  .card.dragging { cursor:grabbing; }
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:256px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 34px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel select, #panel button { font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 6px; cursor:pointer; }
+  #panel .chan { display:flex; gap:12px; margin:8px 0 2px; }
+  #panel .chan label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  #panel .seg { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>fat-line tethers — #3</h1>
+  <div class="row"><label>spring</label><input id="stiff" type="range" min="0" max="100" step="1" value="34"><span class="val" id="stiffv"></span></div>
+  <div class="row"><label>drift</label><input id="drift" type="range" min="0" max="200" step="1" value="55"><span class="val" id="driftv"></span></div>
+  <div class="row"><label>max&nbsp;w</label><input id="maxw" type="range" min="2" max="20" step="1" value="11"><span class="val" id="maxwv"></span></div>
+  <div class="row"><label>tension&nbsp;range</label><input id="trange" type="range" min="10" max="120" step="1" value="55"><span class="val" id="trangev"></span></div>
+  <div class="row"><label>crawl</label><input id="crawl" type="range" min="0" max="100" step="1" value="60"><span class="val" id="crawlv"></span></div>
+  <div class="chan">carry tension via:
+  </div>
+  <div class="chan">
+    <label><input type="checkbox" id="chW" checked>width</label>
+    <label><input type="checkbox" id="chD" checked>dash</label>
+    <label><input type="checkbox" id="chC" checked>color</label>
+  </div>
+  <div class="seg">
+    <button id="shuffle">shuffle</button>
+    <button id="relax">relax</button>
+    <button id="yank">yank one</button>
+  </div>
+  <small>Drag a node away — its edges tauten: thicker, darker, dashes crawl faster. Slack edges go thin, pale, near-static. <b>spring=0</b> → no pull, tension comes only from drift/drag. Toggle channels to judge each one alone.</small>
+</div>
+<div id="fps"></div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let dpr=1, W=0, H=0;
+
+// ---- graph ---------------------------------------------------------------
+const LABELS = ['blog','stuff','about','now','links','lab'];
+const EDGES = [[0,1],[1,2],[2,3],[0,4],[4,5],[1,4],[3,5]]; // small connected web
+let nodes = [];
+function mkNodes(){
+  document.querySelectorAll('.card').forEach(e=>e.remove());
+  nodes = LABELS.map((label,i)=>{
+    const w=78+ (i%3)*14, h=44;
+    const n={ label,w,h, x:0,y:0, vx:(Math.random()*2-1)*24, vy:(Math.random()*2-1)*24, el:null, drag:false };
+    const el=document.createElement('div'); el.className='card';
+    el.style.width=w+'px'; el.style.height=h+'px'; el.textContent=label;
+    document.body.appendChild(el); n.el=el; return n;
+  });
+  scatter();
+  // rest length = initial edge distance (each edge starts ~relaxed)
+  for(const e of EDGES){ const a=nodes[e[0]], b=nodes[e[1]]; e.rest = Math.hypot(b.x-a.x,b.y-a.y); }
+  bindDrag();
+}
+function scatter(){
+  const cx=W/2, cy=H/2, R=Math.min(W,H)*0.30;
+  nodes.forEach((n,i)=>{ const a=i/nodes.length*6.283; n.x=cx+Math.cos(a)*R*(0.7+Math.random()*0.5); n.y=cy+Math.sin(a)*R*(0.7+Math.random()*0.5); n.vx=0; n.vy=0; });
+}
+
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener('resize', resize);
+resize(); mkNodes();
+
+// ---- drag ----------------------------------------------------------------
+let dragOff={x:0,y:0}, lastPt={x:0,y:0,t:0};
+function bindDrag(){
+  nodes.forEach(n=>{
+    n.el.addEventListener('pointerdown', e=>{ n.drag=true; n.el.classList.add('dragging'); n.el.setPointerCapture(e.pointerId);
+      dragOff={x:n.x-e.clientX,y:n.y-e.clientY}; lastPt={x:e.clientX,y:e.clientY,t:performance.now()}; });
+    n.el.addEventListener('pointermove', e=>{ if(!n.drag) return;
+      n.x=e.clientX+dragOff.x; n.y=e.clientY+dragOff.y;
+      const now=performance.now(), dt=Math.max(now-lastPt.t,1)/1000;
+      n.vx=(e.clientX-lastPt.x)/dt*0.4; n.vy=(e.clientY-lastPt.y)/dt*0.4; lastPt={x:e.clientX,y:e.clientY,t:now}; });
+    const end=()=>{ if(n.drag){ n.drag=false; n.el.classList.remove('dragging'); } };
+    n.el.addEventListener('pointerup', end); n.el.addEventListener('pointercancel', end);
+  });
+}
+shuffle.onclick=()=>{ scatter(); };
+relax.onclick=()=> nodes.forEach(n=>{ n.vx=0; n.vy=0; });
+yank.onclick=()=>{ const n=nodes[0]; n.x=Math.max(60,Math.min(W-60, n.x + (n.x<W/2?260:-260))); n.y=Math.max(60,Math.min(H-60,n.y-180)); n.vx=0; n.vy=0; };
+
+// ---- controls ------------------------------------------------------------
+const ui={};
+function bindRange(id,key,scale,fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value*scale; out.textContent=fmt?fmt(+el.value):el.value; }; el.addEventListener('input',upd); upd(); }
+bindRange('stiff','stiff',0.01,v=>(v/100).toFixed(2));
+bindRange('drift','drift',0.01,v=>(v/100).toFixed(2));
+bindRange('maxw','maxw',1);
+bindRange('trange','trange',1);
+bindRange('crawl','crawl',0.01,v=>(v/100).toFixed(2));
+const chW=document.getElementById('chW'), chD=document.getElementById('chD'), chC=document.getElementById('chC');
+
+// ---- sim + render --------------------------------------------------------
+let prev=performance.now(), dashOff=0, fAcc=0,fCnt=0,fT=0;
+function frame(now){
+  let dt=(now-prev)/1000; prev=now; dt=Math.min(dt,0.05);
+
+  // spring forces along edges (tension is real)
+  for(const e of EDGES){
+    const a=nodes[e[0]], b=nodes[e[1]];
+    let dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1e-3, nx=dx/d, ny=dy/d;
+    const f=ui.stiff*(d-e.rest)*0.06;
+    if(!a.drag){ a.vx+=nx*f; a.vy+=ny*f; }
+    if(!b.drag){ b.vx-=nx*f; b.vy-=ny*f; }
+  }
+  // drift + damping + walls
+  for(const n of nodes){
+    if(!n.drag){
+      n.vx+=(Math.random()*2-1)*5; n.vy+=(Math.random()*2-1)*5;
+      n.vx*=0.99; n.vy*=0.99;
+      n.x+=n.vx*dt*ui.drift*4; n.y+=n.vy*dt*ui.drift*4;
+      const mx=n.w*0.6,my=n.h*0.6;
+      if(n.x<mx){n.x=mx;n.vx=Math.abs(n.vx);} if(n.x>W-mx){n.x=W-mx;n.vx=-Math.abs(n.vx);}
+      if(n.y<my){n.y=my;n.vy=Math.abs(n.vy);} if(n.y>H-my){n.y=H-my;n.vy=-Math.abs(n.vy);}
+    }
+  }
+  // light node separation
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){ const a=nodes[i],b=nodes[j];
+    let dx=b.x-a.x,dy=b.y-a.y; const mx=(a.w+b.w)*0.5+8,my=(a.h+b.h)*0.5+8;
+    if(Math.abs(dx)<mx&&Math.abs(dy)<my){ const px=mx-Math.abs(dx),py=my-Math.abs(dy);
+      if(px<py){const s=Math.sign(dx)||1; if(!a.drag)a.x-=s*px*0.5; if(!b.drag)b.x+=s*px*0.5;}
+      else {const s=Math.sign(dy)||1; if(!a.drag)a.y-=s*py*0.5; if(!b.drag)b.y+=s*py*0.5;} } }
+
+  dashOff -= ui.crawl * dt * 90;
+
+  // ---- draw edges ----
+  ctx.clearRect(0,0,W,H);
+  ctx.lineCap='round';
+  for(const e of EDGES){
+    const a=nodes[e[0]], b=nodes[e[1]];
+    const d=Math.hypot(b.x-a.x,b.y-a.y);
+    const t=Math.max(0, Math.min(1, (d-e.rest)/ui.trange));   // 0 slack .. 1 taut
+    const width = chW.checked ? (1.5 + t*(ui.maxw-1.5)) : ui.maxw*0.5;
+    const ink   = chC.checked ? (0.15 + t*0.7) : 0.45;        // opacity slack->taut
+    ctx.strokeStyle = `rgba(26,26,26,${ink.toFixed(3)})`;
+    ctx.lineWidth = width;
+    if(chD.checked && t>0.04){ ctx.setLineDash([Math.max(8,width*1.4), 7+width*0.6]); ctx.lineDashOffset = dashOff * t; }
+    else { ctx.setLineDash([]); }
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // sync DOM cards
+  for(const n of nodes){ n.el.style.left=n.x+'px'; n.el.style.top=n.y+'px'; }
+
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){ document.getElementById('fps').textContent=(fCnt/fAcc).toFixed(0)+' fps · '+EDGES.length+' edges'; fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
