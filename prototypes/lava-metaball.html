@@ -1,0 +1,279 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #1 "SDF metaball / Lava-Lamp Ladder".
+  Question it answers: what does a gloopy SDF aura around drifting, collidable
+  cards actually look/feel like, and what does the smin blend `k` knob do?
+
+  NOT production. GLSL/WebGL2 for speed of iteration; the real thing is WebGPU/TSL
+  (ADR-0009) but the LOOK is identical. Open directly: `open prototypes/lava-metaball.html`
+  Do not commit / fold into the app — delete or absorb the *decision* when done.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>lava-metaball prototype — DRAFT-009 #1</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  /* the crisp DOM cards — the "protagonist" sitting on top of the gloopy aura */
+  .card { position:fixed; transform:translate(-50%,-50%); user-select:none; cursor:grab;
+    background:#fbfaf6; border:1.5px solid var(--ink); border-radius:5px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; letter-spacing:.02em; font-weight:500; box-shadow:0 1px 0 rgba(0,0,0,.15);
+    z-index:2; }
+  .card.dragging { cursor:grabbing; }
+  /* control panel */
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:248px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 38px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel select, #panel button { font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 6px; cursor:pointer; }
+  #panel .seg { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="panel">
+  <h1>metaball aura — #1</h1>
+  <div class="row"><label>blend&nbsp;k</label><input id="k" type="range" min="0" max="120" step="1" value="46"><span class="val" id="kv"></span></div>
+  <div class="row"><label>aura</label><input id="aura" type="range" min="0" max="90" step="1" value="34"><span class="val" id="aurav"></span></div>
+  <div class="row"><label>drift</label><input id="drift" type="range" min="0" max="200" step="1" value="60"><span class="val" id="driftv"></span></div>
+  <div class="row"><label>light</label><input id="light" type="range" min="0" max="100" step="1" value="80"><span class="val" id="lightv"></span></div>
+  <div class="row"><label>cards</label><input id="count" type="range" min="2" max="12" step="1" value="6"><span class="val" id="countv"></span></div>
+  <div class="row"><label>palette</label>
+    <select id="palette">
+      <option value="0">mercury (on-brand)</option>
+      <option value="1">ink (quiet)</option>
+      <option value="2">warm (lava — kitsch)</option>
+    </select>
+  </div>
+  <div class="seg">
+    <button id="shuffle">shuffle</button>
+    <button id="clump">clump</button>
+    <button id="explode">scatter</button>
+  </div>
+  <small>Drag cards. Watch auras merge as cards approach (that's the physics made visible). <b>k=0</b> → no gloop, just boxes. Try the warm palette to feel why "lava lamp" fights the identity.</small>
+</div>
+<div id="fps"></div>
+
+<script>
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl2', { alpha:true, premultipliedAlpha:false, antialias:false });
+if (!gl) { document.body.innerHTML = '<p style="padding:24px">WebGL2 not available.</p>'; throw 0; }
+const MAX = 12;
+
+// ---- shaders -------------------------------------------------------------
+const vs = `#version 300 es
+void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); gl_Position = vec4(p*2.0-1.0,0.0,1.0); }`;
+
+const fs = `#version 300 es
+precision highp float;
+out vec4 o;
+uniform vec2 uRes;
+uniform int uCount;
+uniform vec2 uC[${MAX}];   // centers, buffer px, top-left origin
+uniform vec2 uH[${MAX}];   // half-sizes, buffer px
+uniform float uK, uAura, uLight;
+uniform int uPal;
+
+float sdBox(vec2 p, vec2 b, float r){
+  vec2 q = abs(p) - b + vec2(r);
+  return min(max(q.x,q.y),0.0) + length(max(q,vec2(0.0))) - r;
+}
+float smin(float a, float b, float k){
+  if(k<=0.0) return min(a,b);
+  float h = clamp(0.5 + 0.5*(b-a)/k, 0.0, 1.0);
+  return mix(b,a,h) - k*h*(1.0-h);
+}
+float field(vec2 p){
+  float d = 1e9;
+  for(int i=0;i<${MAX};i++){
+    if(i>=uCount) break;
+    d = smin(d, sdBox(p-uC[i], uH[i], 14.0), uK);
+  }
+  return d;
+}
+void main(){
+  vec2 frag = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  float d = field(frag);
+  float surf = d - uAura;                 // <0 inside the gloop, 0 at its surface
+  float aa = fwidth(surf) + 1e-4;
+  float mask = 1.0 - smoothstep(-aa, aa, surf);
+  if(mask < 0.002){ o = vec4(0.0); return; }
+
+  // fake normal from the 2D field gradient → lit "mercury" look
+  vec2 e = vec2(2.0, 0.0);
+  vec2 g = vec2(field(frag+e.xy)-field(frag-e.xy), field(frag+e.yx)-field(frag-e.yx));
+  float depth = clamp(-surf / max(uAura,1.0), 0.0, 1.0);
+  vec3 N = normalize(vec3(g * (1.6*(1.0-depth)), 1.0));
+  vec3 L = normalize(vec3(0.4,0.55,0.8));
+  float diff = clamp(dot(N,L),0.0,1.0);
+  vec3 H = normalize(L + vec3(0.0,0.0,1.0));
+  float spec = pow(clamp(dot(N,H),0.0,1.0), 46.0);
+
+  vec3 lit;
+  if(uPal==0){ vec3 b = mix(vec3(0.34),vec3(0.66),depth); lit = b*(0.42+0.75*diff*uLight)+spec*uLight*0.95; }
+  else if(uPal==1){ vec3 b = mix(vec3(0.10),vec3(0.20),depth); lit = b*(0.6+0.5*diff*uLight)+spec*uLight*0.22; }
+  else { vec3 b = mix(vec3(0.55,0.12,0.02),vec3(0.97,0.5,0.06),depth); lit = b*(0.5+0.75*diff*uLight)+spec*uLight*0.85; }
+
+  o = vec4(lit, mask);
+}`;
+
+function sh(type, src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER,fs));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) throw gl.getProgramInfoLog(prog);
+gl.useProgram(prog);
+const U = n => gl.getUniformLocation(prog, n);
+const loc = { res:U('uRes'), count:U('uCount'), c:U('uC'), h:U('uH'), k:U('uK'),
+  aura:U('uAura'), light:U('uLight'), pal:U('uPal') };
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+// ---- state ---------------------------------------------------------------
+const LABELS = ['blog','stuff','about','now','links','lab','feed','art','log',' etc','play','me'];
+let dpr=1, W=0, H=0;
+let cards = [];
+const ui = {
+  k:+k.value, aura:+aura.value, drift:+drift.value/100, light:+light.value/100,
+  count:+count.value, pal:+palette.value
+};
+
+function mkCard(label){
+  const w = 78 + Math.random()*46, h = 40 + Math.random()*22;
+  return { label, w, h,
+    x: w + Math.random()*(W-2*w), y: h + Math.random()*(H-2*h),
+    vx:(Math.random()*2-1)*30, vy:(Math.random()*2-1)*30,
+    el:null, drag:false };
+}
+function rebuildCards(){
+  document.querySelectorAll('.card').forEach(e=>e.remove());
+  cards = [];
+  for(let i=0;i<ui.count;i++){
+    const c = mkCard(LABELS[i%LABELS.length].trim());
+    const el = document.createElement('div'); el.className='card';
+    el.style.width = c.w+'px'; el.style.height = c.h+'px';
+    el.textContent = c.label; el.dataset.i = i;
+    document.body.appendChild(el); c.el = el; cards.push(c);
+  }
+  bindDrag();
+}
+
+function resize(){
+  dpr = Math.min(window.devicePixelRatio||1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  gl.viewport(0,0,cv.width,cv.height);
+}
+window.addEventListener('resize', resize);
+resize(); rebuildCards();
+
+// ---- drag ----------------------------------------------------------------
+let dragging=null, dragOff={x:0,y:0}, lastPt={x:0,y:0,t:0};
+function bindDrag(){
+  cards.forEach(c=>{
+    c.el.addEventListener('pointerdown', e=>{
+      dragging=c; c.drag=true; c.el.classList.add('dragging'); c.el.setPointerCapture(e.pointerId);
+      dragOff.x = c.x - e.clientX; dragOff.y = c.y - e.clientY;
+      lastPt={x:e.clientX,y:e.clientY,t:performance.now()};
+    });
+    c.el.addEventListener('pointermove', e=>{
+      if(!c.drag) return;
+      c.x = e.clientX + dragOff.x; c.y = e.clientY + dragOff.y;
+      const now=performance.now(), dt=Math.max(now-lastPt.t,1)/1000;
+      c.vx = (e.clientX-lastPt.x)/dt*0.5; c.vy = (e.clientY-lastPt.y)/dt*0.5;
+      lastPt={x:e.clientX,y:e.clientY,t:now};
+    });
+    const end = ()=>{ if(c.drag){ c.drag=false; c.el.classList.remove('dragging'); dragging=null; } };
+    c.el.addEventListener('pointerup', end);
+    c.el.addEventListener('pointercancel', end);
+  });
+}
+
+// ---- presets -------------------------------------------------------------
+shuffle.onclick = ()=> cards.forEach(c=>{ c.x=c.w+Math.random()*(W-2*c.w); c.y=c.h+Math.random()*(H-2*c.h);
+  c.vx=(Math.random()*2-1)*40; c.vy=(Math.random()*2-1)*40; });
+clump.onclick = ()=> cards.forEach((c,i)=>{ const a=i/cards.length*6.283; c.x=W/2+Math.cos(a)*70; c.y=H/2+Math.sin(a)*70; c.vx=0; c.vy=0; });
+explode.onclick = ()=> cards.forEach(c=>{ const a=Math.random()*6.283; c.vx=Math.cos(a)*260; c.vy=Math.sin(a)*260; });
+
+// ---- controls ------------------------------------------------------------
+function bindRange(id, key, scale, fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value*scale; out.textContent = fmt? fmt(+el.value): el.value; };
+  el.addEventListener('input', upd); upd(); }
+bindRange('k','k',1); bindRange('aura','aura',1); bindRange('drift','drift',0.01,v=>(v/100).toFixed(2));
+bindRange('light','light',0.01,v=>(v/100).toFixed(2));
+count.addEventListener('input',()=>{ document.getElementById('countv').textContent=count.value; ui.count=+count.value; rebuildCards(); });
+document.getElementById('countv').textContent=count.value;
+palette.addEventListener('change',()=> ui.pal=+palette.value);
+
+// ---- sim + render --------------------------------------------------------
+const cBuf=new Float32Array(MAX*2), hBuf=new Float32Array(MAX*2);
+let prev=performance.now(), fAcc=0, fCnt=0, fT=0;
+function frame(now){
+  let dt=(now-prev)/1000; prev=now; dt=Math.min(dt,0.05);
+
+  // drift + walls + soft collision
+  for(const c of cards){
+    if(!c.drag){
+      c.vx += (Math.random()*2-1)*6; c.vy += (Math.random()*2-1)*6;   // gentle jitter keeps it alive
+      c.vx*=0.992; c.vy*=0.992;                                        // damping
+      const sp=ui.drift;
+      c.x += c.vx*dt*sp*4; c.y += c.vy*dt*sp*4;
+      const mx=c.w*0.6, my=c.h*0.6;
+      if(c.x<mx){c.x=mx;c.vx=Math.abs(c.vx);} if(c.x>W-mx){c.x=W-mx;c.vx=-Math.abs(c.vx);}
+      if(c.y<my){c.y=my;c.vy=Math.abs(c.vy);} if(c.y>H-my){c.y=H-my;c.vy=-Math.abs(c.vy);}
+    }
+  }
+  // pairwise separation (collidable, but auras merge before boxes touch)
+  for(let i=0;i<cards.length;i++) for(let j=i+1;j<cards.length;j++){
+    const a=cards[i],b=cards[j]; let dx=b.x-a.x, dy=b.y-a.y;
+    const minx=(a.w+b.w)*0.5+6, miny=(a.h+b.h)*0.5+6;
+    if(Math.abs(dx)<minx && Math.abs(dy)<miny){
+      const px=minx-Math.abs(dx), py=miny-Math.abs(dy);
+      if(px<py){ const s=Math.sign(dx)||1, f=px*0.5; if(!a.drag)a.x-=s*f; if(!b.drag)b.x+=s*f;
+        if(!a.drag)a.vx-=s*30; if(!b.drag)b.vx+=s*30; }
+      else { const s=Math.sign(dy)||1, f=py*0.5; if(!a.drag)a.y-=s*f; if(!b.drag)b.y+=s*f;
+        if(!a.drag)a.vy-=s*30; if(!b.drag)b.vy+=s*30; }
+    }
+  }
+
+  // sync DOM + upload uniforms
+  for(let i=0;i<cards.length;i++){
+    const c=cards[i];
+    c.el.style.left=c.x+'px'; c.el.style.top=c.y+'px';
+    cBuf[i*2]=c.x*dpr; cBuf[i*2+1]=c.y*dpr;
+    hBuf[i*2]=c.w*0.5*dpr; hBuf[i*2+1]=c.h*0.5*dpr;
+  }
+  gl.useProgram(prog); gl.bindVertexArray(vao);
+  gl.uniform2f(loc.res, cv.width, cv.height);
+  gl.uniform1i(loc.count, cards.length);
+  gl.uniform2fv(loc.c, cBuf); gl.uniform2fv(loc.h, hBuf);
+  gl.uniform1f(loc.k, ui.k*dpr); gl.uniform1f(loc.aura, ui.aura*dpr);
+  gl.uniform1f(loc.light, ui.light); gl.uniform1i(loc.pal, ui.pal);
+  gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){ document.getElementById('fps').textContent=(fCnt/fAcc).toFixed(0)+' fps · '+cards.length+' cards'; fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

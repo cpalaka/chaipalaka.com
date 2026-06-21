@@ -52,3 +52,6 @@ NOTES.md
 .codegraph/
 # CodeGraph MCP wiring — project-local opt-in, per-machine (not imposed on clones)
 .mcp.json
+
+# Throwaway prototype screenshots (the .html prototypes themselves ARE tracked)
+prototypes/*.png
