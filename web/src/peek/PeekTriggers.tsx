@@ -48,6 +48,7 @@ function buildSpec(
     trigger: HTMLElement,
     mobile: boolean,
     parentId: string | undefined,
+    at?: { x: number; y: number },
 ): PreviewSpec | null {
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const width = mobile
@@ -71,6 +72,7 @@ function buildSpec(
             viewport,
             peekTuning.previewGapPx,
             peekTuning.previewMarginPx,
+            at?.y, // spawn at the dwell/click height, not always the word centre
         )
         center = { x: pos.x, y: pos.y }
         side = pos.side
@@ -159,7 +161,9 @@ function attach(store: PeekStore): () => void {
             if (dwellTrigger) dwellTrigger.classList.toggle('peek-dwelling', active)
         },
         onFire: () => {
-            if (dwellTrigger) openFor(dwellTrigger)
+            // Spawn the preview near the dwell point, not always at the word's
+            // geometric centre (task-036). `pointer` holds the live cursor.
+            if (dwellTrigger) openFor(dwellTrigger, { ...pointer })
         },
     })
 
@@ -177,7 +181,7 @@ function attach(store: PeekStore): () => void {
         heldTrigger = null
     }
 
-    function openFor(trigger: HTMLElement) {
+    function openFor(trigger: HTMLElement, at?: { x: number; y: number }) {
         // A word that already has a pinned card must not re-peek (task-024): a
         // fresh preview could be kept again, double-pinning the same word — two
         // tethers + nested wobble spans. PinnedCard marks its source `pin-word`.
@@ -189,7 +193,7 @@ function attach(store: PeekStore): () => void {
         const host = resolvePinHost(trigger)
         if (host.kind === 'suppress') return
         const parentId = host.kind === 'child' ? host.parentId : undefined
-        const spec = buildSpec(trigger, !hoverable, parentId)
+        const spec = buildSpec(trigger, !hoverable, parentId, at)
         if (!spec) return
         trigger.classList.remove('peek-dwelling')
         dwellTrigger = null

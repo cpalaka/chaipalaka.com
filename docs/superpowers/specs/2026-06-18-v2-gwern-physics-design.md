@@ -176,9 +176,10 @@ disambiguation). Reuse is the *header DOM slot*; the interaction role is new.
 > convert a preview into a real `CardEntry`.
 > - **Held preview = positioned DOM, no physics body** — it "holds still" (full
 >   physics only at pin, slice 4). **Dismiss** spawns a transient **sensor** body at
->   the card's rect, kicks it along the route's cardinal gravity, and despawns it on
->   viewport-clear or `peekTuning.fallMs` — the `stringCutDrop` cut→kick→fall pattern
->   reused. **No runtime tether / `setDragging` hold is used**, so ADR-0006's
+>   the card's rect, flings it UP in a 90° cone (toward the ceiling — task-036; was a
+>   kick along cardinal gravity), and despawns it the instant it clears the viewport
+>   (`peekTuning.fallMs` is only a safety cap) — the `stringCutDrop` cut→fling→fall
+>   pattern reused. **No runtime tether / `setDragging` hold is used**, so ADR-0006's
 >   runtime-tether-creation work stays in slice 4 as planned.
 > - **Portal lead** = the target post's `frontmatter.description` + title (the
 >   available one-line summary; blog-slug Portals only — non-blog Portals show
@@ -323,9 +324,10 @@ i111 regression in the spike doc.
 - **One scrollable prose surface per route**, **fixed DOM** — not part of the
   simulation. (A scrollable readable surface and a jostleable physics body are
   near-contradictory; the requirement forces fixed-DOM.)
-- Its **edges participate in physics**: cards collide against the box rect (static
-  walls) and tether to its top/bottom edges (the edge regime). Physics-*aware*,
-  not a physics *body*.
+- Its **edges are physics-aware but non-colliding**: registered as static **sensor**
+  edges, so cards pass *through* the box rect (no collision — task-036) yet can still
+  tether/pin to its top/bottom edges (the edge regime). Physics-*aware*, not a
+  physics *body*.
 - **Solid (opaque) box.** Translucency-over-a-live-shader was considered and
   **rejected** — text over moving color cannot guarantee the ≥4.5:1 contrast
   "reading wins" requires. The contrast floor must hold **in both light and dark

@@ -40,8 +40,9 @@ export interface SidePosition extends Point {
 
 /**
  * Place the preview beside the word — to the right by default, flipped left if
- * the card would overflow the right edge — vertically centred on the word and
- * clamped so it never leaves the viewport.
+ * the card would overflow the right edge — vertically centred on the word, or on
+ * `anchorY` (the dwell/click point) when given so the card spawns near where the
+ * interaction happened, and clamped so it never leaves the viewport.
  */
 export function sidePositionFor(
     word: Box,
@@ -49,16 +50,17 @@ export function sidePositionFor(
     viewport: Viewport,
     gap: number,
     margin: number,
+    anchorY?: number,
 ): SidePosition {
     const half = card.width / 2
     const rightCentre = word.right + gap + half
     const side: Side = rightCentre + half + margin > viewport.width ? 'left' : 'right'
     const x = side === 'right' ? rightCentre : word.left - gap - half
 
-    const wordMidY = word.top + word.height / 2
+    const centreY = anchorY ?? word.top + word.height / 2
     const minY = margin + card.height / 2
     const maxY = viewport.height - margin - card.height / 2
-    const y = Math.max(minY, Math.min(maxY, wordMidY))
+    const y = Math.max(minY, Math.min(maxY, centreY))
 
     return { x, y, side }
 }

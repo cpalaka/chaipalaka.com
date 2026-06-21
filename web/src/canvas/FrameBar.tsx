@@ -55,10 +55,6 @@ export function FrameBar() {
         return () => document.removeEventListener('keydown', onKeyDown)
     }, [settingsOpen])
 
-    // `/` is intentionally a chromeless placeholder (issue #148). Revert by
-    // deleting this guard when V2 lands and the route regains nav.
-    if (pathname === '/') return null
-
     return (
         <header role="banner" className="frame-bar">
             <div className="frame-bar__title">

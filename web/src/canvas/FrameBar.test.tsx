@@ -5,9 +5,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { FrameBar } from './FrameBar'
 import { getFrameEdgeController } from './useFrameEdge'
 
-// Default to /blog: per issue #148, FrameBar self-suppresses at `/`
-// (placeholder route). Tests that need to inspect FrameBar internals must
-// render under a path where it actually mounts.
+// renderInRouter defaults to /blog so path-indicator and nav-active tests have
+// a concrete section path. FrameBar now renders on every route including `/`
+// (the issue #148 placeholder suppression was removed in task-036).
 function renderInRouter(initialPath = '/blog') {
     return render(
         <MemoryRouter initialEntries={[initialPath]}>
@@ -24,9 +24,15 @@ describe('FrameBar', () => {
         expect(link).toHaveAttribute('href', '/')
     })
 
-    test('FrameBar self-suppresses at / (placeholder route, issue #148)', () => {
-        const { container } = renderInRouter('/')
-        expect(container).toBeEmptyDOMElement()
+    test('renders the banner with nav at / (placeholder suppression retired, task-036)', () => {
+        renderInRouter('/')
+        expect(screen.getByRole('banner')).toBeInTheDocument()
+        // at home the site name is the active affordance; no path indicator shown
+        expect(screen.getByRole('link', { name: 'chaipalaka' })).toHaveAttribute(
+            'data-active',
+            'true',
+        )
+        expect(screen.queryByText('/')).not.toBeInTheDocument()
     })
 
     test('site-name link is NOT active when at /blog', () => {

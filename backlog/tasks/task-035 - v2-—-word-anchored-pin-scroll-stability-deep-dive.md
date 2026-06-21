@@ -4,7 +4,7 @@ title: v2 — word-anchored pin scroll stability (deep dive)
 status: To Do
 assignee: []
 created_date: '2026-06-21 03:13'
-updated_date: '2026-06-21 04:23'
+updated_date: '2026-06-21 05:55'
 labels:
   - claude-generated
   - v2
@@ -29,7 +29,14 @@ Deep dive on flaky word-anchored pinned-card behavior under scroll, surfaced dur
 - [ ] #3 Recall is always reachable: scrolling a parked card's word back into the fold offers recall and clicking it returns the card
 - [ ] #4 Parked-card restore (task-028) lands cards correctly via parkAt regardless of edge-handle readiness timing
 - [ ] #5 Behavior verified by per-frame trace / conserved invariant (rope drift bounded) across scroll speeds — not single-frame snapshots
+- [ ] #6 Kept cards rest at the content-box edge on Keep (not hanging word-anchored in mid-prose) — a resting-model change from spec §5; reuse parkAt on pin. Depends on AC#2 (parked-bottom must land on-screen, not below the viewport). Folded from task-036 pass-1 (user feedback 2026-06-21).
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+task-036 pass-1 'B' (keep→box-edge pin) folded here per Chai 2026-06-21: kept cards should park to the box edge instead of word-anchored 'thin air'. Reuses parkAt + contentBox edge handles — same machinery as the AC#2 bottom-edge bug, so do them together; pick the edge policy (gravity-direction vs nearest) at implementation. Update spec §5 (resting model: word-anchored → edge-anchored on keep) in the same branch when implemented.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

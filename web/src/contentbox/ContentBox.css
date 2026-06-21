@@ -6,7 +6,8 @@
     inset: 0;
     margin: auto;
     background: var(--color-bg);
-    border: var(--card-border-width) solid var(--color-fg);
+    /* Border removed for now — restored in the capstone design pass (task-036).
+       The box stays visible via background + box-shadow + radius. */
     border-radius: var(--card-radius);
     box-shadow: var(--card-shadow);
     overflow: hidden;

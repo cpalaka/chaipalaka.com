@@ -348,10 +348,11 @@ export class PhysicsWorld implements BodyForceSource {
 
     /**
      * Register, move, or clear the v2 content box as a rectangle of static
-     * physics walls. The box is fixed DOM (not a simulated body), but its four
-     * edges are static collision walls and its top/bottom edges are tetherable
-     * parents (the edge-anchored regime — reusing the ceiling/floor branch in
-     * `wireTetherFor`). Pass `null` to remove it.
+     * physics edges. The box is fixed DOM (not a simulated body); its four edges
+     * are non-colliding sensors (cards pass through the border — task-036), and
+     * its top/bottom edges remain tetherable parents (the edge-anchored regime —
+     * reusing the ceiling/floor branch in `wireTetherFor`). Pass `null` to
+     * remove it.
      *
      * Box edges are viewport-fixed, so this fires on mount and on resize, never
      * on scroll. On a resize move, edge-anchored cards are translate-paired with
@@ -421,15 +422,19 @@ export class PhysicsWorld implements BodyForceSource {
         this.updateEdge(cb.right, g.right.center)
     }
 
-    // Add one static edge bar. With an `anchor` it is registered (tetherable);
-    // without, it is collision-only (no handle), like the persistent side walls.
+    // Add one static, non-colliding (sensor) edge. With an `anchor` it is
+    // registered as a tether anchor (top/bottom stay pinnable); without, it has
+    // no handle and — now that edges are sensors — no physical effect (left/right).
     private addEdge(center: Vec2, size: CardSize, anchor?: Vec2): ContentBoxEdge {
         const body = Matter.Bodies.rectangle(
             center.x,
             center.y,
             size.width,
             size.height,
-            { isStatic: true },
+            // Sensor: the box border is non-colliding (cards pass through it)
+            // but stays a static tether anchor, so top/bottom remain pinnable —
+            // auto-park is a tether/constraint, not a collision rest. task-036.
+            { isStatic: true, isSensor: true },
         )
         Matter.Composite.add(this.world, body)
         if (!anchor) return { body }

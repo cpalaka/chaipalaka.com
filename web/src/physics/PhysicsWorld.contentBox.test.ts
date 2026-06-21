@@ -40,8 +40,8 @@ describe('PhysicsWorld.setContentBox — registration', () => {
     })
 })
 
-describe('PhysicsWorld.setContentBox — collision', () => {
-    test('the box top edge catches a body falling from above (does not pass through)', () => {
+describe('PhysicsWorld.setContentBox — borders are sensors (task-036)', () => {
+    test('the box edges do NOT catch a falling body — it passes through to the viewport floor', () => {
         const world = makeWorld()
         world.setContentBox(BOX)
         const card = world.registerById(
@@ -51,10 +51,10 @@ describe('PhysicsWorld.setContentBox — collision', () => {
         )
         for (let i = 0; i < 600; i++) world.tick(DT)
         const pos = world.getPosition(card)
-        // Rests on the top surface (y=100), half-height 20 → ~80; never tunnels
-        // through to the viewport floor (~580).
-        expect(pos.y).toBeLessThan(100)
-        expect(pos.y).toBeGreaterThan(40)
+        // Box edges are sensors: the card passes through the box region (top
+        // surface y=100, bottom y=300) and lands on the viewport floor (~580).
+        // It is never caught on / rested against a box edge.
+        expect(pos.y).toBeGreaterThan(500)
     })
 })
 

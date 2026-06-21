@@ -13,15 +13,21 @@ export const CONTENT_BOX_HEIGHT = 480
 
 interface ContentBoxProps {
     children: ReactNode
+    // Optional per-route override of the standard box size. Defaults to
+    // CONTENT_BOX_WIDTH/HEIGHT; a route passes this only for an exception. (Card
+    // anchor math still reads the consts — thread the resolved size through when
+    // the first overriding route actually lands. task-036.)
+    size?: { width?: number; height?: number }
 }
 
 /**
  * The v2 content box: a fixed, solid, scrollable prose surface centred over the
  * background shader — the middle of the three depth planes (shader / box /
- * cards). Its screen rectangle is pushed into the physics world as static walls
- * so foreground cards collide with and tether to its edges.
+ * cards). Its screen rectangle is pushed into the physics world as non-colliding
+ * sensor edges: foreground cards pass through the border but can still tether /
+ * pin to its top and bottom edges (task-036).
  */
-export function ContentBox({ children }: ContentBoxProps) {
+export function ContentBox({ children, size }: ContentBoxProps) {
     const world = usePhysicsWorld()
     const ref = useRef<HTMLDivElement>(null)
     const { pathname } = useLocation()
@@ -81,8 +87,8 @@ export function ContentBox({ children }: ContentBoxProps) {
             className="content-box"
             data-content-box
             style={{
-                width: CONTENT_BOX_WIDTH,
-                height: CONTENT_BOX_HEIGHT,
+                width: size?.width ?? CONTENT_BOX_WIDTH,
+                height: size?.height ?? CONTENT_BOX_HEIGHT,
                 viewTransitionName: isMorphDestination ? HERO_NAME : undefined,
             }}
         >

@@ -29,10 +29,11 @@ export const peekTuning = {
     previewGapPx: 12,
     /** Min distance the preview keeps from a viewport edge (px). */
     previewMarginPx: 12,
-    /** Bounded fall lifetime on dismiss — despawns fast, never settles (ms). */
-    fallMs: 600,
-    /** Exit-kick velocity along route gravity when a preview is dismissed. */
-    fallKick: 8,
+    /** Safety cap on a dismissed preview's lifetime (ms). It is normally removed
+     * the instant it clears the viewport; this only bounds a card that never exits. */
+    fallMs: 4000,
+    /** Exit-kick speed when a dismissed preview is flung up (toward the ceiling). */
+    fallKick: 18,
 }
 
 export type PeekTuning = typeof peekTuning

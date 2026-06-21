@@ -47,8 +47,8 @@ describe('CanvasLayout FrameBar presence', () => {
         expect(screen.getByText('chaipalaka')).toBeInTheDocument()
     })
 
-    test('FrameBar is suppressed at / (placeholder route, issue #148)', () => {
+    test('FrameBar is mounted at / too (placeholder suppression retired, task-036)', () => {
         renderCanvasLayout('/')
-        expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+        expect(screen.getByRole('banner')).toBeInTheDocument()
     })
 })

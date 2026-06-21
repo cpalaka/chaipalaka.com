@@ -8,6 +8,7 @@ import { PinGesture } from '../pin/pinGesture'
 import { pinTuning } from '../pin/pinTuning'
 import { usePeek } from './PeekContext'
 import { peekTuning } from './peekTuning'
+import { computeFlingVelocity } from './fling'
 import { useMorphSource, HERO_NAME } from '../nav/morph'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { PreviewEntry } from './PeekStore'
@@ -24,9 +25,9 @@ const CLEAR_PAD = 100
  * One ephemeral preview. Two phases:
  *  - **held**: a fixed DOM card centred beside its source word (no physics body —
  *    it "holds still"; full physics arrives only at pin, slice 4).
- *  - **falling**: on dismiss it becomes a transient sensor body kicked along the
- *    route's cardinal gravity, despawned the moment it clears the viewport or the
- *    bounded `fallMs` lifetime elapses (never settles).
+ *  - **falling**: on dismiss it becomes a transient sensor body flung UP in a 90°
+ *    cone (toward the ceiling); route gravity then acts on it. Removed the moment it
+ *    clears the viewport (any edge); `peekTuning.fallMs` is only a safety cap.
  *
  * Reduced-motion short-circuits the fall: the preview is removed instantly.
  */
@@ -208,13 +209,10 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
         handleRef.current = handle
         // Sensor: fall straight through the box edges / floor, never settle.
         world.setSensor(handle, true)
-        // Snap-kick along the route's cardinal gravity so the exit feels deliberate.
-        const g = world.getGravityVector()
-        const gLen = Math.hypot(g.x, g.y) || 1
-        world.setVelocity(handle, {
-            x: (g.x / gLen) * peekTuning.fallKick,
-            y: (g.y / gLen) * peekTuning.fallKick,
-        })
+        // Upward-cone exit-kick (task-036): the dismissed preview is flung in a
+        // random direction within a 90° cone toward the ceiling at fallKick speed;
+        // route gravity then acts on it. (Was an isotropic 360° kick.)
+        world.setVelocity(handle, computeFlingVelocity(Math.random, peekTuning.fallKick))
 
         const startedAt = performance.now()
         let raf = requestAnimationFrame(function check() {

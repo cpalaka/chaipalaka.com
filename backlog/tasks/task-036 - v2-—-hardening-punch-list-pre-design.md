@@ -1,10 +1,10 @@
 ---
 id: TASK-036
 title: v2 — hardening punch-list (pre-design)
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-21 04:24'
-updated_date: '2026-06-21 04:43'
+updated_date: '2026-06-21 06:02'
 labels:
   - claude-generated
   - v2
@@ -28,15 +28,17 @@ Time-box: collect (user seeds + dogfood pass) -> FREEZE list -> execute -> close
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Punch-list collected (user seeds + dogfood pass) and frozen; each item triaged trivial-inline vs spun-out
-- [ ] #2 Content box: a standard default width/height applies (extensible with per-route overrides later); the box is removed from the physics sim entirely (borders not pinnable); the temporary black border is removed (pending design round)
-- [ ] #3 Home page (/) renders the navbar
-- [ ] #4 Peek preview cards spawn near the click point (not a fixed static location); on drop/dismiss they are flung in a random direction with a slight impulse, not straight down
+- [x] #2 Content box: a standard default width/height applies (extensible with per-route overrides later); the box is removed from the physics sim entirely (borders not pinnable); the temporary black border is removed (pending design round)
+- [x] #3 Home page (/) renders the navbar
+- [x] #4 Peek preview cards spawn near the click point (not a fixed static location); on drop/dismiss they are flung in a random direction with a slight impulse, not straight down
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Pass 1 (2026-06-20): AC #2 content box, #3 home navbar, #4 peek spawn/fling. Also raised: what happened to the temporary WIP/coming-soon home page — under investigation, not yet an AC.
+
+AC#2 clarification: 'removed from physics entirely / borders not pinnable' was the original framing. DELIVERED (per Chai's mid-impl clarification) as NON-COLLIDING SENSOR borders — cards pass through them, but top/bottom edges REMAIN pinnable. The box stays in the sim as sensor edges, not removed. See commit eb88c17 + CONTEXT.md / v2 spec §6.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

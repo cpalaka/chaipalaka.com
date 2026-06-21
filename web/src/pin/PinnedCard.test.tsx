@@ -264,3 +264,53 @@ describe('PinnedCard — child pin (recursion)', () => {
         expect(c1.y - c0.y).toBeCloseTo(-40, 1) // child carried by the SAME delta
     })
 })
+
+// --- Word wobble regime guard (task-036) -------------------------------------
+// Only an actively word-anchored card drives its source word's wobble. Once a
+// card auto-parks to a box edge it no longer tracks the word, so the word must
+// settle to neutral — the bug was the wobble running every tick regardless of
+// regime, so a parked card kept jiggling its word.
+
+describe('PinnedCard — word wobble regime guard (task-036)', () => {
+    function wobbleOffset(span: HTMLElement): number {
+        const m = span.style.transform.match(
+            /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/,
+        )
+        return m ? Math.hypot(parseFloat(m[1] ?? '0'), parseFloat(m[2] ?? '0')) : 0
+    }
+
+    it('a parked card does NOT drive its word wobble (only word-anchored cards wobble)', () => {
+        const { world, store } = renderTree()
+        // Content box: a DOM rect for the fold + its registered physics edges.
+        const box = document.createElement('div')
+        box.setAttribute('data-content-box', '')
+        box.getBoundingClientRect = vi.fn(() => rect(0, 200, 600, 200)) // fold 200..400
+        document.body.appendChild(box)
+        act(() => world.setContentBox({ x: 0, y: 200, width: 600, height: 200 }))
+
+        const word = makeWord('anchor')
+        word.getBoundingClientRect = vi.fn(() => rect(100, 250)) // centre ~258, in fold
+        let id = ''
+        act(() => {
+            id = store.pin(parentSpec(word))
+        })
+        const ch = world.getHandleById(id)!
+        const span = word.querySelector('.pin-wobble') as HTMLElement
+        expect(span).not.toBeNull()
+
+        // Scroll the word well above the fold → the card auto-parks to the top edge.
+        word.getBoundingClientRect = vi.fn(() => rect(100, 20)) // centre ~28 << fold.top
+        act(() => world.tick(16))
+
+        // Drive a strong card velocity every frame; a PARKED card must not move its
+        // word wobble span (pre-fix it tracked the card's velocity and kept jiggling).
+        act(() => {
+            for (let i = 0; i < 40; i++) {
+                world.setVelocity(ch, { x: 200, y: 0 })
+                world.tick(16)
+            }
+        })
+
+        expect(wobbleOffset(span)).toBeLessThan(0.5)
+    })
+})

@@ -39,6 +39,19 @@ describe('sidePositionFor', () => {
         const bottom = sidePositionFor(nearBottom, CARD, VIEWPORT, GAP, MARGIN)
         expect(bottom.y).toBe(VIEWPORT.height - MARGIN - CARD.height / 2)
     })
+
+    it('anchors the card vertically to the supplied point (dwell/click Y), not the word centre', () => {
+        const word = rect(100, 400, 60, 20) // word centre y = 410
+        const pos = sidePositionFor(word, CARD, VIEWPORT, GAP, MARGIN, 520)
+        expect(pos.y).toBe(520) // follows the anchor, not 410
+        expect(pos.x).toBe(160 + GAP + 150) // horizontal placement unchanged
+    })
+
+    it('clamps the anchored Y to the viewport, like the word-centred Y', () => {
+        const word = rect(100, 400, 60, 20)
+        const below = sidePositionFor(word, CARD, VIEWPORT, GAP, MARGIN, 9999)
+        expect(below.y).toBe(VIEWPORT.height - MARGIN - CARD.height / 2)
+    })
 })
 
 describe('pointerBridged', () => {

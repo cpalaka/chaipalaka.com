@@ -317,7 +317,13 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 world.tether.setLength(tetherHandle, curLen)
             }
             if (!reduced && wobbleSpan && world.has(cardHandle)) {
-                const vel = world.getVelocity(cardHandle)
+                // Only a word-anchored card drives the wobble; a parked card hangs
+                // from the box edge, not the word, so zero the drive and let the
+                // spring ease the word back to neutral (task-036).
+                const vel =
+                    regime === 'word'
+                        ? world.getVelocity(cardHandle)
+                        : { x: 0, y: 0 }
                 const drive = clampMag(
                     {
                         x: vel.x * pinTuning.wobbleDriveGain,

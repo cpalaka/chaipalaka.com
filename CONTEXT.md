@@ -464,11 +464,12 @@ supersede the v1 "page is a card swarm" framing for content routes. Full design:
 **Content box**:
 The fixed, solid, scrollable prose surface that is the protagonist of a v2 route —
 gwern-style dense reading content, floating over the background shader, with
-**Card**s in a foreground plane above it. Fixed DOM (not a physics body), but its
-edges participate in physics (cards collide with / tether to them). Its rectangle
-is registered into the **PhysicsWorld** as four static walls via `setContentBox`
-(top/bottom are tetherable handles, the **Edge-anchored** regime; `'box-top'` /
-`'box-bottom'` **ParentRef**s resolve to them); on resize the box recentres and
+**Card**s in a foreground plane above it. Fixed DOM (not a physics body); its
+rectangle is registered into the **PhysicsWorld** via `setContentBox` as four
+static, **non-colliding sensor** edges — cards pass *through* the border (the box
+is visual + pinnable, not a collider — task-036), while top/bottom stay tetherable
+handles (the **Edge-anchored** regime; `'box-top'` / `'box-bottom'` **ParentRef**s
+resolve to them, so pins still park on the edges). On resize the box recentres and
 its edge-anchored cards are translate-paired with their edge (ADR-0006 G6).
 _Avoid_: panel, reader pane, article (the box is the whole reading surface, not
 one element in it).
@@ -531,7 +532,8 @@ _Avoid_: external Portal (it shares the Portal *shape* but enters off-site, not 
 
 **Preview card**:
 The **peek**-state **Card**: ephemeral, stiff-anchored beside its source word,
-side-positioned, dismissed by a physical fall. Not yet a full-physics toy.
+side-positioned at the dwell/click height (task-036), dismissed by an upward
+(90° cone) fling and removed once it leaves the viewport. Not yet a full-physics toy.
 _Avoid_: popup, tooltip, hovercard.
 
 **Pinned card**:
