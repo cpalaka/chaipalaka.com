@@ -5,6 +5,7 @@ import { DwellTracker } from './dwell'
 import { peekTuning } from './peekTuning'
 import { sidePositionFor, pointerBridged, type Box, type Side } from './peekGeometry'
 import { resolvePortalLead, liftPocketBody, pocketIdFromHref } from './peekContent'
+import { resolvePinHost } from '../pin/recursion'
 import type { PeekStore, PreviewSpec } from './PeekStore'
 
 // Portal links + Pocket footnote references are the only peek triggers. External
@@ -38,7 +39,11 @@ function boxOf(el: Element): Box {
     return { left: r.left, top: r.top, width: r.width, height: r.height, right: r.right, bottom: r.bottom }
 }
 
-function buildSpec(trigger: HTMLElement, mobile: boolean): PreviewSpec | null {
+function buildSpec(
+    trigger: HTMLElement,
+    mobile: boolean,
+    parentId: string | undefined,
+): PreviewSpec | null {
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const width = mobile
         ? Math.min(peekTuning.previewWidth, viewport.width - 2 * peekTuning.previewMarginPx)
@@ -81,6 +86,7 @@ function buildSpec(trigger: HTMLElement, mobile: boolean): PreviewSpec | null {
             href,
             title: lead?.title ?? trigger.textContent?.trim() ?? 'Link',
             lead: lead?.description,
+            parentId,
         }
     }
 
@@ -97,6 +103,7 @@ function buildSpec(trigger: HTMLElement, mobile: boolean): PreviewSpec | null {
         width,
         bodyHtml: body.bodyHtml,
         title: 'Note',
+        parentId,
     }
 }
 
@@ -151,7 +158,14 @@ function attach(store: PeekStore): () => void {
         // fresh preview could be kept again, double-pinning the same word — two
         // tethers + nested wobble spans. PinnedCard marks its source `pin-word`.
         if (trigger.classList.contains('pin-word')) return
-        const spec = buildSpec(trigger, !hoverable)
+        // Recursion gate (task-027, spec §9): a content-box prose link is a root
+        // pin; a link inside a *root* pinned card peeks a child carrying that
+        // card's id; a link inside a *child* card (the one-level cap) or a held
+        // preview does not peek at all.
+        const host = resolvePinHost(trigger)
+        if (host.kind === 'suppress') return
+        const parentId = host.kind === 'child' ? host.parentId : undefined
+        const spec = buildSpec(trigger, !hoverable, parentId)
         if (!spec) return
         trigger.classList.remove('peek-dwelling')
         dwellTrigger = null
@@ -180,6 +194,7 @@ function attach(store: PeekStore): () => void {
         if (!target || target === dwellTrigger) return
         if (heldTrigger === target) return // already showing for this source
         if (target.classList.contains('pin-word')) return // already pinned — no re-peek
+        if (resolvePinHost(target).kind === 'suppress') return // child-card / preview link — no dwell
         dwellTrigger = target
         dwell.start(e.clientX, e.clientY)
     }
@@ -251,24 +266,28 @@ function attach(store: PeekStore): () => void {
         if (!bridged()) dismissHeld()
     }
 
-    boxEl.addEventListener('pointerover', onPointerOver)
-    boxEl.addEventListener('pointerout', onPointerOut)
+    // Over/out/focus listen on `document`, not the box: a peek trigger can live
+    // in the box's prose OR inside a pinned card in the foreground pin layer (a
+    // box sibling — recursion, task-027). `resolvePinHost` scopes which links
+    // actually peek, so document-level delegation is safe.
+    document.addEventListener('pointerover', onPointerOver)
+    document.addEventListener('pointerout', onPointerOut)
     window.addEventListener('pointermove', onPointerMove, { passive: true })
     document.addEventListener('pointerdown', onPointerDownDoc)
-    boxEl.addEventListener('focusin', onFocusIn)
-    boxEl.addEventListener('focusout', onFocusOut)
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
     scrollEl.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('scroll', onScroll, { passive: true })
 
     return () => {
         dwell.cancel()
         clearDismissTimer()
-        boxEl.removeEventListener('pointerover', onPointerOver)
-        boxEl.removeEventListener('pointerout', onPointerOut)
+        document.removeEventListener('pointerover', onPointerOver)
+        document.removeEventListener('pointerout', onPointerOut)
         window.removeEventListener('pointermove', onPointerMove)
         document.removeEventListener('pointerdown', onPointerDownDoc)
-        boxEl.removeEventListener('focusin', onFocusIn)
-        boxEl.removeEventListener('focusout', onFocusOut)
+        document.removeEventListener('focusin', onFocusIn)
+        document.removeEventListener('focusout', onFocusOut)
         scrollEl.removeEventListener('scroll', onScroll)
         window.removeEventListener('scroll', onScroll)
     }

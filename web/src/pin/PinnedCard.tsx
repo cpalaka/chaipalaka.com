@@ -9,6 +9,10 @@ import { stepRegime, type Regime } from './scrollRegime'
 import { stepWobble, REST, type WobbleState } from './wobble'
 import { pinTuning } from './pinTuning'
 import { useMorphSource, HERO_NAME } from '../nav/morph'
+import { usePin } from './PinContext'
+import { childHandlesOf } from './recursion'
+import { wireTetherFor, type TetherHandle } from '../physics/Tether'
+import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { PinEntry } from './PinStore'
 import './Pin.css'
 
@@ -55,6 +59,7 @@ function inRect(x: number, y: number, r: DOMRect): boolean {
  */
 export function PinnedCard({ entry }: { entry: PinEntry }) {
     const world = usePhysicsWorld()
+    const pin = usePin()
     const reduced = usePrefersReducedMotion()
     const elRef = useRef<HTMLElement | null>(null)
     // Enter = hero morph into the destination box (ADR-0007). Ref-held so the
@@ -92,30 +97,54 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             world.setVelocity(cardHandle, { x: entry.vx ?? 0, y: entry.vy ?? 0 })
         }
 
-        // Word-anchor proxy + runtime tether (anchor = the word's centre). The
-        // tether handle and its live length are mutable: auto-park / recall swap
-        // the rope between the word and a box edge and ease its rest length.
-        const first = trackWord(null, word.getBoundingClientRect())
-        const startAnchor = first
-            ? first.anchor
-            : { x: entry.center.x, y: entry.center.y - h }
-        const anchorHandle = world.registerAnchor(startAnchor)
-        const wordRest = Math.hypot(
-            entry.center.x - startAnchor.x,
-            entry.center.y - startAnchor.y,
-        )
-        let tetherHandle = world.tether.add(anchorHandle, cardHandle, wordRest)
+        // A **child pin** (spec §9 recursion) ropes to its PARENT card via the
+        // generic card-parent Tether (`wireTetherFor` 'card' — NOT a word-anchor,
+        // NOT the removed NotesChain). A **root pin** instead gets a word-anchor
+        // proxy + runtime word tether (anchor = the word's centre). The handle and
+        // (root) length are mutable: auto-park / recall swap the rope.
+        const isChild = entry.parentId !== undefined
+        let first: { anchor: Vec2; delta: Vec2 } | null = null
+        let anchorHandle: PhysicsHandle | undefined
+        let wordRest = 0
+        let tetherHandle: TetherHandle | undefined
+        if (isChild) {
+            // The parent mounted first, so its body is registered; if it has since
+            // gone, the child just hangs ropeless (only reachable via parent loss).
+            const parentHandle = world.getHandleById(entry.parentId!)
+            if (parentHandle !== undefined) {
+                tetherHandle = wireTetherFor(world, parentHandle, 'card', cardHandle, {
+                    x: entry.center.x,
+                    y: entry.center.y,
+                })
+            }
+        } else {
+            first = trackWord(null, word.getBoundingClientRect())
+            const startAnchor = first
+                ? first.anchor
+                : { x: entry.center.x, y: entry.center.y - h }
+            anchorHandle = world.registerAnchor(startAnchor)
+            wordRest = Math.hypot(
+                entry.center.x - startAnchor.x,
+                entry.center.y - startAnchor.y,
+            )
+            tetherHandle = world.tether.add(anchorHandle, cardHandle, wordRest)
+        }
 
-        // Wobble host: wrap the word's contents in a single inline-block span so a
-        // transform animates without touching the real text (SR/selection/copy)
-        // and without moving the word's own layout box (the anchor measures the
-        // un-wobbled <a>, so there is no feedback loop).
-        const wobbleSpan = document.createElement('span')
-        wobbleSpan.className = 'pin-wobble'
-        while (word.firstChild) wobbleSpan.appendChild(word.firstChild)
-        word.appendChild(wobbleSpan)
+        // Mark the source bonded (blocks a re-peek that would double-pin it). The
+        // wobble host is root-only: wrap the word's contents in a single
+        // inline-block span so a transform animates without touching the real text
+        // (SR/selection/copy) or the word's own layout box (the anchor measures the
+        // un-wobbled <a>, so there is no feedback loop). A child has no word regime,
+        // so it is marked but never wrapped (wobble deferred to the design pass).
         word.classList.add('pin-word')
+        let wobbleSpan: HTMLSpanElement | null = null
         let wob: WobbleState = REST
+        if (!isChild) {
+            wobbleSpan = document.createElement('span')
+            wobbleSpan.className = 'pin-wobble'
+            while (word.firstChild) wobbleSpan.appendChild(word.firstChild)
+            word.appendChild(wobbleSpan)
+        }
 
         // Reduced motion: place the card (frozen, no sway); it still tracks scroll.
         if (reduced) world.setDragging(cardHandle, true)
@@ -150,6 +179,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         // finding 4) then eased to taut (G3). Reduced-motion teleports the frozen
         // card instead, since a static body can't be pulled by the rope.
         const parkAt = (next: 'parked-top' | 'parked-bottom'): void => {
+            if (tetherHandle === undefined) return // root pins always have one
             const edgeHandle =
                 next === 'parked-top'
                     ? world.contentBoxTopHandle
@@ -184,6 +214,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
         // the fold. Re-anchor to the word and ease home; reduced-motion snaps.
         const recall = (): void => {
             if (regime === 'word' || !recallable) return
+            if (anchorHandle === undefined || tetherHandle === undefined) return
             const t = trackWord(null, word.getBoundingClientRect())
             if (!t) return
             world.tether.remove(tetherHandle)
@@ -209,9 +240,17 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             if (hot) ropePath()?.classList.add('string-layer__string--hot')
         }
 
+        const resolveChildHandle = (id: string): PhysicsHandle | undefined => {
+            const hh = world.getHandleById(id)
+            return hh !== undefined && world.has(hh) ? hh : undefined
+        }
+
         // Per-frame, before forces: regime step → translate-pair (G1) while
-        // word-anchored, or a parked hold; then the length ease and the wobble.
+        // word-anchored, or a parked hold; then the length ease and the wobble. A
+        // child has no word regime (anchorHandle undefined) and skips all of this;
+        // it is carried instead by its parent's G5 subtree translate below.
         const stopTick = world.onBeforeTick((dt) => {
+            if (anchorHandle === undefined || tetherHandle === undefined) return
             const tracked = trackWord(prevAnchor, word.getBoundingClientRect())
             if (tracked) {
                 const fold = readFold()
@@ -220,6 +259,16 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                     world.setPosition(anchorHandle, tracked.anchor)
                     if (tracked.delta.x !== 0 || tracked.delta.y !== 0) {
                         world.translate(cardHandle, tracked.delta)
+                        // G5: carry the whole bonded subtree by the SAME delta —
+                        // pairing only the parent would yank each child off its
+                        // card-to-card rope (spike: detach 2490px → 35px).
+                        for (const childHandle of childHandlesOf(
+                            pin.snapshot(),
+                            entry.id,
+                            resolveChildHandle,
+                        )) {
+                            world.translate(childHandle, tracked.delta)
+                        }
                     }
                     prevAnchor = tracked.anchor
                     if (fold) {
@@ -262,7 +311,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 }
                 world.tether.setLength(tetherHandle, curLen)
             }
-            if (!reduced && world.has(cardHandle)) {
+            if (!reduced && wobbleSpan && world.has(cardHandle)) {
                 const vel = world.getVelocity(cardHandle)
                 const drive = clampMag(
                     {
@@ -302,7 +351,8 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 recall()
             }
         }
-        word.addEventListener('click', onWordClick, true)
+        // Recall is a word-anchored-regime affordance — root pins only.
+        if (!isChild) word.addEventListener('click', onWordClick, true)
 
         // Title-bar re-drag gesture (press-hold to grab, body-click to enter).
         const bar = el.querySelector<HTMLElement>('[data-card-header]')
@@ -337,8 +387,10 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                 world.setDragging(cardHandle, false)
                 // Drag-to-edge: releasing the card past a fold edge re-anchors it
                 // there — the manual counterpart of auto-park (spec §5).
+                // Drag-to-edge parking is a root affordance; a child stays roped
+                // to its parent card (never re-anchors to a box edge).
                 const fold = readFold()
-                if (regime === 'word' && fold) {
+                if (!isChild && regime === 'word' && fold) {
                     const pos = world.getPosition(cardHandle)
                     if (pos.y < fold.top - pinTuning.foldMarginPx) {
                         parkAt('parked-top')
@@ -421,19 +473,24 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             word.removeEventListener('pointerleave', onLeave)
             word.removeEventListener('click', onWordClick, true)
             setHot(false)
-            world.tether.remove(tetherHandle)
+            if (tetherHandle !== undefined) world.tether.remove(tetherHandle)
             if (world.has(cardHandle)) world.unregister(cardHandle)
-            if (world.has(anchorHandle)) world.unregister(anchorHandle)
-            // Unwrap the wobble span, restoring the word's original text nodes.
-            while (wobbleSpan.firstChild) {
-                word.insertBefore(wobbleSpan.firstChild, wobbleSpan)
+            if (anchorHandle !== undefined && world.has(anchorHandle)) {
+                world.unregister(anchorHandle)
             }
-            wobbleSpan.remove()
+            // Unwrap the wobble span (root only), restoring the word's text nodes.
+            if (wobbleSpan) {
+                while (wobbleSpan.firstChild) {
+                    word.insertBefore(wobbleSpan.firstChild, wobbleSpan)
+                }
+                wobbleSpan.remove()
+            }
             word.classList.remove('pin-word', 'pin-word--hot', 'pin-word--recallable')
         }
-        // entry.id is the stable identity; other entry fields are captured once at pin.
+        // entry.id is the stable identity; other entry fields are captured once at
+        // pin. `pin` is the stable store from context (no re-run).
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [world, entry.id, reduced])
+    }, [world, pin, entry.id, reduced])
 
     return (
         <article
@@ -443,6 +500,7 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             className="physics-card pin-card"
             data-pin-id={entry.id}
             data-pin-kind={entry.kind}
+            data-pin-parent={entry.parentId}
             style={isMorphing ? { viewTransitionName: HERO_NAME } : undefined}
         >
             <div data-card-header className="pin-card__bar">

@@ -214,7 +214,13 @@ export default function BoxTest() {
                             <p>
                                 A Pocket has nowhere to step through to — the note
                                 itself is the content, lifted from this static
-                                disclosure into a preview card on peek.
+                                disclosure into a preview card on peek. Keep this
+                                note, then peek{' '}
+                                <a data-link-type="portal" href="/test/box-b">
+                                    the destination box
+                                </a>{' '}
+                                from inside its card to nest one level deeper — a
+                                child card strung to this one.
                             </p>
                         </div>
                     </details>

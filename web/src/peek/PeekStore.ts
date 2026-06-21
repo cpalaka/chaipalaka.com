@@ -18,6 +18,10 @@ export interface PreviewSpec {
     /** The source word/link element — handed to Keep to anchor the pinned card. */
     sourceEl?: Element
     kind: PeekKind
+    /** Set when the trigger lives inside a (root) pinned card: the id of that
+     * card, carried through Keep so the resulting pin ropes to it as a child
+     * (spec §9 recursion). Unset for a content-box prose link (a root pin). */
+    parentId?: string
     /** Card-centre placement in viewport space, and which side of the word. */
     center: { x: number; y: number }
     side: 'left' | 'right'

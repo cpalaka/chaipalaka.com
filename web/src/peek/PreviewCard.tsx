@@ -107,6 +107,7 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
                     pin.pin({
                         sourceEl: entry.sourceEl,
                         kind: entry.kind,
+                        parentId: entry.parentId,
                         center: {
                             x: rect.left + rect.width / 2,
                             y: rect.top + rect.height / 2,

@@ -16,6 +16,10 @@ export interface PinSpec {
     /** The source word/link element — the word-anchor target + wobble/highlight host. */
     sourceEl: Element
     kind: PinKind
+    /** Set when this pin was kept from a link *inside* another pinned card: the
+     * id of that parent card. A child pin ropes to the parent **card** (not a
+     * word) via the generic card-parent Tether (spec §9, one level deep). */
+    parentId?: string
     /** Drop position (card centre) in viewport space. */
     center: { x: number; y: number }
     width: number

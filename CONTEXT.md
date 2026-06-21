@@ -563,6 +563,19 @@ The visually-linked unit of a **pinned card**: source word + **Tether** + **Card
 Hovering any of the three highlights all three.
 _Avoid_: group, cluster.
 
+**Child pin / Bonded subtree**:
+One level of **Ladder** recursion (spec §9; task-027): a Portal/Pocket link
+*inside a root **pinned card**'s content* can itself peek/keep, pinning a **child
+pin** roped to its **parent card** (not a word) via the generic card-parent
+**Tether** (`wireTetherFor` `parentKind: 'card'` — **not** the removed NotesChain,
+ADR-0001 §9). Capped at **one level**: a link inside a child card spawns no further
+pin (`pin/recursion.ts` `resolvePinHost`, keyed off the `data-pin-parent` marker;
+arbitrary depth deferred). A root pin's **Word-anchored** translate-pair carries its
+whole **bonded subtree** — the pin *and* all its children — by the same scroll delta
+(spike **G5**), so a child is never yanked off its card-to-card rope. Child wobble is
+deferred to the design pass.
+_Avoid_: NotesChain (removed), grandchild / deep nesting (not built).
+
 **Hero morph / Physical default**:
 The two v2 navigation transitions (replacing the retired v1 transition system,
 ADR-0007). **Hero morph** = a clicked **Card** expands/reflows into the destination
