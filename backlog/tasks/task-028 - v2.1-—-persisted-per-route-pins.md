@@ -4,7 +4,7 @@ title: v2.1 — persisted per-route pins
 status: In Progress
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-21 01:25'
+updated_date: '2026-06-21 03:21'
 labels:
   - claude-generated
   - v2
@@ -31,6 +31,12 @@ Fast-follow persistence (spec section 7). Persist a route's pinned-card arrangem
 - [ ] #2 A pin whose source word no longer exists degrades gracefully (dropped or edge-parked, no crash)
 - [ ] #3 Persistence is per-route and scoped to localStorage
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+SHELVED 2026-06-20 — pending the rest of v2 feature work (user second thoughts; nice-to-have, not blocking). Implemented + verified, NOT merged, NOT signed off. Branch: feat/task-028-persisted-pins (2 commits: fa52c2c feat + e921845 review fixes). Gate green at shelve time (typecheck / test 786 / build+prerender / secret-scan / live). Only the user-sign-off DoD remains. RESUME: git checkout the branch, re-run the verify gate, get sign-off, mark Done, squash-merge. Bug-2 (word-anchored scroll/regime flakiness) split out to task-035.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
