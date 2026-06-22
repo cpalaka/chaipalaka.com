@@ -1,0 +1,359 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #6 "glyph-seeded reaction-diffusion".
+  Question it answers: does a Gray-Scott reaction–diffusion field that GERMINATES
+  FROM THE PROSE actually look good / on-identity, and is prose legible when it
+  floats on the field (the box-less /lab resolution to the occlusion problem)?
+
+  NOT production. WebGL2 + GLSL ping-pong for the LOOK only. The real build is a
+  from-scratch TSL node-material feedback scene per ADR-0009 (the "reuse the shipped
+  RD scene + flip a type" premise is DEAD — WebGPURenderer rejects the GLSL scene's
+  ShaderMaterial). GLSL look-validation is pixel-identical and ~10x faster to iterate.
+  Open directly: `open prototypes/glyph-rd.html`. Screenshots gitignored.
+
+  VERDICT (2026-06-21, Chai): REJECTED as an ambient prose-seeded layer. The look is
+  strong (organic ink/risograph), but free-running RD overgrows into a blob shaped like
+  the text block within ~2-8s — "germinates from the words" is only a brief, fragile
+  transient, and body text is too thin to survive germination legibly. The real blocker
+  is overgrowth-eats-legibility, NOT the occlusion flagged in the draft. If ever revived,
+  only viable as large-type/wordmark germination (a timed moment, converges with #6→#8),
+  not body prose. Not promoted to a task.
+
+  Assumptions (stated per prototype rules):
+   - Seed provenance is the RENDERED TEXT raster (a stand-in for DOM
+     Range.getClientRects / glyph rasterization) — NOT pretext, which measures block
+     metrics only. The same text raster is reused as the crisp overlay so the seed and
+     the readable prose are guaranteed pixel-aligned.
+   - Ink-on-paper palette (#f4f2ec paper) is a neutral placeholder, NOT a fixed house
+     identity — v2 visual design is an unstarted capstone (task-030). The DITHER toggle
+     shows the 1-bit risograph grade as one candidate direction, raw as another.
+   - Default preset "mitosis" reliably grows from thin glyph strokes so germination is
+     visible; "coral"/"maze"/etc. show the range.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>glyph-seeded reaction–diffusion prototype — DRAFT-009 #6</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:264px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 42px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel select, #panel button { font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 6px; cursor:pointer; }
+  #panel select { width:100%; margin-bottom:2px; }
+  #panel .chan { display:flex; gap:14px; margin:8px 0 2px; flex-wrap:wrap; }
+  #panel .chan label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  #panel .seg { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+  #err { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    text-align:center; padding:40px; font-size:14px; z-index:9; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>glyph-seeded RD — #6</h1>
+  <select id="preset">
+    <option value="mitosis">mitosis — grows &amp; divides</option>
+    <option value="coral" selected>coral — branching crawl</option>
+    <option value="maze">maze — labyrinth</option>
+    <option value="worms">worms / U-skate</option>
+    <option value="spots">spots / spirals</option>
+    <option value="solitons">solitons — pulsing dots</option>
+  </select>
+  <div class="row"><label>feed</label><input id="feed" type="range" min="0.010" max="0.100" step="0.0005" value="0.0545"><span class="val" id="feedv"></span></div>
+  <div class="row"><label>kill</label><input id="kill" type="range" min="0.040" max="0.072" step="0.0005" value="0.062"><span class="val" id="killv"></span></div>
+  <div class="row"><label>speed</label><input id="speed" type="range" min="1" max="24" step="1" value="14"><span class="val" id="speedv"></span></div>
+  <div class="row"><label>seed&nbsp;amt</label><input id="seed" type="range" min="0.1" max="1" step="0.05" value="0.7"><span class="val" id="seedv"></span></div>
+  <div class="row"><label>ink&nbsp;hue</label><input id="hue" type="range" min="0" max="100" step="1" value="0"><span class="val" id="huev"></span></div>
+  <div class="chan">
+    <label><input type="checkbox" id="cont">re-seed every frame</label>
+  </div>
+  <div class="chan">
+    <label><input type="checkbox" id="dither">1-bit dither</label>
+    <label><input type="checkbox" id="invert">invert</label>
+  </div>
+  <div class="chan">
+    <label><input type="checkbox" id="txt" checked>prose overlay</label>
+    <input id="txtop" type="range" min="0" max="100" step="1" value="70" style="flex:1">
+  </div>
+  <div class="seg">
+    <button id="reseed">re-seed</button>
+    <button id="clear">clear</button>
+  </div>
+  <small>The field is seeded with ink where the prose sits — the pattern <b>germinates from the words</b>. Drag on the canvas to paint live ink. Toggle <b>prose overlay</b> to judge legibility (the box-less /lab case). Toggle <b>1-bit dither</b> for the risograph grade. Try presets — each is a different "species".</small>
+</div>
+<div id="fps"></div>
+<div id="err"></div>
+
+<script>
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl2', { antialias:false, preserveDrawingBuffer:false });
+function fail(m){ const e=document.getElementById('err'); e.style.display='flex'; e.textContent=m; throw new Error(m); }
+if(!gl) fail('WebGL2 unavailable — this prototype needs it.');
+if(!gl.getExtension('EXT_color_buffer_float')) fail('EXT_color_buffer_float unavailable — needed for half-float RD targets.');
+
+// ---- shader plumbing -----------------------------------------------------
+const VERT = `#version 300 es
+out vec2 vUv;
+void main(){
+  vec2 p = vec2(float((gl_VertexID<<1)&2), float(gl_VertexID&2));
+  vUv = p;                       // 0..1 across the visible region (y-up)
+  gl_Position = vec4(p*2.0-1.0, 0.0, 1.0);
+}`;
+
+const UPDATE = `#version 300 es
+precision highp float;
+uniform sampler2D uState, uSeed;
+uniform vec2 uTexel;
+uniform float uFeed, uKill, uSeedAmt, uCont, uAspect;
+uniform vec3 uMouse;           // xy = uv, z = down
+in vec2 vUv; out vec4 frag;
+void main(){
+  vec2 uv = vUv;
+  vec4 s = texture(uState, uv);
+  float a = s.r, b = s.g;
+  vec2 lap = vec2(0.0);
+  lap += texture(uState, uv+vec2(-1.,-1.)*uTexel).rg * 0.05;
+  lap += texture(uState, uv+vec2( 0.,-1.)*uTexel).rg * 0.20;
+  lap += texture(uState, uv+vec2( 1.,-1.)*uTexel).rg * 0.05;
+  lap += texture(uState, uv+vec2(-1., 0.)*uTexel).rg * 0.20;
+  lap += s.rg * -1.0;
+  lap += texture(uState, uv+vec2( 1., 0.)*uTexel).rg * 0.20;
+  lap += texture(uState, uv+vec2(-1., 1.)*uTexel).rg * 0.05;
+  lap += texture(uState, uv+vec2( 0., 1.)*uTexel).rg * 0.20;
+  lap += texture(uState, uv+vec2( 1., 1.)*uTexel).rg * 0.05;
+  float Da = 1.0, Db = 0.5, dt = 1.0;
+  float reaction = a*b*b;
+  float na = a + (Da*lap.r - reaction + uFeed*(1.0-a))*dt;
+  float nb = b + (Db*lap.g + reaction - (uKill+uFeed)*b)*dt;
+  // continuous re-seed from prose
+  nb += texture(uSeed, uv).r * uSeedAmt * uCont;
+  // live brush
+  if(uMouse.z > 0.5){
+    float d = distance(uv*vec2(uAspect,1.0), uMouse.xy*vec2(uAspect,1.0));
+    nb += smoothstep(0.04, 0.0, d) * 0.7;
+  }
+  frag = vec4(clamp(na,0.0,1.0), clamp(nb,0.0,1.0), 0.0, 1.0);
+}`;
+
+const INIT = `#version 300 es
+precision highp float;
+uniform sampler2D uSeed; uniform float uSeedAmt;
+in vec2 vUv; out vec4 frag;
+void main(){ frag = vec4(1.0, texture(uSeed,vUv).r*uSeedAmt, 0.0, 1.0); }`;
+
+const DISPLAY = `#version 300 es
+precision highp float;
+uniform sampler2D uState, uSeed;
+uniform vec2 uRes;
+uniform float uDither, uInvert, uTxt, uTxtOp, uHue;
+in vec2 vUv; out vec4 frag;
+const vec3 PAPER = vec3(0.957,0.949,0.925);   // #f4f2ec
+vec3 inkColor(){
+  vec3 base = vec3(0.10,0.10,0.10);
+  vec3 warm = vec3(0.55,0.06,0.04);            // oxblood ink option
+  return mix(base, warm, uHue);
+}
+const int BAYER[16] = int[16](0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5);
+void main(){
+  float b = texture(uState, vUv).g;
+  float ink = smoothstep(0.04, 0.22, b);
+  if(uInvert > 0.5) ink = 1.0 - ink;
+  if(uDither > 0.5){
+    ivec2 p = ivec2(mod(vUv*uRes, 4.0));
+    float thr = (float(BAYER[p.y*4+p.x]) + 0.5) / 16.0;
+    ink = step(thr, ink);
+  }
+  vec3 col = mix(PAPER, inkColor(), ink*0.92);
+  // crisp prose overlay (same raster as the seed, so pixel-aligned)
+  float txt = texture(uSeed, vUv).r * uTxt;
+  col = mix(col, inkColor(), txt*uTxtOp);
+  frag = vec4(col, 1.0);
+}`;
+
+function sh(type, src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) fail('shader: '+gl.getShaderInfoLog(s)); return s; }
+function prog(fs){ const p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,VERT));
+  gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) fail('link: '+gl.getProgramInfoLog(p)); return p; }
+const pUpdate = prog(UPDATE), pInit = prog(INIT), pDisplay = prog(DISPLAY);
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+
+// ---- textures / FBOs -----------------------------------------------------
+let simW=0, simH=0, texA, texB, fboA, fboB, seedTex, cur='A';
+function makeState(w,h){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null);
+  for(const p of [[gl.TEXTURE_MIN_FILTER,gl.NEAREST],[gl.TEXTURE_MAG_FILTER,gl.NEAREST],
+                  [gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])
+    gl.texParameteri(gl.TEXTURE_2D,p[0],p[1]);
+  return t; }
+function makeFBO(t){ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0); return f; }
+
+// ---- prose raster: the seed AND the crisp overlay ------------------------
+const seedCanvas = document.createElement('canvas');
+const HEAD = 'the leopard’s spots';
+const BODY = 'Turing imagined two chemicals — one diffusing fast, one slow — and proved that this alone, with no plan, could grow the markings on an animal’s coat. Here the prose itself is the seed: the reaction begins exactly where the words are.';
+function buildSeed(){
+  const c = seedCanvas; c.width=simW; c.height=simH;
+  const x = c.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0,0,simW,simH);
+  x.fillStyle = '#fff'; x.strokeStyle = '#fff'; x.textAlign='center';
+  x.lineJoin='round'; x.lineCap='round';
+  const hs = Math.round(simH*0.085), bs = Math.round(simH*0.034);
+  const cx = simW*0.5, maxW = simW*0.74;
+  // fatten strokes so thin letterforms have enough mass to germinate (not dissolve)
+  const stamp = (str,fs,fw,fatten) => { x.font = `${fw} ${fs}px "IBM Plex Sans", sans-serif`;
+    x.lineWidth = fs*fatten; x.strokeText(str,cx,curY); x.fillText(str,cx,curY); };
+  // wrap body
+  x.font = `400 ${bs}px "IBM Plex Sans", sans-serif`;
+  const words = BODY.split(' '); const lines=[]; let line='';
+  for(const w of words){ const t=line?line+' '+w:w;
+    if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }
+  if(line) lines.push(line);
+  const bodyLH = bs*1.42, headLH = hs*1.1;
+  const total = headLH + bs*0.6 + lines.length*bodyLH;
+  let curY = (simH-total)/2 + hs*0.8;
+  stamp(HEAD, hs, 600, 0.05); curY += headLH + bs*0.6;
+  for(const l of lines){ stamp(l, bs, 400, 0.12); curY += bodyLH; }
+  if(!seedTex) seedTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, seedTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  for(const p of [[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],
+                  [gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])
+    gl.texParameteri(gl.TEXTURE_2D,p[0],p[1]);
+}
+
+function alloc(){
+  const scale = Math.min(1, 1100/Math.max(innerWidth, innerHeight));
+  simW = Math.max(2, Math.round(innerWidth*scale));
+  simH = Math.max(2, Math.round(innerHeight*scale));
+  cv.width = simW; cv.height = simH;                 // backing store; CSS stretches to viewport
+  texA = makeState(simW,simH); texB = makeState(simW,simH);
+  fboA = makeFBO(texA); fboB = makeFBO(texB);
+  buildSeed();
+  reseed();
+}
+function reseed(){
+  // wait for the webfont so glyph shapes are real, then init A=1, B=text*amt
+  gl.useProgram(pInit);
+  gl.bindTexture(gl.TEXTURE_2D, seedTex);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, seedTex);
+  gl.uniform1i(gl.getUniformLocation(pInit,'uSeed'), 0);
+  gl.uniform1f(gl.getUniformLocation(pInit,'uSeedAmt'), ui.seed);
+  for(const f of [fboA,fboB]){ gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+    gl.viewport(0,0,simW,simH); gl.drawArrays(gl.TRIANGLES,0,3); }
+  cur='A';
+}
+function clearField(){
+  gl.useProgram(pInit);
+  gl.activeTexture(gl.TEXTURE0);
+  // a black (no-text) one-pixel seed → B=0 everywhere
+  const blank = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,blank);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
+  gl.uniform1i(gl.getUniformLocation(pInit,'uSeed'),0);
+  gl.uniform1f(gl.getUniformLocation(pInit,'uSeedAmt'),0);
+  for(const f of [fboA,fboB]){ gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+    gl.viewport(0,0,simW,simH); gl.drawArrays(gl.TRIANGLES,0,3); }
+  gl.deleteTexture(blank);
+}
+
+// ---- controls ------------------------------------------------------------
+const ui = {};
+function bindRange(id,key,fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value; if(out) out.textContent=fmt?fmt(+el.value):el.value; };
+  el.addEventListener('input',upd); upd(); return el; }
+const PRESETS = { mitosis:[0.0367,0.0649], coral:[0.0545,0.062], maze:[0.029,0.057],
+  worms:[0.078,0.061], spots:[0.018,0.051], solitons:[0.030,0.062] };
+const feedEl=bindRange('feed','feed',v=>v.toFixed(4));
+const killEl=bindRange('kill','kill',v=>v.toFixed(4));
+bindRange('speed','speed');
+bindRange('seed','seed',v=>v.toFixed(2));
+bindRange('hue','hue',v=>v+'%'); // 0=charcoal .. 100=oxblood
+bindRange('txtop','txtop');
+document.getElementById('preset').addEventListener('change', e=>{
+  const p=PRESETS[e.target.value]; if(!p) return;
+  feedEl.value=p[0]; killEl.value=p[1]; feedEl.dispatchEvent(new Event('input')); killEl.dispatchEvent(new Event('input'));
+});
+const contEl=document.getElementById('cont'), ditherEl=document.getElementById('dither'),
+      invertEl=document.getElementById('invert'), txtEl=document.getElementById('txt');
+document.getElementById('reseed').onclick = reseed;
+document.getElementById('clear').onclick = clearField;
+
+// ---- pointer brush -------------------------------------------------------
+const mouse = { x:0, y:0, down:0 };
+function setM(e){ const r=cv.getBoundingClientRect(); mouse.x=(e.clientX-r.left)/r.width; mouse.y=1-(e.clientY-r.top)/r.height; }
+cv.addEventListener('pointerdown', e=>{ mouse.down=1; setM(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e=>{ if(mouse.down) setM(e); });
+addEventListener('pointerup', ()=> mouse.down=0);
+addEventListener('pointercancel', ()=> mouse.down=0);
+
+// ---- frame loop ----------------------------------------------------------
+const U = {}; for(const n of ['uState','uSeed','uTexel','uFeed','uKill','uSeedAmt','uCont','uAspect','uMouse'])
+  U[n]=gl.getUniformLocation(pUpdate,n);
+const D = {}; for(const n of ['uState','uSeed','uRes','uDither','uInvert','uTxt','uTxtOp','uHue'])
+  D[n]=gl.getUniformLocation(pDisplay,n);
+
+let prev=performance.now(), fAcc=0,fCnt=0,fT=0, started=false;
+function step(){
+  const src = cur==='A'?texA:texB, dstF = cur==='A'?fboB:fboA;
+  gl.useProgram(pUpdate);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, dstF); gl.viewport(0,0,simW,simH);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src); gl.uniform1i(U.uState,0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, seedTex); gl.uniform1i(U.uSeed,1);
+  gl.uniform2f(U.uTexel, 1/simW, 1/simH);
+  gl.uniform1f(U.uFeed, ui.feed); gl.uniform1f(U.uKill, ui.kill);
+  gl.uniform1f(U.uSeedAmt, ui.seed); gl.uniform1f(U.uCont, contEl.checked?1:0);
+  gl.uniform1f(U.uAspect, simW/simH);
+  gl.uniform3f(U.uMouse, mouse.x, mouse.y, mouse.down);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  cur = cur==='A'?'B':'A';
+}
+function frame(now){
+  let dt=(now-prev)/1000; prev=now;
+  for(let i=0;i<ui.speed;i++) step();
+  // display
+  gl.useProgram(pDisplay);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,simW,simH);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, cur==='A'?texA:texB); gl.uniform1i(D.uState,0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, seedTex); gl.uniform1i(D.uSeed,1);
+  gl.uniform2f(D.uRes, simW, simH);
+  gl.uniform1f(D.uDither, ditherEl.checked?1:0);
+  gl.uniform1f(D.uInvert, invertEl.checked?1:0);
+  gl.uniform1f(D.uTxt, txtEl.checked?1:0);
+  gl.uniform1f(D.uTxtOp, ui.txtop/100);
+  gl.uniform1f(D.uHue, ui.hue/100);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){
+    document.getElementById('fps').textContent =
+      (fCnt/fAcc).toFixed(0)+' fps · '+simW+'×'+simH+' · '+ui.speed+' steps/frame';
+    fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+
+addEventListener('resize', ()=>{ alloc(); });
+// build once the IBM Plex webfont is ready so the seed has real glyph shapes
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+  .then(()=>{ alloc(); requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
