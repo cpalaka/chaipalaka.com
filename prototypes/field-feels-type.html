@@ -1,0 +1,235 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #7 "the field feels the typography".
+  Question it answers: does a crisp, readable headline with the AMBIENT BACKGROUND flowing /
+  bending AROUND its letterforms read as elegant — and is the (quiet) effect worth it? This is
+  the only typography idea that never touches the text's legibility (text stays sharp; only the
+  field reacts). FEEL test — watch the flow bend around the letters; tune warp strength.
+
+  NOT production. WebGL2 + GLSL for the LOOK. The real build is a TSL node-material: a distance
+  field of the glyphs (baked at build-time via BVH, OR a runtime jump-flood — NO dep needed since
+  the canvas is client-only) drives a UV warp of the ambient TSL scene. The percept is identical.
+  Here the distance field is baked in JS (rasterize headline -> box-blur -> nearness + gradient),
+  which is the production-correct provenance (NOT pretext — pretext gives BLOCK rects, not glyph
+  contours). Open directly: `open prototypes/field-feels-type.html`.
+
+  VERDICT (2026-06-22, Chai): PROMOTED but REFRAMED → task-041. The SDF-driven UV warp +
+  crisp-text overlay works (~60fps) and the mechanism is sound, BUT the warp is QUIET — even
+  exaggerated, the bend-around reads subtly in a still; it's a motion/feel effect. KEY REFRAME:
+  on the live site the warp-source is the drifting physics CARDS, not static text (text-warp is
+  occluded inside the content box + static; card-warp is dynamic, un-occluded, and IS the
+  foreground<->background "two-RAF" tie). That makes it a Theme-1 sibling of task-038 sharing its
+  physics->GPU bridge + DRAFT-010 gate; card-warp (distortion) vs #1 auras (glow) = two treatments
+  of one mechanism (combine or pick one — task-041 AC#1). Separate keeper: the ink-wash/topographic
+  flow-field UNDER the warp is a reusable background-scene candidate on its own.
+
+  Assumptions (stated per prototype rules):
+   - Background substrate = animated FBM flow-noise rendered as contour bands (a stand-in; the real
+     scene is whatever TSL background gets authored — voronoi / RD / flow all warp the same way).
+   - 'near' = box-blurred glyph mask (high at/near ink, fading out); its gradient = warp direction.
+     +warp pulls the field ONTO the text; -warp parts it AROUND the text. Tune for the wrap look.
+   - Ink-on-paper palette is a neutral placeholder, not a fixed identity (capstone task-030).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>the field feels the typography prototype — DRAFT-009 #7</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:266px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 42px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel select { width:100%; font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 6px; cursor:pointer; margin-bottom:4px; }
+  #panel .chan { display:flex; gap:14px; margin:8px 0 2px; flex-wrap:wrap; }
+  #panel .chan label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+  #err { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    text-align:center; padding:40px; font-size:14px; z-index:9; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>field feels type — #7</h1>
+  <select id="word">
+    <option value="chaipalaka">chaipalaka</option>
+    <option value="writing">writing</option>
+    <option value="reading">reading</option>
+    <option value="now">now</option>
+  </select>
+  <div class="row"><label>warp</label><input id="warp" type="range" min="-100" max="100" step="1" value="-82"><span class="val" id="warpv"></span></div>
+  <div class="row"><label>reach</label><input id="reach" type="range" min="1" max="40" step="1" value="24"><span class="val" id="reachv"></span></div>
+  <div class="row"><label>bands</label><input id="bands" type="range" min="1" max="14" step="0.5" value="3.5"><span class="val" id="bandsv"></span></div>
+  <div class="row"><label>line&nbsp;sharp</label><input id="contrast" type="range" min="1" max="40" step="1" value="6"><span class="val" id="contrastv"></span></div>
+  <div class="row"><label>zoom</label><input id="scale" type="range" min="2" max="16" step="0.5" value="4"><span class="val" id="scalev"></span></div>
+  <div class="row"><label>flow</label><input id="flow" type="range" min="0" max="100" step="1" value="20"><span class="val" id="flowv"></span></div>
+  <div class="row"><label>clearing</label><input id="clear" type="range" min="0" max="100" step="1" value="22"><span class="val" id="clearv"></span></div>
+  <div class="row"><label>ink&nbsp;hue</label><input id="hue" type="range" min="0" max="100" step="1" value="0"><span class="val" id="huev"></span></div>
+  <div class="chan">
+    <label><input type="checkbox" id="field">show distance field</label>
+  </div>
+  <small>The headline stays <b>crisp + readable</b>; the flowing field <b>bends around the letters</b> (driven by the baked glyph distance field). <b>warp</b> &lt;0 parts the field around the text, &gt;0 pulls it onto the text. <b>reach</b> = how far the influence extends. Toggle <b>show distance field</b> to see the baked SDF.</small>
+</div>
+<div id="fps"></div>
+<div id="err"></div>
+
+<script>
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl2', { antialias:false });
+function fail(m){ const e=document.getElementById('err'); e.style.display='flex'; e.textContent=m; throw new Error(m); }
+if(!gl) fail('WebGL2 unavailable — this prototype needs it.');
+
+const VERT = `#version 300 es
+out vec2 vUv;
+void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2), float(gl_VertexID&2));
+  vUv=p; gl_Position=vec4(p*2.0-1.0,0.0,1.0); }`;
+
+const FRAG = `#version 300 es
+precision highp float;
+uniform sampler2D uSdf, uText;
+uniform float uTime,uWarp,uBands,uContrast,uScale,uFlow,uClear,uHue,uShowField,uAspect;
+in vec2 vUv; out vec4 frag;
+const vec3 PAPER=vec3(0.957,0.949,0.925);
+float hash(vec2 p){ p=fract(p*vec2(123.34,345.45)); p+=dot(p,p+34.345); return fract(p.x*p.y); }
+float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+  float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+  return mix(mix(a,b,u.x), mix(c,d,u.x), u.y); }
+float fbm(vec2 p){ float v=0.0, amp=0.5; for(int i=0;i<5;i++){ v+=amp*vnoise(p); p*=2.0; amp*=0.5; } return v; }
+void main(){
+  vec2 uv=vUv;
+  vec4 s=texture(uSdf,uv);
+  float near=s.r;
+  vec2 dir=s.gb*2.0-1.0;
+  if(uShowField>0.5){ frag=vec4(vec3(near),1.0); return; }
+  vec2 asp=vec2(uAspect,1.0);
+  vec2 p=uv*asp*uScale;
+  // animated domain warp → the field flows
+  vec2 fl=vec2(fbm(p+vec2(0.0,uTime*uFlow)), fbm(p+vec2(3.7,1.2)-uTime*uFlow*0.8));
+  p += (fl-0.5)*1.2;
+  // typography warp: bend the domain near the glyphs
+  p += dir*asp*near*uWarp;
+  float f=fbm(p);
+  float band=abs(sin(f*3.14159*uBands));
+  float ink=pow(band,uContrast);
+  vec3 inkCol=mix(vec3(0.10), vec3(0.52,0.06,0.04), uHue);
+  vec3 col=mix(PAPER, inkCol, ink*0.78);
+  // breathing room + crisp headline
+  float tmask=texture(uText,uv).r;
+  col=mix(col, PAPER, near*uClear*(1.0-tmask));
+  col=mix(col, inkCol, tmask);
+  frag=vec4(col,1.0);
+}`;
+
+function sh(t,src){ const s=gl.createShader(t); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) fail('shader: '+gl.getShaderInfoLog(s)); return s; }
+const prog=gl.createProgram();
+gl.attachShader(prog,sh(gl.VERTEX_SHADER,VERT)); gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FRAG));
+gl.linkProgram(prog); if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) fail('link: '+gl.getProgramInfoLog(prog));
+const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+const U={}; for(const n of ['uSdf','uText','uTime','uWarp','uBands','uContrast','uScale','uFlow','uClear','uHue','uShowField','uAspect'])
+  U[n]=gl.getUniformLocation(prog,n);
+
+// ---- headline raster + baked distance field -----------------------------
+let BW=0,BH=0, textTex, sdfTex, word='chaipalaka';
+const tmp=document.createElement('canvas'), tctx=tmp.getContext('2d',{willReadFrequently:true});
+function drawHeadline(w,h){
+  tmp.width=w; tmp.height=h;
+  tctx.fillStyle='#000'; tctx.fillRect(0,0,w,h);
+  tctx.fillStyle='#fff'; tctx.textAlign='center'; tctx.textBaseline='middle';
+  let fs=Math.round(h*0.2); tctx.font=`600 ${fs}px "IBM Plex Sans",sans-serif`;
+  const maxW=w*0.66;
+  if(tctx.measureText(word).width>maxW){ fs=Math.floor(fs*maxW/tctx.measureText(word).width);
+    tctx.font=`600 ${fs}px "IBM Plex Sans",sans-serif`; }
+  tctx.fillText(word,w/2,h/2);
+}
+function upload(tex,w,h,data,filter){ gl.bindTexture(gl.TEXTURE_2D,tex);
+  if(data instanceof HTMLCanvasElement) gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,data);
+  else gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,data);
+  for(const p of [[gl.TEXTURE_MIN_FILTER,filter],[gl.TEXTURE_MAG_FILTER,filter],
+                  [gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])
+    gl.texParameteri(gl.TEXTURE_2D,p[0],p[1]); }
+function boxBlur(src,w,h,r,passes){
+  let a=Float32Array.from(src), b=new Float32Array(w*h);
+  const cl=(v,lo,hi)=>v<lo?lo:v>hi?hi:v, inv=1/(2*r+1);
+  for(let pz=0;pz<passes;pz++){
+    for(let y=0;y<h;y++){ const o=y*w; let sum=0; for(let x=-r;x<=r;x++) sum+=a[o+cl(x,0,w-1)];
+      for(let x=0;x<w;x++){ b[o+x]=sum*inv; sum+=a[o+cl(x+r+1,0,w-1)]-a[o+cl(x-r,0,w-1)]; } }
+    for(let x=0;x<w;x++){ let sum=0; for(let y=-r;y<=r;y++) sum+=b[cl(y,0,h-1)*w+x];
+      for(let y=0;y<h;y++){ a[y*w+x]=sum*inv; sum+=b[cl(y+r+1,0,h-1)*w+x]-b[cl(y-r,0,h-1)*w+x]; } }
+  }
+  return a;
+}
+function buildFields(){
+  if(!textTex){ textTex=gl.createTexture(); sdfTex=gl.createTexture(); }
+  // crisp headline at backing res
+  drawHeadline(BW,BH); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true); upload(textTex,BW,BH,tmp,gl.LINEAR);
+  // distance field at half res
+  const fw=BW>>1, fh=BH>>1; drawHeadline(fw,fh);
+  const img=tctx.getImageData(0,0,fw,fh).data;
+  const mask=new Float32Array(fw*fh);
+  for(let i=0;i<fw*fh;i++) mask[i]=img[i*4]>128?1:0;
+  const r=Math.max(1, Math.round(ui.reach*fh/410));
+  const near=boxBlur(mask,fw,fh,r,3);
+  // normalize peak to ~1
+  let mx=0; for(let i=0;i<near.length;i++) if(near[i]>mx) mx=near[i];
+  const k=mx>0?1/mx:1;
+  const out=new Uint8Array(fw*fh*4);
+  const cl=(v,lo,hi)=>v<lo?lo:v>hi?hi:v;
+  for(let y=0;y<fh;y++) for(let x=0;x<fw;x++){ const i=y*fw+x;
+    const gx=near[i+(x<fw-1?1:0)]-near[i-(x>0?1:0)], gy=near[(y<fh-1?y+1:y)*fw+x]-near[(y>0?y-1:y)*fw+x];
+    const len=Math.hypot(gx,gy)||1;
+    out[i*4]=cl(near[i]*k,0,1)*255; out[i*4+1]=(gx/len*0.5+0.5)*255; out[i*4+2]=(gy/len*0.5+0.5)*255; out[i*4+3]=255; }
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true); upload(sdfTex,fw,fh,out,gl.LINEAR);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+}
+
+// ---- controls -----------------------------------------------------------
+const ui={};
+function bindRange(id,key,fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value; if(out) out.textContent=fmt?fmt(+el.value):el.value; };
+  el.addEventListener('input',upd); upd(); return el; }
+bindRange('warp','warp'); const reachEl=bindRange('reach','reach'); bindRange('bands','bands');
+bindRange('contrast','contrast'); bindRange('scale','scale'); bindRange('flow','flow');
+bindRange('clear','clear'); bindRange('hue','hue',v=>v+'%');
+const fieldEl=document.getElementById('field');
+reachEl.addEventListener('change', buildFields);
+document.getElementById('word').addEventListener('change', e=>{ word=e.target.value; buildFields(); });
+
+// ---- resize / frame -----------------------------------------------------
+function resize(){ const dpr=Math.min(window.devicePixelRatio||1,2);
+  BW=Math.round(innerWidth*dpr); BH=Math.round(innerHeight*dpr); cv.width=BW; cv.height=BH; buildFields(); }
+addEventListener('resize', resize);
+let t=0, prev=performance.now(), fAcc=0,fCnt=0,fT=0;
+function frame(now){ let dt=Math.min((now-prev)/1000,0.05); prev=now; t+=dt;
+  gl.useProgram(prog); gl.viewport(0,0,BW,BH);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sdfTex); gl.uniform1i(U.uSdf,0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,textTex); gl.uniform1i(U.uText,1);
+  gl.uniform1f(U.uTime,t); gl.uniform1f(U.uWarp, ui.warp/100*0.9); gl.uniform1f(U.uBands,ui.bands);
+  gl.uniform1f(U.uContrast,ui.contrast); gl.uniform1f(U.uScale,ui.scale); gl.uniform1f(U.uFlow,ui.flow/100*0.4);
+  gl.uniform1f(U.uClear,ui.clear/100); gl.uniform1f(U.uHue,ui.hue/100);
+  gl.uniform1f(U.uShowField, fieldEl.checked?1:0); gl.uniform1f(U.uAspect, BW/BH);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){ document.getElementById('fps').textContent=
+    (fCnt/fAcc).toFixed(0)+' fps · "'+word+'"'; fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+  .then(()=>{ resize(); requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
