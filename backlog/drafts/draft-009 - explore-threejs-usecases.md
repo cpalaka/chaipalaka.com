@@ -38,6 +38,34 @@ _Navigation layer over the detailed sections below. ~30 raw entries fold to ~23 
 
 **Build status (2026-06-21):** #1 and #3 walked, prototyped, and promoted to tasks — **task-038** (SDF metaball card auras) and **task-039** (fat-line tethers). Both gated on a planned gravity→top-down-drift physics rewrite (Chai tracks). **#3's design changed in review:** dash-crawl DROPPED; width+color carry tension; life/direction comes from a gloopy/liquid filament tied to #1; the `Line2` premise is dead under ADR-0009 (TSL only — leading approach is an SDF capsule in #1's field). The detailed #3 prose below is **superseded by task-039**.
 
+---
+
+## 🚶 Walk ledger — where I left off (updated 2026-06-22)
+
+_Authoritative pick-up marker for the one-by-one walk. Each walked idea has a throwaway prototype committed under `prototypes/` (the `.html` is kept; `*.png` screenshots are gitignored). Resume by picking any NOT-YET-WALKED idea below._
+
+**Walked so far (7 of ~27):**
+
+| # | Idea | Outcome | Prototype | Notes |
+|---|------|---------|-----------|-------|
+| 1 | SDF metaball auras | ✅ **task-038** (To Do, gated DRAFT-010) | `lava-metaball.html` | mercury/cells not "lava-lamp"; one-way physics→uniform bridge; box-occluded → /lab |
+| 3 | Fat-line tethers | ✅ **task-039** (To Do, gated DRAFT-010) | `fat-tethers.html` | dash-crawl DROPPED; width+color; `Line2` dead → TSL (SDF capsule in #1's field) |
+| 6 | Glyph-seeded reaction-diffusion | ❌ **REJECTED** | `glyph-rd.html` | overgrows→illegible blob; "germinates from words" only a fragile transient; "reuse shipped RD scene" premise dead (ADR-0009); only salvage = wordmark germ → folds into #8 |
+| 15 | Off-axis parallax peephole | ✅ **task-040** (To Do, NOT DRAFT-010-gated) | `parallax-peephole.html` | DoF-blur-rising-with-depth is THE lever; open Q = what the z-layers depict; card-aperture = portal stretch (Theme 3) |
+| 8 | Type dissolves & re-condenses | ⏭️ **SKIPPED** ("meh") | `type-condense.html` | works (legible-at-rest inverse of #6) but an L, likely compute-spike-gated, needs a home; glyph-particle machinery could feed task-040's typography substrate |
+| 9 | Risograph / newsprint dither | ⏭️ **SKIPPED** (no prototype) | — | a post-process GRADE not a scene; "re-bake 9 PNGs" moot + "hand-roll GLSL bayer" INVERTED under ADR-0009 (TSL bayer is native now); candidate capstone-time look, NOT on-brand-by-default; standalone piece = "Dither Press" /stuff toy |
+| 7 | Field feels the typography | ✅ **task-041** (To Do, gated DRAFT-010, sibling of task-038) | `field-feels-type.html` | REFRAMED: warp-source on-site = the drifting CARDS, not text → dynamic, un-occluded, the foreground↔background "two-RAF" tie; shares task-038's bridge; card-warp (distortion) vs #1 auras (glow) = combine-or-pick-one; warp is QUIET; ink-wash flow-field under it = reusable bg-scene candidate |
+
+**Cross-cutting facts established during the walk (don't re-derive):** ADR-0009 makes WebGPU/TSL the exclusive renderer + static-PNG a first-class fallback (~18% no-WebGPU); the 9 GLSL scenes are disposable placeholders (any "reuse/port/re-bake the shipped scene" premise is DEAD); the render-integration spike PASSED (task-037) so all render-side ideas are buildable NOW; the COMPUTE half (storage buffers / atomics / readback → #4, #26) still needs its own spike; pretext measures BLOCK rects, not glyph contours (glyph-seeded ideas rasterize/font-outline). Recurring tension: a background quad sits BEHIND the opaque content box, so "behind the prose" effects are occluded on reading routes → want a box-less /lab route or a canvas-mode/hero surface.
+
+**NOT yet walked (pick up here):**
+- **Theme 1 (two-RAF):** #2 (lava toy ⭐), #4 (tether-current — compute-gated), #5 (half-float+MRT — compute plumbing for #4).
+- **Theme 2 (typography):** #10 (celebration shatter), #11 (ink-bleed selection).
+- **Theme 3 (hero-morph):** #12 (VT guardrail test+ADR ⭐), #13 (point-cloud gather on ENTER ▲), #14 (bg dissolve matched to morph — needs #25).
+- **Standalone / toys:** #16 (comet-trail/phosphor ▲), #17 (volumetric fog), #18 (figured glass), #19 (Quiet Room studio), #20 (CSS3D ladder), #21 (AnimationMixer scheduler), #22 (Portal Slab), #23 (water reflector ▽).
+- **Big swings / WebGPU-compute-gated (XL):** #24 (ENTER as literal portal), #25 (render-persistence across routes), #26 (murmuration GPGPU), #27 (N-body layout ✕skip).
+- _Remaining draft "start-here" picks: **#2** (lava toy), **#12** (VT guardrail)._
+
 **Legend** — Tier: ⭐start-here ▲strong ◇worth ▽stretch ✕skip · Rndr: GL2=render math ships today, GPU=WebGPU-compute-only, DOM/CPU=no shader · Effort: S/M/L/XL
 
 ### Theme 1 — Close the two-RAF gap (physics ↔ GPU, "make the loops talk")
