@@ -1,0 +1,217 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #8 "type dissolves & re-condenses" /
+  "the headline that spells itself" (absorbs the rejected #6's only salvage: wordmark germination).
+  Question it answers: does particle type — specks self-assembling into a headline, dissolving
+  to gas on interaction, re-condensing into the NEXT word — read well and feel on-identity?
+  FEEL test — drive it (blow on the type with the cursor, cycle words); a still half-shows it.
+
+  NOT production. Canvas2D particle system for the LOOK. The real build is a
+  GPUComputationRenderer / TSL compute particle sim seeded by MeshSurfaceSampler from glyph
+  outlines (NOT pretext — pretext gives BLOCK metrics; seed by rasterizing the text + sampling,
+  exactly as done here). The condense<->disperse percept is identical; this just runs on the CPU.
+  Open directly: `open prototypes/type-condense.html`.
+
+  VERDICT (2026-06-21, Chai): SKIPPED ("meh"). The effect works and is the
+  legibility-preserving INVERSE of the rejected #6 (legible at rest by construction; gasifies
+  only on interaction/word-transit; the re-gather-into-next-word morph is the nice part). Not
+  promoted because: it's an L not an S (TSL/GPGPU particle plumbing + glyph-rasterize seeding),
+  likely GATED on the still-open compute-capability spike (CPU particles won't scale to desktop
+  counts; GPGPU is exactly the storage-buffer/readback half of ADR-0009 not yet spiked), and it
+  needs a defined HOME (hero / route-transition), not an ambient layer. If revived, its
+  glyph-particle machinery is reusable for task-040's "receding typography" depth substrate. No task.
+
+  Assumptions (stated per prototype rules):
+   - Particles seeded by RASTERIZING the word + sampling ink pixels (the production-correct
+     provenance), NOT pretext block rects.
+   - Fixed particle budget; each word re-samples N targets. ~9k default (draft: million-point is
+     a DESKTOP figure — budget tens-of-thousands on low-power; this proves the look at a sane count).
+   - Ink-on-paper palette (#f4f2ec) is a neutral placeholder, not a fixed identity (v2 design is
+     the unstarted capstone). Speed-fades particles (faint when fast) sell "legible at rest, smoke in motion".
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>type dissolves &amp; re-condenses prototype — DRAFT-009 #8</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:266px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 40px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel .chan { display:flex; gap:14px; margin:8px 0 2px; flex-wrap:wrap; }
+  #panel .chan label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  #panel .seg { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  #panel button { font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 8px; cursor:pointer; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>type condenses — #8</h1>
+  <div class="row"><label>disperse</label><input id="mix" type="range" min="0" max="100" step="1" value="0"><span class="val" id="mixv"></span></div>
+  <div class="row"><label>turbulence</label><input id="turb" type="range" min="0" max="100" step="1" value="42"><span class="val" id="turbv"></span></div>
+  <div class="row"><label>snap</label><input id="stiff" type="range" min="2" max="40" step="1" value="16"><span class="val" id="stiffv"></span></div>
+  <div class="row"><label>count</label><input id="count" type="range" min="2000" max="26000" step="1000" value="13000"><span class="val" id="countv"></span></div>
+  <div class="row"><label>speck</label><input id="size" type="range" min="8" max="32" step="1" value="16"><span class="val" id="sizev"></span></div>
+  <div class="row"><label>ink&nbsp;hue</label><input id="hue" type="range" min="0" max="100" step="1" value="0"><span class="val" id="huev"></span></div>
+  <div class="chan">
+    <label><input type="checkbox" id="trails" checked>smoke trails</label>
+    <label><input type="checkbox" id="auto">auto-cycle</label>
+  </div>
+  <div class="seg">
+    <button id="next">next word →</button>
+    <button id="blow">blow (hold)</button>
+  </div>
+  <small>The specks <b>spell the word</b>, then re-gather into the next one. <b>Drag on the canvas</b> to blow the type into gas (wind-tunnel). Push <b>disperse</b> to gasify the whole field. Specks <b>fade when fast</b> (smoke) and sharpen when settled (legible) — that contrast is the effect.</small>
+</div>
+<div id="fps"></div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d', { alpha:false });
+let dpr=1, W=0, H=0;
+
+// ---- words --------------------------------------------------------------
+const WORDS = ['chaipalaka', 'writing', 'reading', 'listening', 'stuff'];
+let wi = 0;
+
+// offscreen text raster → ink-pixel pool
+const tcv = document.createElement('canvas'); const tctx = tcv.getContext('2d', { willReadFrequently:true });
+let inkPool = [];   // [x,y, x,y, ...] of ink pixels in CSS px
+function rasterWord(word){
+  tcv.width=W; tcv.height=H;
+  tctx.fillStyle='#000'; tctx.fillRect(0,0,W,H);
+  tctx.fillStyle='#fff'; tctx.textAlign='center'; tctx.textBaseline='middle';
+  // fit font to ~74% width
+  let fs = Math.round(H*0.22);
+  tctx.font = `600 ${fs}px "IBM Plex Sans", sans-serif`;
+  const maxW = W*0.66;
+  if(tctx.measureText(word).width > maxW){ fs = Math.floor(fs*maxW/tctx.measureText(word).width);
+    tctx.font = `600 ${fs}px "IBM Plex Sans", sans-serif`; }
+  tctx.fillText(word, W/2, H/2);
+  const img = tctx.getImageData(0,0,W,H).data;
+  inkPool = [];
+  const stride = 2; // sample every 2px for a dense pool
+  for(let y=0;y<H;y+=stride) for(let x=0;x<W;x+=stride){
+    if(img[(y*W+x)*4] > 128){ inkPool.push(x,y); }
+  }
+}
+
+// ---- particles ----------------------------------------------------------
+let N=0, px,py,vx,vy,tx,ty;
+function alloc(n){
+  N=n; px=new Float32Array(N); py=new Float32Array(N); vx=new Float32Array(N); vy=new Float32Array(N);
+  tx=new Float32Array(N); ty=new Float32Array(N);
+  for(let i=0;i<N;i++){ px[i]=Math.random()*W; py[i]=Math.random()*H; vx[i]=vy[i]=0; }
+  assignTargets();
+}
+function assignTargets(){
+  const m = inkPool.length/2;
+  for(let i=0;i<N;i++){ const k=(Math.random()*m|0)*2; tx[i]=inkPool[k]; ty[i]=inkPool[k+1]; }
+}
+
+// ---- controls -----------------------------------------------------------
+const ui={};
+function bindRange(id,key,fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value; if(out) out.textContent=fmt?fmt(+el.value):el.value; };
+  el.addEventListener('input',upd); upd(); return el; }
+bindRange('mix','mix'); bindRange('turb','turb'); bindRange('stiff','stiff');
+const countEl=bindRange('count','count'); bindRange('size','size'); bindRange('hue','hue',v=>v+'%');
+const trailsEl=document.getElementById('trails'), autoEl=document.getElementById('auto'),
+      blowBtn=document.getElementById('blow');
+countEl.addEventListener('change', ()=> alloc(ui.count));
+
+let morphBurst=0;
+function nextWord(){ wi=(wi+1)%WORDS.length; rasterWord(WORDS[wi]); assignTargets(); morphBurst=1; }
+document.getElementById('next').onclick = nextWord;
+
+// ---- pointer "blow" -----------------------------------------------------
+const ptr={x:0,y:0,down:0};
+function setP(e){ const r=cv.getBoundingClientRect(); ptr.x=e.clientX-r.left; ptr.y=e.clientY-r.top; }
+cv.addEventListener('pointerdown', e=>{ ptr.down=1; setP(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e=>{ setP(e); });
+addEventListener('pointerup', ()=> ptr.down=0);
+blowBtn.addEventListener('pointerdown', ()=> ptr.down=2);  // "blow" = disperse near center-ish via held flag
+blowBtn.addEventListener('pointerup', ()=> ptr.down=0);
+
+// ---- resize / init ------------------------------------------------------
+function resize(){ dpr=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
+  rasterWord(WORDS[wi]); if(N) assignTargets(); }
+addEventListener('resize', ()=>{ resize(); });
+
+// ---- frame --------------------------------------------------------------
+let prev=performance.now(), t=0, fAcc=0,fCnt=0,fT=0, autoT=0;
+function frame(now){
+  let dt=Math.min((now-prev)/1000,0.05); prev=now; t+=dt;
+  morphBurst = Math.max(0, morphBurst - dt*0.9);
+  if(autoEl.checked){ autoT+=dt; if(autoT>2.6){ autoT=0; nextWord(); } }
+
+  const gMix = ui.mix/100;
+  const stiff = ui.stiff;
+  const turbK = ui.turb*0.02;
+  const blowR = Math.min(W,H)*0.16, blowR2=blowR*blowR;
+  const blowCx = ptr.down===2 ? W/2 : ptr.x, blowCy = ptr.down===2 ? H/2 : ptr.y;
+
+  for(let i=0;i<N;i++){
+    let x=px[i], y=py[i];
+    // local mix: global + morph transit + pointer blow
+    let lm = Math.max(gMix, morphBurst*0.9);
+    let bx=0,by=0;
+    if(ptr.down){ const dx=x-blowCx, dy=y-blowCy, d2=dx*dx+dy*dy;
+      if(d2<blowR2){ const d=Math.sqrt(d2)||1, f=(1-d/blowR); lm=Math.max(lm,f);
+        bx=dx/d*f*9; by=dy/d*f*9; } }
+    // spring to target (weak when dispersed)
+    const k = stiff*(1-lm)*dt;
+    let ax=(tx[i]-x)*k + bx*dt*60, ay=(ty[i]-y)*k + by*dt*60;
+    // turbulence when dispersed
+    if(lm>0.01){ const tu=Math.sin(x*0.012+t*0.7)+Math.cos(y*0.015-t*0.5);
+      const tv=Math.cos(x*0.011-t*0.6)+Math.sin(y*0.013+t*0.8);
+      ax+=tu*turbK*lm*60*dt; ay+=tv*turbK*lm*60*dt; }
+    let nvx=(vx[i]+ax)*0.86, nvy=(vy[i]+ay)*0.86;
+    vx[i]=nvx; vy[i]=nvy; px[i]=x+nvx; py[i]=y+nvy;
+  }
+
+  // ---- draw ----
+  if(trailsEl.checked){ ctx.fillStyle='rgba(244,242,236,0.30)'; ctx.fillRect(0,0,W,H); }
+  else { ctx.fillStyle='#f4f2ec'; ctx.fillRect(0,0,W,H); }
+  const hue=ui.hue/100;
+  const ir=Math.round(26+hue*(140-26)), ig=Math.round(26+hue*(15-26)), ib=Math.round(26+hue*(10-26));
+  const s=ui.size/10;
+  ctx.fillStyle=`rgb(${ir},${ig},${ib})`;
+  // speed → alpha (fast = faint smoke, settled = crisp). batch by drawing low-alpha squares.
+  ctx.globalAlpha=0.55;
+  let fast=0;
+  for(let i=0;i<N;i++){
+    const sp=vx[i]*vx[i]+vy[i]*vy[i];
+    if(sp>6){ fast++; ctx.globalAlpha=0.14; } else ctx.globalAlpha=0.62;
+    ctx.fillRect(px[i]-s*0.5, py[i]-s*0.5, s, s);
+  }
+  ctx.globalAlpha=1;
+
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){ document.getElementById('fps').textContent=
+    (fCnt/fAcc).toFixed(0)+' fps · '+N+' specks · "'+WORDS[wi]+'"'; fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+  .then(()=>{ resize(); alloc(+document.getElementById('count').value); requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
