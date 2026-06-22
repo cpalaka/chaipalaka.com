@@ -1,0 +1,224 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE — DRAFT-009 idea #15 "off-axis parallax peephole".
+  Iteration 2. Questions it answers:
+   (A) ambient fish-tank depth — does DEPTH-OF-FIELD blur (blurrier the deeper the layer)
+       make the parallax read as real depth instead of sliding dots? (Chai's idea.)
+   (B) the LITERAL peephole — frame the parallax depth inside an aperture (circle / card),
+       flat paper outside. Does the framed flat-vs-deep contrast turn a quiet polish trick
+       into a deliberate "window into another space" moment? (ties to the portal/hero-morph.)
+  Still a FEEL test — drive the mouse; a still can't show parallax.
+
+  NOT production. Canvas2D for the look; the real build is `Camera.setViewOffset` / off-axis
+  projection on the TSL scene (CPU-side, renderer-agnostic — that's #15's whole point), with
+  per-layer DoF as a cheap blur pass. The substrate here (soft flecks) is a PLACEHOLDER — what
+  the z-layers actually depict is the open design question. Open: `open prototypes/parallax-peephole.html`.
+
+  Assumptions: background is a deep field; foreground cards sit at the glass (depth 0, anchored)
+  so the field swims behind them. Focus plane = the glass; depth blurs out behind it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>parallax peephole prototype v2 — DRAFT-009 #15</title>
+<style>
+  :root { --bg:#f4f2ec; --ink:#1a1a1a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; color:var(--ink);
+    overflow:hidden; touch-action:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  .card { position:fixed; transform:translate(-50%,-50%); user-select:none;
+    background:#fbfaf6; border:1.5px solid var(--ink); border-radius:5px;
+    display:flex; align-items:center; justify-content:center; padding:10px 16px;
+    font-size:14px; letter-spacing:.02em; font-weight:500; box-shadow:0 2px 12px rgba(0,0,0,.16);
+    z-index:2; pointer-events:none; }
+  #panel { position:fixed; top:14px; right:14px; z-index:5; width:264px;
+    background:rgba(251,250,246,.92); border:1.5px solid var(--ink); border-radius:6px;
+    padding:12px 14px; font-size:12px; line-height:1.5;
+    box-shadow:0 4px 18px rgba(0,0,0,.12); backdrop-filter:blur(4px); }
+  #panel h1 { font-size:12px; margin:0 0 8px; letter-spacing:.04em; text-transform:uppercase; }
+  #panel .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:7px 0; }
+  #panel label { flex:0 0 auto; }
+  #panel input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--ink); }
+  #panel .val { flex:0 0 38px; text-align:right; font-variant-numeric:tabular-nums; opacity:.7; }
+  #panel select { width:100%; font:inherit; border:1px solid var(--ink); border-radius:4px;
+    background:#fff; padding:3px 6px; cursor:pointer; margin-bottom:4px; }
+  #panel .seg { display:flex; gap:6px; margin:6px 0; }
+  #panel .seg select { margin:0; }
+  #panel .chan { display:flex; gap:14px; margin:8px 0 2px; flex-wrap:wrap; }
+  #panel .chan label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  #panel small { display:block; opacity:.6; margin-top:10px; line-height:1.45; }
+  #fps { position:fixed; bottom:10px; left:12px; z-index:5; font-size:11px; opacity:.5;
+    font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>parallax peephole v2 — #15</h1>
+  <div class="seg">
+    <select id="mode">
+      <option value="ambient">A · ambient (full screen)</option>
+      <option value="aperture">B · peephole (framed)</option>
+    </select>
+  </div>
+  <div class="seg">
+    <select id="content">
+      <option value="scatter">substrate: soft flecks</option>
+      <option value="lattice">substrate: lattice</option>
+    </select>
+    <select id="shape">
+      <option value="circle">○ circle</option>
+      <option value="card">▭ card</option>
+    </select>
+  </div>
+  <div class="row"><label>strength</label><input id="strength" type="range" min="0" max="100" step="1" value="26"><span class="val" id="strengthv"></span></div>
+  <div class="row"><label>depth&nbsp;blur</label><input id="blur" type="range" min="0" max="18" step="0.5" value="7"><span class="val" id="blurv"></span></div>
+  <div class="row"><label>smoothing</label><input id="smooth" type="range" min="1" max="30" step="1" value="11"><span class="val" id="smoothv"></span></div>
+  <div class="row"><label>density</label><input id="density" type="range" min="60" max="700" step="20" value="320"><span class="val" id="densityv"></span></div>
+  <div class="chan">
+    <label><input type="checkbox" id="wobble">auto-wobble</label>
+    <label><input type="checkbox" id="cards" checked>cards</label>
+  </div>
+  <small>Move the mouse — deep layers <b>swim &amp; blur</b>, the glass stays sharp: depth-of-field fish-tank. <b>Mode B</b> frames it in an aperture (flat paper outside) — the window-into-depth read. Drag <b>depth blur</b> to feel how much the blur sells it. Switch substrate to question what the layers should actually BE.</small>
+</div>
+<div id="fps"></div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let dpr=1, W=0, H=0;
+
+// downscaled field (it's blurred anyway → cheap) rendered once, composited to screen
+const FS = 0.6;            // field render scale
+let fw=0, fh=0, fcx=0, fcy=0, fscale=0;
+const field = document.createElement('canvas'), fctx = field.getContext('2d');
+const band  = document.createElement('canvas'), bctx = band.getContext('2d');
+const NB = 6;              // depth-of-field bands
+
+// soft dark fleck sprite
+const sprite = document.createElement('canvas'); sprite.width=sprite.height=64;
+(()=>{ const g=sprite.getContext('2d'); const grad=g.createRadialGradient(32,32,0,32,32,32);
+  grad.addColorStop(0,'rgba(26,26,26,0.95)'); grad.addColorStop(0.45,'rgba(26,26,26,0.5)');
+  grad.addColorStop(1,'rgba(26,26,26,0)'); g.fillStyle=grad; g.fillRect(0,0,64,64); })();
+
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
+  fw=Math.round(W*FS); fh=Math.round(H*FS); field.width=band.width=fw; field.height=band.height=fh;
+  fcx=fw/2; fcy=fh/2; fscale=Math.min(fw,fh)*0.55;
+  placeCards();
+}
+addEventListener('resize', resize);
+
+// ---- substrate: points with depth d (0 glass .. 1 deepest), bucketed into NB bands
+let bands = [];
+function rnd(a,b){ return a+Math.random()*(b-a); }
+function buildScene(){
+  bands = Array.from({length:NB}, ()=>[]);
+  const n = ui.density;
+  if(contentEl.value==='lattice'){
+    const layers=[0.12,0.34,0.56,0.78,0.96], per=Math.max(4,Math.round(Math.sqrt(n/layers.length)));
+    layers.forEach(d=>{ for(let gx=0;gx<per;gx++)for(let gy=0;gy<per;gy++){
+      push({x:(gx/(per-1)*2-1)*1.35, y:(gy/(per-1)*2-1)*1.35, d}); } });
+  } else {
+    for(let i=0;i<n;i++) push({x:rnd(-1.5,1.5), y:rnd(-1.5,1.5), d:Math.random()});
+  }
+}
+function push(p){ bands[Math.min(NB-1, Math.floor(p.d*NB))].push(p); }
+
+// ---- eye (pointer-driven, smoothed) --------------------------------------
+const mouse={x:0,y:0}, eye={x:0,y:0}; let wob=0; const probe={on:false,x:0,y:0};
+function setM(e){ const r=cv.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=((e.clientY-r.top)/r.height)*2-1; probe.on=false; }
+cv.addEventListener('pointermove', setM);
+window.__eye = (x,y)=>{ probe.on=true; probe.x=x; probe.y=y; };
+
+// ---- controls ------------------------------------------------------------
+const ui={};
+function bindRange(id,key,fmt){ const el=document.getElementById(id), out=document.getElementById(id+'v');
+  const upd=()=>{ ui[key]=+el.value; if(out) out.textContent=fmt?fmt(+el.value):el.value; };
+  el.addEventListener('input',upd); upd(); return el; }
+bindRange('strength','strength'); bindRange('blur','blur',v=>v.toFixed(1));
+bindRange('smooth','smooth'); const densEl=bindRange('density','density');
+const modeEl=document.getElementById('mode'), contentEl=document.getElementById('content'),
+      shapeEl=document.getElementById('shape'), wobbleEl=document.getElementById('wobble'),
+      cardsEl=document.getElementById('cards');
+contentEl.addEventListener('change', buildScene);
+densEl.addEventListener('change', buildScene);
+modeEl.addEventListener('change', placeCards);
+cardsEl.addEventListener('change', placeCards);
+
+// ---- foreground DOM cards (ambient mode, at the glass) --------------------
+const CARD_DEFS=[['now','38%','40%'],['blog','63%','54%'],['stuff','49%','71%']];
+let cardEls=[];
+function placeCards(){
+  cardEls.forEach(e=>e.remove()); cardEls=[];
+  if(!cardsEl.checked || modeEl.value!=='ambient') return;
+  for(const [t,l,tp] of CARD_DEFS){ const el=document.createElement('div'); el.className='card';
+    el.textContent=t; el.style.left=l; el.style.top=tp; document.body.appendChild(el); cardEls.push(el); }
+}
+
+// ---- aperture path (screen coords) ---------------------------------------
+function aperturePath(c){
+  const R=Math.min(W,H)*0.30, ax=W*0.5, ay=H*0.5;
+  c.beginPath();
+  if(shapeEl.value==='card'){ const w=Math.min(W*0.46,560), h=Math.min(H*0.6,420);
+    c.roundRect(ax-w/2, ay-h/2, w, h, 10); return {ax,ay,rad:Math.max(w,h)/2}; }
+  c.arc(ax,ay,R,0,6.283); return {ax,ay,rad:R};
+}
+
+// ---- render --------------------------------------------------------------
+let prev=performance.now(), fAcc=0,fCnt=0,fT=0;
+function frame(now){
+  let dt=(now-prev)/1000; prev=now; dt=Math.min(dt,0.05); wob+=dt;
+  let tx,ty;
+  if(wobbleEl.checked){ tx=Math.sin(wob*0.9)*0.85; ty=Math.cos(wob*0.7)*0.6; }
+  else if(probe.on){ tx=probe.x; ty=probe.y; } else { tx=mouse.x; ty=mouse.y; }
+  const k=1-Math.exp(-dt*ui.smooth); eye.x+=(tx-eye.x)*k; eye.y+=(ty-eye.y)*k;
+  const K=ui.strength/100, maxBlur=ui.blur;
+
+  // 1) render the depth field (deepest band first, blurred most)
+  fctx.clearRect(0,0,fw,fh);
+  for(let bi=NB-1; bi>=0; bi--){
+    bctx.clearRect(0,0,fw,fh);
+    for(const p of bands[bi]){
+      const sx=fcx+(p.x - eye.x*p.d*K)*fscale, sy=fcy+(p.y - eye.y*p.d*K)*fscale;
+      const r=(0.7+(1-p.d)*1.1)*fscale*0.014;
+      bctx.globalAlpha=0.20+(1-p.d)*0.6;
+      bctx.drawImage(sprite, sx-r, sy-r, r*2, r*2);
+    }
+    bctx.globalAlpha=1;
+    fctx.filter = maxBlur>0 ? `blur(${((bi/(NB-1))*maxBlur*FS).toFixed(2)}px)` : 'none';
+    fctx.drawImage(band,0,0);
+  }
+  fctx.filter='none';
+
+  // 2) composite to screen
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#f4f2ec'; ctx.fillRect(0,0,W,H);
+  if(modeEl.value==='ambient'){
+    ctx.drawImage(field,0,0,W,H);
+  } else {
+    ctx.save();
+    const a=aperturePath(ctx); ctx.clip();
+    ctx.drawImage(field,0,0,W,H);
+    // recessed inner shadow → reads as a hole into depth
+    const g=ctx.createRadialGradient(a.ax,a.ay,a.rad*0.55,a.ax,a.ay,a.rad*1.02);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.22)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    // frame: soft drop shadow + crisp ink edge
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,0.18)'; ctx.shadowBlur=18; ctx.shadowOffsetY=6;
+    aperturePath(ctx); ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore();
+  }
+
+  fAcc+=dt; fCnt++; if((fT+=dt)>0.5){ document.getElementById('fps').textContent=
+    (fCnt/fAcc).toFixed(0)+' fps · '+modeEl.value+' · '+contentEl.value; fAcc=0;fCnt=0;fT=0; }
+  requestAnimationFrame(frame);
+}
+resize(); buildScene(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
