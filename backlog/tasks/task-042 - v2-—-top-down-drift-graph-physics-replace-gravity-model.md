@@ -1,16 +1,21 @@
 ---
-id: DRAFT-010
+id: TASK-042
 title: v2 — top-down drift graph physics (replace gravity model)
-status: Draft
+status: In Progress
 assignee: []
 created_date: '2026-06-21 21:56'
+updated_date: '2026-07-02 03:53'
 labels:
   - claude-generated
   - v2
   - physics
   - foundational
   - high-priority
+milestone: v2
 dependencies: []
+documentation:
+  - docs/superpowers/plans/2026-07-01-drift-physics-execution-plan.md
+priority: high
 ---
 
 ## Description
