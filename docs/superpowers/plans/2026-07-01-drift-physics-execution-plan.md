@@ -48,12 +48,12 @@ converts the ladder's behaviors, S3 converts rendering and deletes the dead weig
 converts route authorship and tunes feel. **Deletion ordering rule honored:** nothing is
 deleted before its replacement lands (adjustment 1 exists precisely to keep that true).
 
-| # | Slice | Branch (NNN = sub-task id minted at decomposition) | Size |
+| # | Slice | Branch (sub-task ids minted 2026-07-02) | Size |
 |---|---|---|---|
-| S1 | Engine + mode plumbing | `feat/task-NNN-drift-engine` | L |
-| S2 | Ladder conversion + spawn swap | `feat/task-NNN-drift-ladder` | M |
-| S3 | Rendering + cleanup | `feat/task-NNN-drift-rendering-cleanup` | M |
-| S4 | Route conversion + feel pass (SOLO — never a wave) | `feat/task-NNN-drift-routes-feel` | M |
+| S1 | Engine + mode plumbing | `feat/task-042.01-drift-engine` | L |
+| S2 | Ladder conversion + spawn swap | `feat/task-042.02-drift-ladder` | M |
+| S3 | Rendering + cleanup | `feat/task-042.03-drift-rendering-cleanup` | M |
+| S4 | Route conversion + feel pass (SOLO — never a wave) | `feat/task-042.04-drift-routes-feel` | M |
 
 ### Boundary adjustments vs the §7 sketch (justified)
 
