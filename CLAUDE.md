@@ -82,6 +82,9 @@ auto mode authorises them.
 - Relay ALL confirmed/adjudication/LOW findings to the user verbatim; the session that
   wrote the code never self-dismisses one. Fable appears ONLY in this workflow's
   finder/critic/synthesis stages (model policy 2026-07-01).
+- Pin the gate per task as a `--dod` item at task creation (space-miner shape), with the
+  args pre-filled (mode + the task's spec §§) so the executing session can't miss it. The
+  user may waive it per branch (waiver recorded in notes).
 
 ### Deploy (Hetzner — human-gated)
 - **Confirm first** for anything touching the box: `make deploy` / `deploy-web` / `deploy-api`

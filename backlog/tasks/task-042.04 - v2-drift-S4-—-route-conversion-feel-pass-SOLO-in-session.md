@@ -4,7 +4,7 @@ title: 'v2 drift S4 — route conversion + feel pass (SOLO, in-session)'
 status: To Do
 assignee: []
 created_date: '2026-07-02 04:53'
-updated_date: '2026-07-02 04:53'
+updated_date: '2026-07-02 05:29'
 labels:
   - claude-generated
   - v2
@@ -50,4 +50,5 @@ Plan: docs/superpowers/plans/2026-07-01-drift-physics-execution-plan.md (§S4 �
 - [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
 - [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
 - [ ] #6 User sign-off received — explicit approval before Done
+- [ ] #7 Pre-merge review gate: run Workflow adversarial-review args={mode:"modest", task:"task-042.04", diffRange:"main...HEAD", specSections:"spec §§3.2 (route drops), D7, D8, §6 items 1–4"} after the verify gate; relay ALL confirmed/adjudication findings verbatim (never self-dismiss); fixes wait for user word
 <!-- DOD:END -->
