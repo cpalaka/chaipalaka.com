@@ -72,6 +72,17 @@ Ask only the questions that genuinely need a decision; don't prompt before stand
 commands (`npm run typecheck` / `test` / `build` / `dev`, `make web-*` targets) — sandbox +
 auto mode authorises them.
 
+### Pre-merge adversarial review (`.claude/workflows/adversarial-review.js`)
+- Run after the verify gate is green on a task branch, BEFORE diff review/merge — with the
+  user's go per branch (workflows need explicit opt-in). Modes: `modest` (3 Fable finders
+  @ high; routine slices) | `full` (5 finders + critic + synthesis @ xhigh; foundational/L
+  slices — projects >20 agents, state the estimate in chat first).
+- args: `{mode, task, diffRange, specSections, focus?, docs?}` — finders discover the plan
+  + spec from the task's board entry unless `docs` overrides.
+- Relay ALL confirmed/adjudication/LOW findings to the user verbatim; the session that
+  wrote the code never self-dismisses one. Fable appears ONLY in this workflow's
+  finder/critic/synthesis stages (model policy 2026-07-01).
+
 ### Deploy (Hetzner — human-gated)
 - **Confirm first** for anything touching the box: `make deploy` / `deploy-web` / `deploy-api`
   / `assets-sync`, any direct `ssh chaipalaka …`, any `rsync` whose destination is the server.

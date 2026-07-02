@@ -45,7 +45,8 @@ web/.vitest-cache/
 NOTES.md
 
 # Claude session artifacts — local only
-.claude/
+.claude/*
+!.claude/workflows/
 .superpowers/
 
 # CodeGraph local index — never commit (public repo; per-machine SQLite graph)
