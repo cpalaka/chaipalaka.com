@@ -16,7 +16,7 @@ project-specific rules are inline below (Zone 3).
 @~/.claude/chunks/backlog-core.md
 
 <!-- knobs:backlog-core -->
-- backlog version: 1.45.2 (CLI-only; no MCP; no generated agent instructions)
+- backlog version: 1.45.2 (pinned; bump deliberately via `npm i -g backlog.md@<pin>`)
 - plans dir: docs/superpowers/plans/ (specs in docs/superpowers/specs/; plans/ created lazily)
 - AC verify examples: typecheck/test/build green, dev smoke of the affected route, screenshot where visual
 - DoD items (source of truth = backlog/config.yml definition_of_done; 6, ending in sign-off):
@@ -51,6 +51,15 @@ project-specific rules are inline below (Zone 3).
 <!-- /knobs:parallel-work -->
 
 ## Project-specific (inline-leaf)
+
+### Project
+
+Personal site + frontend-craft portfolio at `chaipalaka.com`, mid-**v2 redesign**: gwern-style
+fixed content box over a generative shader, with play relocated into the link ladder
+(*peek* → *keep* → *enter*) and matter.js physics cards on tethers. Stack: React prerendered via
+`vite-react-ssg` (`web/`), MDX content in `content/`, and a Bun API behind Caddy on a Hetzner box
+serving live lifelog data through `/api/*`. The v2 spec (see `PRD.md`'s banner) is the
+authoritative design record; `CONTEXT.md` is the domain glossary.
 
 ### Communication style
 When reporting to me, be extremely concise and sacrifice grammar for concision.
@@ -118,8 +127,7 @@ by `vite-react-ssg`'s peer deps. Do not bump any of them without checking compat
 that's a separate slice. Pin table + rationale: `docs/process/toolchain-pins.md`.
 
 ### CodeGraph (opt-in, per-machine; `.codegraph/` present here)
-Usage, MCP-vs-shell, and per-machine opt-in steps: `docs/process/codegraph.md`. (The codegraph
-chunk self-gates on `.codegraph/`; `impact`/`affected` over-report — structural upper bound.)
+Usage, MCP-vs-shell, and per-machine opt-in steps: `docs/process/codegraph.md`.
 
 ### Project boundaries (off-limits)
 - Hardcoded server paths or IPs in frontend code — never; the frontend talks to `/api/*` only.
