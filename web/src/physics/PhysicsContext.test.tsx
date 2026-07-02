@@ -75,6 +75,26 @@ describe('PhysicsProvider', () => {
         expect(floor.x).toBe(window.innerWidth / 2)
     })
 
+    test('constructs the world in drift mode — the site default (AC#2 / spec §3.2)', async () => {
+        const { render, PhysicsProvider, usePhysicsWorld } = await setup()
+        let captured: ReturnType<typeof usePhysicsWorld> | null = null
+        function Probe() {
+            captured = usePhysicsWorld()
+            return null
+        }
+        render(
+            <PhysicsProvider>
+                <Probe />
+            </PhysicsProvider>,
+        )
+        // A PageSpec-less physics route (blog, /sandbox/cards) never reaches
+        // usePageDef, so PhysicsProvider itself must resolve the drift default —
+        // otherwise the world sticks at the constructor's dormant 'gravity'.
+        const world = captured!
+        expect(world.getMode()).toBe('drift')
+        expect(world.getGravityVector()).toEqual({ x: 0, y: 0 })
+    })
+
     test('window resize calls setViewport with new dims and current insets', async () => {
         const { act, render, PhysicsProvider, usePhysicsWorld } = await setup()
         let captured: ReturnType<typeof usePhysicsWorld> | null = null

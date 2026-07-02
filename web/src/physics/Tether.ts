@@ -29,6 +29,36 @@ export function resolveParent(
     return h !== undefined ? { handle: h, kind: 'card' } : null
 }
 
+/**
+ * Radial attach geometry for a static/edge tether parent (spec §3.3). The
+ * attach point is the point on the edge **nearest the child** — for a
+ * horizontal top/bottom (or ceiling/floor) edge that is directly above/below
+ * the child, clamped to the edge's width so a parked rope never converges on
+ * the bar's centre — and `length` is the true (Euclidean) distance from there,
+ * replacing the old y-projection (which dropped any horizontal offset). Shared
+ * by `wireTetherFor` and `PinnedCard`'s `parkAt` so authored and auto-parked
+ * ropes wire the same way. Numerically identical to the y-projection when the
+ * child sits within the edge's width (the shipped case).
+ */
+export function edgeAttachPoint(
+    world: PhysicsWorld,
+    parentHandle: PhysicsHandle,
+    childAnchor: Vec2,
+): { anchorA: Vec2; length: number } {
+    const parentBodyPos = world.getPosition(parentHandle)
+    const parentAnchor = world.getAnchor(parentHandle)
+    const halfWidth = world.getSize(parentHandle).width / 2
+    const attachX = Math.min(
+        Math.max(childAnchor.x, parentBodyPos.x - halfWidth),
+        parentBodyPos.x + halfWidth,
+    )
+    const attachY = parentAnchor.y
+    return {
+        anchorA: { x: attachX - parentBodyPos.x, y: attachY - parentBodyPos.y },
+        length: Math.hypot(childAnchor.x - attachX, childAnchor.y - attachY),
+    }
+}
+
 export function wireTetherFor(
     world: PhysicsWorld,
     parentHandle: PhysicsHandle,
@@ -36,20 +66,15 @@ export function wireTetherFor(
     childHandle: PhysicsHandle,
     childAnchor: Vec2,
 ): TetherHandle {
-    const parentBodyPos = world.getPosition(parentHandle)
     if (parentKind === 'card') {
+        const parentBodyPos = world.getPosition(parentHandle)
         const length = Math.hypot(
             childAnchor.x - parentBodyPos.x,
             childAnchor.y - parentBodyPos.y,
         )
         return world.tether.add(parentHandle, childHandle, length)
     }
-    const parentAnchor = world.getAnchor(parentHandle)
-    const anchorA = {
-        x: childAnchor.x - parentBodyPos.x,
-        y: parentAnchor.y - parentBodyPos.y,
-    }
-    const length = Math.abs(childAnchor.y - parentAnchor.y)
+    const { anchorA, length } = edgeAttachPoint(world, parentHandle, childAnchor)
     return world.tether.add(parentHandle, childHandle, length, anchorA)
 }
 

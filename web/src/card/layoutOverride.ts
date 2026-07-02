@@ -42,5 +42,14 @@ export function applyLayoutOverride(
     ) {
         return pageDef
     }
-    return { ...pageSpecFromLayout(override), sections: pageDef.sections }
+    // Preserve the physics mode + intensity from the route's PageSpec: a
+    // RouteLayout carries neither (D7 — mode/driftScale are authored route-side),
+    // so an override must re-inject them like it does `sections`, or a drift
+    // route would silently revert to gravity when arranged in the Atelier.
+    return {
+        ...pageSpecFromLayout(override),
+        sections: pageDef.sections,
+        mode: pageDef.mode,
+        driftScale: pageDef.driftScale,
+    }
 }

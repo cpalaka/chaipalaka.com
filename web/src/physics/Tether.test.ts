@@ -1,8 +1,9 @@
 import { describe, test, expect } from 'vitest'
-import { Tether, resolveParent } from './Tether'
+import { Tether, resolveParent, wireTetherFor } from './Tether'
 import { physicsTuning } from './physicsTuning'
+import { PhysicsWorld } from './PhysicsWorld'
 import type { BodyForceSource } from './BodyForceSource'
-import type { PhysicsHandle, PhysicsWorld, Vec2 } from './PhysicsWorld'
+import type { PhysicsHandle, Vec2 } from './PhysicsWorld'
 
 class FakeBodyForceSource implements BodyForceSource {
     private bodies = new Map<
@@ -480,5 +481,44 @@ describe('resolveParent', () => {
             registered: new Map(),
         })
         expect(resolveParent(world, 'box-bottom')).toBeNull()
+    })
+})
+
+describe('wireTetherFor — radial edge wiring (spec §3.3)', () => {
+    // Content box top edge: line at y=300, spans x∈[200,800], body centre (500,330).
+    const makeBoxWorld = () => {
+        const w = new PhysicsWorld({ viewport: { width: 2000, height: 2000 } })
+        w.setContentBox({ x: 200, y: 300, width: 600, height: 400 })
+        return w
+    }
+    const attachWorld = (w: PhysicsWorld, parent: PhysicsHandle, anchorA: Vec2) => {
+        const p = w.getPosition(parent)
+        return { x: p.x + anchorA.x, y: p.y + anchorA.y }
+    }
+
+    test('within-width child: attach = nearest edge point, radial length', () => {
+        const w = makeBoxWorld()
+        const top = w.contentBoxTopHandle!
+        const child = w.registerById('c', { x: 450, y: 600 }, { width: 100, height: 60 })
+        const th = wireTetherFor(w, top, 'ceiling', child, { x: 450, y: 600 })
+        const rec = w.tether.records().find((r) => r.handle === th)!
+        const attach = attachWorld(w, top, rec.anchorA!)
+        expect(attach.x).toBeCloseTo(450, 6) // directly above the child
+        expect(attach.y).toBeCloseTo(300, 6) // on the edge line
+        expect(rec.length).toBeCloseTo(300, 6) // hypot(0, 600-300)
+    })
+
+    test('out-of-width child: attach clamps to the edge, length is radial (not y-projection)', () => {
+        const w = makeBoxWorld()
+        const top = w.contentBoxTopHandle!
+        // child to the right of the box (x=1000 > 800)
+        const child = w.registerById('c', { x: 1000, y: 600 }, { width: 100, height: 60 })
+        const th = wireTetherFor(w, top, 'ceiling', child, { x: 1000, y: 600 })
+        const rec = w.tether.records().find((r) => r.handle === th)!
+        const attach = attachWorld(w, top, rec.anchorA!)
+        expect(attach.x).toBeCloseTo(800, 6) // clamped to the bar's right end
+        expect(attach.y).toBeCloseTo(300, 6)
+        expect(rec.length).toBeCloseTo(Math.hypot(200, 300), 4) // radial ≈ 360.6
+        expect(rec.length).toBeGreaterThan(301) // NOT the y-projection (300)
     })
 })

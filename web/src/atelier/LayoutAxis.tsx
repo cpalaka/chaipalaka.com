@@ -208,24 +208,31 @@ function LayoutAxisBody({ route, state }: { route: string; state: AtelierState }
                     : 'normal drag flings — toggle to arrange'}
             </p>
 
-            <label style={rowStyle}>
-                <span style={labelTextStyle}>
-                    Gravity{gravityDirty ? ' •' : ''}
-                </span>
-                <select
-                    value={values['gravity'] as string}
-                    onChange={(e) =>
-                        store.setValues(axis, { ...values, gravity: e.target.value })
-                    }
-                    style={selectStyle}
-                >
-                    {['down', 'up', 'left', 'right'].map((g) => (
-                        <option key={g} value={g}>
-                            {g}
-                        </option>
-                    ))}
-                </select>
-            </label>
+            {/* Gravity is dormant-mode-only (spec §3.2). Render the control ONLY
+                for a layout that actually declares gravity — otherwise the select
+                would show a stale 'down' and its onChange would write a `gravity`
+                key that the arrange write-back re-inserts into a gravity-less
+                .layout.ts (defeats AC#11 at the UI layer). */}
+            {layout.gravity !== undefined && (
+                <label style={rowStyle}>
+                    <span style={labelTextStyle}>
+                        Gravity{gravityDirty ? ' •' : ''}
+                    </span>
+                    <select
+                        value={values['gravity'] as string}
+                        onChange={(e) =>
+                            store.setValues(axis, { ...values, gravity: e.target.value })
+                        }
+                        style={selectStyle}
+                    >
+                        {['down', 'up', 'left', 'right'].map((g) => (
+                            <option key={g} value={g}>
+                                {g}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
 
             <p style={captionStyle}>cards</p>
             {layout.cards.map((card) => {

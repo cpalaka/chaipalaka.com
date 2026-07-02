@@ -55,7 +55,16 @@ export type SectionsConfig =
 export type Resting = 'quiet' | 'populated'
 
 export interface PageSpec {
-    gravity: Cardinal
+    // Physics model (spec §3.2 / ADR-0010). Absent ⇒ `'drift'` (resolved in
+    // usePageDef). `mode:'gravity'` opts a route into the dormant gravity mode.
+    mode?: 'drift' | 'gravity'
+    // The gravity direction — only meaningful under `mode:'gravity'`. Optional
+    // now that drift is the default; `mode:'gravity'` + absent ⇒ 'down'.
+    gravity?: Cardinal
+    // Per-route drift intensity (default 1); scales the Brownian wander. Reading
+    // routes author it near 0, canvas routes livelier. Authored route-side, never
+    // in an Atelier-regenerated `.layout.ts` (D7).
+    driftScale?: number
     resting?: Resting
     cards: CardSpec[]
     sections?: SectionsConfig

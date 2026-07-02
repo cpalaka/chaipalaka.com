@@ -22,7 +22,11 @@ export interface LayoutCardSpec {
  * regenerates them whole (no AST surgery; see the atelier design spec).
  */
 export interface RouteLayout {
-    gravity: Cardinal
+    // Optional now that drift is the default (spec §3.2). Present only for a
+    // route in the dormant gravity mode; drift routes omit it. `mode`/`driftScale`
+    // are never authored here (whole-file Atelier regen would drop them, D7) —
+    // they live route-side and are re-injected by applyLayoutOverride.
+    gravity?: Cardinal
     cards: readonly LayoutCardSpec[]
 }
 
@@ -33,7 +37,8 @@ export function resolveAnchor(anchor: LayoutAnchor): (viewport: Viewport) => Vec
 
 export function pageSpecFromLayout(layout: RouteLayout): PageSpec {
     return {
-        gravity: layout.gravity,
+        // Emit gravity only when the layout declares it (drift routes omit it).
+        ...(layout.gravity !== undefined ? { gravity: layout.gravity } : {}),
         cards: layout.cards.map((c) => ({ ...c, anchor: resolveAnchor(c.anchor) })),
     }
 }

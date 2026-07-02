@@ -419,7 +419,10 @@ const IDENT = /^[A-Za-z0-9_-]+$/
 
 const layoutSchema = z
     .object({
-        gravity: z.enum(CARDINALS),
+        // Optional now that drift is the default (spec §3.2): a gravity-less
+        // (drift) layout must validate, and the regen must round-trip it without
+        // re-inserting a gravity line.
+        gravity: z.enum(CARDINALS).optional(),
         cards: z
             .array(
                 z
@@ -491,11 +494,14 @@ export function generateLayoutSource(
             anchor: { fx: ${String(c.anchor.fx)}, fy: ${String(c.anchor.fy)} },
         },`
     })
+    // Emit the gravity line only when the layout carries gravity (drift routes
+    // omit it) so the regenerated file round-trips a gravity-less layout.
+    const gravityLine = gravity !== undefined ? `    gravity: '${gravity}',\n` : ''
     const source =
         "import type { RouteLayout } from './routeLayout'\n\n" +
         '// Pure data literal — the Atelier regenerates this file whole on write-back.\n' +
         `export const ${target.exportName} = {\n` +
-        `    gravity: '${gravity}',\n` +
+        gravityLine +
         '    cards: [\n' +
         cardEntries.join('\n') +
         '\n    ],\n' +

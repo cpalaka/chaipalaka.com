@@ -88,13 +88,17 @@ function fractionAnchor(card: LayoutCardSpec): { fx: number; fy: number } {
 
 export function layoutSchemaFor(layout: RouteLayout): TuningSchema {
     const ids = layout.cards.map((c) => c.id)
-    const schema: TuningSchema = {
-        gravity: {
+    // Seed the Gravity widget only when the layout declares gravity — a drift
+    // route (no gravity) exposes no gravity control, so the write-back path
+    // never re-inserts one (spec §3.2 round-trip; V1.4).
+    const schema: TuningSchema = {}
+    if (layout.gravity !== undefined) {
+        schema['gravity'] = {
             kind: 'enum',
             default: layout.gravity,
             options: CARDINALS,
             label: 'Gravity',
-        },
+        }
     }
     for (const card of layout.cards) {
         const anchor = fractionAnchor(card)
@@ -144,7 +148,10 @@ export function layoutFromValues(
     baseline: RouteLayout,
 ): RouteLayout {
     return {
-        gravity: values['gravity'] as Cardinal,
+        // Emit gravity only when a working value exists for it (drift routes omit it).
+        ...(values['gravity'] !== undefined
+            ? { gravity: values['gravity'] as Cardinal }
+            : {}),
         cards: baseline.cards.map((card) => {
             const record = cardRecord(values, card.id)
             const parent = record['parent'] as string
@@ -189,7 +196,8 @@ export function descendantsOf(
 }
 
 export function valuesFromLayout(layout: RouteLayout): AxisValues {
-    const values: AxisValues = { gravity: layout.gravity }
+    const values: AxisValues = {}
+    if (layout.gravity !== undefined) values['gravity'] = layout.gravity
     for (const card of layout.cards) {
         const anchor = fractionAnchor(card)
         values[card.id] = {

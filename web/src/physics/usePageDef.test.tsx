@@ -4,79 +4,91 @@ import { PhysicsProvider } from './PhysicsContext'
 import { PhysicsWorld } from './PhysicsWorld'
 import { usePageDef } from './usePageDef'
 import type { PageSpec } from './PageSpec'
-import type { Cardinal } from './PhysicsWorld'
 
 afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
 })
 
-function pageDef(gravity: Cardinal): PageSpec {
-    return { gravity, cards: [] }
-}
-
 function Consumer({ def }: { def: PageSpec }) {
     usePageDef(def)
     return null
 }
 
+function renderDef(def: PageSpec) {
+    return render(
+        <PhysicsProvider>
+            <Consumer def={def} />
+        </PhysicsProvider>,
+    )
+}
+
 describe('usePageDef', () => {
-    test('mount calls setGravityDirection with pageDef.gravity', () => {
-        const spy = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
-        render(
-            <PhysicsProvider>
-                <Consumer def={pageDef('up')} />
-            </PhysicsProvider>,
-        )
-        expect(spy).toHaveBeenCalledTimes(1)
-        expect(spy).toHaveBeenCalledWith('up')
+    // AC#2 — a route with no `mode` runs drift; gravity direction is NOT applied.
+    test('no mode ⇒ drift: sets mode drift, driftScale 1, no gravity direction', () => {
+        const mode = vi.spyOn(PhysicsWorld.prototype, 'setMode')
+        const scale = vi.spyOn(PhysicsWorld.prototype, 'setDriftScale')
+        const grav = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
+        renderDef({ cards: [] })
+        expect(mode).toHaveBeenCalledWith('drift')
+        expect(scale).toHaveBeenCalledWith(1)
+        // A declared gravity is ignored under drift.
+        renderDef({ gravity: 'up', cards: [] })
+        expect(grav).not.toHaveBeenCalledWith('up')
     })
 
-    test('unmount restores gravity to "down"', () => {
-        const spy = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
-        const { unmount } = render(
-            <PhysicsProvider>
-                <Consumer def={pageDef('up')} />
-            </PhysicsProvider>,
-        )
-        spy.mockClear()
+    test('mode:"gravity" ⇒ sets gravity mode and the declared direction', () => {
+        const mode = vi.spyOn(PhysicsWorld.prototype, 'setMode')
+        const grav = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
+        renderDef({ mode: 'gravity', gravity: 'up', cards: [] })
+        expect(mode).toHaveBeenCalledWith('gravity')
+        expect(grav).toHaveBeenCalledWith('up')
+    })
+
+    test('mode:"gravity" with no direction defaults to "down"', () => {
+        const grav = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
+        renderDef({ mode: 'gravity', cards: [] })
+        expect(grav).toHaveBeenCalledWith('down')
+    })
+
+    // AC#4 — driftScale plumbs through to the world.
+    test('driftScale plumbs through; defaults to 1 when absent', () => {
+        const scale = vi.spyOn(PhysicsWorld.prototype, 'setDriftScale')
+        renderDef({ driftScale: 0.3, cards: [] })
+        expect(scale).toHaveBeenCalledWith(0.3)
+        scale.mockClear()
+        renderDef({ cards: [] })
+        expect(scale).toHaveBeenCalledWith(1)
+    })
+
+    test('unmount resets to the site default (drift, scale 1, gravity down)', () => {
+        const mode = vi.spyOn(PhysicsWorld.prototype, 'setMode')
+        const scale = vi.spyOn(PhysicsWorld.prototype, 'setDriftScale')
+        const grav = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
+        const { unmount } = renderDef({ mode: 'gravity', gravity: 'up', cards: [] })
+        mode.mockClear()
+        scale.mockClear()
+        grav.mockClear()
         unmount()
-        expect(spy).toHaveBeenCalledWith('down')
+        expect(mode).toHaveBeenCalledWith('drift')
+        expect(scale).toHaveBeenCalledWith(1)
+        expect(grav).toHaveBeenCalledWith('down')
     })
 
-    test('changing pageDef.gravity re-applies it (cleanup-then-effect)', () => {
-        const spy = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
-        const { rerender } = render(
-            <PhysicsProvider>
-                <Consumer def={pageDef('up')} />
-            </PhysicsProvider>,
-        )
-        spy.mockClear()
-        rerender(
-            <PhysicsProvider>
-                <Consumer def={pageDef('left')} />
-            </PhysicsProvider>,
-        )
-        const args = spy.mock.calls.map((c) => c[0])
-        // useEffect cleanup with old deps fires first (restores 'down'),
-        // then new effect applies the new gravity.
-        expect(args).toEqual(['down', 'left'])
-    })
-
-    test('no-op re-render with stable world+gravity does not re-invoke', () => {
-        const spy = vi.spyOn(PhysicsWorld.prototype, 'setGravityDirection')
-        const def = pageDef('right')
+    test('a stable pageDef does not re-invoke on re-render', () => {
+        const mode = vi.spyOn(PhysicsWorld.prototype, 'setMode')
+        const def: PageSpec = { driftScale: 0.5, cards: [] }
         const { rerender } = render(
             <PhysicsProvider>
                 <Consumer def={def} />
             </PhysicsProvider>,
         )
-        const callsAfterMount = spy.mock.calls.length
+        const afterMount = mode.mock.calls.length
         rerender(
             <PhysicsProvider>
                 <Consumer def={def} />
             </PhysicsProvider>,
         )
-        expect(spy.mock.calls.length).toBe(callsAfterMount)
+        expect(mode.mock.calls.length).toBe(afterMount)
     })
 })

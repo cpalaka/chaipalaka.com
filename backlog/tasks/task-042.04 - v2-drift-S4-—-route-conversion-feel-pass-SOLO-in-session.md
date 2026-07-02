@@ -4,7 +4,7 @@ title: 'v2 drift S4 — route conversion + feel pass (SOLO, in-session)'
 status: To Do
 assignee: []
 created_date: '2026-07-02 04:53'
-updated_date: '2026-07-02 05:29'
+updated_date: '2026-07-02 22:09'
 labels:
   - claude-generated
   - v2
@@ -34,7 +34,11 @@ Route conversion + feel pass (drift rewrite slice S4/4; umbrella task-042; SOLO 
 - [ ] #7 Word-anchored/parked pose polish + wobble retuned for drift (`pinTuning.ts` wobble* values), feel-checked in the V4.5 session. [spec §3.3, §6 item 3]
 - [ ] #8 **Feel constants tuned solo in-session (visual/feel AC — never run as a background wave).** [spec §6 item 1]
 - [ ] #9 Full verify gate + V4.6 route-declaration sweep + final global grep sweep clean.
+- [ ] #10 D8 reduced-motion: driftScale=0 must ALSO still the prose repel (or spec accepts a one-time settle). driftScale scales only Brownian wander (spec §1), so driftScale=0 alone leaves repel pushing every non-dragged card to the repel/rope equilibrium on load — motion a reduced-motion user must not see. Source: task-042.01 Opus re-review L1 (spec §1 vs D8).
+- [ ] #11 Feel-tune driftTuning.damping below ~0.6: the drift tick clamps frictionAir at Math.min(damping,0.6) as a matter NaN-inversion backstop (frictionAir*(dt/16.667)>2 inverts drag to NaN, ~0.667 at the 50ms dt-clamp). Tuning damping above 0.6 silently hits the clamp (no viscosity gain), it does not NaN — do not tune into the clamp. Source: task-042.01 re-review L3 + reference_matter_js_frictionair_inversion.
 <!-- AC:END -->
+
+
 
 ## Implementation Notes
 

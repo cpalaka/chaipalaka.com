@@ -38,4 +38,16 @@ describe('pageSpecFromLayout', () => {
         expect(spec.cards[0]!.anchor(viewport)).toEqual({ x: 600, y: 200 })
         expect(spec.cards[1]!.anchor(viewport)).toEqual({ x: 10, y: 20 })
     })
+
+    test('a gravity-less (drift) layout omits gravity from the PageSpec', () => {
+        const drift: RouteLayout = {
+            cards: [
+                { id: 'a', kind: 'blog', parent: null, anchor: { fx: 0.5, fy: 0.5 } },
+            ],
+        }
+        const spec = pageSpecFromLayout(drift)
+        expect('gravity' in spec).toBe(false)
+        expect(spec.gravity).toBeUndefined()
+        expect(spec.cards).toHaveLength(1)
+    })
 })

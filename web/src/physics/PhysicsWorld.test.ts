@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { PhysicsWorld } from './PhysicsWorld'
 import { physicsTuning } from './physicsTuning'
+import { driftTuning } from './driftTuning'
 
 const FIXED_DT_MS = 1000 / 60
 
@@ -205,6 +206,20 @@ describe('PhysicsWorld gravity direction', () => {
 })
 
 describe('PhysicsWorld setViewport', () => {
+    // edgeAttachPoint clamps ceiling/floor tethers against the registration's
+    // width + anchor; setViewport must refresh those or a card near the new edge
+    // wires diagonally to a stale extent after a resize.
+    test('setViewport refreshes ceiling/floor registration width + anchor', () => {
+        const world = new PhysicsWorld({ viewport: { width: 800, height: 600 } })
+        world.setViewport({ width: 1600, height: 900 })
+        expect(world.getSize(world.ceilingHandle).width).toBe(1600)
+        expect(world.getAnchor(world.ceilingHandle).x).toBeCloseTo(800)
+        expect(world.getAnchor(world.ceilingHandle).y).toBeCloseTo(0)
+        expect(world.getSize(world.floorHandle).width).toBe(1600)
+        expect(world.getAnchor(world.floorHandle).x).toBeCloseTo(800)
+        expect(world.getAnchor(world.floorHandle).y).toBeCloseTo(900)
+    })
+
     test('setViewport repositions floor so new floor catches a falling body', () => {
         const world = new PhysicsWorld({
             viewport: { width: 800, height: 600 },
@@ -539,5 +554,355 @@ describe('PhysicsWorld setSensor', () => {
         )
         expect(() => world.setSensor(handle, true)).not.toThrow()
         expect(() => world.setSensor(handle, false)).not.toThrow()
+    })
+})
+
+// A small deterministic PRNG so drift tests are reproducible (Math.random is
+// injectable via the `rng` option).
+function mulberry32(seed: number): () => number {
+    let a = seed >>> 0
+    return () => {
+        a |= 0
+        a = (a + 0x6d2b79f5) | 0
+        let t = Math.imul(a ^ (a >>> 15), 1 | a)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+}
+
+describe('PhysicsWorld drift mode', () => {
+    // AC#2 — no mode declared ⇒ the app resolves drift; drift runs zero gravity.
+    test('drift mode runs zero engine gravity', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+        })
+        expect(world.getGravityVector()).toEqual({ x: 0, y: 0 })
+    })
+
+    test('driftScale 0 ⇒ a body does not fall (proves zero gravity)', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+            rng: mulberry32(3),
+        })
+        world.setDriftScale(0)
+        const h = world.registerById('a', { x: 400, y: 100 }, { width: 100, height: 60 })
+        for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
+        const p = world.getPosition(h)
+        expect(Math.abs(p.y - 100)).toBeLessThan(1)
+        expect(Math.abs(p.x - 400)).toBeLessThan(1)
+    })
+
+    test('drift active ⇒ a body wanders from its anchor', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+            rng: mulberry32(1),
+        })
+        const h = world.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+        for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
+        const p = world.getPosition(h)
+        expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
+    })
+
+    // AC#4 — driftScale scales the wander amplitude; default 1.
+    test('driftScale scales wander amplitude linearly', () => {
+        const run = (scale: number) => {
+            const w = new PhysicsWorld({
+                viewport: { width: 4000, height: 4000 },
+                mode: 'drift',
+                rng: mulberry32(7),
+            })
+            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+            w.setDriftScale(scale)
+            for (let i = 0; i < 20; i++) w.tick(FIXED_DT_MS)
+            const p = w.getPosition(h)
+            return Math.hypot(p.x - 2000, p.y - 2000)
+        }
+        const ratio = run(2) / run(1)
+        expect(ratio).toBeGreaterThan(1.8)
+        expect(ratio).toBeLessThan(2.2)
+    })
+
+    test('driftScale defaults to 1 (a fresh drift world already wanders)', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+            rng: mulberry32(9),
+        })
+        const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+        for (let i = 0; i < 60; i++) w.tick(FIXED_DT_MS)
+        const p = w.getPosition(h)
+        expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
+    })
+
+    // AC#5 — damping, both halves.
+    test('registers frictionAir per mode (drift damping vs 0.005 gravity)', () => {
+        const drift = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+        })
+        const hd = drift.registerById('a', { x: 1, y: 1 }, { width: 100, height: 60 })
+        expect(drift.getFrictionAir(hd)).toBeCloseTo(driftTuning.damping)
+
+        const grav = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'gravity',
+        })
+        const hg = grav.registerById('a', { x: 1, y: 1 }, { width: 100, height: 60 })
+        expect(grav.getFrictionAir(hg)).toBeCloseTo(0.005)
+    })
+
+    test('setMode re-applies frictionAir to existing bodies (dormant stays 0.005)', () => {
+        const w = new PhysicsWorld({ viewport: { width: 800, height: 600 }, mode: 'gravity' })
+        const h = w.registerById('a', { x: 1, y: 1 }, { width: 100, height: 60 })
+        expect(w.getFrictionAir(h)).toBeCloseTo(0.005)
+        w.setMode('drift')
+        expect(w.getFrictionAir(h)).toBeCloseTo(driftTuning.damping)
+        w.setMode('gravity')
+        expect(w.getFrictionAir(h)).toBeCloseTo(0.005)
+    })
+
+    test('the drift tick re-syncs frictionAir from driftTuning (HMR)', () => {
+        const w = new PhysicsWorld({ viewport: { width: 800, height: 600 }, mode: 'drift' })
+        const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+        const orig = driftTuning.damping
+        try {
+            driftTuning.damping = 0.033
+            w.tick(FIXED_DT_MS)
+            expect(w.getFrictionAir(h)).toBeCloseTo(0.033)
+        } finally {
+            driftTuning.damping = orig
+        }
+    })
+
+    // Guard the matter NaN-inversion footgun: an S4/HMR mis-tune of the damping
+    // knob must not flip frictionAir past the drag-inversion ceiling and NaN the
+    // world (reference_matter_js_frictionair_inversion).
+    test('the drift tick clamps frictionAir below the NaN-inversion ceiling', () => {
+        const w = new PhysicsWorld({ viewport: { width: 800, height: 600 }, mode: 'drift' })
+        const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+        const orig = driftTuning.damping
+        try {
+            driftTuning.damping = 0.9 // above the ~0.667 inversion threshold
+            w.tick(FIXED_DT_MS)
+            expect(w.getFrictionAir(h)).toBeLessThanOrEqual(0.6)
+            const p = w.getPosition(h)
+            expect(Number.isFinite(p.x) && Number.isFinite(p.y)).toBe(true)
+        } finally {
+            driftTuning.damping = orig
+        }
+    })
+
+    // AC#8 — word-anchor proxies are sensors.
+    test('word-anchor proxy is a sensor and emits no collision impulse', () => {
+        const w = new PhysicsWorld({ viewport: { width: 800, height: 600 }, mode: 'drift' })
+        const proxy = w.registerAnchor({ x: 400, y: 300 })
+        expect(w.isSensor(proxy)).toBe(true)
+        const card = w.registerById('c', { x: 400, y: 300 }, { width: 100, height: 60 })
+        w.setDriftScale(0) // isolate: any motion would be a collision shove
+        for (let i = 0; i < 10; i++) w.tick(FIXED_DT_MS)
+        const p = w.getPosition(card)
+        expect(Math.hypot(p.x - 400, p.y - 300)).toBeLessThan(0.5)
+    })
+
+    // Spec §1 — dismissed previews (dynamic sensors: PreviewCard.setSensor) get
+    // "no Brownian, no repel". The drift pass must skip every dynamic sensor,
+    // not just static bodies.
+    test('drift pass skips dynamic sensors (dismissed-preview exclusion)', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+            rng: mulberry32(4),
+        })
+        const sensor = w.registerById('s', { x: 400, y: 300 }, { width: 100, height: 60 })
+        w.setSensor(sensor, true)
+        const solid = w.registerById('c', { x: 200, y: 300 }, { width: 100, height: 60 })
+        for (let i = 0; i < 120; i++) w.tick(FIXED_DT_MS)
+        // The non-sensor body wanders; the sensor stays put (no Brownian kick).
+        const ps = w.getPosition(solid)
+        expect(Math.hypot(ps.x - 200, ps.y - 300)).toBeGreaterThan(1)
+        const px = w.getPosition(sensor)
+        expect(Math.hypot(px.x - 400, px.y - 300)).toBeLessThan(0.5)
+    })
+
+    // Spec §1 — the drift pass clamps only the Brownian wander, never a body's
+    // authored velocity. A drag-release fling / dismissal kick above the old
+    // maxSpeed=8 must survive (was clamped to 8 px/tick, deadening every fling).
+    test('drift pass does not clamp an authored fling velocity', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 4000, height: 4000 },
+            mode: 'drift',
+            rng: mulberry32(6),
+        })
+        const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+        w.setVelocity(h, { x: 32, y: 0 }) // ~2px/ms drag at flingVelocityScale 16
+        w.tick(FIXED_DT_MS)
+        const v = w.getVelocity(h)
+        // Only damping (≈0.02) + one small Brownian kick touch it — not a cap to 8.
+        expect(Math.hypot(v.x, v.y)).toBeGreaterThan(25)
+    })
+
+    // AC#9 — drift-mode anchor move translate-pairs; gravity teleports + zeroes.
+    test('drift setAnchor translate-pairs (preserves wander offset + velocity)', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 4000, height: 4000 },
+            mode: 'drift',
+            rng: mulberry32(5),
+        })
+        const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+        for (let i = 0; i < 15; i++) w.tick(FIXED_DT_MS)
+        const posBefore = w.getPosition(h)
+        const velBefore = w.getVelocity(h)
+        const offset = { x: posBefore.x - 2000, y: posBefore.y - 2000 }
+        w.setAnchor(h, { x: 2300, y: 2400 })
+        const posAfter = w.getPosition(h)
+        const velAfter = w.getVelocity(h)
+        expect(posAfter.x).toBeCloseTo(2300 + offset.x, 6)
+        expect(posAfter.y).toBeCloseTo(2400 + offset.y, 6)
+        expect(velAfter.x).toBeCloseTo(velBefore.x, 6)
+        expect(velAfter.y).toBeCloseTo(velBefore.y, 6)
+    })
+
+    test('gravity setAnchor teleports to the anchor and zeroes velocity', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 4000, height: 4000 },
+            mode: 'gravity',
+        })
+        const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+        w.setVelocity(h, { x: 5, y: 5 })
+        w.setAnchor(h, { x: 2300, y: 2400 })
+        const p = w.getPosition(h)
+        expect(p.x).toBeCloseTo(2300, 6)
+        expect(p.y).toBeCloseTo(2400, 6)
+        expect(w.getVelocity(h)).toEqual({ x: 0, y: 0 })
+    })
+
+    // AC#3 — invariance suite.
+    test('deterministic under an injected RNG (same seed ⇒ same path)', () => {
+        const run = () => {
+            const w = new PhysicsWorld({
+                viewport: { width: 4000, height: 4000 },
+                mode: 'drift',
+                rng: mulberry32(11),
+            })
+            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+            for (let i = 0; i < 50; i++) w.tick(FIXED_DT_MS)
+            return w.getPosition(h)
+        }
+        expect(run()).toEqual(run())
+    })
+
+    test('Brownian is mass-invariant (same seed, 16× mass ⇒ same path)', () => {
+        const run = (size: number) => {
+            const w = new PhysicsWorld({
+                viewport: { width: 8000, height: 8000 },
+                mode: 'drift',
+                rng: mulberry32(13),
+            })
+            const h = w.registerById('a', { x: 4000, y: 4000 }, { width: size, height: size })
+            for (let i = 0; i < 40; i++) w.tick(FIXED_DT_MS)
+            return w.getPosition(h)
+        }
+        const small = run(40)
+        const big = run(160)
+        expect(big.x).toBeCloseTo(small.x, 5)
+        expect(big.y).toBeCloseTo(small.y, 5)
+    })
+
+    test('prose repel is mass-invariant', () => {
+        const run = (size: number) => {
+            const w = new PhysicsWorld({
+                viewport: { width: 4000, height: 4000 },
+                mode: 'drift',
+            })
+            w.setDriftScale(0) // no Brownian — isolate repel
+            w.setContentBox({ x: 1800, y: 1800, width: 400, height: 400 })
+            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: size, height: size })
+            for (let i = 0; i < 30; i++) w.tick(FIXED_DT_MS)
+            return w.getPosition(h)
+        }
+        const small = run(40)
+        const big = run(160)
+        expect(big.x).toBeCloseTo(small.x, 4)
+        expect(big.y).toBeCloseTo(small.y, 4)
+    })
+
+    test('wander statistics are dt-invariant (8ms vs 33ms)', () => {
+        // matter warns once for dt > 16.667ms; the 33ms tick exercises exactly
+        // that regime on purpose, so silence its advisory to keep gate output clean.
+        const warn = console.warn
+        console.warn = () => {}
+        const rmsOver = (dt: number) => {
+            const T = 600
+            const ticks = Math.round(T / dt)
+            const N = 80
+            let sumSq = 0
+            for (let k = 0; k < N; k++) {
+                const w = new PhysicsWorld({
+                    viewport: { width: 10000, height: 10000 },
+                    mode: 'drift',
+                    rng: mulberry32(100 + k),
+                })
+                const h = w.registerById('a', { x: 5000, y: 5000 }, { width: 60, height: 60 })
+                for (let i = 0; i < ticks; i++) w.tick(dt)
+                const p = w.getPosition(h)
+                sumSq += (p.x - 5000) ** 2 + (p.y - 5000) ** 2
+            }
+            return Math.sqrt(sumSq / N)
+        }
+        const ratio = rmsOver(8) / rmsOver(33)
+        console.warn = warn
+        expect(ratio).toBeGreaterThan(0.6)
+        expect(ratio).toBeLessThan(1.6)
+    })
+
+    test('non-positive-dt frames are dropped before any work (0-dt matter guard)', () => {
+        // A browser feeds occasional 0-dt frames (two rAF in one millisecond);
+        // matter's Verlet solve on a 0-dt frame poisons drift bodies to NaN
+        // (verified in-browser — node's Engine.update(0) is a harmless no-op, so
+        // the NaN itself is not node-reproducible). This pins the guard's
+        // contract: a dt ≤ 0 tick runs nothing at all.
+        const w = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+        })
+        let ran = 0
+        w.onBeforeTick(() => {
+            ran++
+        })
+        w.tick(FIXED_DT_MS)
+        expect(ran).toBe(1) // a real frame runs
+        w.tick(0)
+        w.tick(-5)
+        expect(ran).toBe(1) // 0 and negative frames are dropped before any work
+    })
+
+    test('drift-settle: displacement + speed stay bounded, never NaN', () => {
+        const w = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+            mode: 'drift',
+            rng: mulberry32(21),
+        })
+        const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+        let maxDisp = 0
+        let maxSpeed = 0
+        for (let i = 0; i < 2000; i++) {
+            w.tick(FIXED_DT_MS)
+            const p = w.getPosition(h)
+            const v = w.getVelocity(h)
+            expect(Number.isFinite(p.x) && Number.isFinite(p.y)).toBe(true)
+            maxDisp = Math.max(maxDisp, Math.hypot(p.x - 400, p.y - 300))
+            maxSpeed = Math.max(maxSpeed, Math.hypot(v.x, v.y))
+        }
+        // Bounded-drift invariant: the card wanders but never escapes its region
+        // (walls + damping bound it) and never NaNs. The old maxSpeed clamp is
+        // gone — the dt-clamp + damping bound Brownian, so the speed assertion is
+        // a loose runaway/NaN-inversion sanity ceiling (equilibrium is ~1 px/tick),
+        // NOT a velocity cap on authored motion.
+        expect(Number.isFinite(maxSpeed)).toBe(true)
+        expect(maxSpeed).toBeLessThan(50)
+        expect(maxDisp).toBeLessThan(600)
     })
 })

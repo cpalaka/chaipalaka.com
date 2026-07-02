@@ -11,7 +11,7 @@ import { pinTuning } from './pinTuning'
 import { useMorphSource, HERO_NAME } from '../nav/morph'
 import { usePin } from './PinContext'
 import { childHandlesOf } from './recursion'
-import { wireTetherFor, type TetherHandle } from '../physics/Tether'
+import { wireTetherFor, edgeAttachPoint, type TetherHandle } from '../physics/Tether'
 import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { PinEntry } from './PinStore'
 import './Pin.css'
@@ -191,14 +191,14 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
                     : world.contentBoxBottomHandle
             if (edgeHandle === undefined) return // no box edge → stay word-anchored
             const cardPos = world.getPosition(cardHandle)
-            const edgePos = world.getPosition(edgeHandle)
             const edgeAnchor = world.getAnchor(edgeHandle)
             world.tether.remove(tetherHandle)
-            curLen = Math.abs(cardPos.y - edgeAnchor.y)
-            tetherHandle = world.tether.add(edgeHandle, cardHandle, curLen, {
-                x: cardPos.x - edgePos.x,
-                y: edgeAnchor.y - edgePos.y,
-            })
+            // Radial edge wiring (spec §3.3) — same rule as wireTetherFor, so
+            // auto-parked and authored edge ropes agree (was an inline
+            // y-projection duplicate).
+            const { anchorA, length } = edgeAttachPoint(world, edgeHandle, cardPos)
+            curLen = length
+            tetherHandle = world.tether.add(edgeHandle, cardHandle, curLen, anchorA)
             regime = next
             const parkRest = h / 2 + pinTuning.parkGapPx
             if (reduced) {

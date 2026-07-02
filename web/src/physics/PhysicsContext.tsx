@@ -72,6 +72,11 @@ export function PhysicsProvider({ children }: PhysicsProviderProps) {
                     ? { width: window.innerWidth, height: window.innerHeight }
                     : { width: 1024, height: 768 },
             insets: initialInsets,
+            // Drift is the site default (spec §3.2 / AC#2). PageSpec routes
+            // still refine mode via usePageDef; PageSpec-less physics routes
+            // (blog, /sandbox/cards) rely on this. The constructor keeps its
+            // 'gravity' default for direct-construction unit tests.
+            mode: 'drift',
         })
     })
 

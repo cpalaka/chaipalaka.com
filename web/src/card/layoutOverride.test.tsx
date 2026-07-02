@@ -69,6 +69,27 @@ describe('applyLayoutOverride', () => {
         }
         expect(applyLayoutOverride(pageDef, other)).toBe(pageDef)
     })
+
+    test('preserves the route physics mode + driftScale across a gravity-less override', () => {
+        const driftDef: PageSpec = {
+            mode: 'drift',
+            driftScale: 0.4,
+            cards: pageDef.cards,
+        }
+        const driftOverride: RouteLayout = {
+            cards: [
+                { id: 'a', kind: 'headline', parent: null, anchor: { fx: 0.5, fy: 0.5 } },
+                { id: 'b', kind: 'note', parent: null, anchor: { fx: 0.25, fy: 0.25 } },
+            ],
+        }
+        const applied = applyLayoutOverride(driftDef, driftOverride)
+        // mode/driftScale come from the route PageSpec, not the RouteLayout — an
+        // override must not silently drop them (drift → gravity regression).
+        expect(applied.mode).toBe('drift')
+        expect(applied.driftScale).toBe(0.4)
+        expect(applied.gravity).toBeUndefined()
+        expect(applied.cards.map((c) => c.parent)).toEqual([null, null])
+    })
 })
 
 describe('Page + layout override', () => {

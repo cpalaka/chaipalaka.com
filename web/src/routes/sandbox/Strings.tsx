@@ -1,8 +1,23 @@
 import { useState, useEffect } from 'react'
-import { PhysicsProvider } from '../../physics/PhysicsContext'
+import { PhysicsProvider, usePhysicsWorld } from '../../physics/PhysicsContext'
 import { CardRegistryProvider } from '../../card/CardRegistry'
 import { Card } from '../../card/Card'
 import { StringLayer } from '../../canvas/StringLayer'
+
+// This is the deliberate gravity demo (hang/fall/balloon). PhysicsProvider now
+// defaults to drift (the site default), so opt this one route back into the
+// dormant gravity mode explicitly. Deleted with the demo in S3 (spec D1).
+function GravityDemoMode() {
+    const world = usePhysicsWorld()
+    useEffect(() => {
+        world.setMode('gravity')
+        // Reset to the site default on unmount, mirroring usePageDef — so a
+        // future shared/persistent PhysicsProvider can't leak gravity onto the
+        // next drift route.
+        return () => world.setMode('drift')
+    }, [world])
+    return null
+}
 
 function computeLayout(w: number, h: number) {
     return {
@@ -37,6 +52,7 @@ export default function Strings() {
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
             <PhysicsProvider>
+                <GravityDemoMode />
                 <CardRegistryProvider>
                     <StringLayer />
 

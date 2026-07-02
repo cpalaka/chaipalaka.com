@@ -1,10 +1,19 @@
 import Matter from 'matter-js'
 import { Tether } from './Tether'
 import { physicsTuning } from './physicsTuning'
+import { driftTuning } from './driftTuning'
+import { brownianKick, proseRepelForce } from './drift'
 import type { BodyForceSource } from './BodyForceSource'
 import type { BodyDriver, TetherSpec } from './BodyDriver'
 
 export type Cardinal = 'down' | 'up' | 'left' | 'right'
+
+// The route's physics model (spec §3.2 / ADR-0010). `drift` is the site
+// default (top-down Brownian wander + prose repel, engine gravity {0,0});
+// `gravity` is the retained dormant mode. Absent-on-a-PageSpec ⇒ drift is
+// resolved at the route boundary (`usePageDef`), not here — the world
+// constructor defaults to `gravity` so the dormant path stays bit-identical.
+export type PhysicsMode = 'drift' | 'gravity'
 
 export interface Vec2 {
     x: number
@@ -31,6 +40,13 @@ export interface Rect {
 export interface PhysicsWorldOptions {
     viewport: Viewport
     insets?: { top: number; bottom: number }
+    // Physics model. Defaults to `gravity` (the dormant mode) so direct
+    // construction stays bit-identical to the pre-drift engine; the app sets
+    // `drift` via `usePageDef`. Tests pass `drift` to exercise the force pass.
+    mode?: PhysicsMode
+    // Injectable RNG for the Brownian drift kick — defaults to `Math.random`;
+    // tests inject a seeded generator for deterministic drift.
+    rng?: () => number
 }
 
 export type PhysicsHandle = number
@@ -77,6 +93,9 @@ export class PhysicsWorld implements BodyForceSource {
     private registrations = new Map<PhysicsHandle, Registration>()
     private byId = new Map<string, PhysicsHandle>()
     private gravityDir: Cardinal = 'down'
+    private mode: PhysicsMode
+    private driftScale = 1
+    private rng: () => number
     private preTick = new Set<(dtMs: number) => void>()
     private contentBox: {
         top: ContentBoxEdge
@@ -84,6 +103,9 @@ export class PhysicsWorld implements BodyForceSource {
         left: ContentBoxEdge
         right: ContentBoxEdge
     } | null = null
+    // The live content-box rect (spec §1 prose repel reads it each drift tick);
+    // mirrors `setContentBox`, null when no box is registered.
+    private contentBoxRect: Rect | null = null
 
     readonly floorHandle: PhysicsHandle
     readonly ceilingHandle: PhysicsHandle
@@ -92,7 +114,9 @@ export class PhysicsWorld implements BodyForceSource {
     constructor(opts: PhysicsWorldOptions) {
         this.engine = Matter.Engine.create()
         this.world = this.engine.world
-        this.syncEngineGravity() // always on, default down
+        this.mode = opts.mode ?? 'gravity'
+        this.rng = opts.rng ?? Math.random
+        this.syncEngineGravity() // drift ⇒ {0,0}; gravity ⇒ the cardinal
 
         const { width, height } = opts.viewport
         const top = opts.insets?.top ?? 0
@@ -169,7 +193,16 @@ export class PhysicsWorld implements BodyForceSource {
             anchor.y,
             size.width,
             size.height,
-            { frictionAir: BODY_FRICTION_AIR },
+            // Damping is a registration-time body property, mode-conditional
+            // (spec §1): drift uses driftTuning.damping, gravity keeps 0.005.
+            // The drift tick re-syncs this from tuning; setMode re-applies it to
+            // existing bodies so registration order vs mode-set doesn't matter.
+            {
+                frictionAir:
+                    this.mode === 'drift'
+                        ? driftTuning.damping
+                        : BODY_FRICTION_AIR,
+            },
         )
         Matter.Composite.add(this.world, body)
         const id = this.nextId++
@@ -211,10 +244,17 @@ export class PhysicsWorld implements BodyForceSource {
      * gravity/forces never move it — it exists only to be a tether parent that
      * follows a DOM word (ADR-0006: the first runtime-created tether topology,
      * pinning; reuses the card-parent tether kind, no `anchorA`).
+     *
+     * Sensor (spec §3.1): the proxy is a non-colliding static body. Under
+     * gravity a card hangs ~150px away so a solid proxy never touched it, but
+     * under drift's near-word poses a card overlaps the proxy and a solid one
+     * would emit an i111-class invisible collision kick — behavior-neutral in
+     * the dormant gravity mode.
      */
     registerAnchor(pos: Vec2): PhysicsHandle {
         const body = Matter.Bodies.rectangle(pos.x, pos.y, 1, 1, {
             isStatic: true,
+            isSensor: true,
         })
         Matter.Composite.add(this.world, body)
         const id = this.nextId++
@@ -306,11 +346,37 @@ export class PhysicsWorld implements BodyForceSource {
         this.syncEngineGravity()
     }
 
+    setMode(mode: PhysicsMode): void {
+        this.mode = mode
+        this.syncEngineGravity()
+        // frictionAir is a registration-time property (spec §1). Re-apply the
+        // mode-appropriate value to existing dynamic bodies so a mode set after
+        // registration (usePageDef runs in an effect) still yields correct
+        // damping — and the dormant gravity path stays bit-identical at 0.005.
+        const fa = mode === 'drift' ? driftTuning.damping : BODY_FRICTION_AIR
+        for (const reg of this.registrations.values()) {
+            if (!reg.isStatic) reg.body.frictionAir = fa
+        }
+    }
+
+    getMode(): PhysicsMode {
+        return this.mode
+    }
+
+    // Per-route drift intensity (spec §1 / D7); scales the Brownian amplitude.
+    // Reading routes author it near 0; canvas routes livelier. Default 1.
+    setDriftScale(scale: number): void {
+        this.driftScale = scale
+    }
+
     // Read-at-use: gravity is derived from physicsTuning.gravityY on every
     // call (and re-synced into the engine each tick), never captured at
     // construction, so a mid-simulation tuning change takes effect on the
     // next tick.
     getGravityVector(): Vec2 {
+        // Drift routes run zero engine gravity (spec §3.1) — this one place
+        // makes syncEngineGravity, buoyancy, and any consumer inert under drift.
+        if (this.mode === 'drift') return { x: 0, y: 0 }
         const gy = physicsTuning.gravityY
         switch (this.gravityDir) {
             case 'down':
@@ -344,6 +410,19 @@ export class PhysicsWorld implements BodyForceSource {
             x: vp.width + hw,
             y: vp.height / 2,
         })
+        // Keep the floor/ceiling registrations' surface anchor + width in step
+        // with the moved bars, or `edgeAttachPoint` clamps a resize-time tether
+        // to the stale construction-time extent.
+        const floorReg = this.registrations.get(this.floorHandle)
+        if (floorReg) {
+            floorReg.anchor = { x: vp.width / 2, y: vp.height - bottom }
+            floorReg.width = vp.width
+        }
+        const ceilingReg = this.registrations.get(this.ceilingHandle)
+        if (ceilingReg) {
+            ceilingReg.anchor = { x: vp.width / 2, y: top }
+            ceilingReg.width = vp.width
+        }
     }
 
     /**
@@ -362,6 +441,7 @@ export class PhysicsWorld implements BodyForceSource {
      * are a later slice's concern.
      */
     setContentBox(rect: Rect | null): void {
+        this.contentBoxRect = rect ? { ...rect } : null
         if (rect === null) {
             if (this.contentBox) this.removeContentBox()
             return
@@ -516,8 +596,20 @@ export class PhysicsWorld implements BodyForceSource {
     setAnchor(handle: PhysicsHandle, anchor: Vec2): void {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        if (this.mode === 'drift' && !reg.isStatic) {
+            // Drift (D4): translate-pair a dynamic card by the layout delta so a
+            // resize/re-layout preserves its wander offset + velocity instead of
+            // teleporting it home ("stays where left"). 2-arg translate injects
+            // no Verlet velocity, so the sway survives.
+            const dx = anchor.x - reg.anchor.x
+            const dy = anchor.y - reg.anchor.y
+            reg.anchor = { ...anchor }
+            Matter.Body.translate(reg.body, { x: dx, y: dy })
+            return
+        }
         reg.anchor = { ...anchor }
-        // Always teleport — static bodies snap immediately; dynamic bodies reposition on resize
+        // Gravity / static: teleport — static bodies snap immediately; dynamic
+        // bodies reposition on resize and zero velocity.
         Matter.Body.setPosition(reg.body, anchor)
         if (!reg.isStatic) Matter.Body.setVelocity(reg.body, { x: 0, y: 0 })
     }
@@ -538,6 +630,14 @@ export class PhysicsWorld implements BodyForceSource {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
         return reg.body.mass
+    }
+
+    // The body's live air-friction (damping). Mode-conditional at registration
+    // and re-synced each drift tick from driftTuning (spec §1).
+    getFrictionAir(handle: PhysicsHandle): number {
+        const reg = this.registrations.get(handle)
+        if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)
+        return reg.body.frictionAir
     }
 
     isStatic(handle: PhysicsHandle): boolean {
@@ -606,6 +706,14 @@ export class PhysicsWorld implements BodyForceSource {
     }
 
     tick(dtMs: number): void {
+        // A zero- (or negative-) duration frame must integrate nothing. Two rAF
+        // callbacks in the same millisecond feed dt=0, and matter's Verlet
+        // solve on a 0-dt frame (correction / collision division by the frame
+        // delta) poisons drift bodies to NaN — verified in-browser: without this
+        // guard, drift routes NaN on load; with it they drift cleanly. Constant-
+        // dt unit tests never feed 0, so this is a browser-only failure mode.
+        if (dtMs <= 0) return
+
         // 0. Pre-tick steps (word-anchor translate-pair) — before any force.
         for (const cb of this.preTick) cb(dtMs)
 
@@ -620,6 +728,58 @@ export class PhysicsWorld implements BodyForceSource {
                 x: -g.x * reg.body.mass * gravScale * physicsTuning.buoyancyGain,
                 y: -g.y * reg.body.mass * gravScale * physicsTuning.buoyancyGain,
             })
+        }
+
+        // 1b. Drift force pass (spec §1) — Brownian wander + prose repel on
+        //     non-dragged card bodies. Gated on drift mode; under gravity this
+        //     is skipped entirely so the dormant path stays bit-identical.
+        if (this.mode === 'drift') {
+            const amp = driftTuning.baseAmplitude * this.driftScale
+            for (const reg of this.registrations.values()) {
+                // `reg.body.isStatic` (the LIVE matter flag) is true for walls,
+                // edges, word proxies AND cards currently being dragged
+                // (setDragging → setStatic) — exactly what drift must skip.
+                if (reg.body.isStatic) continue
+                // Dynamic sensors are dismissed previews (PreviewCard flings a
+                // sensor body on dismiss) — spec §1 excludes them: no Brownian,
+                // no repel. Static sensors (box edges, word proxies) already
+                // skipped above.
+                if (reg.body.isSensor) continue
+                // Re-sync damping from tuning each tick (read-at-use HMR — the
+                // one drift knob that is a registration-time body property).
+                // Clamp below the matter drag-inversion ceiling: frictionAir·
+                // (dt/16.667) > 2 flips drag into amplification → NaN, which with
+                // the 50ms dt-clamp is frictionAir ~0.667. This backstops an
+                // S4/HMR damping mis-tune before it can NaN the world (this tick
+                // re-sync runs before Engine.update, so it bounds every drift body
+                // each frame). See driftTuning.ts + reference_matter_js_frictionair_inversion.
+                reg.body.frictionAir = Math.min(driftTuning.damping, 0.6)
+                // Brownian velocity kick: a direct velocity add (mass-invariant)
+                // with sqrt(dt) scaling (dt-invariant diffusion). Add only the
+                // wander — the body's authored velocity (drag-release fling,
+                // dismissal kick) is never clamped here (spec §1: the clamp rode
+                // the Brownian row only). The dt-clamp (Math.min(dt,50)) already
+                // bounds a dropped-frame kick, and damping bounds equilibrium.
+                const kick = brownianKick(this.rng, dtMs, amp)
+                Matter.Body.setVelocity(reg.body, {
+                    x: reg.body.velocity.x + kick.x,
+                    y: reg.body.velocity.y + kick.y,
+                })
+                // Prose repel: an acceleration → force = a·mass (mass-invariant
+                // pose). Rope caps distance; repel + rope jointly position cards.
+                if (this.contentBoxRect) {
+                    const a = proseRepelForce(
+                        reg.body.position,
+                        this.contentBoxRect,
+                        driftTuning.repelRadius,
+                        driftTuning.repelStrength,
+                    )
+                    Matter.Body.applyForce(reg.body, reg.body.position, {
+                        x: a.x * reg.body.mass,
+                        y: a.y * reg.body.mass,
+                    })
+                }
+            }
         }
 
         // 2. Apply pull-only tether forces (rope semantics) via the Tether module.

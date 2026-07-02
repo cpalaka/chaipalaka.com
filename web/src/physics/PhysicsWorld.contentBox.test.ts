@@ -120,10 +120,13 @@ describe('PhysicsWorld.setContentBox — resize (G6 translate-pair / i111)', () 
 
 describe('PhysicsWorld.setContentBox — auto-park ease hand-off (task-024)', () => {
     test('a card edge-tethered seamlessly then eased to taut settles held just below the edge, finite and bounded', () => {
-        // Mirrors PinnedCard.parkAt: on auto-park, swap to an edge tether started
-        // at the card's live distance (overshoot ≈ 0, spike finding 4) then ease
-        // the rest length down to taut (spike G3). Sensor-isolated so the rope/
-        // ease is measured without bottom-wall contact (the spike's method).
+        // Mirrors PinnedCard.parkAt's auto-park sequence: swap to an edge tether
+        // started at the card's live distance (overshoot ≈ 0, spike finding 4)
+        // then ease the rest length down to taut (spike G3). NB parkAt now wires
+        // the attach point via the shared radial `edgeAttachPoint`; the y-projected
+        // anchorA hand-copied below equals it only because the card is centred on
+        // the edge (dx = 0). Sensor-isolated so the rope/ease is measured without
+        // bottom-wall contact (the spike's method).
         const world = new PhysicsWorld({ viewport: { width: 800, height: 1200 } })
         world.setContentBox(BOX) // bottom edge anchor at {400, 300}
         // Auto-park fires while the card is still tracking its word at the fold

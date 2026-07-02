@@ -6,6 +6,8 @@ import type { PhysicsWorld } from '../physics/PhysicsWorld'
 import { PinnedCard } from './PinnedCard'
 import { PinLayer } from './PinLayer'
 import { PinProvider, usePin } from './PinContext'
+import { edgeAttachPoint } from '../physics/Tether'
+import { pinTuning } from './pinTuning'
 import type { PinStore, PinEntry, PinSpec } from './PinStore'
 
 afterEach(() => {
@@ -312,5 +314,56 @@ describe('PinnedCard — word wobble regime guard (task-036)', () => {
         })
 
         expect(wobbleOffset(span)).toBeLessThan(0.5)
+    })
+})
+
+// --- Radial edge wiring on auto-park (task-042.01, spec §3.3) ----------------
+// parkAt used to inline-duplicate the old y-projection edge wiring; it now calls
+// the shared edgeAttachPoint (the radial rule). Driving a REAL auto-park with the
+// card OUT of the edge's width proves the clamp+radial geometry at this 2nd site
+// (Tether.test.ts covers wireTetherFor, the 1st site).
+describe('PinnedCard — radial edge wiring on auto-park (task-042.01)', () => {
+    it('auto-park wires the edge rope with the radial rule (attach point + radial length)', () => {
+        const { world, store } = renderTree()
+        // Box off to the side of the card's spawn x (300): x∈[400,600], fold y∈[200,400].
+        const box = document.createElement('div')
+        box.setAttribute('data-content-box', '')
+        box.getBoundingClientRect = vi.fn(() => rect(400, 200, 200, 200))
+        document.body.appendChild(box)
+        act(() => world.setContentBox({ x: 400, y: 200, width: 200, height: 200 }))
+
+        const word = makeWord('anchor')
+        word.getBoundingClientRect = vi.fn(() => rect(300, 250)) // in fold
+        let id = ''
+        act(() => {
+            id = store.pin(parentSpec(word))
+        })
+        const ch = world.getHandleById(id)!
+        const top = world.contentBoxTopHandle!
+
+        // Scroll the word above the fold → auto-park to the top edge in one tick.
+        word.getBoundingClientRect = vi.fn(() => rect(300, 20))
+        act(() => world.tick(16))
+
+        const rec = world.tether
+            .records()
+            .find((r) => r.parent === top && r.child === ch)
+        expect(rec).toBeDefined()
+        const expected = edgeAttachPoint(world, top, world.getPosition(ch))
+
+        // Attach point = radial nearest edge point, clamped to the bar (x=400) —
+        // NOT the card's own x (~300) as the old inline y-projection produced.
+        const pbp = world.getPosition(top)
+        expect(pbp.x + rec!.anchorA!.x).toBeCloseTo(400, 0)
+        expect(pbp.y + rec!.anchorA!.y).toBeCloseTo(200, 0)
+        expect(rec!.anchorA!.x).toBeCloseTo(expected.anchorA.x, 6)
+        expect(rec!.anchorA!.y).toBeCloseTo(expected.anchorA.y, 6)
+
+        // Radial length: seeded at the radial distance, then eased toward parkRest
+        // — so the recorded length is in (parkRest, radial].
+        const parkRest = 160 / 2 + pinTuning.parkGapPx
+        expect(expected.length).toBeGreaterThan(parkRest)
+        expect(rec!.length).toBeGreaterThan(parkRest)
+        expect(rec!.length).toBeLessThanOrEqual(expected.length + 1e-6)
     })
 })

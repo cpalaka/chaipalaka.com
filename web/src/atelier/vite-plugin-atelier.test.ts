@@ -322,6 +322,38 @@ describe('generateLayoutSource', () => {
         }
     })
 
+    it('round-trips a gravity-less (drift) layout: no gravity line, re-import omits it (V1.4)', async () => {
+        const drift = {
+            cards: [
+                {
+                    id: 'stuff-flash',
+                    kind: 'portfolio',
+                    parent: null,
+                    anchor: { fx: 0.3, fy: 0.6 },
+                },
+                {
+                    id: 'stuff-note',
+                    kind: 'note',
+                    parent: null,
+                    anchor: { fx: 0.8, fy: 0.2 },
+                },
+            ],
+        }
+        const result = generateLayoutSource('stuff', drift)
+        if (!result.ok) throw new Error(result.error)
+        expect(result.source).not.toContain('gravity') // no gravity line emitted
+        const tmp = join(here, '..', 'routes', '.roundtrip-stuff-drift.layout.gen.ts')
+        writeFileSync(tmp, result.source)
+        try {
+            const mod = await import(/* @vite-ignore */ tmp)
+            // Deep-equal + no gravity key ⇒ the write-back neither re-inserts nor rejects.
+            expect(mod.stuffLayout).toEqual(drift)
+            expect('gravity' in mod.stuffLayout).toBe(false)
+        } finally {
+            rmSync(tmp)
+        }
+    })
+
     it('refuses a route that is not whitelisted', () => {
         const result = generateLayoutSource('home', lifelogLayout)
         expect(result.ok).toBe(false)
