@@ -1,7 +1,7 @@
 # ADR 0001: Gravity-always-on + strings/tether model
 
 **Date:** 2026-05-10
-**Status:** Accepted
+**Status:** Accepted — decisions 1 and 6 (and 7's rationale) superseded in part by [ADR-0010](0010-drift-default-physics.md) (2026-07-01)
 **Issues:** #56 (implementation), #57 (per-route wiring), #58 (PRD/cleanup)
 
 ---
@@ -17,6 +17,8 @@ During the May 2026 Swiss-grid redesign we wanted physics to feel more intention
 ## Decisions and rationale
 
 ### 1. Gravity is always on; direction declared per route
+
+> **Superseded by [ADR-0010](0010-drift-default-physics.md)** (2026-07-01) — gravity is now the *dormant* per-route **Physics mode**; **drift** is the site-wide default and no route declares gravity. Retained below for historical context.
 
 **Decision:** The user-toggle (`setGravity(boolean)`) is removed. Gravity is always on. Each route's `PageDef` declares a cardinal direction (`'down' | 'up' | 'left' | 'right'`). Default: `'down'`. Magnitude: 0.7 (same as the previous ON value).
 
@@ -64,6 +66,8 @@ During the May 2026 Swiss-grid redesign we wanted physics to feel more intention
 
 ### 6. Layout determines string length; cards rest at layout positions
 
+> **Superseded in part by [ADR-0010](0010-drift-default-physics.md)** (2026-07-01) — with edge-only drift and no home anchors, cards no longer rest *at* their layout positions; the layout seeds initial positions and (radially derived) tether lengths only.
+
 **Decision:** Tether length = `distance(parentAnchorPos, cardLayoutPos)`. Not declared per-card. Cards rest at their `CardLayout` positions when taut.
 
 **Why:** Preserves the load-bearing "anchor positions ARE the layout" principle (PRD:365). Degradation path (no physics → just the grid) is unchanged. Authors don't need to specify lengths — the layout IS the rest configuration.
@@ -71,6 +75,8 @@ During the May 2026 Swiss-grid redesign we wanted physics to feel more intention
 ---
 
 ### 7. Two static bodies (ceiling + floor) plus side walls
+
+> **Rationale updated by [ADR-0010](0010-drift-default-physics.md)** (2026-07-01) — the walls persist as drift bounds; under the drift default nothing falls onto the floor.
 
 **Decision:** The physics world always has: a ceiling at y = frameBarHeight, a floor at y = viewport.height, and two invisible side walls at x = 0 and x = viewport.width. All resize-aware.
 

@@ -25,7 +25,9 @@ static body — ceiling or floor) and a child **Card**. Authored
 declaratively in a **PageDef**; never created or destroyed by user action.
 Its length is derived from the layout — `length = distance(parentAnchorPos, cardLayoutPos)`.
 _Avoid_: string (used only for the rendered SVG line), constraint, link,
-rope (used as a behavioural adjective, not the noun for the thing itself).
+rope (used as a behavioural adjective, not the noun for the thing itself),
+edge (graph-theory description of a tether in the drift model, not the
+domain noun).
 
 **Rope** (adjective):
 The behaviour a **Tether** exhibits — slack when the child is closer than
@@ -35,22 +37,55 @@ _Avoid_: spring (different behaviour — oscillates), rigid (different
 behaviour — fixed distance).
 
 **Strung**:
-A **Card** whose **Tether** chain reaches a static body (ceiling or floor)
-transitively. Hangs or floats at its taut position. One of two **Card**
-states.
+A **Card** whose **Tether** chain reaches a static body transitively
+(word-anchor proxy, box edge, ceiling/floor, declared fixed point).
+Under **Drift**: drifts *bounded*, held within rope reach of its static
+anchor. (Dormant gravity mode: hangs or floats at its taut position.)
+One of two **Card** states.
 _Avoid_: locked, pinned, anchored (those imply runtime user control).
 
 **Detached**:
-A **Card** with no **Tether** to a static body. Falls or floats freely
-under **Cardinal** gravity, bounded by floor/ceiling/side walls.
+A **Card** with no **Tether** to a static body. Under **Drift**: wanders
+freely and stays where it is left (anchor moves translate-pair rather
+than teleport), bounded by the viewport walls. (Dormant gravity mode:
+falls or floats along the **Cardinal**.)
 _Avoid_: free, floating, loose.
 
-**Cardinal**:
-One of `'down' | 'up' | 'left' | 'right'`. The fixed gravity direction
-declared per route in its **PageDef**. Magnitude comes from
-**PhysicsTuning** (`gravityY`, default `0.7`).
+**Cardinal** _(dormant-mode-only — DRAFT-010/ADR-0010, 2026-07-01)_:
+One of `'down' | 'up' | 'left' | 'right'`. The gravity direction a route
+*may* declare when its **Physics mode** is `gravity`. Under the drift
+default no live route declares one; the compiler and knobs
+(**PhysicsTuning** `gravityY`, default `0.7`) stay in the engine for the
+dormant mode.
 _Avoid_: direction (too generic), vector (gravity isn't authored as a
 vector — the cardinal compiles to one).
+
+**Physics mode** _(DRAFT-010/ADR-0010 — lands with the drift rewrite)_:
+A route's declared physics model — `'drift' | 'gravity'` on its
+**PageSpec**, absent ⇒ **Drift**. Drift is the site default; `gravity`
+is retained as a dormant mode no route currently declares.
+_Avoid_: regime (already names the pin anchor regimes and
+`scrollRegime.ts`), physics type, motion model.
+
+**Drift** _(DRAFT-010/ADR-0010 — lands with the rewrite)_:
+The default **Physics mode**: cards on a top-down plane receive gentle
+dt-normalized Brownian wander, damping, pull-only **Tether** forces,
+card-card collision, wall bounds, and **Prose repel** — no gravity, no
+home anchors, no spring-back. Rest is wherever ropes, repel, and drift
+leave a card — **drift-settle**, the successor to pendulum-settle: a
+bounded-drift invariant, never a rest state. Full force model:
+`docs/superpowers/specs/2026-07-01-drift-physics-design.md`.
+_Avoid_: float mode, zero-g, wander (the Brownian component, not the
+mode).
+
+**Prose repel** _(DRAFT-010/ADR-0010 — lands with the rewrite)_:
+The **Content box**'s gentle outward force (signed-distance falloff) on
+every non-dragged, non-dismissed **Card** body under **Drift**. Pull-only
+ropes only *cap* distance; repel + rope jointly produce every "floats
+just clear" pose (parked cards, word-anchored pins) and keep free
+wanderers off the prose.
+_Avoid_: box repel, collision (the box edges stay non-colliding
+sensors).
 
 **PageDef**:
 A route's declarative spec. Since task-025 (ADR-0007) this is just an alias of
@@ -60,8 +95,10 @@ reference `PageDef` widely.
 _Avoid_: page config, route schema, layout def.
 
 **PageSpec**:
-A route's declared content — its **Cardinal** gravity, an optional **Resting
-state**, a **CardSpec** list, and optional **SectionsConfig**. Physics-side
+A route's declared content — its **Physics mode** (+ optional `driftScale`,
+and a **Cardinal** only when the dormant gravity mode is declared), an
+optional **Resting state**, a **CardSpec** list, and optional
+**SectionsConfig**. Physics-side
 consumers (`PhysicsPage`, `usePageDef`, `partitionPageDef`) read **PageSpec**,
 which since task-025 is the whole of a **PageDef** (the transitions half was
 retired).
@@ -532,8 +569,11 @@ _Avoid_: external Portal (it shares the Portal *shape* but enters off-site, not 
 
 **Preview card**:
 The **peek**-state **Card**: ephemeral, stiff-anchored beside its source word,
-side-positioned at the dwell/click height (task-036), dismissed by an upward
-(90° cone) fling and removed once it leaves the viewport. Not yet a full-physics toy.
+side-positioned at the dwell/click height (task-036). Dismissal is
+system-initiated (hover-end / scroll-away / tap-outside — never a user
+gesture): a slight random fling + fade-out, removed on fade-end
+(DRAFT-010; was an upward-cone fling removed at viewport exit). Not yet a
+full-physics toy.
 _Avoid_: popup, tooltip, hovercard.
 
 **Pinned card**:
@@ -616,8 +656,8 @@ A route's v2 per-route arrival behaviour, declared on its **PageSpec**
 (`resting?: 'quiet' | 'populated'`, absent ⇒ quiet; spec §7). **Quiet** = the
 **content box** + inline links only, nothing pinned (essay/reading routes — blog
 index, blog posts). **Populated** = one or two **Ambient pin**s already strung on
-arrival (index/playful routes — the home landing). Orthogonal to **Cardinal**
-gravity, which still decides balloons (up) vs hanging cards (down).
+arrival (index/playful routes — the home landing). Orthogonal to the
+route's **Physics mode**.
 _Avoid_: idle state, default cards.
 
 **Ambient teacher / Ambient pin**:
@@ -636,8 +676,9 @@ _Avoid_: starter card, default pin, pre-pinned card.
   tether to the same parent — the topology is a forest of trees.
 - A **Card** is either **Strung** or **Detached**; the state is fully
   determined by whether its **Tether** chain reaches a static body.
-- A **PageDef** owns the **Cardinal** gravity direction and the full
-  **Tether** topology for its route — neither is mutated at runtime.
+- A **PageDef** owns the route's **Physics mode** (and its **Cardinal**,
+  only when the dormant gravity mode is declared) and the full **Tether**
+  topology — neither is mutated at runtime.
 - **Tether** depends on **BodyForceSource**; `PhysicsWorld` satisfies that
   interface.
 - A **Card**'s **CardLifecycle** (Spawning / Active / Exiting) is
@@ -666,10 +707,11 @@ _Avoid_: starter card, default pin, pre-pinned card.
 
 > **Dev:** "If I drag a **Strung Card** way off its taut position and let
 > go, does it return to its layout anchor?"
-> **Designer:** "No — there's no spring back. The **Card** pendulum-settles
-> at the taut position the **Tether** allows. The layout anchor was just
-> where the **Card** started; once the world is running, gravity and the
-> **Tether** decide where it rests."
+> **Designer:** "No — there's no spring back. The **Card** settles where
+> the **Tether** allows — drift-settle under **Drift**, pendulum-settle
+> under the dormant gravity mode. The layout anchor was just where the
+> **Card** started; once the world is running, the physics decides where
+> it rests."
 
 > **Dev:** "Can I make a **Card** swing between two parents like a
 > hammock?"

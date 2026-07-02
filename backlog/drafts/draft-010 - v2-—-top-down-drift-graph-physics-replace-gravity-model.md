@@ -16,24 +16,26 @@ dependencies: []
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-GOAL: replace the current gravity-based matter.js model with a TOP-DOWN 'graph' model — all elements (cards, tethers, etc.) live on a 2D plane viewed top-down and move with GENTLE DRIFT (not gravity); cards stay DRAGGABLE + COLLIDABLE.
+GOAL: replace the gravity-based matter.js model with a TOP-DOWN drift graph — cards drift gently on a 2D plane, draggable + collidable; tethers are pull-only rope graph-edges.
 
-PRIORITY: HIGH / FOUNDATIONAL — the foundation for the canvas auras (task-038), fat-line tethers (task-039), and the broader v2 art direction. Everything downstream is gated on this. (Draft CLI has no priority/milestone flag; conveyed via labels high-priority + v2 — set real HIGH priority + v2 milestone when promoting to a task.)
+STATUS (2026-07-01): **GRILLED + SPEC RATIFIED.** Full grilling session (8 branches, all resolved) + 46-agent adversarial review (16 confirmed + 8 LOW findings applied; 2 review-reopened items resolved by Chai). Authoritative design: `docs/superpowers/specs/2026-07-01-drift-physics-design.md` + ADR-0010 (ADR-0001 superseded in part). CONTEXT.md + PRD updated in the same commit.
 
-CHANGES FROM TODAY: remove the gravity vector + fall + pendulum-settle; tethers become graph EDGES (springs with rest length, per the fat-tether prototype) instead of gravity-hung sagging ropes; resting behavior becomes gentle drift; PRESERVE drag + collision.
+PRIORITY: HIGH / FOUNDATIONAL — the foundation for the canvas auras (task-038), fat-line tethers (task-039), field-warp (task-041), and the broader v2 art direction. (Set real HIGH priority + v2 milestone when promoting.)
 
-REQUIRES A FULL GRILLING SESSION before promotion (Chai's call). Pair grilling with domain-modeling — this changes core domain language (gravity / pendulum / STRUNG<->DETACHED -> drift / graph-edge / ...). Update CONTEXT.md + PRD.md + an ADR for the model change. Will likely DECOMPOSE into sub-tasks after grilling (needs explicit go-ahead). ACs get written at grilling-end (ungrilled drafts carry none).
+THE 7 OPEN QUESTIONS — RESOLVED (details + rationale in the spec):
+1. Edge dynamics → real pull-only rope forces (existing `Tether.applyRopeForces` unchanged); no push-apart; no force-directed layout.
+2. Resting → edge-only drift, NO home anchors (no-spring-back upheld); layout seeds initial positions + rest lengths (static-edge parents become radial); "drift-settle" = a bounded-drift invariant, never a rest state.
+3. peek/keep/enter → survive; `scrollRegime` unchanged; parked/word poses = rope + prose repel jointly; peek dismissal = slight random fling + fade (future "melt" replaces the fade); ENTER/hero-morph untouched.
+4. Card states → STRUNG/DETACHED names kept; consequences = bounded drift vs free wander (stays where left; resize translate-pairs, never teleports).
+5. Boundaries → viewport walls stay as drift bounds; box edges stay non-colliding sensors + park handles; NEW **Prose repel** on all non-dragged bodies.
+6. Engine → matter.js retained (config, not surgery); dt-normalized mass-invariant Brownian via applyForce; frictionAir mode-conditional (0.005 dormant / driftTuning under drift).
+7. Tuning → new `physics/driftTuning.ts` read-at-use; `driftScale` on PageSpec (reduced-motion ⇒ 0); dismissal knobs stay in peekTuning (renamed); 9 physicsTuning fossils deleted (4-file sweep); no Atelier drift axis in v1.
 
-OPEN DESIGN QUESTIONS (resolve in the grilling session):
-1. Edge dynamics: do edges exert spring / force-directed-layout forces (prototype used gentle springs), or purely visual? Force-directed layout, free Brownian drift, or anchored drift?
-2. Resting/anchoring: drift indefinitely, settle into a layout, or drift around per-route anchors? Does a per-route layout still exist?
-3. peek / keep / enter: how do they survive? KEEP currently pins a card to a physics toy via a tether constraint; ENTER is the hero-morph. What is the drift-model analog?
-4. Card-state model: does STRUNG vs DETACHED survive, or does 'everything is a drifting graph node' replace it?
-5. Boundaries: how do drifting cards interact with the content box + viewport edges (current static walls)?
-6. Engine: keep matter.js (kill gravity + add spring constraints, watch the frictionAir-inversion NaN) or a lighter custom drift integrator (the prototypes hand-rolled one)?
-7. Tuning constants: drift/spring feel constants live in a read-at-use module, NOT the physicsTuning schema (whole-file-regen gotcha).
+SCOPE RATIFIED: every route converts (drift = universal default); gravity kept DORMANT in-engine (per-route Physics mode 'drift'|'gravity'); `sandbox/Strings.tsx` deleted; `test/Box`+`BoxB` kept + converted (the ladder & nested-cards demo); 404 up-gravity joke retires; ADR-0008 reduced-motion pin freeze unchanged.
 
-Prototypes that informed this: prototypes/lava-metaball.html + prototypes/fat-tethers.html (both use a hand-rolled top-down drift integrator with drag + collision + springs).
+NEXT: promote to task(s) + decomposition — NEEDS EXPLICIT GO (sequencing sketch = spec §7: engine slice → ladder conversion → rendering/cleanup → route conversion + solo feel pass). Unblocks task-038/039/041 when built.
+
+Prototypes that informed this: prototypes/lava-metaball.html + prototypes/fat-tethers.html (hand-rolled top-down drift integrators; feel pre-validated ~60fps).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
