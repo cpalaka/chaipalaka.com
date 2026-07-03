@@ -33,8 +33,11 @@ export const pinTuning = {
     /** Hysteresis deadband (px) past a fold edge before a card auto-parks, so a
      * word straddling the edge can't thrash the regime (spike G3 / scrollRegime). */
     foldMarginPx: 24,
-    /** Gap (px) added below the parked rest length so the card hangs just clear of
-     * the box edge it docks to (parked rest = card half-height + this). */
+    /** Park-rope rest clearance (px): added to the card half-height to set the
+     * parked edge-rope's rest length, so the card floats just clear of the box
+     * edge it docks to (parked rest = card half-height + this). Under drift the
+     * pull-only rope caps distance and prose repel holds the card off the edge —
+     * no gravity "hang" (spec §3.3). */
     parkGapPx: 8,
     /** Per-16.7ms exponential factor for easing a tether length to taut on
      * auto-park and on recall — the snap-to-edge / ease-home motion. ~0.2

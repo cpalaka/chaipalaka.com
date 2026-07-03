@@ -226,6 +226,6 @@ describe('PeekTriggers — mobile tap', () => {
         fireEvent.pointerDown(portalLink())
         expect(store.snapshot()[0]?.phase).toBe('held')
         fireEvent.pointerDown(document.body)
-        expect(store.snapshot()[0]?.phase).toBe('falling')
+        expect(store.snapshot()[0]?.phase).toBe('dismissing')
     })
 })

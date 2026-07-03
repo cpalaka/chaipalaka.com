@@ -4,7 +4,7 @@ title: 'v2 drift S4 — route conversion + feel pass (SOLO, in-session)'
 status: To Do
 assignee: []
 created_date: '2026-07-02 04:53'
-updated_date: '2026-07-02 22:09'
+updated_date: '2026-07-03 00:13'
 labels:
   - claude-generated
   - v2
@@ -38,12 +38,14 @@ Route conversion + feel pass (drift rewrite slice S4/4; umbrella task-042; SOLO 
 - [ ] #11 Feel-tune driftTuning.damping below ~0.6: the drift tick clamps frictionAir at Math.min(damping,0.6) as a matter NaN-inversion backstop (frictionAir*(dt/16.667)>2 inverts drag to NaN, ~0.667 at the 50ms dt-clamp). Tuning damping above 0.6 silently hits the clamp (no viscosity gain), it does not NaN — do not tune into the clamp. Source: task-042.01 re-review L3 + reference_matter_js_frictionair_inversion.
 <!-- AC:END -->
 
-
-
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Plan: docs/superpowers/plans/2026-07-01-drift-physics-execution-plan.md (§S4 — read its "Spec claims this slice load-bears on" list at execution). Spec (RATIFIED 2026-07-01, frozen): docs/superpowers/specs/2026-07-01-drift-physics-design.md. Blocked by: task-042.03 (S3). Branch: feat/task-042.04-drift-routes-feel off main after task-042.03 merges. SOLO in-session by AC — visual/feel work, never a background wave. Serial merges; no wave.
+
+From task-042.02 (S2) adversarial review wf_5b9dc396 — 2 LOW findings deferred to S4 feel tuning:
+(1) NaN-margin guard: the drift-tick frictionAir clamp `Math.min(driftTuning.damping, 0.6)` (PhysicsWorld.ts) runs AFTER `if (reg.body.isSensor) continue`, so a dismissed-preview sensor body carries UNCLAMPED registration-time frictionAir = driftTuning.damping for its ~fadeMs life. When tuning driftTuning.damping keep it within the NaN-inversion margin (~0.6 at 50ms dt) — the dismissed preview is not protected by the per-tick clamp that regular drift bodies get.
+(2) Peek dismiss entrance-snap: dismissing within the 200ms peek-in entrance sets `animation:'none'` which snaps opacity/scale to full before the fade → a brief pop on sub-200ms dismiss (mobile double-tap). Cosmetic; polish alongside peekTuning fadeMs/dismissKick, or fold into the future 'melt' dismissal (spec §5).
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

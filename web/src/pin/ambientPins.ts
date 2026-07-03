@@ -24,7 +24,8 @@ export interface AmbientPinSpec {
     /** Card size; defaults below. */
     width?: number
     height?: number
-    /** Card-centre offset from the word's bottom-centre, px. Default: hang below. */
+    /** Card-centre offset from the word's bottom-centre, px — a free authored
+     * vector, any direction (drift has no gravity to align to). Default below. */
     offset?: { x: number; y: number }
 }
 
@@ -42,9 +43,11 @@ export interface Resolved {
 
 const DEFAULT_WIDTH = 240
 const DEFAULT_HEIGHT = 130
-// Hang the card below its word by default, so the rope reads downward (the card
-// route picks gravity; the offset only sets the initial drop point).
-const DEFAULT_OFFSET = { x: 0, y: 150 }
+// The default near-word offset for an ambient pin: a free authored vector (any
+// direction — drift has no gravity to align to), floating the card up and to the
+// side of its word. Prose repel + the pull-only rope jointly settle the real pose
+// (spec §3.3); this only sets where the card first materialises. S4 polishes it.
+export const DEFAULT_OFFSET = { x: 120, y: -90 }
 
 /**
  * Build the `PinSpec`s to seed for a route. Quiet (or absent) resting seeds

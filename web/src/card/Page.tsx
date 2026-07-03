@@ -70,7 +70,6 @@ export function Page({
                         variant={c?.variant}
                         className={c?.className}
                         style={c?.style}
-                        spawnOffset={spec.spawnOffset}
                     >
                         {c?.children}
                     </Card>

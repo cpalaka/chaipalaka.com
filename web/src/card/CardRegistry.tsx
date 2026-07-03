@@ -17,7 +17,6 @@ export interface CardEntry {
     kind: string
     buoyancy: Buoyancy
     anchor: { x: number; y: number }
-    spawnOffset?: { x: number; y: number }
     content: CardContent
     state: CardLifecycle
 }

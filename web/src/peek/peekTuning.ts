@@ -29,11 +29,13 @@ export const peekTuning = {
     previewGapPx: 12,
     /** Min distance the preview keeps from a viewport edge (px). */
     previewMarginPx: 12,
-    /** Safety cap on a dismissed preview's lifetime (ms). It is normally removed
-     * the instant it clears the viewport; this only bounds a card that never exits. */
-    fallMs: 4000,
-    /** Exit-kick speed when a dismissed preview is flung up (toward the ceiling). */
-    fallKick: 18,
+    /** Fade-out duration of a dismissed preview (ms); the card is removed when
+     * this fade ends (DRAFT-010 §3.4). Placeholder value — the S4 feel pass
+     * (task-042.04) tunes it. */
+    fadeMs: 280,
+    /** Speed of the slight any-direction fling a dismissed preview gets as it
+     * fades (px/tick). Placeholder value — S4 tunes it. */
+    dismissKick: 8,
 }
 
 export type PeekTuning = typeof peekTuning

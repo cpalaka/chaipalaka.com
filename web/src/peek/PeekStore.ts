@@ -3,14 +3,14 @@
  * React-agnostic (get/subscribe/mutators — the project's Controller contract).
  *
  * Invariant: at most one **held** preview at a time. Opening a new source
- * dismisses the prior held one (it falls); opening the source that is already
- * held is a no-op, so a re-fired dwell or a jittery hover never re-spawns. The
- * store owns lifecycle only; placement + content ride along as opaque payload
- * the `PreviewCard` consumes.
+ * dismisses the prior held one (it flings + fades); opening the source that is
+ * already held is a no-op, so a re-fired dwell or a jittery hover never
+ * re-spawns. The store owns lifecycle only; placement + content ride along as
+ * opaque payload the `PreviewCard` consumes.
  */
 
 export type PeekKind = 'portal' | 'pocket' | 'external'
-export type PeekPhase = 'held' | 'falling'
+export type PeekPhase = 'held' | 'dismissing'
 
 export interface PreviewSpec {
     /** Identity of the source word/link — the dedup key. */
@@ -68,7 +68,7 @@ export class PeekStore {
             if (e.phase === 'held' && e.sourceId === spec.sourceId) return e.id
         }
         for (const e of this.entries.values()) {
-            if (e.phase === 'held') this.entries.set(e.id, { ...e, phase: 'falling' })
+            if (e.phase === 'held') this.entries.set(e.id, { ...e, phase: 'dismissing' })
         }
         const id = `peek-${spec.sourceId}-${this.seq++}`
         this.entries.set(id, { ...spec, id, phase: 'held' })
@@ -76,15 +76,15 @@ export class PeekStore {
         return id
     }
 
-    /** Move a preview from held to falling (dismiss → physical fall). */
+    /** Move a preview from held to dismissing (dismiss → fling + fade out). */
     dismiss(id: string): void {
         const e = this.entries.get(id)
-        if (!e || e.phase === 'falling') return
-        this.entries.set(id, { ...e, phase: 'falling' })
+        if (!e || e.phase === 'dismissing') return
+        this.entries.set(id, { ...e, phase: 'dismissing' })
         this.invalidate()
     }
 
-    /** Delete a preview entirely (after its fall has cleared). */
+    /** Delete a preview entirely (after its fade-out ends). */
     remove(id: string): void {
         if (this.entries.delete(id)) this.invalidate()
     }

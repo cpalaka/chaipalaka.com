@@ -431,3 +431,26 @@ describe('CardImpl — unmount cleanup', () => {
         expect(world!.tether.records()).toHaveLength(0)
     })
 })
+
+describe('CardImpl — drift spawn (§3.5)', () => {
+    test('spawns the body AT the layout anchor (no gravity-aligned offset)', () => {
+        const entry = makeEntry({ id: 'spawn-anchor', anchor: { x: 320, y: 240 } })
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
+        const world = getWorld()
+        const handle = world.getHandleById('spawn-anchor')!
+        const p = world.getPosition(handle)
+        expect(p.x).toBeCloseTo(320, 6)
+        expect(p.y).toBeCloseTo(240, 6)
+    })
+
+    test('applies a small nonzero initial velocity ("the route breathes in")', () => {
+        const entry = makeEntry({ id: 'spawn-kick', anchor: { x: 200, y: 200 } })
+        const { getWorld } = renderWith(<CardImpl entry={entry} />)
+        const world = getWorld()
+        const handle = world.getHandleById('spawn-kick')!
+        const v = world.getVelocity(handle)
+        const mag = Math.hypot(v.x, v.y)
+        expect(mag).toBeGreaterThan(0)
+        expect(mag).toBeLessThanOrEqual(30) // "small"
+    })
+})

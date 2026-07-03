@@ -32,12 +32,6 @@ export interface CardSpec {
     // `trail: 'floor'` so a string visibly continues from the card to the
     // floor, implying the chain extends below the screen.
     trail?: ParentRef
-    // Optional extra spawn offset applied on top of the gravity-aligned
-    // default in computeSpawnOffset. Use to spawn a card off its layout
-    // anchor (e.g. for a settle-in animation under physics). The card's
-    // rest position is still the anchor; spawnOffset only affects where
-    // it materialises in the first frame.
-    spawnOffset?: Vec2
 }
 
 export interface AuthorSectionDef {

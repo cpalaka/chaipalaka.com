@@ -19,7 +19,6 @@ export interface CardProps {
     trail?: ParentRef
     buoyancy?: Buoyancy
     draggable?: boolean
-    spawnOffset?: { x: number; y: number }
 }
 
 export function Card(props: CardProps) {
@@ -35,7 +34,6 @@ export function Card(props: CardProps) {
             kind: props.kind ?? 'card',
             buoyancy: props.buoyancy ?? 'heavy',
             anchor: props.anchor,
-            spawnOffset: props.spawnOffset,
             content: {
                 text: props.text,
                 width: props.width,
@@ -67,8 +65,6 @@ export function Card(props: CardProps) {
             props.variant,
             props.className,
             props.style,
-            props.spawnOffset?.x,
-            props.spawnOffset?.y,
         ],
     )
 

@@ -33,8 +33,6 @@ export const physicsTuning = {
     flingVelocityScale: 16,
     /** Pause longer than this before release and the fling is cancelled. */
     flingPauseMs: 50,
-    /** How far past its anchor (along gravity) a card spawns, in px. */
-    spawnOffsetPx: 20,
     /** Velocity kick along the buoyancy axis when a tether is cut on exit. */
     exitKick: 10,
     /** Delay after the exit primitive starts before the first card drops in. */

@@ -33,7 +33,10 @@ const AMBIENT: AmbientPinSpec[] = [
         href: '/blog',
         width: 240,
         height: 130,
-        offset: { x: 40, y: -150 }, // float above the word (balloon)
+        // Authored near-word offset (any direction under drift — no gravity to
+        // align to); floats the card up-and-beside its word. Drift + prose repel
+        // settle the real pose. S4 polishes it alongside the gravity: drop.
+        offset: { x: 40, y: -150 },
     },
 ]
 

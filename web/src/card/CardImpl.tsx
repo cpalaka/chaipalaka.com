@@ -7,8 +7,13 @@ import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
 import type { CardEntry } from './CardRegistry'
 import { computeFlingImpulse } from './flingImpulse'
-import { computeSpawnOffset } from './spawnOffset'
 import './Card.css'
+
+// Drift spawn "breathe-in" speed (px/tick), scaled by the route's driftScale at
+// the call site (spec §3.5). Hardcoded rather than a driftTuning knob — there is
+// no Atelier drift axis (D7) and the S4 feel pass tunes it in source; reduced
+// motion (driftScale 0) zeroes it for free.
+const SPAWN_KICK = 4
 
 interface CardImplProps {
     entry: CardEntry
@@ -21,7 +26,6 @@ export function CardImpl({ entry }: CardImplProps) {
         trail,
         buoyancy,
         anchor,
-        spawnOffset,
         content: {
             text,
             width,
@@ -46,7 +50,7 @@ export function CardImpl({ entry }: CardImplProps) {
     // anchor moves (e.g. viewport resize re-layouts). On initial mount its
     // deps trip from undefined → initial value, so without this guard it
     // teleports the body to the anchor and zeroes velocity — wiping out
-    // any spawn offset the body just registered with.
+    // the spawn velocity the body just registered with.
     const anchorEffectMountedRef = useRef(false)
 
     useEffect(() => {
@@ -56,13 +60,10 @@ export function CardImpl({ entry }: CardImplProps) {
         const w = width
         const h = height
 
-        const { x: gx, y: gy } = computeSpawnOffset(
-            anchorRef.current,
-            world.getGravityVector(),
-            physicsTuning.spawnOffsetPx,
-        )
-        const sx = gx + (spawnOffset?.x ?? 0)
-        const sy = gy + (spawnOffset?.y ?? 0)
+        // Drift spawn (spec §3.5): materialise AT the layout anchor — the old
+        // gravity-aligned spawn offset is gone — then breathe in with a slight
+        // random-direction velocity (scaled by driftScale below).
+        const { x: sx, y: sy } = anchorRef.current
 
         el.style.width = `${w}px`
         el.style.height = `${h}px`
@@ -79,6 +80,15 @@ export function CardImpl({ entry }: CardImplProps) {
             },
         )
         handleRef.current = handle
+
+        const kick = SPAWN_KICK * world.getDriftScale()
+        if (kick > 0) {
+            const a = Math.random() * (Math.PI * 2)
+            world.setVelocity(handle, {
+                x: Math.cos(a) * kick,
+                y: Math.sin(a) * kick,
+            })
+        }
 
         if (buoyancy) world.setBuoyancy(handle, buoyancy)
 

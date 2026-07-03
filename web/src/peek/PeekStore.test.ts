@@ -25,7 +25,7 @@ describe('PeekStore', () => {
         const first = s.open(portal('a'))
         s.open(portal('b'))
         const byId = Object.fromEntries(s.snapshot().map((e) => [e.id, e]))
-        expect(byId[first]?.phase).toBe('falling')
+        expect(byId[first]?.phase).toBe('dismissing')
         expect(s.snapshot().filter((e) => e.phase === 'held')).toHaveLength(1)
     })
 
@@ -37,11 +37,11 @@ describe('PeekStore', () => {
         expect(s.snapshot()).toHaveLength(1)
     })
 
-    it('dismiss moves a held preview to falling', () => {
+    it('dismiss moves a held preview to dismissing', () => {
         const s = new PeekStore()
         const id = s.open(portal('a'))
         s.dismiss(id)
-        expect(s.snapshot()[0]?.phase).toBe('falling')
+        expect(s.snapshot()[0]?.phase).toBe('dismissing')
     })
 
     it('remove deletes the entry', () => {

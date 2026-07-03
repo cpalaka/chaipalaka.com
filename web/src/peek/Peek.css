@@ -5,8 +5,8 @@
  * the entrance motion live here.
  *
  * The card's *position* is driven imperatively (held: a centred transform;
- * falling: per-frame physics), so the entrance animates `scale`/`opacity` only —
- * animating `transform` here would fight the inline transform.
+ * dismissing: per-frame physics), so the entrance animates `scale`/`opacity`
+ * only — animating `transform` here would fight the inline transform.
  */
 
 .peek-preview {
@@ -87,8 +87,10 @@ a.peek-preview__body:hover {
     z-index: 21;
 }
 
-/* While falling it is no longer interactive. */
-.peek-preview--falling {
+/* While dismissing (flung + fading out) it is no longer interactive. The fade
+ * itself is driven inline from PreviewCard (animation:none + an opacity
+ * transition over peekTuning.fadeMs) so the duration stays a read-at-use knob. */
+.peek-preview--dismissing {
     pointer-events: none;
 }
 

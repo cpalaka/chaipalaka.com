@@ -40,7 +40,6 @@ export const PHYSICS_SCHEMA = defineTuning({
         fields: {
             flingScale: { kind: 'range', default: physicsTuning.flingVelocityScale, min: 0, max: 40, step: 1, label: 'Fling scale' },
             flingPauseMs: { kind: 'range', default: physicsTuning.flingPauseMs, min: 0, max: 300, step: 10, label: 'Fling pause' },
-            spawnOffsetPx: { kind: 'range', default: physicsTuning.spawnOffsetPx, min: 0, max: 200, step: 5, label: 'Spawn offset' },
             exitKick: { kind: 'range', default: physicsTuning.exitKick, min: 0, max: 40, step: 1, label: 'Exit kick' },
         },
     },
@@ -68,7 +67,6 @@ export const PHYSICS_BINDINGS: Record<string, keyof PhysicsTuning> = {
     'tether.slackFactor': 'slackFactor',
     'interaction.flingScale': 'flingVelocityScale',
     'interaction.flingPauseMs': 'flingPauseMs',
-    'interaction.spawnOffsetPx': 'spawnOffsetPx',
     'interaction.exitKick': 'exitKick',
     'transitions.pourInBaseDelayMs': 'pourInBaseDelayMs',
     'transitions.pourInStaggerMs': 'pourInStaggerMs',

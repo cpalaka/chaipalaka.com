@@ -126,7 +126,11 @@ export function PinnedCard({ entry }: { entry: PinEntry }) {
             first = trackWord(null, word.getBoundingClientRect())
             const startAnchor = first
                 ? first.anchor
-                : { x: entry.center.x, y: entry.center.y - h }
+                : // Degenerate fallback (non-finite word rect at pin time): place
+                  // the word proxy a short authored near-word offset from the card
+                  // — any direction, no gravity "hang below" (spec §3.3) — enough
+                  // rope for drift + repel to settle the pose once the rect resolves.
+                  { x: entry.center.x + 60, y: entry.center.y - 80 }
             anchorHandle = world.registerAnchor(startAnchor)
             wordRest = Math.hypot(
                 entry.center.x - startAnchor.x,

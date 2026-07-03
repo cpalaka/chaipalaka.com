@@ -177,10 +177,6 @@ const PHYSICS_FIELDS: ReadonlyArray<{ key: string; doc: string }> = [
         doc: '    /** Pause longer than this before release and the fling is cancelled. */',
     },
     {
-        key: 'spawnOffsetPx',
-        doc: '    /** How far past its anchor (along gravity) a card spawns, in px. */',
-    },
-    {
         key: 'exitKick',
         doc: '    /** Velocity kick along the buoyancy axis when a tether is cut on exit. */',
     },

@@ -369,6 +369,13 @@ export class PhysicsWorld implements BodyForceSource {
         this.driftScale = scale
     }
 
+    // The live per-route drift intensity. Spawn scales its "breathe-in" kick by
+    // this (spec §3.5) so it inherits reduced-motion (S4 sets driftScale 0 for
+    // prefers-reduced-motion, D8) and per-route liveliness for free.
+    getDriftScale(): number {
+        return this.driftScale
+    }
+
     // Read-at-use: gravity is derived from physicsTuning.gravityY on every
     // call (and re-synced into the engine each tick), never captured at
     // construction, so a mid-simulation tuning change takes effect on the

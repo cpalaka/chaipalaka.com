@@ -18,18 +18,16 @@ function inRect(x: number, y: number, r: DOMRect): boolean {
     return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
 }
 
-// Pad past the viewport edge before a falling preview is considered "cleared".
-const CLEAR_PAD = 100
-
 /**
  * One ephemeral preview. Two phases:
  *  - **held**: a fixed DOM card centred beside its source word (no physics body —
  *    it "holds still"; full physics arrives only at pin, slice 4).
- *  - **falling**: on dismiss it becomes a transient sensor body flung UP in a 90°
- *    cone (toward the ceiling); route gravity then acts on it. Removed the moment it
- *    clears the viewport (any edge); `peekTuning.fallMs` is only a safety cap.
+ *  - **dismissing**: on dismiss it becomes a transient sensor body given a slight
+ *    any-direction fling (spec §3.4) and fades out over `peekTuning.fadeMs`,
+ *    removed when the fade ends. As a sensor it drifts through walls/edges and is
+ *    skipped by the drift force pass (spec §1), so the fling is its only motion.
  *
- * Reduced-motion short-circuits the fall: the preview is removed instantly.
+ * Reduced-motion short-circuits the dismissal: the preview is removed instantly.
  */
 export function PreviewCard({ entry }: { entry: PreviewEntry }) {
     const world = usePhysicsWorld()
@@ -186,7 +184,7 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
     }, [entry, peek, pin, reduced])
 
     useEffect(() => {
-        if (entry.phase !== 'falling') return
+        if (entry.phase !== 'dismissing') return
         const el = elRef.current
         if (!el) return
         if (reduced) {
@@ -207,34 +205,33 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
             },
         )
         handleRef.current = handle
-        // Sensor: fall straight through the box edges / floor, never settle.
+        // Sensor: drift through the box edges / walls untouched, and be skipped
+        // by the drift force pass (spec §1 excludes dynamic sensors) — so the
+        // fling coasting under damping is the card's only motion.
         world.setSensor(handle, true)
-        // Upward-cone exit-kick (task-036): the dismissed preview is flung in a
-        // random direction within a 90° cone toward the ceiling at fallKick speed;
-        // route gravity then acts on it. (Was an isotropic 360° kick.)
-        world.setVelocity(handle, computeFlingVelocity(Math.random, peekTuning.fallKick))
+        // Slight any-direction fling (spec §3.4): a gentle nudge as the card
+        // fades. Read-at-use `dismissKick`; injected `Math.random` (fling.ts).
+        world.setVelocity(handle, computeFlingVelocity(Math.random, peekTuning.dismissKick))
 
-        const startedAt = performance.now()
-        let raf = requestAnimationFrame(function check() {
-            const hdl = handleRef.current
-            if (hdl === null || !world.has(hdl)) return
-            const p = world.getPosition(hdl)
-            const vw = window.innerWidth
-            const vh = window.innerHeight
-            const cleared =
-                p.y - h / 2 > vh + CLEAR_PAD ||
-                p.y + h / 2 < -CLEAR_PAD ||
-                p.x - w / 2 > vw + CLEAR_PAD ||
-                p.x + w / 2 < -CLEAR_PAD
-            if (cleared || performance.now() - startedAt > peekTuning.fallMs) {
-                peek.remove(entry.id)
-                return
-            }
-            raf = requestAnimationFrame(check)
+        // Fade out, then remove when the fade ends (spec §3.4 — replaces the old
+        // fling-until-off-viewport detection). Kill the entrance animation so the
+        // opacity transition can run from 1 → 0 while physics keeps translating
+        // the body; a rAF defers the opacity flip one frame so the transition has
+        // a start value. Start the removal timer INSIDE that same rAF so it is
+        // anchored to fade-start, not effect-run — else the timer fires ~1 frame
+        // before the rAF-deferred fade completes and a main-thread hitch blinks
+        // the card out mid-fade. `fadeMs` is read-at-use (drives fade + removal).
+        el.style.animation = 'none'
+        el.style.transition = `opacity ${peekTuning.fadeMs}ms linear`
+        let timer = 0
+        const raf = requestAnimationFrame(() => {
+            el.style.opacity = '0'
+            timer = window.setTimeout(() => peek.remove(entry.id), peekTuning.fadeMs)
         })
 
         return () => {
             cancelAnimationFrame(raf)
+            window.clearTimeout(timer)
             const hdl = handleRef.current
             if (hdl !== null && world.has(hdl)) world.unregister(hdl)
             handleRef.current = null
@@ -244,7 +241,7 @@ export function PreviewCard({ entry }: { entry: PreviewEntry }) {
     const cls = [
         'peek-preview',
         'physics-card',
-        entry.phase === 'falling' ? 'peek-preview--falling' : null,
+        entry.phase === 'dismissing' ? 'peek-preview--dismissing' : null,
         reduced ? 'peek-preview--reduced' : null,
     ]
         .filter(Boolean)

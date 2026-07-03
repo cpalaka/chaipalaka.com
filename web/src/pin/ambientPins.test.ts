@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { buildAmbientPinSpecs, type AmbientPinSpec, type Resolved } from './ambientPins'
+import {
+    buildAmbientPinSpecs,
+    DEFAULT_OFFSET,
+    type AmbientPinSpec,
+    type Resolved,
+} from './ambientPins'
 
 // A fake source <a> element — only identity matters for the pure builder.
 const fakeEl = (tag: string): Element => ({ tagName: tag }) as unknown as Element
@@ -48,11 +53,18 @@ describe('buildAmbientPinSpecs (ambient-teacher seeding)', () => {
         expect(pin.title).toBe('Writing')
         expect(pin.lead).toBe('Essays and notes.')
         expect(pin.href).toBe('/blog')
-        // default size, and the card hangs below the word's bottom-centre.
+        // default size, and the default near-word offset is applied to the
+        // word's bottom-centre (130, 220) — any direction, no gravity "hang".
         expect(pin.width).toBeGreaterThan(0)
         expect(pin.height).toBeGreaterThan(0)
-        expect(pin.center.x).toBe(130) // 100 + 60/2 + offset.x(0)
-        expect(pin.center.y).toBeGreaterThan(220) // below the word bottom (200+20)
+        expect(pin.center.x).toBe(130 + DEFAULT_OFFSET.x) // wordCx + default offset
+        expect(pin.center.y).toBe(220 + DEFAULT_OFFSET.y) // wordBottom + default offset
+    })
+
+    it('default offset is a real near-word vector (not the old gravity "hang")', () => {
+        // A nonzero offset with a horizontal component — no longer straight-down.
+        expect(Math.hypot(DEFAULT_OFFSET.x, DEFAULT_OFFSET.y)).toBeGreaterThan(0)
+        expect(DEFAULT_OFFSET.x).not.toBe(0)
     })
 
     it('applies per-spec width/height/offset overrides', () => {
