@@ -1,10 +1,10 @@
 ---
 id: TASK-042
 title: v2 — top-down drift graph physics (replace gravity model)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-06-21 21:56'
-updated_date: '2026-07-02 03:53'
+updated_date: '2026-07-03 05:47'
 labels:
   - claude-generated
   - v2
@@ -45,10 +45,16 @@ Prototypes that informed this: prototypes/lava-metaball.html + prototypes/fat-te
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
-- [ ] #2 Secret-leak grep from repo root: zero matches
-- [ ] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
-- [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
-- [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
-- [ ] #6 User sign-off received — explicit approval before Done
+- [x] #1 web/: npm run typecheck + test + build green (prerender check: data-server-rendered in dist/index.html)
+- [x] #2 Secret-leak grep from repo root: zero matches
+- [x] #3 CONTEXT.md / docs/adr/ updated for new domain language or decisions (or N/A)
+- [x] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
+- [x] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
+- [x] #6 User sign-off received — explicit approval before Done
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CLOSEOUT 2026-07-03: v2 top-down drift graph physics COMPLETE — all 4 sub-slices Done + squash-merged to main. S1 (6db63c0 engine+mode), S2 (2346229 ladder+spawn), S3 (7e48a05 rendering+cleanup), S4 (d591291 route conversion + run-and-tumble feel pass). The gravity-hang model is replaced by drift on every route (dormant gravity retained). Final wander model = RUN-AND-TUMBLE (rare per-card impulse → straight glide, not the Brownian per-frame tremble). Gate-lift notes pinned onto task-038 (auras) + task-041 (field-warp); task-039 already carried the tension note. Spec: docs/superpowers/specs/2026-07-01-drift-physics-design.md + ADR-0010.
+<!-- SECTION:NOTES:END -->

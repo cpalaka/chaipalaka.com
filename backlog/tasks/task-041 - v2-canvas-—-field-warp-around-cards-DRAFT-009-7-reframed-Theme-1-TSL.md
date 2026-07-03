@@ -4,6 +4,7 @@ title: 'v2 canvas — field-warp around cards (DRAFT-009 #7 reframed, Theme-1, T
 status: To Do
 assignee: []
 created_date: '2026-06-22 01:09'
+updated_date: '2026-07-03 05:46'
 labels:
   - claude-generated
   - threejs
@@ -43,6 +44,8 @@ BUILD NOTES: cards are rectangles -> ANALYTIC SDF in-shader (sdBox + smin), NO b
 
 <!-- SECTION:NOTES:BEGIN -->
 Reframe of DRAFT-009 #7 (text->cards, Chai 2026-06-22). Prototype: prototypes/field-feels-type.html (text-warp proxy — validated SDF UV-warp + crisp overlay @~60fps; warp confirmed QUIET; the ink-wash flow-field under it is a reusable bg-scene candidate). SIBLING of task-038 (shares the physics->GPU bridge + the DRAFT-010 drift-rewrite gate). Cross-refs: DRAFT-009 #7 + #1, task-038, task-040, ADR-0009, task-037, DRAFT-010.
+
+GATE LIFTED 2026-07-03: task-042 (top-down drift physics) shipped to main (squash d591291; S1–S4 all Done). Live per-frame card rects (same bridge as task-038) now exist under the drift model — spec §4: 'task-041 (field-warp): live card rects: same bridge as 038.' 041 is a sibling of 038 (card-warp-distortion vs aura-glow — combine or pick one). Ref: docs/superpowers/specs/2026-07-01-drift-physics-design.md §4 + ADR-0010.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
