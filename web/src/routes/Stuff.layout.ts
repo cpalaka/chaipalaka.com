@@ -2,7 +2,6 @@ import type { RouteLayout } from './routeLayout'
 
 // Pure data literal — the Atelier regenerates this file whole on write-back.
 export const stuffLayout = {
-    gravity: 'down',
     cards: [
         {
             id: 'stuff-flash',

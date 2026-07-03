@@ -10,20 +10,21 @@ import type { AmbientPinSpec } from '../pin/ambientPins'
 /**
  * The v2 home: a populated bespoke landing (spec §8). It rests POPULATED — a card
  * is already pinned to a section link on arrival (the "ambient teacher", §12),
- * teaching the *keep* rung by example — and uses UP gravity so foreground cards
- * read as balloons (§8). It has no v1 PageDef cards; the only card is the runtime
- * ambient pin. The prose is the no-JS floor (ReadingSubstrate prerenders), so it
- * carries no NoJsFallback. Final look is the capstone pass (task-030); this is the
- * functional landing on token-separable placeholder styling.
+ * teaching the *keep* rung by example. A reading route, so it drifts gently
+ * (low `driftScale`) — the prose stays readable while the ambient card wanders.
+ * It has no v1 PageDef cards; the only card is the runtime ambient pin. The prose
+ * is the no-JS floor (ReadingSubstrate prerenders), so it carries no NoJsFallback.
+ * Final look is the capstone pass (task-030); this is the functional landing on
+ * token-separable placeholder styling.
  */
 export const pageDef: PageDef = {
-    gravity: 'up',
+    driftScale: 0.25,
     resting: 'populated',
     cards: [],
 }
 
-// One ambient pin, strung to the "writing" section link and floating above it
-// (balloon, up gravity). Stable module const so the seeding effect runs once.
+// One ambient pin, strung to the "writing" section link and floating up-and-beside
+// it. Stable module const so the seeding effect runs once.
 const AMBIENT: AmbientPinSpec[] = [
     {
         selector: 'a[data-link-type="portal"][href="/blog"]',
@@ -34,8 +35,8 @@ const AMBIENT: AmbientPinSpec[] = [
         width: 240,
         height: 130,
         // Authored near-word offset (any direction under drift — no gravity to
-        // align to); floats the card up-and-beside its word. Drift + prose repel
-        // settle the real pose. S4 polishes it alongside the gravity: drop.
+        // align to); places the card up-and-right of its word. Prose repel + the
+        // short rope jointly hold it clear of the column while it drifts.
         offset: { x: 40, y: -150 },
     },
 ]
@@ -53,7 +54,7 @@ export default function Home() {
         setThemeRef.current('light')
     }, [])
 
-    // Up gravity (balloons) + seed the ambient teacher pin on arrival.
+    // Gentle drift + seed the ambient teacher pin on arrival.
     usePageDef(pageDef)
     useAmbientPins(pageDef.resting, AMBIENT)
 

@@ -61,6 +61,29 @@ describe('usePageDef', () => {
         expect(scale).toHaveBeenCalledWith(1)
     })
 
+    // AC#4 / D8 — prefers-reduced-motion forces driftScale 0, overriding the
+    // route's authored intensity, so a reduced-motion user sees no drift (the
+    // repel is driftScale-gated too, AC#10). Drag/peek stay live — separate paths.
+    test('prefers-reduced-motion ⇒ driftScale 0 (overrides the authored value)', () => {
+        const mql = {
+            matches: true,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+        }
+        vi.stubGlobal('matchMedia', vi.fn().mockReturnValue(mql))
+        try {
+            const scale = vi.spyOn(PhysicsWorld.prototype, 'setDriftScale')
+            renderDef({ driftScale: 0.9, cards: [] })
+            expect(scale).toHaveBeenLastCalledWith(0)
+            // ④ (review): the FIRST effect pass already reads reduced-motion
+            // synchronously, so the authored value never reaches the world — no
+            // one-frame window at 0.9 for the rAF loop to tick through.
+            expect(scale).not.toHaveBeenCalledWith(0.9)
+        } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
     test('unmount resets to the site default (drift, scale 1, gravity down)', () => {
         const mode = vi.spyOn(PhysicsWorld.prototype, 'setMode')
         const scale = vi.spyOn(PhysicsWorld.prototype, 'setDriftScale')

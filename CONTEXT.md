@@ -74,13 +74,15 @@ _Avoid_: regime (already names the pin anchor regimes and
 
 **Drift** _(DRAFT-010/ADR-0010 — lands with the rewrite)_:
 The default **Physics mode**: cards on a top-down plane receive gentle
-dt-normalized Brownian wander, damping, pull-only **Tether** forces,
-card-card collision, wall bounds, and **Prose repel** — no gravity, no
+**run-and-tumble** wander (a rarely-fired per-card velocity impulse, then a
+straight glide that damping coasts to rest — amended 2026-07-03 from a
+per-frame Brownian kick that read as tremble), damping, pull-only **Tether**
+forces, card-card collision, wall bounds, and **Prose repel** — no gravity, no
 home anchors, no spring-back. Rest is wherever ropes, repel, and drift
 leave a card — **drift-settle**, the successor to pendulum-settle: a
 bounded-drift invariant, never a rest state. Full force model:
 `docs/superpowers/specs/2026-07-01-drift-physics-design.md`.
-_Avoid_: float mode, zero-g, wander (the Brownian component, not the
+_Avoid_: float mode, zero-g, wander (the run-and-tumble component, not the
 mode).
 
 **Prose repel** _(DRAFT-010/ADR-0010 — lands with the rewrite)_:

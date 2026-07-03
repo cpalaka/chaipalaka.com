@@ -111,7 +111,7 @@ export function buildFlashIndex(
         void vp
     })
 
-    return { pageDef: { gravity: 'down', cards }, cardContent }
+    return { pageDef: { driftScale: 0.6, cards }, cardContent }
 }
 
 function getViewport(): Viewport {
@@ -121,7 +121,7 @@ function getViewport(): Viewport {
 }
 
 const empty: { pageDef: PageDef; cardContent: Record<string, CardContent> } = {
-    pageDef: { gravity: 'down', cards: [] },
+    pageDef: { driftScale: 0.6, cards: [] },
     cardContent: {},
 }
 

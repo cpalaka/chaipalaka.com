@@ -51,7 +51,10 @@ describe('buildFlashIndex — empty input', () => {
             width: 1024,
             height: 768,
         })
-        expect(pageDef.gravity).toBe('down')
+        // Drift default (spec §3.2): no gravity; a chain route authors a
+        // moderate driftScale (D7).
+        expect(pageDef.gravity).toBeUndefined()
+        expect(pageDef.driftScale).toBeGreaterThan(0)
         expect(pageDef.cards).toEqual([])
         expect(cardContent).toEqual({})
     })

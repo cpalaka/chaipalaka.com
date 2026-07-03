@@ -7,7 +7,9 @@ import type { CardContent } from '../card/Page'
 const recentPosts = getPosts().slice(0, 3)
 
 export const pageDef: PageDef = {
-    gravity: 'up',
+    // Livelier drift than a reading route — the 404 cards visibly wander
+    // ("everything is floating away").
+    driftScale: 0.9,
     cards: [
         {
             id: 'notfound-headline',

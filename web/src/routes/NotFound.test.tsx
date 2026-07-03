@@ -56,8 +56,11 @@ function renderNotFound() {
 }
 
 describe('NotFound — pageDef shape', () => {
-    test('gravity is up', () => {
-        expect(pageDef.gravity).toBe('up')
+    test('drifts (no gravity), livelier than a reading route', () => {
+        // Drift default (spec §3.2): no gravity. The 404 cards visibly wander,
+        // so it authors a higher driftScale than the reading routes (D7).
+        expect(pageDef.gravity).toBeUndefined()
+        expect(pageDef.driftScale).toBeGreaterThan(0.5)
     })
 
     test('has at least 3 cards (headline + portfolio + link), up to 3 more from recent posts', () => {

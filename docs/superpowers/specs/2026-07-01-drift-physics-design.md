@@ -19,8 +19,8 @@ adversarial review (claim checks and/or skeptic panels). No unverified `✓a` ma
 
 ## 0. Vision
 
-All elements live on a 2D plane viewed top-down. Cards **drift gently** (Brownian
-wander), **bounce off each other** (real collision), and are **draggable**. Tethers are
+All elements live on a 2D plane viewed top-down. Cards **drift gently**
+(run-and-tumble wander), **bounce off each other** (real collision), and are **draggable**. Tethers are
 **pull-only ropes**: slack when close, real tension when stretched. No gravity, no
 pendulum-hang, no home anchors — rest is wherever the ropes, the prose repel, and drift
 leave you. This is the foundation for the WebGPU canvas layer (metaball auras task-038,
@@ -29,25 +29,40 @@ force inputs (pointer motion/clicks perturbing the drift) slot in as additional 
 
 ## 1. The drift-mode force model
 
+> **Amended 2026-07-03 (Chai-ratified, task-042.04 S4):** the **Brownian wander**
+> row below is superseded by **run-and-tumble** (the amended row). Reason: a
+> per-frame random velocity kick reads as a constant ±7°/frame tremble (in-browser
+> trace); tuning amplitude only shrinks the jitter, never its trembly character.
+> Run-and-tumble keeps a card still by default, fires ONE impulse from a
+> rarely-elapsing per-card timer, then lets it glide straight until damping / a
+> collision / wall / rope redirects or stops it. The mass-invariance, dt-invariance,
+> injected-RNG, and driftScale invariants are **preserved** — driftScale now scales
+> impulse SPEED, and dt-invariance rides the ms-based firing interval rather than a
+> `sqrt(dt)` magnitude. Knobs: `driftTuning.{impulseSpeed, impulseIntervalMs}`
+> replace `baseAmplitude`; the velocity-clamp is dropped (authored flings survive;
+> damping + the 50ms dt-clamp bound equilibrium). The **prose-repel** row is
+> separately amended (binary driftScale gate — see its row); the rest of the table
+> is unchanged. ADR-0010 carries the matching amendment note.
+
 Per tick, a non-dragged card body receives:
 
 | Force | Mechanism | Notes |
 |---|---|---|
-| Brownian wander | dt-normalized random **velocity kick**: `Δv = baseAmplitude × driftScale × sqrt(dt/16.667) × rand()`, velocity-clamped | **Acceleration semantics, not raw force** — multiply by body mass at the apply site (the `tetherStiffness` convention, `Tether.ts:202-215`) so drift is mass-invariant like the prototype ✓r. dt-normalized against the 16.667ms reference tick so feel is refresh-rate-invariant (site ticks raw rAF dt clamped to 50ms, `PhysicsContext.tsx:84` → `Engine.update` ✓r); a unit test asserts wander statistics are invariant ticking at 8ms vs 33ms |
+| Run-and-tumble wander _(amended 2026-07-03; was Brownian per-frame kick)_ | a per-card timer (`impulseIntervalMs`, uniform-jittered ±50% so cards desync) rarely fires ONE **velocity impulse** `Δv = impulseSpeed × driftScale × (cosθ, sinθ)`, `θ = rand()·2π`; the card then glides straight and `frictionAir` damping coasts it to rest. Applied as a direct velocity **add** ⇒ inherently mass-invariant (no `×mass`). | **No dt term on the magnitude** — an impulse is a discrete event, not a diffusion; dt-invariance rides the ms-based interval, decremented by the raw rAF dt (clamped to 50ms, `PhysicsContext.tsx:84` → `Engine.update`) each tick ✓v. driftScale scales the SPEED so `driftScale 0` ⇒ still (D8). A unit test asserts impulse displacement is dt-invariant ticking at 8ms vs 33ms; the glide distance `≈ impulseSpeed/damping` is dt-invariant at constant dt ✓v (task-042.04) |
 | Damping | `frictionAir` is a **registration-time body property**, mode-conditional: existing `0.005` (`BODY_FRICTION_AIR`, `PhysicsWorld.ts:66`) when gravity-dormant, `driftTuning.damping` under drift ✓r | NOT part of the tick force pass — a global change would break §3.1's dormant-path bit-identity. For HMR tuning, the drift tick re-syncs `body.frictionAir` from `driftTuning` (cheap), which is what keeps the read-at-use promise for this one knob. NaN-inversion margin (~0.2 threshold) holds either way |
 | Rope pull | `Tether.applyRopeForces` `[reuse]` ✓v | pull-only past rest length; zero force when slack (`Tether.ts:197`). **Conditional** (LOW ✓r): the module applies equal *accelerations* to both ends (force = a·m per body), so a taut dynamic–dynamic pair of *unequal* masses self-propels slightly — invisible under gravity, exposed by drift. Fine while tethered pairs are same-size; if unequal-size pairs get authored (child pins!), symmetrize at build (single magnitude ± both ends) |
 | Card collision | matter.js collision impulses | replaces the prototypes' crude AABB separation |
 | Wall bounds | existing 4 static walls `[reuse]` ✓r `PhysicsWorld.ts:103-157` | soft bounce; frame-bar insets unchanged ✓r |
-| Prose repel | `[new]` gentle outward force from the content-box rect, signed-distance falloff | **Scope amended + ratified 2026-07-01:** applies to **all non-dragged, non-dismissed card bodies** (STRUNG included), superseding Q5's "DETACHED only". Reason ✓r: a pull-only rope only *caps* distance, it never positions — without repel, a parked or word-anchored card is free anywhere in its rope disc (half of which is over the prose) and Brownian actively explores it. Repel + rope *jointly* produce every "floats just clear" pose deterministically |
+| Prose repel | `[new]` gentle outward force from the content-box rect, signed-distance falloff | **Scope amended + ratified 2026-07-01:** applies to **all non-dragged, non-dismissed card bodies** (STRUNG included), superseding Q5's "DETACHED only". Reason ✓r: a pull-only rope only *caps* distance, it never positions — without repel, a parked or word-anchored card is free anywhere in its rope disc (half of which is over the prose) and drift actively explores it. Repel + rope *jointly* produce every "floats just clear" pose deterministically. **Amended 2026-07-03 (binary driftScale gate — commit 9ab2b0f / AC#10):** applied only when `driftScale > 0`, and NOT scaled by it — off at `driftScale 0` (reduced-motion, D8) so cards fully still, full at any nonzero driftScale so a low-drift reading route still holds its cards off the prose ✓v (task-042.04) |
 
 Dragged cards: pointer authority as today `[reuse]`. Dismissed previews: slight random
-fling + fade (§3.4) — no Brownian, no repel, removal on fade-end.
+fling + fade (§3.4) — no impulse, no repel, removal on fade-end.
 
 **Tick-loop / sleeping baseline** (LOW ✓r): matter sleeping is not enabled anywhere in
 `web/src`, the rAF loop already runs unconditionally forever (`PhysicsContext.tsx:79-91`),
 and `tick()` runs solver + per-body `onTransform` every frame — so perpetual drift adds
 only the per-card force pass to an already-perpetual loop. **Matter sleeping stays OFF**
-(explicit guard: sleeping bodies ignore small per-tick forces and would kill Brownian
+(explicit guard: sleeping bodies ignore small per-tick forces and would kill the drift
 wander and rope tugs). "Drift-settle" is operationally the *bounded-drift invariant*,
 never a rest state.
 
@@ -93,9 +108,10 @@ never a rest state.
   **pull-only** (`applyRopeForces` unchanged ✓v, with the equal-mass condition noted in
   §1) — preserves the slack state task-039's tension rendering needs. No push-apart:
   overlap is collision's job.
-- **D7 — Tuning.** New **`physics/driftTuning.ts`** `[new]`, read-at-use: Brownian
-  base amplitude (acceleration units, §1), drift damping (with the registration-time
-  sync caveat, §1), prose-repel radius + strength. **Dismissal knobs stay in
+- **D7 — Tuning.** New **`physics/driftTuning.ts`** `[new]`, read-at-use:
+  run-and-tumble impulse speed + mean interval (§1, amended 2026-07-03; was
+  Brownian base amplitude), drift damping (with the registration-time sync
+  caveat, §1), prose-repel radius + strength. **Dismissal knobs stay in
   `peekTuning`** ✓r (not driftTuning — one home only): `fallMs`→`fadeMs`,
   `fallKick`→`dismissKick`, re-semanticized in place (§3.4). NOT in `physicsTuning.ts`
   (Atelier whole-file-regen gotcha). No Atelier drift axis in the initial build.
@@ -133,7 +149,7 @@ never a rest state.
   `syncEngineGravity` (:327-331, re-synced per tick :613). Drift routes run gravity
   `{x:0, y:0}`. Note ✓r: `syncEngineGravity` is itself a `getGravityVector()` consumer
   (the primary one); buoyancy is the only discrete *per-body* force reading it.
-- `[new]` drift force pass in the tick: Brownian + prose repel (§1). Gated on the
+- `[new]` drift force pass in the tick: run-and-tumble + prose repel (§1). Gated on the
   route's mode; **damping is the one non-tick knob** (registration-time property +
   drift-tick re-sync, §1) so the dormant gravity path stays bit-identical.
 - Buoyancy `[reuse]`-dormant ✓r (`setBuoyancy` :491-501, tick force :617-623): inert
@@ -274,7 +290,7 @@ never a rest state.
   builds from `layoutTuning` directly). `[delete]` module + test as v1 dead code
   (verify-at-build that no planned consumer exists), rather than "partial rewrite".
 - `[new]`: drift force pass (frozen-body determinism via injected RNG), dt-invariance
-  of Brownian statistics (§1), mass-invariance of drift (§1), prose-repel falloff
+  of the run-and-tumble impulse displacement (§1, amended), mass-invariance of drift (§1), prose-repel falloff
   (incl. box corners + inside-the-rect case), radial edge wiring, drift-settle
   bounded-drift invariant, drift-mode anchor-move translate-pair (D4).
 

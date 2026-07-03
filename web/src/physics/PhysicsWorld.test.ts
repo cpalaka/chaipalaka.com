@@ -570,6 +570,23 @@ function mulberry32(seed: number): () => number {
     }
 }
 
+// The drift knobs are a read-at-use module singleton (driftTuning.ts). Run-and-
+// tumble tests tune the firing rate so an impulse reliably fires — or never
+// fires — within the tick window: a short `impulseIntervalMs` to exercise
+// wander, a huge one to isolate prose repel. Overrides are restored after.
+function withDriftTuning(
+    overrides: Partial<typeof driftTuning>,
+    fn: () => void,
+): void {
+    const saved = { ...driftTuning }
+    Object.assign(driftTuning, overrides)
+    try {
+        fn()
+    } finally {
+        Object.assign(driftTuning, saved)
+    }
+}
+
 describe('PhysicsWorld drift mode', () => {
     // AC#2 — no mode declared ⇒ the app resolves drift; drift runs zero gravity.
     test('drift mode runs zero engine gravity', () => {
@@ -594,31 +611,39 @@ describe('PhysicsWorld drift mode', () => {
         expect(Math.abs(p.x - 400)).toBeLessThan(1)
     })
 
-    test('drift active ⇒ a body wanders from its anchor', () => {
-        const world = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-            mode: 'drift',
-            rng: mulberry32(1),
+    test('drift active ⇒ a body wanders as impulses fire', () => {
+        withDriftTuning({ impulseIntervalMs: 100 }, () => {
+            const world = new PhysicsWorld({
+                viewport: { width: 800, height: 600 },
+                mode: 'drift',
+                rng: mulberry32(1),
+            })
+            const h = world.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+            for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
+            const p = world.getPosition(h)
+            expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
         })
-        const h = world.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
-        for (let i = 0; i < 120; i++) world.tick(FIXED_DT_MS)
-        const p = world.getPosition(h)
-        expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
     })
 
-    // AC#4 — driftScale scales the wander amplitude; default 1.
+    // AC#4 — driftScale scales the impulse speed (hence wander amplitude); the
+    // same seed fires the same impulses at both scales, so displacement scales
+    // linearly (no collisions/walls/repel in the huge empty viewport).
     test('driftScale scales wander amplitude linearly', () => {
         const run = (scale: number) => {
-            const w = new PhysicsWorld({
-                viewport: { width: 4000, height: 4000 },
-                mode: 'drift',
-                rng: mulberry32(7),
+            let d = 0
+            withDriftTuning({ impulseIntervalMs: 100 }, () => {
+                const w = new PhysicsWorld({
+                    viewport: { width: 4000, height: 4000 },
+                    mode: 'drift',
+                    rng: mulberry32(7),
+                })
+                const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+                w.setDriftScale(scale)
+                for (let i = 0; i < 60; i++) w.tick(FIXED_DT_MS)
+                const p = w.getPosition(h)
+                d = Math.hypot(p.x - 2000, p.y - 2000)
             })
-            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
-            w.setDriftScale(scale)
-            for (let i = 0; i < 20; i++) w.tick(FIXED_DT_MS)
-            const p = w.getPosition(h)
-            return Math.hypot(p.x - 2000, p.y - 2000)
+            return d
         }
         const ratio = run(2) / run(1)
         expect(ratio).toBeGreaterThan(1.8)
@@ -626,15 +651,17 @@ describe('PhysicsWorld drift mode', () => {
     })
 
     test('driftScale defaults to 1 (a fresh drift world already wanders)', () => {
-        const w = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-            mode: 'drift',
-            rng: mulberry32(9),
+        withDriftTuning({ impulseIntervalMs: 100 }, () => {
+            const w = new PhysicsWorld({
+                viewport: { width: 800, height: 600 },
+                mode: 'drift',
+                rng: mulberry32(9),
+            })
+            const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
+            for (let i = 0; i < 120; i++) w.tick(FIXED_DT_MS)
+            const p = w.getPosition(h)
+            expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
         })
-        const h = w.registerById('a', { x: 400, y: 300 }, { width: 100, height: 60 })
-        for (let i = 0; i < 60; i++) w.tick(FIXED_DT_MS)
-        const p = w.getPosition(h)
-        expect(Math.hypot(p.x - 400, p.y - 300)).toBeGreaterThan(1)
     })
 
     // AC#5 — damping, both halves.
@@ -711,25 +738,28 @@ describe('PhysicsWorld drift mode', () => {
     // "no Brownian, no repel". The drift pass must skip every dynamic sensor,
     // not just static bodies.
     test('drift pass skips dynamic sensors (dismissed-preview exclusion)', () => {
-        const w = new PhysicsWorld({
-            viewport: { width: 800, height: 600 },
-            mode: 'drift',
-            rng: mulberry32(4),
+        withDriftTuning({ impulseIntervalMs: 100 }, () => {
+            const w = new PhysicsWorld({
+                viewport: { width: 800, height: 600 },
+                mode: 'drift',
+                rng: mulberry32(4),
+            })
+            const sensor = w.registerById('s', { x: 400, y: 300 }, { width: 100, height: 60 })
+            w.setSensor(sensor, true)
+            const solid = w.registerById('c', { x: 200, y: 300 }, { width: 100, height: 60 })
+            for (let i = 0; i < 120; i++) w.tick(FIXED_DT_MS)
+            // The non-sensor body wanders; the sensor is skipped before its
+            // impulse timer decrements, so it never fires and stays put.
+            const ps = w.getPosition(solid)
+            expect(Math.hypot(ps.x - 200, ps.y - 300)).toBeGreaterThan(1)
+            const px = w.getPosition(sensor)
+            expect(Math.hypot(px.x - 400, px.y - 300)).toBeLessThan(0.5)
         })
-        const sensor = w.registerById('s', { x: 400, y: 300 }, { width: 100, height: 60 })
-        w.setSensor(sensor, true)
-        const solid = w.registerById('c', { x: 200, y: 300 }, { width: 100, height: 60 })
-        for (let i = 0; i < 120; i++) w.tick(FIXED_DT_MS)
-        // The non-sensor body wanders; the sensor stays put (no Brownian kick).
-        const ps = w.getPosition(solid)
-        expect(Math.hypot(ps.x - 200, ps.y - 300)).toBeGreaterThan(1)
-        const px = w.getPosition(sensor)
-        expect(Math.hypot(px.x - 400, px.y - 300)).toBeLessThan(0.5)
     })
 
-    // Spec §1 — the drift pass clamps only the Brownian wander, never a body's
-    // authored velocity. A drag-release fling / dismissal kick above the old
-    // maxSpeed=8 must survive (was clamped to 8 px/tick, deadening every fling).
+    // Spec §1 — the drift pass never clamps a body's authored velocity. A
+    // drag-release fling / dismissal kick above the old maxSpeed=8 must survive
+    // (was clamped to 8 px/tick, deadening every fling).
     test('drift pass does not clamp an authored fling velocity', () => {
         const w = new PhysicsWorld({
             viewport: { width: 4000, height: 4000 },
@@ -740,29 +770,33 @@ describe('PhysicsWorld drift mode', () => {
         w.setVelocity(h, { x: 32, y: 0 }) // ~2px/ms drag at flingVelocityScale 16
         w.tick(FIXED_DT_MS)
         const v = w.getVelocity(h)
-        // Only damping (≈0.02) + one small Brownian kick touch it — not a cap to 8.
+        // Only damping (≈0.01) touches it (default 15000ms interval ⇒ no impulse
+        // fires on tick 1) — not a cap to 8.
         expect(Math.hypot(v.x, v.y)).toBeGreaterThan(25)
     })
 
     // AC#9 — drift-mode anchor move translate-pairs; gravity teleports + zeroes.
+    // A short interval builds a real wander offset + velocity to preserve.
     test('drift setAnchor translate-pairs (preserves wander offset + velocity)', () => {
-        const w = new PhysicsWorld({
-            viewport: { width: 4000, height: 4000 },
-            mode: 'drift',
-            rng: mulberry32(5),
+        withDriftTuning({ impulseIntervalMs: 100 }, () => {
+            const w = new PhysicsWorld({
+                viewport: { width: 4000, height: 4000 },
+                mode: 'drift',
+                rng: mulberry32(5),
+            })
+            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+            for (let i = 0; i < 15; i++) w.tick(FIXED_DT_MS)
+            const posBefore = w.getPosition(h)
+            const velBefore = w.getVelocity(h)
+            const offset = { x: posBefore.x - 2000, y: posBefore.y - 2000 }
+            w.setAnchor(h, { x: 2300, y: 2400 })
+            const posAfter = w.getPosition(h)
+            const velAfter = w.getVelocity(h)
+            expect(posAfter.x).toBeCloseTo(2300 + offset.x, 6)
+            expect(posAfter.y).toBeCloseTo(2400 + offset.y, 6)
+            expect(velAfter.x).toBeCloseTo(velBefore.x, 6)
+            expect(velAfter.y).toBeCloseTo(velBefore.y, 6)
         })
-        const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
-        for (let i = 0; i < 15; i++) w.tick(FIXED_DT_MS)
-        const posBefore = w.getPosition(h)
-        const velBefore = w.getVelocity(h)
-        const offset = { x: posBefore.x - 2000, y: posBefore.y - 2000 }
-        w.setAnchor(h, { x: 2300, y: 2400 })
-        const posAfter = w.getPosition(h)
-        const velAfter = w.getVelocity(h)
-        expect(posAfter.x).toBeCloseTo(2300 + offset.x, 6)
-        expect(posAfter.y).toBeCloseTo(2400 + offset.y, 6)
-        expect(velAfter.x).toBeCloseTo(velBefore.x, 6)
-        expect(velAfter.y).toBeCloseTo(velBefore.y, 6)
     })
 
     test('gravity setAnchor teleports to the anchor and zeroes velocity', () => {
@@ -782,28 +816,36 @@ describe('PhysicsWorld drift mode', () => {
     // AC#3 — invariance suite.
     test('deterministic under an injected RNG (same seed ⇒ same path)', () => {
         const run = () => {
-            const w = new PhysicsWorld({
-                viewport: { width: 4000, height: 4000 },
-                mode: 'drift',
-                rng: mulberry32(11),
+            let p = { x: 0, y: 0, rotation: 0 }
+            withDriftTuning({ impulseIntervalMs: 100 }, () => {
+                const w = new PhysicsWorld({
+                    viewport: { width: 4000, height: 4000 },
+                    mode: 'drift',
+                    rng: mulberry32(11),
+                })
+                const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
+                for (let i = 0; i < 50; i++) w.tick(FIXED_DT_MS)
+                p = w.getPosition(h)
             })
-            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: 100, height: 60 })
-            for (let i = 0; i < 50; i++) w.tick(FIXED_DT_MS)
-            return w.getPosition(h)
+            return p
         }
         expect(run()).toEqual(run())
     })
 
-    test('Brownian is mass-invariant (same seed, 16× mass ⇒ same path)', () => {
+    test('drift impulse is mass-invariant (same seed, 16× area ⇒ same path)', () => {
         const run = (size: number) => {
-            const w = new PhysicsWorld({
-                viewport: { width: 8000, height: 8000 },
-                mode: 'drift',
-                rng: mulberry32(13),
+            let p = { x: 0, y: 0, rotation: 0 }
+            withDriftTuning({ impulseIntervalMs: 100 }, () => {
+                const w = new PhysicsWorld({
+                    viewport: { width: 8000, height: 8000 },
+                    mode: 'drift',
+                    rng: mulberry32(13),
+                })
+                const h = w.registerById('a', { x: 4000, y: 4000 }, { width: size, height: size })
+                for (let i = 0; i < 40; i++) w.tick(FIXED_DT_MS)
+                p = w.getPosition(h)
             })
-            const h = w.registerById('a', { x: 4000, y: 4000 }, { width: size, height: size })
-            for (let i = 0; i < 40; i++) w.tick(FIXED_DT_MS)
-            return w.getPosition(h)
+            return p
         }
         const small = run(40)
         const big = run(160)
@@ -813,15 +855,23 @@ describe('PhysicsWorld drift mode', () => {
 
     test('prose repel is mass-invariant', () => {
         const run = (size: number) => {
-            const w = new PhysicsWorld({
-                viewport: { width: 4000, height: 4000 },
-                mode: 'drift',
+            let p = { x: 0, y: 0, rotation: 0 }
+            // Huge interval ⇒ no run-and-tumble impulse fires in-window, so only
+            // repel moves the card. (rng()=0.5 no longer zeroes the impulse under
+            // run-and-tumble — it is a real π-direction kick — so a huge interval
+            // isolates repel instead. See reference_drift_repel_driftscale_gated.)
+            withDriftTuning({ impulseIntervalMs: 1e9 }, () => {
+                const w = new PhysicsWorld({
+                    viewport: { width: 4000, height: 4000 },
+                    mode: 'drift',
+                    rng: () => 0.5,
+                })
+                w.setContentBox({ x: 1800, y: 1800, width: 400, height: 400 })
+                const h = w.registerById('a', { x: 2000, y: 2000 }, { width: size, height: size })
+                for (let i = 0; i < 30; i++) w.tick(FIXED_DT_MS)
+                p = w.getPosition(h)
             })
-            w.setDriftScale(0) // no Brownian — isolate repel
-            w.setContentBox({ x: 1800, y: 1800, width: 400, height: 400 })
-            const h = w.registerById('a', { x: 2000, y: 2000 }, { width: size, height: size })
-            for (let i = 0; i < 30; i++) w.tick(FIXED_DT_MS)
-            return w.getPosition(h)
+            return p
         }
         const small = run(40)
         const big = run(160)
@@ -829,30 +879,73 @@ describe('PhysicsWorld drift mode', () => {
         expect(big.y).toBeCloseTo(small.y, 4)
     })
 
-    test('wander statistics are dt-invariant (8ms vs 33ms)', () => {
-        // matter warns once for dt > 16.667ms; the 33ms tick exercises exactly
-        // that regime on purpose, so silence its advisory to keep gate output clean.
+    // AC#10 / D8 — repel is BINARY-gated by driftScale (Chai 2026-07-03), not
+    // ∝ it: reduced-motion (driftScale 0) stills repel, but any nonzero drift
+    // gives FULL repel. This decouples "hold cards clear of the prose" from
+    // "how lively the drift is", so a low-drift reading route still holds its
+    // cards off the prose (task-042.01 re-review L1: spec §1 scales only wander).
+    test('prose repel is binary-gated by driftScale (0 stills; any nonzero = full)', () => {
+        const near = { x: 2000, y: 1750 } // 50px above the box top edge (< repelRadius)
+        const run = (scale: number) => {
+            let p = { x: 0, y: 0, rotation: 0 }
+            // Huge interval ⇒ no impulse fires, isolating repel from wander at any
+            // driftScale (rng()=0.5 no longer zeroes the impulse under run-and-tumble).
+            withDriftTuning({ impulseIntervalMs: 1e9 }, () => {
+                const w = new PhysicsWorld({
+                    viewport: { width: 4000, height: 4000 },
+                    mode: 'drift',
+                    rng: () => 0.5,
+                })
+                w.setContentBox({ x: 1800, y: 1800, width: 400, height: 400 })
+                const h = w.registerById('a', near, { width: 60, height: 60 })
+                w.setDriftScale(scale)
+                for (let i = 0; i < 30; i++) w.tick(FIXED_DT_MS)
+                p = w.getPosition(h)
+            })
+            return p
+        }
+        // driftScale 0 ⇒ repel off: the card stays exactly where it loaded.
+        const still = run(0)
+        expect(Math.hypot(still.x - near.x, still.y - near.y)).toBeLessThan(0.5)
+        // Any nonzero driftScale ⇒ full repel: a low-drift reading route (0.25)
+        // is pushed off the edge exactly as hard as a lively one (1.0).
+        const low = run(0.25)
+        const high = run(1)
+        expect(low.y).toBeLessThan(near.y - 1) // pushed outward (−y)
+        expect(low.y).toBeCloseTo(high.y, 4) // same push regardless of scale
+        expect(low.x).toBeCloseTo(high.x, 4)
+    })
+
+    test('impulse displacement is dt-invariant (8ms vs 33ms)', () => {
+        // Run-and-tumble timing is ms-based, so over a fixed wall-clock window the
+        // impulse count (≈ T/interval) and each glide's distance (v0/damping,
+        // dt-invariant at constant dt) match across refresh rates. Params pick a
+        // fast-settling glide + a non-overlapping interval so the window holds
+        // whole random-walk steps; RMS displacement matches within a loose band.
         const warn = console.warn
-        console.warn = () => {}
+        console.warn = () => {} // matter warns once per dt > 16.667ms (the 33ms tick)
         const rmsOver = (dt: number) => {
-            const T = 600
+            const T = 8000
             const ticks = Math.round(T / dt)
-            const N = 80
+            const N = 60
             let sumSq = 0
             for (let k = 0; k < N; k++) {
                 const w = new PhysicsWorld({
-                    viewport: { width: 10000, height: 10000 },
+                    viewport: { width: 20000, height: 20000 },
                     mode: 'drift',
                     rng: mulberry32(100 + k),
                 })
-                const h = w.registerById('a', { x: 5000, y: 5000 }, { width: 60, height: 60 })
+                const h = w.registerById('a', { x: 10000, y: 10000 }, { width: 60, height: 60 })
                 for (let i = 0; i < ticks; i++) w.tick(dt)
                 const p = w.getPosition(h)
-                sumSq += (p.x - 5000) ** 2 + (p.y - 5000) ** 2
+                sumSq += (p.x - 10000) ** 2 + (p.y - 10000) ** 2
             }
             return Math.sqrt(sumSq / N)
         }
-        const ratio = rmsOver(8) / rmsOver(33)
+        let ratio = 0
+        withDriftTuning({ impulseIntervalMs: 800, damping: 0.2 }, () => {
+            ratio = rmsOver(8) / rmsOver(33)
+        })
         console.warn = warn
         expect(ratio).toBeGreaterThan(0.6)
         expect(ratio).toBeLessThan(1.6)
@@ -898,9 +991,9 @@ describe('PhysicsWorld drift mode', () => {
         }
         // Bounded-drift invariant: the card wanders but never escapes its region
         // (walls + damping bound it) and never NaNs. The old maxSpeed clamp is
-        // gone — the dt-clamp + damping bound Brownian, so the speed assertion is
-        // a loose runaway/NaN-inversion sanity ceiling (equilibrium is ~1 px/tick),
-        // NOT a velocity cap on authored motion.
+        // gone — the dt-clamp + damping bound the impulse glides, so the speed
+        // assertion is a loose runaway/NaN-inversion sanity ceiling (a glide peaks
+        // at ~impulseSpeed), NOT a velocity cap on authored motion.
         expect(Number.isFinite(maxSpeed)).toBe(true)
         expect(maxSpeed).toBeLessThan(50)
         expect(maxDisp).toBeLessThan(600)

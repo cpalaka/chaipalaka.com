@@ -53,8 +53,8 @@ function buildPage(
     const swfW = playerW + CARD_CHROME + 2 * SWF_PAD
     const swfH = playerH + CARD_CHROME + 2 * SWF_PAD
 
-    // Back card hangs from the ceiling at a fixed y; the other 3 are detached
-    // and spawn stacked beneath it (edge-to-edge), then fall under gravity.
+    // Back card is strung to the ceiling at a fixed y; the other 3 are detached
+    // and materialise stacked beneath it (edge-to-edge), then drift free.
     const detachedStartY = BACK_ANCHOR_Y + BACK_H / 2 + SPAWN_GAP
     const [titleY, swfYy, notesY] = stackCenters(
         [TITLE_H, swfH, NOTES_H],
@@ -67,7 +67,7 @@ function buildPage(
     const notesAnchor = (vp: Viewport) => ({ x: vp.width / 2 + offsets.notes, y: notesY! })
 
     const pageDef: PageDef = {
-        gravity: 'down',
+        driftScale: 0.6,
         cards: [
             { id: 'flash-back', kind: 'link', parent: 'ceiling', anchor: backAnchor },
             { id: 'flash-title', kind: 'headline', parent: null, anchor: titleAnchor },

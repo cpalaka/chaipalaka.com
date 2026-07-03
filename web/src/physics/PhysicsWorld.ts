@@ -2,7 +2,7 @@ import Matter from 'matter-js'
 import { Tether } from './Tether'
 import { physicsTuning } from './physicsTuning'
 import { driftTuning } from './driftTuning'
-import { brownianKick, proseRepelForce } from './drift'
+import { driftImpulse, nextImpulseDelay, proseRepelForce } from './drift'
 import type { BodyForceSource } from './BodyForceSource'
 import type { BodyDriver, TetherSpec } from './BodyDriver'
 
@@ -70,6 +70,11 @@ interface Registration {
     height: number
     buoyancy: 'heavy' | 'balloon'
     id?: string
+    // Run-and-tumble (spec §1): ms until this card's next drift impulse fires.
+    // Seeded with a random phase in `register()` so cards desync; decremented by
+    // dtMs each drift tick. Only dynamic card bodies carry it (static/sensor
+    // bodies are skipped in the drift pass), hence optional.
+    nextImpulseMs?: number
 }
 
 // One edge of the v2 content box's static-wall rectangle. Top/bottom edges are
@@ -214,6 +219,9 @@ export class PhysicsWorld implements BodyForceSource {
             width: size.width,
             height: size.height,
             buoyancy: 'heavy',
+            // Random initial phase ∈ [0, mean) so cards don't fire in sync (spec
+            // §1). Read-at-use for the recurring interval; this seed is one-time.
+            nextImpulseMs: driftTuning.impulseIntervalMs * this.rng(),
         })
         return id
     }
@@ -741,14 +749,14 @@ export class PhysicsWorld implements BodyForceSource {
         //     non-dragged card bodies. Gated on drift mode; under gravity this
         //     is skipped entirely so the dormant path stays bit-identical.
         if (this.mode === 'drift') {
-            const amp = driftTuning.baseAmplitude * this.driftScale
+            const speed = driftTuning.impulseSpeed * this.driftScale
             for (const reg of this.registrations.values()) {
                 // `reg.body.isStatic` (the LIVE matter flag) is true for walls,
                 // edges, word proxies AND cards currently being dragged
                 // (setDragging → setStatic) — exactly what drift must skip.
                 if (reg.body.isStatic) continue
                 // Dynamic sensors are dismissed previews (PreviewCard flings a
-                // sensor body on dismiss) — spec §1 excludes them: no Brownian,
+                // sensor body on dismiss) — spec §1 excludes them: no impulse,
                 // no repel. Static sensors (box edges, word proxies) already
                 // skipped above.
                 if (reg.body.isSensor) continue
@@ -761,20 +769,40 @@ export class PhysicsWorld implements BodyForceSource {
                 // re-sync runs before Engine.update, so it bounds every drift body
                 // each frame). See driftTuning.ts + reference_matter_js_frictionair_inversion.
                 reg.body.frictionAir = Math.min(driftTuning.damping, 0.6)
-                // Brownian velocity kick: a direct velocity add (mass-invariant)
-                // with sqrt(dt) scaling (dt-invariant diffusion). Add only the
-                // wander — the body's authored velocity (drag-release fling,
-                // dismissal kick) is never clamped here (spec §1: the clamp rode
-                // the Brownian row only). The dt-clamp (Math.min(dt,50)) already
-                // bounds a dropped-frame kick, and damping bounds equilibrium.
-                const kick = brownianKick(this.rng, dtMs, amp)
-                Matter.Body.setVelocity(reg.body, {
-                    x: reg.body.velocity.x + kick.x,
-                    y: reg.body.velocity.y + kick.y,
-                })
+                // Run-and-tumble (spec §1, amended 2026-07-03): the card sits
+                // still and coasts on damping; a per-card timer rarely fires ONE
+                // velocity impulse in a random direction, then the card glides
+                // straight until damping / a collision / wall / rope redirects or
+                // stops it. The impulse is a direct velocity ADD (mass-invariant);
+                // decrementing an ms-based interval by dtMs makes the firing rate
+                // refresh-rate-invariant. driftScale scales the impulse SPEED, so
+                // driftScale 0 (reduced-motion, D8) adds a zero impulse ⇒ the card
+                // never moves. The authored velocity (drag-release fling, dismissal
+                // kick) is never clamped here. `nextImpulseMs` is seeded for every
+                // dynamic body in register(); the ?? only satisfies its optional
+                // type (static/sensor bodies are skipped above).
+                let remaining = (reg.nextImpulseMs ?? 0) - dtMs
+                if (remaining <= 0) {
+                    const impulse = driftImpulse(this.rng, speed)
+                    Matter.Body.setVelocity(reg.body, {
+                        x: reg.body.velocity.x + impulse.x,
+                        y: reg.body.velocity.y + impulse.y,
+                    })
+                    remaining = nextImpulseDelay(
+                        this.rng,
+                        driftTuning.impulseIntervalMs,
+                    )
+                }
+                reg.nextImpulseMs = remaining
                 // Prose repel: an acceleration → force = a·mass (mass-invariant
                 // pose). Rope caps distance; repel + rope jointly position cards.
-                if (this.contentBoxRect) {
+                // BINARY-gated on driftScale (Chai 2026-07-03), not scaled by it:
+                // driftScale 0 (reduced-motion, D8) stills repel, but any nonzero
+                // drift gets FULL repel — decouples "hold cards clear of the
+                // prose" from drift liveliness, so a low-drift reading route still
+                // holds its cards off the text (task-042.01 re-review L1: spec §1
+                // scales only wander, so gating — not scaling — repel is the fit).
+                if (this.contentBoxRect && this.driftScale > 0) {
                     const a = proseRepelForce(
                         reg.body.position,
                         this.contentBoxRect,

@@ -1,33 +1,34 @@
 import type { Rect, Vec2 } from './PhysicsWorld'
 
 /**
- * Drift-mode force primitives (spec §1). Pure functions — the injectable-RNG
- * and content-box rect are passed in, so PhysicsWorld stays the only stateful
- * owner and these are unit-testable in isolation.
+ * Drift-mode force primitives (spec §1, run-and-tumble model — amended
+ * 2026-07-03). Pure functions — the injectable RNG and content-box rect are
+ * passed in, so PhysicsWorld stays the only stateful owner and these are
+ * unit-testable in isolation.
  */
 
 /**
- * The reference tick (matter.js's internal `Engine.update` baseline, 60fps).
- * The Brownian kick is normalised against it so wander statistics are
- * refresh-rate-invariant (spec §1: `sqrt(dt / 16.667)`).
+ * One **run-and-tumble impulse** (spec §1): a single velocity kick in a
+ * uniformly-random direction at a fixed `speed`, applied by the caller as a
+ * **direct velocity add** (mass-invariant, like the prototype). No dt term — an
+ * impulse is a discrete event, not a per-tick diffusion; dt-invariance comes
+ * from the ms-based firing interval ({@link nextImpulseDelay}), not the
+ * magnitude. RNG is injected (draws exactly one value — the direction angle) so
+ * the pass is deterministic under test.
  */
-export const DRIFT_REF_TICK_MS = 1000 / 60
+export function driftImpulse(rng: () => number, speed: number): Vec2 {
+    const angle = rng() * 2 * Math.PI
+    return { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed }
+}
 
 /**
- * One tick's Brownian velocity kick (spec §1): a dt-normalised random velocity
- * delta, `amplitude × sqrt(dt/refTick) × rand()` per component with
- * `rand() ∈ [-1, 1]`. Applied as a **direct velocity add** (not a force), so it
- * is inherently mass-invariant and the `sqrt(dt)` scaling gives dt-invariant
- * diffusion — matter's `applyForce` integrates `Δv ∝ dt²`, which cannot. RNG is
- * injected so the pass is deterministic under test.
+ * The delay (ms) until a card's next run-and-tumble impulse: the mean interval
+ * with uniform jitter across `[0.5×, 1.5×]` so cards desync and never cluster or
+ * drought (spec §1). The world decrements it by `dtMs` each tick, so the firing
+ * rate is refresh-rate-invariant. Draws exactly one RNG value.
  */
-export function brownianKick(
-    rng: () => number,
-    dtMs: number,
-    amplitude: number,
-): Vec2 {
-    const scale = amplitude * Math.sqrt(dtMs / DRIFT_REF_TICK_MS)
-    return { x: (rng() * 2 - 1) * scale, y: (rng() * 2 - 1) * scale }
+export function nextImpulseDelay(rng: () => number, meanMs: number): number {
+    return meanMs * (0.5 + rng())
 }
 
 /**

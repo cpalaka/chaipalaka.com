@@ -26,7 +26,7 @@ const cardContent: Record<string, CardContent> = {
         label: 'strung',
     },
     'box-faller': {
-        text: 'dropped onto the box',
+        text: 'detached — drifts free',
         width: 200,
         height: 110,
         label: 'detached',
@@ -36,7 +36,9 @@ const cardContent: Record<string, CardContent> = {
 export default function BoxTest() {
     const pageDef = useMemo<PageDef>(
         () => ({
-            gravity: 'down',
+            // Moderate drift: the demo cards wander visibly (this is the physics
+            // walkthrough) while the prose column stays readable.
+            driftScale: 0.35,
             cards: [
                 {
                     id: 'box-strung',
@@ -117,9 +119,12 @@ export default function BoxTest() {
                     The box is fixed DOM, not a jostleable body — a scrollable
                     reading surface and a tumbling physics object are very
                     nearly contradictions. But its rectangle is pushed into the
-                    physics world as four static walls, so a card can land on
-                    the top edge, and a card can be strung to the bottom edge
-                    and swing there.
+                    physics world as four static edges — non-colliding sensors,
+                    so a drifting or dragged card passes straight through the
+                    border rather than piling against it. The top and bottom
+                    edges double as tether anchors: a card strung to either
+                    drifts on its tether there, held just clear of the prose by
+                    the rope and the box&rsquo;s gentle outward repel.
                 </p>
                 <p>
                     When the window resizes, the box recentres and its edge
@@ -141,7 +146,7 @@ export default function BoxTest() {
                         a second piece
                     </a>{' '}
                     beside it — a preview card spawns next to the word and holds
-                    still until you move away, when it falls. A footnote
+                    still until you move away, when it drifts off and fades. A footnote
                     <sup>
                         <a href="#user-content-fn-1" id="user-content-fnref-1">
                             1
@@ -176,8 +181,8 @@ export default function BoxTest() {
                 <h2 id="regimes">Two regimes</h2>
                 <p>
                     A pinned card lives in one of two states. While its source
-                    word is on screen it is word-anchored: the rope hangs from
-                    the word and the whole card rides the scroll, swinging a
+                    word is on screen it is word-anchored: the rope runs to
+                    the word and the whole card rides the scroll, drifting a
                     little as the column moves. The word itself wobbles, a small
                     transform-only spring, so the bond reads as physical rather
                     than incidental.
@@ -186,7 +191,7 @@ export default function BoxTest() {
                     The other state is edge-anchored — parked. When the word
                     scrolls out of the box the card cannot sensibly follow it off
                     screen, so it re-homes to the edge the word left through and
-                    hangs there, viewport-fixed, waiting. The hand-off is meant
+                    holds there, viewport-fixed, waiting. The hand-off is meant
                     to be quiet: the rope re-aims at the edge and settles taut
                     without a lurch.
                 </p>

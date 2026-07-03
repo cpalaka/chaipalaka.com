@@ -13,10 +13,12 @@
  * is frictionAir < ~0.66).
  */
 export const driftTuning = {
-    /** Brownian velocity-kick amplitude per component per reference tick (px/tick). */
-    baseAmplitude: 0.25,
-    /** Per-body `frictionAir` under drift (replaces the 0.005 gravity default). */
-    damping: 0.02,
+    /** Glide-start speed of one run-and-tumble impulse (px/tick), scaled by driftScale. */
+    impulseSpeed: 1.2,
+    /** Mean ms between a card's impulses (uniform-jittered ±50% per fire, so cards desync). */
+    impulseIntervalMs: 15000,
+    /** Per-body `frictionAir` under drift — low drag so glides coast far before resting (replaces the 0.005 gravity default). */
+    damping: 0.01,
     /** Distance (px) from the content-box surface over which prose repel falls to zero. */
     repelRadius: 120,
     /** Peak prose-repel acceleration at the box surface (scaled by mass at the apply site). */

@@ -7,12 +7,15 @@ import type { PhysicsHandle } from '../physics/PhysicsWorld'
 import type { TetherHandle } from '../physics/Tether'
 import type { CardEntry } from './CardRegistry'
 import { computeFlingImpulse } from './flingImpulse'
+import { prefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import './Card.css'
 
 // Drift spawn "breathe-in" speed (px/tick), scaled by the route's driftScale at
 // the call site (spec §3.5). Hardcoded rather than a driftTuning knob — there is
-// no Atelier drift axis (D7) and the S4 feel pass tunes it in source; reduced
-// motion (driftScale 0) zeroes it for free.
+// no Atelier drift axis (D7) and the S4 feel pass tunes it in source. Reduced
+// motion is gated EXPLICITLY at the spawn site (below): this effect runs before
+// the route's usePageDef sets driftScale 0, so getDriftScale() can't gate it
+// (task-042.04 review ①).
 const SPAWN_KICK = 4
 
 interface CardImplProps {
@@ -81,7 +84,10 @@ export function CardImpl({ entry }: CardImplProps) {
         )
         handleRef.current = handle
 
-        const kick = SPAWN_KICK * world.getDriftScale()
+        // D8/AC#4: reduced-motion users get no breathe-in. Read matchMedia
+        // synchronously (this is a client-only effect) rather than driftScale,
+        // which usePageDef has not zeroed yet at spawn time.
+        const kick = prefersReducedMotion() ? 0 : SPAWN_KICK * world.getDriftScale()
         if (kick > 0) {
             const a = Math.random() * (Math.PI * 2)
             world.setVelocity(handle, {

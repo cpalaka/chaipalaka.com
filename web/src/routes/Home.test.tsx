@@ -18,8 +18,12 @@ function renderHome() {
 }
 
 describe('Home — v2 populated landing pageDef', () => {
-    test('rests populated with up gravity (balloons) and no v1 cards', () => {
-        expect(pageDef.gravity).toBe('up')
+    test('rests populated, drifts gently (no gravity), and has no v1 cards', () => {
+        // Drift is the default (spec §3.2): no gravity declared. A reading route,
+        // so it authors a low driftScale (D7).
+        expect(pageDef.gravity).toBeUndefined()
+        expect(pageDef.driftScale).toBeGreaterThan(0)
+        expect(pageDef.driftScale).toBeLessThan(1)
         expect(pageDef.resting).toBe('populated')
         expect(pageDef.cards).toHaveLength(0)
     })

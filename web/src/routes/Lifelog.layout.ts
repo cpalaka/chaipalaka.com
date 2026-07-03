@@ -2,7 +2,6 @@ import type { RouteLayout } from './routeLayout'
 
 // Pure data literal — the Atelier regenerates this file whole on write-back.
 export const lifelogLayout = {
-    gravity: 'down',
     cards: [
         {
             id: 'lifelog-books',

@@ -453,4 +453,27 @@ describe('CardImpl — drift spawn (§3.5)', () => {
         expect(mag).toBeGreaterThan(0)
         expect(mag).toBeLessThanOrEqual(30) // "small"
     })
+
+    // D8 / AC#4 — prefers-reduced-motion ⇒ cards still. The spawn kick runs in
+    // CardImpl's mount effect, BEFORE the route's usePageDef sets driftScale 0
+    // (CardLayer precedes Outlet), so world.getDriftScale() can't gate it — the
+    // kick reads matchMedia directly. Without the gate a reduced-motion user
+    // sees every card glide hundreds of px on cold load (task-042.04 review ①).
+    test('reduced-motion: no breathe-in kick on spawn (D8/AC#4)', () => {
+        const spy = vi.spyOn(window, 'matchMedia').mockReturnValue({
+            matches: true,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+        } as unknown as MediaQueryList)
+        try {
+            const entry = makeEntry({ id: 'spawn-reduced', anchor: { x: 200, y: 200 } })
+            const { getWorld } = renderWith(<CardImpl entry={entry} />)
+            const world = getWorld()
+            const handle = world.getHandleById('spawn-reduced')!
+            const v = world.getVelocity(handle)
+            expect(Math.hypot(v.x, v.y)).toBe(0) // still — no spawn glide
+        } finally {
+            spy.mockRestore()
+        }
+    })
 })

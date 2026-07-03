@@ -64,3 +64,17 @@ for zero behavioral gain.
   demo-surface note).
 - The full change map, force model, and test plan live in the spec (single source);
   this ADR records the decision, not the mapping.
+
+## Amendment — 2026-07-03 (drift wander: Brownian → run-and-tumble)
+
+Decision 2's "Brownian velocity kicks" is superseded by **run-and-tumble**
+(Chai-ratified, task-042.04 S4): a card sits still by default; a rarely-elapsing
+per-card timer fires ONE velocity impulse in a random direction; the card glides
+straight until damping / a collision / wall / rope redirects or stops it. Reason:
+the per-frame Brownian kick read as a constant ±7°/frame tremble that amplitude
+tuning could only shrink, never remove. The decision's load-bearing invariants are
+unchanged — mass-invariant (a velocity add), dt-invariant (ms-based firing
+interval, not a `sqrt(dt)` magnitude), deterministic under injected RNG, and
+`driftScale`-scaled (now the impulse speed; `driftScale 0` still stills the whole
+model for reduced-motion, D8). `driftTuning.{impulseSpeed, impulseIntervalMs}`
+replace `baseAmplitude`. Full force model + amendment banner: spec §1.

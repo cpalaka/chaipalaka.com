@@ -6,7 +6,10 @@ import { pageSpecFromLayout } from './routeLayout'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 
-export const pageDef: PageDef = pageSpecFromLayout(stuffLayout)
+// driftScale is authored here, route-side — never in Stuff.layout.ts (D7: the
+// Atelier regenerates the layout file whole and would drop it). Reading route:
+// gentle drift so the portfolio cards wander without the page feeling busy.
+export const pageDef: PageDef = { ...pageSpecFromLayout(stuffLayout), driftScale: 0.25 }
 
 const cardContent: Record<string, CardContent> = {
     'stuff-flash': {

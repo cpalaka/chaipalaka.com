@@ -332,7 +332,10 @@ function ActivityPanel() {
 
 // ─── Page definition ──────────────────────────────────────────────────────────
 
-export const pageDef: PageDef = pageSpecFromLayout(lifelogLayout)
+// driftScale is authored here, route-side — never in Lifelog.layout.ts (D7: the
+// Atelier regenerates the layout file whole and would drop it). Reading route:
+// gentle drift so the lifelog cards wander without distracting from the prose.
+export const pageDef: PageDef = { ...pageSpecFromLayout(lifelogLayout), driftScale: 0.25 }
 
 const cardContent: Record<string, CardContent> = {
     'lifelog-books': {
