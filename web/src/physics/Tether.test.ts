@@ -255,6 +255,60 @@ describe('Tether list()', () => {
         tether.add(1, 2, 100)
         expect(tether.list()[0]!.slack).toBe(false)
     })
+
+    // Continuous tension = max(0, dist − length) / length (task-039's render
+    // input). Zero-crossing is the RAW rest length, matching the force model in
+    // applyRopeForces — NOT the 0.98 slackFactor the visual `slack` flag uses.
+    test('tension is 0 when the rope is slack (dist < length)', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 50 }, 1)
+        const tether = new Tether(src)
+        tether.add(1, 2, 100)
+        expect(tether.list()[0]!.tension).toBe(0)
+    })
+
+    test('tension is 0 at exactly the rest length (zero-crossing is exclusive)', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 100 }, 1)
+        const tether = new Tether(src)
+        tether.add(1, 2, 100)
+        expect(tether.list()[0]!.tension).toBe(0)
+    })
+
+    test('tension = max(0, dist − length) / length ramps monotonically past rest', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 150 }, 1)
+        const tether = new Tether(src)
+        tether.add(1, 2, 100)
+        expect(tether.list()[0]!.tension).toBeCloseTo(0.5, 5)
+        src.setPosition(2, { x: 0, y: 200 })
+        expect(tether.list()[0]!.tension).toBeCloseTo(1.0, 5)
+    })
+
+    test('tension stays 0 in the [slackFactor, length) band where slack is already false', () => {
+        // dist 99, length 100: slack === false (drawn taut) but tension === 0
+        // (no force yet). Proves the two thresholds intentionally diverge.
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 99 }, 1)
+        const tether = new Tether(src)
+        tether.add(1, 2, 100)
+        const view = tether.list()[0]!
+        expect(view.slack).toBe(false)
+        expect(view.tension).toBe(0)
+    })
+
+    test('a degenerate zero-length tether yields tension 0, not NaN', () => {
+        const src = new FakeBodyForceSource()
+        src.setBody(1, { x: 0, y: 0 }, 1, true)
+        src.setBody(2, { x: 0, y: 50 }, 1)
+        const tether = new Tether(src)
+        tether.add(1, 2, 0)
+        expect(tether.list()[0]!.tension).toBe(0)
+    })
 })
 
 describe('Tether applyRopeForces', () => {

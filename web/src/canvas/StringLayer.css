@@ -11,8 +11,13 @@
 .string-layer__string {
     fill: none;
     stroke: var(--color-fg);
-    stroke-width: 1;
-    opacity: 0.4;
+    /* --tension (0..1, set per-frame by StringLayer, drift only) modulates
+     * weight+opacity: slack = thin/dim (1px, 0.4), taut = thicker/brighter
+     * (1.6px, 0.8). Both stay below the --hot highlight (1.75px, 0.9) so the
+     * bonded-trio highlight is always the strongest, even at max tension.
+     * Defaults to the slack look when --tension is unset (pre-hydration / no-JS). */
+    stroke-width: calc(1px + var(--tension, 0) * 0.6px);
+    opacity: calc(0.4 + var(--tension, 0) * 0.4);
 }
 
 /* Bonded-trio highlight: the tether of a pinned card whose card or word is

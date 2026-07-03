@@ -4,7 +4,7 @@ title: 'v2 canvas — fat-line tethers (DRAFT-009 #3, TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-21 21:50'
-updated_date: '2026-06-21 21:57'
+updated_date: '2026-07-03 01:13'
 labels:
   - claude-generated
   - threejs
@@ -49,6 +49,8 @@ DEPENDENCY (tracked by Chai, not a board task): gated on the gravity -> top-down
 Prototype: prototypes/fat-tethers.html (width+color confirmed, dash-crawl rejected, ~60fps). Cross-refs: DRAFT-009 #3, sibling task-038 (likely shared SDF renderer per fork A), ADR-0009, task-037. Open tuning (build-time): slack-edge visibility floor — lean toward keeping slack faintly legible. Verify-at-build: TSL line approach (Line2 dead), StringLayer survival.
 
 Physics-rewrite dependency is now DRAFT-010 (v2 — top-down drift graph physics, high-priority). Starts only after DRAFT-010 is grilled, promoted, and built.
+
+TetherView tension contract (pinned by task-042.03 / S3, spec §3.6): Tether.list() now returns a continuous `tension` field = max(0, dist − length) / length. Semantics: 0 at/under rest length, rising unbounded as the rope stretches (consumers normalise; no high clamp). Zero-crossing is the RAW rest length — matches applyRopeForces force threshold (d <= rec.length), NOT the 0.98 slackFactor the binary `slack` uses; so in the band length*0.98 ≤ dist < length, slack=false (drawn taut) while tension=0. length-guarded (returns 0 on a degenerate zero-length rope, no NaN). ALLOCATION NOTE (task-039 AC#4 no-per-frame-alloc): list() allocates fresh TetherView objects every call (deliberate no-cache — positions are live per-frame). Read once/frame; satisfiable GPU-buffer-side (StringLayer tolerates the churn today) OR via a snapshot-into-caller-buffer variant — 039 decides at build. Formula pinned in Tether.test.ts "Tether list()" cases + a code comment at Tether.ts list(). StringLayer already consumes it (drift stroke width/opacity).
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

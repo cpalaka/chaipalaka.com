@@ -196,7 +196,6 @@ describe('generatePhysicsTuningSource', () => {
             ...physicsTuning,
             gravityY: 1.2,
             tetherStiffness: 3e-6,
-            pourInBaseDelayMs: 500,
         }
         const result = generatePhysicsTuningSource(retuned)
         if (!result.ok) throw new Error(result.error)

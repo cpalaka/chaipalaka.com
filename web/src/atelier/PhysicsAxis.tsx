@@ -1,7 +1,7 @@
 /**
  * Physics axis body — curated sliders over physicsTuning (live via the
- * physics binding, see physicsBinding.ts) plus the re-drop replay button.
- * Transition timings carry no replay button: navigating is the replay.
+ * physics binding, see physicsBinding.ts) plus the re-scatter replay button
+ * (remounts the card layer so every card respawns at its layout anchor).
  */
 
 import type { CSSProperties } from 'react'
@@ -36,9 +36,9 @@ export function PhysicsAxis({ state }: { state: AtelierState }) {
     return (
         <>
             <button type="button" style={redropStyle} onClick={bumpRedrop}>
-                Re-drop
+                re-scatter
             </button>
-            <p style={captionStyle}>transition timings replay on navigation</p>
+            <p style={captionStyle}>respawns every card at its layout anchor</p>
             <TuningFields
                 schema={PHYSICS_SCHEMA}
                 values={state.axes[PHYSICS_AXIS] ?? defaultsOf(PHYSICS_SCHEMA)}

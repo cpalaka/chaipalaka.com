@@ -180,13 +180,6 @@ export const routes: RouteRecord[] = [
         },
     },
     {
-        path: '/sandbox/strings',
-        lazy: async () => {
-            const { default: Strings } = await import('./routes/sandbox/Strings')
-            return { Component: Strings }
-        },
-    },
-    {
         path: '/sandbox/scenes/:id',
         lazy: async () => {
             const { default: SandboxScene } = await import(
@@ -238,10 +231,10 @@ export const routes: RouteRecord[] = [
         ],
     },
     {
-        // 404 stays bespoke (floaty, up-gravity) under the canvas layout — a
-        // pathless layout route whose splat child catches every URL no other
-        // route matched. (Home moved off CanvasLayout to the content box, so the
-        // catch-all needed its own layout parent.)
+        // 404 stays bespoke under the canvas layout — a pathless layout route
+        // whose splat child catches every URL no other route matched. (Home
+        // moved off CanvasLayout to the content box, so the catch-all needed its
+        // own layout parent.)
         lazy: async () => {
             const { default: CanvasLayout } =
                 await import('./layouts/CanvasLayout')

@@ -24,6 +24,11 @@ The rope-shaped relationship between a parent (another **Card** or a
 static body — ceiling or floor) and a child **Card**. Authored
 declaratively in a **PageDef**; never created or destroyed by user action.
 Its length is derived from the layout — `length = distance(parentAnchorPos, cardLayoutPos)`.
+Its **string layer rendering** exposes a continuous **tension**
+(`max(0, dist − length) / length`, 0 at rest, rising as the rope stretches) —
+the pull-only stretch ratio the drift stroke styling and task-039's fat tethers
+consume, distinct from the binary `slack` (a 0.98-`slackFactor` cutoff that only
+picks straight-vs-sag rendering).
 _Avoid_: string (used only for the rendered SVG line), constraint, link,
 rope (used as a behavioural adjective, not the noun for the thing itself),
 edge (graph-theory description of a tether in the drift model, not the

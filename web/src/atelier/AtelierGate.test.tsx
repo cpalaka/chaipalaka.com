@@ -36,7 +36,7 @@ describe('AtelierGate (dev)', () => {
         await screen.findByTestId('atelier-panel')
 
         fireEvent.click(screen.getByRole('tab', { name: 'Physics' }))
-        expect(screen.getByRole('button', { name: 'Re-drop' })).toBeDefined()
+        expect(screen.getByRole('button', { name: 're-scatter' })).toBeDefined()
         expect(screen.getByLabelText(/Gravity/)).toBeDefined()
         expect(screen.getByLabelText(/Stiffness/)).toBeDefined()
 

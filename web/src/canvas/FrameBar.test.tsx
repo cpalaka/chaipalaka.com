@@ -179,7 +179,7 @@ describe('FrameBar', () => {
         await userEvent.selectOptions(select, original)
     })
 
-    test('gravity toggle is absent (gravity is always on per ADR 0001)', async () => {
+    test('no gravity control in FrameBar settings (gravity is a per-route dormant mode, ADR-0010)', async () => {
         renderInRouter()
         await userEvent.click(screen.getByRole('button', { name: 'Site settings' }))
         expect(screen.queryByText('Gravity')).not.toBeInTheDocument()

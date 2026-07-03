@@ -1,12 +1,15 @@
 /**
- * The single home for the site's physics/transition feel constants.
+ * The home for the site's gravity, tether, and fling feel constants (the
+ * dormant-gravity knobs plus the live tether + fling ones). Drift-mode
+ * wander/damping/repel live in driftTuning.ts; peek dismissal timings in
+ * peekTuning.ts.
  *
  * Shape rules (the Atelier physics axis regenerates this file whole):
  *   - One flat, mutable data literal — no computed values, no spreads.
  *   - Read-at-use: consumers read `physicsTuning.x` at the moment of use —
- *     per tick for gravity/stiffness, per event for fling/kick/transition
- *     timings — never captured into a closure or engine state at
- *     construction. This is what lets a dev slider act on a running world.
+ *     per tick for gravity/stiffness, per event for fling — never captured
+ *     into a closure or engine state at construction. This is what lets a
+ *     dev slider act on a running world.
  *   - Tests import from this module; they never copy these literals.
  */
 export const physicsTuning = {
@@ -33,24 +36,6 @@ export const physicsTuning = {
     flingVelocityScale: 16,
     /** Pause longer than this before release and the fling is cancelled. */
     flingPauseMs: 50,
-    /** Velocity kick along the buoyancy axis when a tether is cut on exit. */
-    exitKick: 10,
-    /** Delay after the exit primitive starts before the first card drops in. */
-    pourInBaseDelayMs: 1000,
-    /** Additional per-card delay between successive pour-in drops. */
-    pourInStaggerMs: 80,
-    /** Duration of one card's pour-in position tween. */
-    pourInTweenMs: 600,
-    /** Hard ceiling that finalizes any still-in-flight pour-in entries. */
-    pourInHardCeilingMs: 2500,
-    /** Hard ceiling that finalizes a string-cut drop still in flight. */
-    stringCutHardCeilingMs: 2000,
-    /** Duration of a coupled anchor-slide transition. */
-    anchorSlideDurationMs: 700,
-    /** Overlap between exit and enter primitives in a decoupled transition. */
-    decoupledOverlapMs: 200,
-    /** Cross-fade duration used when prefers-reduced-motion is set. */
-    reducedMotionMs: 150,
 }
 
 export type PhysicsTuning = typeof physicsTuning

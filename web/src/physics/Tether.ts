@@ -83,6 +83,14 @@ export interface TetherView {
     childPos: Vec2
     length: number
     slack: boolean
+    /**
+     * Continuous rope-stretch ratio `max(0, dist − length) / length` — task-039's
+     * fat-tether render input (also drives StringLayer's drift stroke/opacity).
+     * 0 while at/under rest length, ramping up as the rope stretches, unbounded
+     * above (consumers normalise). See `list()` for the pinned formula + why its
+     * zero-crossing differs from `slack`.
+     */
+    tension: number
 }
 
 export interface TetherRecord {
@@ -198,6 +206,19 @@ export class Tether {
                 childPos,
                 length: rec.length,
                 slack: dist < rec.length * physicsTuning.slackFactor,
+                // Pinned tension formula (task-039 contract): max(0, dist − length)
+                // / length. Its zero-crossing is the RAW rest length, matching the
+                // pull-only force threshold in applyRopeForces (`d <= rec.length`) —
+                // deliberately NOT the 0.98 slackFactor `slack` uses. So in the band
+                // length*slackFactor ≤ dist < length the rope draws taut (slack=false)
+                // while tension is still 0. Do not "fix" this to slackFactor: it would
+                // desync tension from the actual rope force. length-guard avoids /0 on
+                // a degenerate zero-length record. NOTE: list() allocates fresh views
+                // per call (no cache — positions are live per-frame); read once/frame.
+                tension:
+                    rec.length > 0
+                        ? Math.max(0, dist - rec.length) / rec.length
+                        : 0,
             })
         }
         return views
