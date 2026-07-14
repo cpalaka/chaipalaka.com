@@ -1,12 +1,12 @@
 export const meta = {
   name: 'adversarial-review',
   description: 'Adversarial pre-merge review of a task branch (modest|full modes)',
-  whenToUse: 'After the verify gate is green on a task branch, BEFORE diff review/merge. args: {mode: "modest"|"full", task: "task-NNN[.NN]", diffRange: "main...HEAD", specSections: "…", focus: "…", docs: ["path", …]}. Full mode projects >20 agents — state the estimate in chat before launching. Relay ALL confirmed findings to the user verbatim; the session that wrote the code never self-dismisses one. Model policy (2026-07-01): Fable ONLY in finder/critic/synthesis stages; everything else Opus xhigh.',
+  whenToUse: 'After the verify gate is green on a task branch, BEFORE diff review/merge. args: {mode: "modest"|"full", task: "task-NNN[.NN]", diffRange: "main...HEAD", specSections: "…", focus: "…", docs: ["path", …]}. Full mode projects >20 agents — state the estimate in chat before launching. Relay ALL confirmed findings to the user verbatim; the session that wrote the code never self-dismisses one. Model policy (2026-07-13, Chai): all-Opus — finder/critic/synthesis stages run Opus (Fable retired from this workflow to conserve the weekly budget); verify panels Opus xhigh as before.',
   phases: [
-    { title: 'Find', detail: 'independent Fable lenses over the branch diff', model: 'fable' },
-    { title: 'Critic', detail: 'full mode only: Fable completeness pass', model: 'fable' },
+    { title: 'Find', detail: 'independent Opus lenses over the branch diff', model: 'opus' },
+    { title: 'Critic', detail: 'full mode only: Opus completeness pass', model: 'opus' },
     { title: 'Verify', detail: 'severity-tiered Opus xhigh skeptic panels', model: 'opus' },
-    { title: 'Synthesize', detail: 'full mode only: Fable cross-finding synthesis', model: 'fable' },
+    { title: 'Synthesize', detail: 'full mode only: Opus cross-finding synthesis', model: 'opus' },
   ],
 }
 
@@ -29,7 +29,7 @@ const specSections = A.specSections || 'the sections named in the task descripti
 const focus = A.focus || ''
 const docs = Array.isArray(A.docs) ? A.docs : A.docs ? [A.docs] : []
 
-const FABLE_EFFORT = mode === 'full' ? 'xhigh' : 'high' // the user-pinned effort split
+const FINDER_EFFORT = mode === 'full' ? 'xhigh' : 'high' // the user-pinned effort split
 
 // Doc discovery: this repo has many specs/plans, so the task's own board entry is the
 // pointer of record — every task's description/notes name its plan + spec (backlog-core
@@ -176,11 +176,11 @@ than just untested.`,
 // Phase 1: Find (Fable, fresh-context, parallel)
 // ---------------------------------------------------------------------------
 phase('Find')
-log(`adversarial-review ${mode} on ${task} (${diffRange}) — ${LENSES.length} Fable finders @ ${FABLE_EFFORT}`)
+log(`adversarial-review ${mode} on ${task} (${diffRange}) — ${LENSES.length} Opus finders @ ${FINDER_EFFORT}`)
 
 const finderResults = await parallel(
   LENSES.map((l) => () =>
-    agent(l.prompt, { label: `find:${l.key}`, phase: 'Find', model: 'fable', effort: FABLE_EFFORT, schema: FINDINGS_SCHEMA })),
+    agent(l.prompt, { label: `find:${l.key}`, phase: 'Find', model: 'opus', effort: FINDER_EFFORT, schema: FINDINGS_SCHEMA })),
 )
 const finderDropped = LENSES.filter((_, i) => !finderResults[i]).map((l) => l.key)
 let raw = finderResults.filter(Boolean).flatMap((r) => r.findings)
@@ -201,7 +201,7 @@ ${summary || '(nothing)'}
 Your job is what they MISSED. Do not re-argue their findings. Look for: files in the diff no
 finding touches, spec sections (${specSections}) no finding checks, interaction between changed
 systems, and the second-order effects of the listed findings. Report only NEW defects, same rules.`,
-    { label: 'critic:missed', phase: 'Critic', model: 'fable', effort: 'xhigh', schema: FINDINGS_SCHEMA },
+    { label: 'critic:missed', phase: 'Critic', model: 'opus', effort: 'xhigh', schema: FINDINGS_SCHEMA },
   )
   if (critic) {
     raw = raw.concat(critic.findings)
@@ -317,7 +317,7 @@ Produce: (1) a severity-ranked list with one-line consequences; (2) shared root 
 findings trace to one wrong assumption?; (3) interactions — does fixing one change another?; (4) the
 minimal fix ORDER that avoids rework. Read code only where needed to settle an interaction question.
 Return the report as plain text.`,
-    { label: 'synthesize', phase: 'Synthesize', model: 'fable', effort: 'xhigh' },
+    { label: 'synthesize', phase: 'Synthesize', model: 'opus', effort: 'xhigh' },
   )
 }
 
