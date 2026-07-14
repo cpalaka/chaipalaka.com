@@ -256,6 +256,25 @@ _Avoid_: tune panel (drift from the existing `TunePanel` visual layer,
 which may survive underneath the **Tuner** as a presentational
 component); control panel (collides with the retired `ControlsPanel`).
 
+**Aura** (metaball aura):
+The WebGPU/TSL layer (`canvas/AuraLayer.tsx` + `canvas/aura/`) that
+renders every non-static card body as a rounded-box SDF; neighbouring
+cards gloop into one mercury body via a polynomial smin and split as
+they drift apart — the physics made visible (task-038, ADR-0011).
+Mounted per-route (currently only the box-less `/lab`), NOT a
+**BackgroundScene**: it sits in its own transparent layer between the
+background canvas and the cards, is fed one-way per frame by
+`PhysicsWorld.snapshotCardRects` (rects + rotations into TSL uniform
+arrays, never a GPU→CPU readback), and gates on real WebGPU
+(`navigator.gpu` AND `requestAdapter()`, `detect-webgpu.ts`) with a
+baked-PNG + CSS-gradient static fallback (reduced motion forces the
+fallback). Feel constants live in `canvas/aura/auraTuning.ts`, a
+read-at-use module like `driftTuning` — never the Atelier-regenerated
+physics schema.
+_Avoid_: glow (undersells the merge/split behaviour); metaball scene
+(it is not a **SceneRegistry** entry); lava lamp (the rejected warm
+framing — the palette is mercury/ink).
+
 ### Atelier
 
 **TuningSchema**:

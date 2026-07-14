@@ -1,0 +1,47 @@
+/* The aura overlay sits ABOVE the background canvas (.background-canvas-layer,
+   z-index 0) and BELOW the cards (.physics-card, z-index 10) — a glow field
+   behind the masses. `fixed` (not `absolute`) to share the viewport coordinate
+   space that the cards and background canvas both live in, so the slice-2 scene's
+   viewport-space rects align with the fixed cards. */
+.aura-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.aura-layer__fallback img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aura-layer__fallback {
+    position: absolute;
+    inset: 0;
+    /* Transparent mercury-blob impression, matching the live scene's compositing
+       model (blobs over whatever sits beneath the layer — never an opaque
+       backdrop). The baked PNG of the real field (img above) covers this; the
+       gradient shows while it loads or if it is missing. */
+    background:
+        radial-gradient(
+            22% 26% at 30% 32%,
+            rgba(105, 110, 118, 0.5),
+            rgba(75, 79, 86, 0.35) 55%,
+            rgba(75, 79, 86, 0) 75%
+        ),
+        radial-gradient(
+            26% 22% at 52% 44%,
+            rgba(105, 110, 118, 0.45),
+            rgba(75, 79, 86, 0.3) 55%,
+            rgba(75, 79, 86, 0) 78%
+        ),
+        radial-gradient(
+            20% 24% at 70% 66%,
+            rgba(105, 110, 118, 0.45),
+            rgba(75, 79, 86, 0.3) 55%,
+            rgba(75, 79, 86, 0) 75%
+        );
+}

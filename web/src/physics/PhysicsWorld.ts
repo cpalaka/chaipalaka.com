@@ -641,6 +641,54 @@ export class PhysicsWorld implements BodyForceSource {
         return { width: reg.width, height: reg.height }
     }
 
+    /**
+     * One-way physics→GPU bridge (task-038 AC#2; shared by task-041). Packs each
+     * non-static card body as `[centerX, centerY, halfWidth, halfHeight]` into
+     * `out` sequentially from index 0 and returns the number of rects written,
+     * capped at `floor(out.length / 4)`. Runs every rAF frame, so it allocates
+     * nothing — no arrays, no objects — and writes straight into the caller's
+     * pre-sized Float32Array (a TSL uniform array on the aura scene side).
+     *
+     * "Static" is the registration flag (floor/ceiling/content-box edges/word
+     * proxies), not the live matter flag: a card being dragged is momentarily
+     * `body.isStatic` yet is still a visible card whose aura must track it, so it
+     * stays in the snapshot.
+     *
+     * Dynamic sensors are excluded too (`body.isSensor`) — a dismissed preview
+     * flings a sensor body (PreviewCard.setSensor), which is a fading ghost, not
+     * a live card, and must not grow an aura. This mirrors the drift force pass's
+     * exclusion (see the drift step), so the shared bridge and the physics agree
+     * on what a "card" is. A dragged card is never a sensor, so this is a no-op
+     * for it.
+     *
+     * `outRot`, when given, receives each card's rotation as `[cos θ, sin θ]`
+     * (precomputed here so the shader rotates a sample point with two dot
+     * products instead of per-fragment trig), index-aligned with `out` — one
+     * loop fills both, so the buffers can never disagree on card order. Its
+     * capacity (`floor(outRot.length / 2)`) also caps the count.
+     */
+    snapshotCardRects(out: Float32Array, outRot?: Float32Array): number {
+        let capacity = Math.floor(out.length / 4)
+        if (outRot) capacity = Math.min(capacity, Math.floor(outRot.length / 2))
+        let count = 0
+        for (const reg of this.registrations.values()) {
+            if (reg.isStatic) continue
+            if (reg.body.isSensor) continue
+            if (count >= capacity) break
+            const base = count * 4
+            out[base] = reg.body.position.x
+            out[base + 1] = reg.body.position.y
+            out[base + 2] = reg.width / 2
+            out[base + 3] = reg.height / 2
+            if (outRot) {
+                outRot[count * 2] = Math.cos(reg.body.angle)
+                outRot[count * 2 + 1] = Math.sin(reg.body.angle)
+            }
+            count++
+        }
+        return count
+    }
+
     getMass(handle: PhysicsHandle): number {
         const reg = this.registrations.get(handle)
         if (!reg) throw new Error(`PhysicsWorld: unknown handle ${handle}`)

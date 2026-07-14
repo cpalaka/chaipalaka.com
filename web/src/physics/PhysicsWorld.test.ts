@@ -999,3 +999,143 @@ describe('PhysicsWorld drift mode', () => {
         expect(maxDisp).toBeLessThan(600)
     })
 })
+
+describe('PhysicsWorld snapshotCardRects', () => {
+    test('packs [cx, cy, halfW, halfH] per card sequentially from index 0', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        world.registerById('a', { x: 100, y: 200 }, { width: 240, height: 160 })
+        world.registerById('b', { x: 300, y: 400 }, { width: 80, height: 40 })
+        const out = new Float32Array(8)
+        const count = world.snapshotCardRects(out)
+        expect(count).toBe(2)
+        expect(out[0]).toBeCloseTo(100, 4)
+        expect(out[1]).toBeCloseTo(200, 4)
+        expect(out[2]).toBeCloseTo(120, 4)
+        expect(out[3]).toBeCloseTo(80, 4)
+        expect(out[4]).toBeCloseTo(300, 4)
+        expect(out[5]).toBeCloseTo(400, 4)
+        expect(out[6]).toBeCloseTo(40, 4)
+        expect(out[7]).toBeCloseTo(20, 4)
+    })
+
+    test('excludes static bodies (floor/ceiling are registered but static)', () => {
+        // A fresh world already registers the floor + ceiling as static bodies.
+        // Only the one dynamic card must be snapshot.
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        world.registerById('a', { x: 150, y: 250 }, { width: 100, height: 60 })
+        const out = new Float32Array(40)
+        const count = world.snapshotCardRects(out)
+        expect(count).toBe(1)
+        expect(out[0]).toBeCloseTo(150, 4)
+        expect(out[1]).toBeCloseTo(250, 4)
+    })
+
+    test('clamps to floor(out.length / 4) rects and never overflows the buffer', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        world.registerById('a', { x: 100, y: 100 }, { width: 200, height: 100 })
+        world.registerById('b', { x: 200, y: 200 }, { width: 200, height: 100 })
+        // Capacity = floor(6 / 4) = 1: only the first rect fits.
+        const out = new Float32Array(6)
+        const count = world.snapshotCardRects(out)
+        expect(count).toBe(1)
+        expect(out[0]).toBeCloseTo(100, 4)
+        expect(out[3]).toBeCloseTo(50, 4)
+        // The trailing partial slot must be left untouched (no overflow write).
+        expect(out[4]).toBe(0)
+        expect(out[5]).toBe(0)
+    })
+
+    test('returns 0 for a world with no card bodies', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        const out = new Float32Array(8)
+        expect(world.snapshotCardRects(out)).toBe(0)
+    })
+
+    test('packed values track the live body position + registered size', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        const h = world.registerById(
+            'a',
+            { x: 400, y: 100 },
+            { width: 120, height: 60 },
+        )
+        // Let gravity move the body off its anchor so we prove a live read.
+        for (let i = 0; i < 30; i++) world.tick(FIXED_DT_MS)
+        const out = new Float32Array(4)
+        const count = world.snapshotCardRects(out)
+        expect(count).toBe(1)
+        const pos = world.getPosition(h)
+        const size = world.getSize(h)
+        expect(out[0]).toBeCloseTo(pos.x, 2)
+        expect(out[1]).toBeCloseTo(pos.y, 2)
+        expect(out[2]).toBeCloseTo(size.width / 2, 2)
+        expect(out[3]).toBeCloseTo(size.height / 2, 2)
+    })
+
+    test('outRot packs [cos, sin] of the live body rotation, index-aligned', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        const h = world.registerById('a', { x: 200, y: 150 }, { width: 100, height: 60 })
+        world.registerById('b', { x: 500, y: 150 }, { width: 100, height: 60 })
+        // Let the sim run so rotations are whatever physics produced (usually 0
+        // without collisions) — the contract is cos/sin of getPosition().rotation.
+        for (let i = 0; i < 10; i++) world.tick(FIXED_DT_MS)
+        const out = new Float32Array(8)
+        const rot = new Float32Array(4)
+        const count = world.snapshotCardRects(out, rot)
+        expect(count).toBe(2)
+        const theta = world.getPosition(h).rotation
+        expect(rot[0]).toBeCloseTo(Math.cos(theta), 4)
+        expect(rot[1]).toBeCloseTo(Math.sin(theta), 4)
+        // cos² + sin² = 1 for every packed pair.
+        expect(rot[2]! ** 2 + rot[3]! ** 2).toBeCloseTo(1, 4)
+    })
+
+    test('outRot capacity also caps the count', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        world.registerById('a', { x: 100, y: 100 }, { width: 100, height: 60 })
+        world.registerById('b', { x: 300, y: 100 }, { width: 100, height: 60 })
+        const out = new Float32Array(8) // room for 2 rects
+        const rot = new Float32Array(2) // room for only 1 rotation pair
+        expect(world.snapshotCardRects(out, rot)).toBe(1)
+    })
+
+    // task-038 review (LOW#4): the bridge must agree with the drift force pass on
+    // what a "card" is — exclude dynamic sensors (dismissed previews), but keep a
+    // dragged card (body.isStatic, never a sensor). Latent on /lab; real on
+    // peek-enabled routes (task-041).
+    test('excludes dynamic sensor bodies but keeps a dragged card', () => {
+        const world = new PhysicsWorld({
+            viewport: { width: 800, height: 600 },
+        })
+        const card = world.registerById(
+            'a',
+            { x: 100, y: 200 },
+            { width: 100, height: 60 },
+        )
+        const dismissed = world.registerById(
+            'd',
+            { x: 300, y: 200 },
+            { width: 100, height: 60 },
+        )
+        world.setSensor(dismissed, true) // dynamic sensor: a dismissed preview
+        world.setDragging(card, true) // body.isStatic, NOT a sensor: aura stays
+        const out = new Float32Array(40)
+        const count = world.snapshotCardRects(out)
+        expect(count).toBe(1) // only the dragged card, not the dismissed sensor
+        expect(out[0]).toBeCloseTo(100, 4)
+        expect(out[1]).toBeCloseTo(200, 4)
+    })
+})

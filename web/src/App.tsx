@@ -102,6 +102,28 @@ export const routes: RouteRecord[] = [
         ],
     },
     {
+        // Box-less drift toy for the task-038 SDF metaball card auras — mounts
+        // AuraLayer over 12 detached, full-drift cards (resolves AC#6: no content
+        // box to occlude the aura field).
+        path: '/lab',
+        lazy: async () => {
+            const { default: CanvasLayout } =
+                await import('./layouts/CanvasLayout')
+            return { Component: CanvasLayout }
+        },
+        entry: 'src/layouts/CanvasLayout.tsx',
+        children: [
+            {
+                index: true,
+                lazy: async () => {
+                    const { default: Lab } = await import('./routes/Lab')
+                    return { Component: Lab }
+                },
+                entry: 'src/routes/Lab.tsx',
+            },
+        ],
+    },
+    {
         path: '/stuff',
         lazy: async () => {
             const { default: CanvasLayout } =
