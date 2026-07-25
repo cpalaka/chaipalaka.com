@@ -7,13 +7,15 @@ project-specific rules are inline below (Zone 3).
 <!-- Dev-process rules live in the shared chunk library (single-source in
      cpalaka-claude-skills/chunks, delivered via ~/.claude/chunks). Edit a rule
      THERE, not here — the edit propagates to every project. dev-base.md bundles
-     the 9 base chunks (git-sync-branch-start, git-commit-format,
+     the 8 base chunks (git-sync-branch-start, git-commit-format,
      git-confirm-destructive, sandbox-auto, parallel-work, verify-gate,
-     superpowers-default, codegraph, code-hygiene); the two explicit imports
-     are the integration model (squash) + the board. -->
+     dev-practice, code-hygiene); the explicit imports are the integration model
+     (squash), the board, and codegraph — the last because this is the one
+     project carrying a `.codegraph/` index (it left dev-base 2026-07-25). -->
 @~/.claude/chunks/dev-base.md
 @~/.claude/chunks/git-flow-squash.md
 @~/.claude/chunks/backlog-core.md
+@~/.claude/chunks/codegraph.md
 
 <!-- knobs:backlog-core -->
 - backlog version: 1.45.2 (pinned; bump deliberately via `npm i -g backlog.md@<pin>`)
@@ -39,10 +41,10 @@ project-specific rules are inline below (Zone 3).
 - Full gate (exact commands, prerender check, secret-scan grep): docs/process/local-verification.md
 <!-- /knobs:verify-gate -->
 
-<!-- knobs:superpowers-default -->
+<!-- knobs:dev-practice -->
 - test-roster: PRD.md "### Modules with tests" (authoritative required-coverage roster)
 - spec-verify src: web/src  (the tree specs' [reuse] claims are grep/CodeGraph-checked against)
-<!-- /knobs:superpowers-default -->
+<!-- /knobs:dev-practice -->
 
 <!-- knobs:parallel-work -->
 - worktree path prefix: ../cp-task-NNN-<slug>
