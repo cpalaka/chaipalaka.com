@@ -4,7 +4,7 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-07-27 01:38'
+updated_date: '2026-07-27 01:57'
 labels:
   - claude-generated
   - v2
@@ -57,6 +57,12 @@ Parked/edge-anchored card *feel* is being reworked — see DRAFT-006 (high-prior
 PROD-V1 (2026-07-26, docs/plan/): protect-last item per brief A23, scheduled M3 (2026-08-31 to 2026-09-13, 26 h reserved). Dependency on TASK-028 REMOVED this session — 028 was deferred post-launch by brief A21, so the capstone was formally blocked by a deferred task. Both input roadmaps missed this; --dep replaces the whole list, which is likely why. Remaining deps TASK-020..027 + TASK-029 are all Done. Plan: docs/plan/workstream-design.md WP-11.
 
 DEPENDENCY NOTE (2026-07-26): structural prod-v1 predecessors TASK-033 (lifelog composed canvas), TASK-034 (/about) and TASK-045 (per-route composition) added. The responsive-layout foundation and mobile pin rail are ALSO hard predecessors per the ratified spine-first rule — mobile responsiveness is spine, not design — but their tasks are created at the M2 checkpoint under rolling-wave discipline, so those two edges must be ADDED THEN. --dep replaces the whole list: pass the complete set, do not append one id.
+
+OPEN DECISION O3 — delight vs triage (docs/plan/open-questions.md T3; forcing date 2026-08-30, the M2 checkpoint). Brief A5 makes "visitors admire the site itself" an explicit launch goal. A19 then moved EVERY delight-bearing item to NICE — sound (DRAFT-001), card shaders (002), background shaders (003), wide media (004), pretext (005), morph polish (007) — and A21 cut two outright. CUT-1 removes TASK-039, the last visual-fidelity item beside this one.
+
+CONSEQUENCE FOR THIS TASK: in the budgeted cut path (CUT-1 and CUT-2 both fire in M4), THIS TASK CARRIES THE ENTIRE LAUNCH DELIGHT BUDGET ALONE. That may be exactly right, or A19 rule may have over-fired — only Chai can say, and the plan cannot resolve it.
+
+If one NICE item is restored, restore DRAFT-007 (hero-morph polish): 4-8 h, pure CSS in head-loaded base.css, improves the single most-seen transition on the site, and folds into this task motion-vocabulary work rather than needing its own slot. Second cheapest is DRAFT-003 (background-shader overhaul) — it upgrades a surface every visitor sees on every route, unlike /lab-only or card-only effects. Decide by the M2 checkpoint so a restored item can ride M3 rather than needing a slot of its own.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-07-27 01:37'
+updated_date: '2026-07-27 01:57'
 labels:
   - claude-generated
   - prod-v1
@@ -36,6 +37,16 @@ Plan: docs/plan/workstream-ops.md WP-02, open-questions.md T7/T11.
 - [ ] #6 DEPLOY DRY-RUN, human-gated, end-to-end against the real box: make deploy-web plus make assets-sync with the existing payload. This settles the one genuinely open flash question. NOTE: the claim that assets/ does not exist and that assets-sync has never carried a payload is FALSE — it was checked against the git tree, where assets/ is gitignored BY DESIGN per the >1 MB rule. assets/ holds 33 MB including assets/ruffle/nightly-2026-05-12, exactly the version RuffleEmbed.tsx:3 requests. What is unknown is whether assets-sync has ever been RUN against the box. Verify: curl the live host for /assets/ruffle/nightly-2026-05-12/ruffle.js and expect 200.
 - [ ] #7 docs/process/launch-checklist.md drafted, covering RSS validity, sitemap vs the real route set, OG tags per route, no-JS floor per content-box route, reduced-motion pass, /api/* liveness, secret-scan, and the data-server-rendered prerender check. It is executed in M4, not here.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PARKED OPEN DECISION O4 — .swf vs video for the ~40 flash items (brief Q7, never answered; docs/plan/open-questions.md T11). Recorded HERE because the flash-ingest task is M4 and is created at its own checkpoint under rolling-wave discipline, so until it exists this question has no board home — and it has a forcing date of 2026-09-06, with TRIGGER-G firing CUT-3 if the source media is not locatable and format-classified by then.
+
+The fork is real: .swf plays through the shipped, tested RuffleEmbed component; video files do not and need a different component AND a different route treatment (about +6 h). The four items that exist in assets/ are .swf, which is evidence but not an answer for the other ~36. About 100 MB across ~40 items is ~2.5 MB each, plausible for either.
+
+ACTION FOR THIS TASK: the M0 deploy dry-run is the natural moment to ask it, since it already touches assets/ and make assets-sync. Surface the question to Chai then, and carry the answer forward onto the flash-ingest task when it is created at the M3 checkpoint. Risk R5: the media may not exist in usable form at all, in which case /stuff/flash is re-scoped honestly to the four pieces it has rather than promised and missed.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
