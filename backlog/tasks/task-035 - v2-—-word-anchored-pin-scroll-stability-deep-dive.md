@@ -4,7 +4,7 @@ title: v2 — word-anchored pin scroll stability (deep dive)
 status: To Do
 assignee: []
 created_date: '2026-06-21 03:13'
-updated_date: '2026-06-21 05:55'
+updated_date: '2026-07-27 01:19'
 labels:
   - claude-generated
   - v2
@@ -36,6 +36,12 @@ Deep dive on flaky word-anchored pinned-card behavior under scroll, surfaced dur
 
 <!-- SECTION:NOTES:BEGIN -->
 task-036 pass-1 'B' (keep→box-edge pin) folded here per Chai 2026-06-21: kept cards should park to the box edge instead of word-anchored 'thin air'. Reuses parkAt + contentBox edge handles — same machinery as the AC#2 bottom-edge bug, so do them together; pick the edge policy (gravity-direction vs nearest) at implementation. Update spec §5 (resting model: word-anchored → edge-anchored on keep) in the same branch when implemented.
+
+PROD-V1 DISPOSITION (2026-07-26, docs/plan/): VERIFICATION-ONLY in prod-v1. Not picked for FIXING in brief Q16, but A11 makes verification real scheduled work and Chai belief that this is stale is tagged [leaning], not [decided] — nobody has checked. The four symptoms are individually re-tested inside the M0 board-staleness sweep, against current main, UNDER DRIFT, using a per-frame trace or a conserved invariant (never a single-frame snapshot — a soft system is mid-settle one frame after any action). They were observed on /test/box during task-028 dev review, BEFORE the drift conversion landed (042.01-.04, 2026-07-01 to 07-03), so drift may have fixed all, some or none.
+
+The sweep also confirms or REFUTES (rather than inheriting) the brief unverified interviewer reading: that PinnedCard.parkAt reduced-motion branch places a top-parked card at edgeAnchor.y + parkRest, INSIDE the box over the prose, while the non-reduced path lets prose repel settle it outside.
+
+If ANY symptom reproduces, TRIGGER-A fires CUT-1 (drops task-039, freeing about 18 h to fix it) and the escalation goes to Chai at the 2026-08-02 checkpoint — never silently absorbed. AC#4 (parked-card restore via task-028) is dormant, not orphaned, while 028 is deferred.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

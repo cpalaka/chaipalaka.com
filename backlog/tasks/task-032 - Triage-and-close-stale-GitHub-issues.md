@@ -4,10 +4,13 @@ title: Triage and close stale GitHub issues
 status: To Do
 assignee: []
 created_date: '2026-06-19 08:14'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - chore
   - housekeeping
+  - prod-v1
+milestone: prod-v1
 dependencies: []
 priority: low
 ordinal: 22010
@@ -25,6 +28,12 @@ GitHub issues are retired for new work (all forward work is on the backlog.md bo
 - [ ] #2 Any still-actionable issue migrated to a backlog task or explicitly kept open with a reason
 - [ ] #3 Issue tracker reflects 'v1 archived; new work on the backlog board'
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PROD-V1 (2026-07-26, docs/plan/): SCHEDULED M4 (2026-09-14 to 2026-09-26), about 2.5 h. Picked MUST in brief Q14. Parked in the launch window with TASK-031 for the same reason. Recorded gotchas: every gh WRITE is human-gated (git-confirm-destructive), and gh HTTPS write calls fail TLS in the sandbox with OSStatus -26276 — run each with the sandbox disabled, per call. GitHub issues #1-150 are frozen as the historical v1 record; close obsolete ones with a pointer to the board, never reopen or create.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

@@ -4,14 +4,17 @@ title: v2 — about page (content-box)
 status: To Do
 assignee: []
 created_date: '2026-06-21 00:02'
+updated_date: '2026-07-27 01:38'
 labels:
   - claude-generated
   - v2
   - content
-milestone: v2
+  - prod-v1
+milestone: prod-v1
 dependencies:
   - TASK-026
-priority: low
+  - TASK-046
+priority: high
 ordinal: 24010
 ---
 
@@ -26,6 +29,8 @@ Create the greenfield /about route as a quiet content-box (spec §8). No route, 
 - [ ] #1 /about route exists under ContentBoxLayout as a quiet content-box (resting: 'quiet'), prerendered
 - [ ] #2 Bio prose authored with Portal links; peek/keep fires on them inside the box
 - [ ] #3 web/: typecheck + test + build green; prerendered no-JS floor present (data-server-rendered)
+- [ ] #4 Verify dist/about/index.html contains BOTH the authored bio text and data-server-rendered. Note: a component-level import of its own .css code-splits and never loads for no-JS, so anything the pre-hydration floor needs belongs in base.css.
+- [ ] #5 Bio depth is elastic and CUT-6 reduces it to one strong paragraph without losing the route or AC#2 — one paragraph still carries two Portal links. Bio prose is Chai serial writing time, tracked in the content-authoring task, and is on this task critical path.
 <!-- AC:END -->
 
 ## Definition of Done
@@ -36,4 +41,5 @@ Create the greenfield /about route as a quiet content-box (spec §8). No route, 
 - [ ] #4 Debug/scaffolding instrumentation reverted (no stray console.log)
 - [ ] #5 Branch handed off for local diff review in VS Code; squash-merge to main only after explicit approval
 - [ ] #6 User sign-off received — explicit approval before Done
+- [ ] #7 Pre-merge adversarial review after the verify gate is green, before diff review: .claude/workflows/adversarial-review.js with {mode: "modest", task: "task-034", diffRange: "main...HEAD", specSections: "v2 spec §8 route table; ADR-0004; ADR-0008 progressive-enhancement contract"}. Relay ALL findings verbatim; never self-dismiss one.
 <!-- DOD:END -->

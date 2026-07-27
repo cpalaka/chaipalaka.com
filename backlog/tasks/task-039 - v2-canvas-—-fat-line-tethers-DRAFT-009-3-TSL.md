@@ -4,14 +4,15 @@ title: 'v2 canvas — fat-line tethers (DRAFT-009 #3, TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-21 21:50'
-updated_date: '2026-07-03 01:13'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - threejs
   - webgpu
   - v2
   - canvas
-milestone: v2
+  - prod-v1
+milestone: prod-v1
 dependencies: []
 ordinal: 29010
 ---
@@ -41,7 +42,10 @@ DEPENDENCY (tracked by Chai, not a board task): gated on the gravity -> top-down
 - [ ] #5 Slack edges stay faintly legible at rest (topology readable); monochrome, on-brand (no kitsch)
 - [ ] #6 SVG/DOM fallback remains for no-JS and no-WebGPU
 - [ ] #7 Visual verification: agent-browser screenshot in main session showing width+color tracking tension on drag
+- [ ] #8 CUT-1 MARKER — this task is FIRST in the prod-v1 ordered cut register (docs/plan/risk-cut-register.md) and M4 is budgeted to fire it. Rationale: L-sized; the technique fork on AC#1 is explicitly unresolved so the cost is unbounded; WebGPU-only, so about 18 percent of visitors never see it; ZERO dependents; and the delight goal it serves (brief A5) is carried by the protected TASK-030 capstone. Chai picked it in Q15, so firing CUT-1 REVERSES a stated preference and must be surfaced at the checkpoint that fires it, never applied quietly. TRIGGER-A (a task-035 symptom reproducing) or TRIGGER-B (measured pace under 12 h/week) fire it early.
 <!-- AC:END -->
+
+
 
 ## Implementation Notes
 

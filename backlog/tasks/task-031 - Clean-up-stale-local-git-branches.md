@@ -4,10 +4,13 @@ title: Clean up stale local git branches
 status: To Do
 assignee: []
 created_date: '2026-06-19 08:14'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - chore
   - housekeeping
+  - prod-v1
+milestone: prod-v1
 dependencies: []
 priority: low
 ordinal: 21010
@@ -25,6 +28,12 @@ The local repo carries ~90 stale branches (feat/issue-*, refactor/issue-*, docs/
 - [ ] #2 Each deletion confirmed obsolete (merged or superseded post-history-rewrite), not blind
 - [ ] #3 No remote branches deleted without explicit confirmation
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PROD-V1 (2026-07-26, docs/plan/): SCHEDULED M4 (2026-09-14 to 2026-09-26), about 1.5 h. Picked MUST in brief Q14. Parked in the launch window deliberately — zero dependents, zero-risk local work, and it must not compete with anything load-bearing. Brief §4 fairly notes the plan should not spend hours deleting branches while the pin bug goes unverified; the answer is sequencing, not overriding the triage: the staleness sweep is the FIRST item in the plan and this is nearly the last. Local branches only; each deletion confirmed obsolete post the 2026-06-09 history rewrite, not blind; remote deletions need explicit confirmation.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

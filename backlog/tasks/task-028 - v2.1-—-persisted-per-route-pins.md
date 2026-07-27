@@ -4,7 +4,7 @@ title: v2.1 — persisted per-route pins
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-06-19 08:14'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - v2
@@ -31,6 +31,12 @@ Fast-follow persistence (spec section 7). Persist a route's pinned-card arrangem
 - [ ] #2 A pin whose source word no longer exists degrades gracefully (dropped or edge-parked, no crash)
 - [ ] #3 Persistence is per-route and scoped to localStorage
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PROD-V1 DISPOSITION (2026-07-26, docs/plan/): DEFERRED post-launch. Cut by name in brief A21 — the only NET-NEW cut in that answer, since sound (DRAFT-001) and pretext (DRAFT-005) had already dropped to NICE via A19. Stays To Do under milestone v2; nothing in prod-v1 depends on it, and this task own description already frames it as a v2.1 fast-follow. NOTE: TASK-030 dependency on this task was REMOVED on 2026-07-26 — with 028 deferred, the protect-last capstone was formally blocked by a deferred task. task-035 AC#4 (parked-card restore via this task) is dormant, not orphaned.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->

@@ -4,6 +4,7 @@ title: 'v2 canvas — z-layered parallax depth field (DRAFT-009 #15, TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-22 00:13'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - threejs
@@ -45,6 +46,8 @@ NOT gated on DRAFT-010 (render-side, buildable now on the task-037 TSL integrati
 
 <!-- SECTION:NOTES:BEGIN -->
 Prototype: prototypes/parallax-peephole.html (v2 — ambient DoF + circle/card peephole; ~51-60fps Canvas2D proxy for the look only). Rejected sibling from the same walk: prototypes/glyph-rd.html (#6 — see its in-file VERDICT). Cross-refs: DRAFT-009 #15 (+ #13/#24 for the portal stretch, #6->#8 for the typography substrate), ADR-0009, task-037. Real build = setViewOffset/off-axis projection + a per-layer DoF blur pass on the TSL scene.
+
+PROD-V1 DISPOSITION (2026-07-26, docs/plan/): DEFERRED post-launch. Not picked in brief Q15. Its AC#1 (what the z-layers depict) is still an open design question on this ticket, so it is not implementable as written. Stays To Do under milestone v2.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

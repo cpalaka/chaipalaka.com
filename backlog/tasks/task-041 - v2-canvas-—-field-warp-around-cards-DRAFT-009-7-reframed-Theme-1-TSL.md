@@ -4,7 +4,7 @@ title: 'v2 canvas — field-warp around cards (DRAFT-009 #7 reframed, Theme-1, T
 status: To Do
 assignee: []
 created_date: '2026-06-22 01:09'
-updated_date: '2026-07-14 21:09'
+updated_date: '2026-07-27 01:20'
 labels:
   - claude-generated
   - threejs
@@ -48,6 +48,8 @@ Reframe of DRAFT-009 #7 (text->cards, Chai 2026-06-22). Prototype: prototypes/fi
 GATE LIFTED 2026-07-03: task-042 (top-down drift physics) shipped to main (squash d591291; S1–S4 all Done). Live per-frame card rects (same bridge as task-038) now exist under the drift model — spec §4: 'task-041 (field-warp): live card rects: same bridge as 038.' 041 is a sibling of 038 (card-warp-distortion vs aura-glow — combine or pick one). Ref: docs/superpowers/specs/2026-07-01-drift-physics-design.md §4 + ADR-0010.
 
 From task-038 review (2026-07-14, commit 94b36c4): the shared bridge PhysicsWorld.snapshotCardRects now EXCLUDES dynamic sensor bodies (reg.body.isSensor — dismissed previews from PreviewCard.setSensor), mirroring the drift force pass. So when 041's field-warp consumes the bridge on peek-enabled routes, a dismissed preview will NOT grow a warp. Also: task-038's auraTuning.maxCards caps at 12 (AC#7 fill-rate budget) with zero headroom on /lab — 041 must size its own GPU-slot capacity for its route, not inherit 038's 12.
+
+PROD-V1 DISPOSITION (2026-07-26, docs/plan/): DEFERRED post-launch. Not picked in brief Q15. Its AC#1 (combine with the task-038 auras or pick one) is undecided, and ADR-0011 deliberately declines to decide it. Stays To Do under milestone v2.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
