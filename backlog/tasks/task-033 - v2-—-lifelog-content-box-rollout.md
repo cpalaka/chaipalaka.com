@@ -4,7 +4,7 @@ title: v2 — lifelog composed-canvas route (prod-v1)
 status: To Do
 assignee: []
 created_date: '2026-06-21 00:02'
-updated_date: '2026-07-27 01:38'
+updated_date: '2026-07-28 21:19'
 labels:
   - claude-generated
   - v2
@@ -39,8 +39,6 @@ Verified state at planning time: routes/Lifelog.tsx still imports card/Page and 
 - [ ] #7 Pre-merge adversarial review run after the verify gate is green, before diff review: .claude/workflows/adversarial-review.js with {mode: "modest", task: "task-033", diffRange: "main...HEAD", specSections: "v2 spec §8 route table; ADR-0005 dec.1; ADR-0010 dec.2-3; ADR-0011; ADR-0012; drift spec D7"}. Escalate to full mode if the spawn-kick fix changes shared CardImpl/PhysicsWorld ordering. Relay ALL findings verbatim; never self-dismiss one.
 <!-- DOD:END -->
 
-
-
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 GATE — before any build hour: ADR-0012 drafted and ratified by Chai. It records (a) the box-less carve-out and its departure from ADR-0005 decision 1 (each route is a fixed, solid, scrollable content box) — ADR-0011 states that extending that carve-out beyond /lab becomes its own decision, and this is the second box-less route; (b) the STRUNG bounded-drift mechanism (O1); (c) the shipping minimum. v2 spec §8 route table AND the CONTEXT.md lifelog content-box language are amended IN THIS BRANCH (PRD-sync rule, unconditional).
@@ -52,3 +50,9 @@ Verified state at planning time: routes/Lifelog.tsx still imports card/Page and 
 - [ ] #7 The four existing adapters move into card content with fetches unchanged. ZERO new adapters and zero deepening: A8 expansions (last.fm weekly artists, Letterboxd/Goodreads depth, Claude activity log, sleep, YouTube) are deferred post-launch and recorded in the ADR-0012 shipping-minimum section.
 - [ ] #8 No-JS floor present and prerendered. Verify gate green per docs/process/local-verification.md, including data-server-rendered, and a dev smoke of /lifelog.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+SWEEP VERDICT 2026-07-28 (task-043): LIVE — premise re-confirmed by direct read, not inherited. web/src/routes/Lifelog.tsx still imports Page from ../card/Page and pageSpecFromLayout from ./routeLayout (lines 2 and 5), i.e. genuinely the v1 scatter shape the planning session recorded. The redefinition to a composed canvas route stands unchallenged.
+<!-- SECTION:NOTES:END -->

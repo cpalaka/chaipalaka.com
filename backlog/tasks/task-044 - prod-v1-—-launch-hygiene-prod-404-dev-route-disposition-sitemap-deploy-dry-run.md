@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-07-27 01:37'
-updated_date: '2026-07-27 01:57'
+updated_date: '2026-07-28 21:20'
 labels:
   - claude-generated
   - prod-v1
@@ -46,6 +46,8 @@ PARKED OPEN DECISION O4 — .swf vs video for the ~40 flash items (brief Q7, nev
 The fork is real: .swf plays through the shipped, tested RuffleEmbed component; video files do not and need a different component AND a different route treatment (about +6 h). The four items that exist in assets/ are .swf, which is evidence but not an answer for the other ~36. About 100 MB across ~40 items is ~2.5 MB each, plausible for either.
 
 ACTION FOR THIS TASK: the M0 deploy dry-run is the natural moment to ask it, since it already touches assets/ and make assets-sync. Surface the question to Chai then, and carry the answer forward onto the flash-ingest task when it is created at the M3 checkpoint. Risk R5: the media may not exist in usable form at all, in which case /stuff/flash is re-scoped honestly to the four pieces it has rather than promised and missed.
+
+POINTER from task-043 sweep 2026-07-28: two OPEN GitHub issues duplicate this task's scope and are the only prior record of it — read them before designing, and close them against this task rather than as generic v1-archive. #64 'Redesign 404 page (deferred from masonry refactor)' overlaps the bespoke-404 half; #50 'Slice 29: Sandbox cleanup — remove /sandbox/cards prototype' overlaps the dev-route disposition half and may already carry the intended strip decision. #24 'Slice 24: Lifelog feed view + 404 + per-page OG metadata' straddles this task and task-033. Triage is task-032's job but the content is this task's input. Also: gh READ calls fail TLS in the sandbox (OSStatus -26276), not just writes — use dangerouslyDisableSandbox per call.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

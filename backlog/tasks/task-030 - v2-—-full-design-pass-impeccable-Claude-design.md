@@ -4,7 +4,7 @@ title: v2 — full design pass (impeccable + Claude design)
 status: To Do
 assignee: []
 created_date: '2026-06-19 07:54'
-updated_date: '2026-07-27 01:57'
+updated_date: '2026-07-28 21:19'
 labels:
   - claude-generated
   - v2
@@ -63,6 +63,8 @@ OPEN DECISION O3 — delight vs triage (docs/plan/open-questions.md T3; forcing 
 CONSEQUENCE FOR THIS TASK: in the budgeted cut path (CUT-1 and CUT-2 both fire in M4), THIS TASK CARRIES THE ENTIRE LAUNCH DELIGHT BUDGET ALONE. That may be exactly right, or A19 rule may have over-fired — only Chai can say, and the plan cannot resolve it.
 
 If one NICE item is restored, restore DRAFT-007 (hero-morph polish): 4-8 h, pure CSS in head-loaded base.css, improves the single most-seen transition on the site, and folds into this task motion-vocabulary work rather than needing its own slot. Second cheapest is DRAFT-003 (background-shader overhaul) — it upgrades a surface every visitor sees on every route, unlike /lab-only or card-only effects. Decide by the M2 checkpoint so a restored item can ride M3 rather than needing a slot of its own.
+
+SWEEP VERDICT 2026-07-28 (task-043): LIVE, premise unchanged. Unstarted; it is the protected core (A23) and makes no repo claim the sweep could falsify. Sweep note: task-043 confirmed DRAFT-002 (card fragment shaders) is STALE on its renderer premise (names an R3F shader-quad layer plus an SVG/Houdini no-WebGL fallback, both superseded by ADR-0009 WebGPU/TSL-exclusive and ADR-0004 static-PNG fallback). That does not change this task's no-shader-reskin scope — it only means the split-out draft cannot be promoted from its current text.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

@@ -149,7 +149,7 @@ undecided, and ADR-0011 deliberately declines to decide it. Stays To Do under `v
 
 ---
 
-## Drafts (9)
+## Drafts (9 at planning time → **7 live**, 2 killed 2026-07-28)
 
 > **Drafts cannot be annotated on the board.** `backlog draft` exposes only
 > `list` / `create` / `archive` / `promote` / `view` — there is no edit verb, so a
@@ -164,13 +164,38 @@ been picked — DRAFT-001, 002, 003, 004, 005 and **007** (the brief correctly n
 007 is also ungrilled, making it six, not five). None is killed by that rule; each
 stays a draft awaiting a grill session post-launch.
 
+> **TASK-043 sweep verdicts (2026-07-28).** Each draft below carries a dated
+> `Sweep verdict` line, per TASK-043 AC#1. Vocabulary: `live` (premise holds) ·
+> `stale` (premise provably false) · `partly stale` · `premise unchecked` (nothing
+> code-bearing to falsify, or not reached inside the 5 h box — itself a verdict,
+> AC#8). Idea-stage drafts are `premise unchecked` **by nature**: they assert no
+> claim about the repo that a sweep could test.
+
 ### DRAFT-001 — sound design + juice · **DEFERRED**
 Picked in Q17, dropped to NICE by A19, **then cut by name in A21**. Doubly out.
+
+**Sweep verdict 2026-07-28: premise unchecked** — idea-stage, no code-bearing
+premise. Disposition unchanged.
 
 ### DRAFT-002 — card fragment shaders · **DEFERRED**
 Picked in Q15, dropped by A19. Part of the "simplified form" reading (§T12): shipped
 shader work stays, new shader work does not. TASK-030 does **not** absorb it — the
 capstone is a no-shader reskin.
+
+**Sweep verdict 2026-07-28: STALE (renderer premise).** The draft text specifies "a
+foreground R3F layer rendering shader quads" with "SVG feTurbulence/feDisplacementMap
+or CSS Houdini as a no-WebGL fallback". **ADR-0009** makes WebGPU/TSL the exclusive
+renderer for new canvas work, and **ADR-0004** makes a static PNG the first-class
+fallback. Both the technique and the fallback need rewriting **before** any grill —
+promoting from the current text would build against a superseded renderer decision.
+This is a *second* draft whose premise is dead (the plan believed DRAFT-006 was the
+only one); it does not change the deferral, only what a future grill starts from.
+
+**CHAI RULED 2026-07-28: KILL.** Draft archived (`backlog draft archive draft-002`).
+The sweep proposed rewrite-before-grill; Chai cut it instead. Consistent with §T12's
+"simplified form" reading — shipped shader work stays, new shader work does not — and
+with TASK-030 remaining a no-shader reskin. Card fragment-shader effects are now
+**out of prod-v1 entirely**, not merely deferred.
 
 ### DRAFT-003 — background-shader overhaul · **DEFERRED, with a named consequence**
 Picked in Q15, dropped by A19. **Consequence, stated rather than discovered:**
@@ -179,13 +204,25 @@ ones ship and their fallback PNGs; it does not author new ones. Flagged as the
 second-highest-value NICE item if T3/O3 reopens — it upgrades a surface every
 visitor sees on every route, unlike `/lab`-only or card-only effects.
 
+**Sweep verdict 2026-07-28: live.** Unlike DRAFT-002 this draft names **no**
+renderer, so ADR-0009 constrains its eventual implementation without invalidating
+its text. Disposition unchanged.
+
 ### DRAFT-004 — asymmetric wide media (jut past box borders) · **DEFERRED**
 Picked in Q17, dropped by A19. Also collides with v2 spec §13's explicit v2.0
 assumption that content stays inside the box rectangle — so it needs both a grill
 *and* a spec amendment. Correctly post-launch.
 
+**Sweep verdict 2026-07-28: premise unchecked** — idea-stage. The stated spec §13
+collision was **not** re-verified against the current spec inside the timebox;
+treat it as the plan's claim, not a swept one.
+
 ### DRAFT-005 — pretext use-cases · **DEFERRED**
 Picked in Q17, dropped by A19, **cut by name in A21**. Doubly out.
+
+**Sweep verdict 2026-07-28: premise unchecked** — idea-stage, doubly cut, so no
+sweep effort spent. Carry-over note for whoever grills it: pretext measures
+**blocks**, not glyph rects — several parked ideas assume glyph-level geometry.
 
 ### DRAFT-006 — rework parked-card feel · **DEFERRED, premise to be adjudicated**
 Not picked in Q16. **The one confirmed-stale board item**: it complains that a
@@ -199,6 +236,33 @@ promote it without that verdict** — building from its current text would be
 building against a world that no longer exists. **Not silently killed**: Chai
 decides kill-vs-rewrite once the sweep reports.
 
+**Sweep verdict 2026-07-28: PREMISE REFUTED — verified, not inherited.** Confirmed
+in source: `PhysicsWorld.syncEngineGravity` sets engine gravity to `{0,0}` in drift
+mode ("Drift routes run zero engine gravity (spec §3.1)"), and no route declares a
+`gravity` cardinal. A parked card therefore has **no restoring force** — there is no
+pendulum and cannot be one.
+
+**What survives, reframed.** A parked card is still *not* still: it wanders on a
+pull-only rope under drift wander + prose repel. So the underlying concern — *does a
+parked card read as intentionally stowed?* — survives, but the question changes from
+"stop the swing" to **"does a drift-wandering parked card read as stowed?"**. Its
+proposed AC#1 survives verbatim; AC#2's "amend ADR-0006" must also account for
+**ADR-0010**, and the reduced-motion top-park defect below belongs to TASK-035 AC#2,
+not here.
+
+**Recommendation to Chai was REWRITE, not kill.**
+
+**CHAI RULED 2026-07-28: KILL.** Draft archived (`backlog draft archive draft-006`).
+The recommendation is recorded above as the sweep's proposal; the ruling overrides
+it, per AC#4's reservation of this decision to Chai.
+
+**Consequence to carry.** The *geometry* half of the parked-card problem is now owned
+by TASK-035 (AC#7 sign `parkRest` by edge; AC#8 stay on-screen below vh 816). The
+*feel* half — "does a drift-wandering parked card read as intentionally stowed?" — is
+**unowned** after this kill. That is a deliberate scope reduction, not an oversight;
+if it resurfaces post-launch it starts as a fresh draft against the drift world
+rather than the dead pendulum text.
+
 ### DRAFT-007 — hero-morph polish · **DEFERRED**
 Picked in Q16, dropped by A19 (it is ungrilled — the brief catches this). **The
 cheapest delight-per-hour item on the NICE list** (4–8 h, pure CSS in head-loaded
@@ -206,15 +270,32 @@ cheapest delight-per-hour item on the NICE list** (4–8 h, pure CSS in head-loa
 one NICE item is restored, this is the one, and it folds into WP-11's
 motion-vocabulary work rather than needing its own slot.
 
+**Sweep verdict 2026-07-28: premise unchecked** — idea-stage. Still the cheapest
+delight-per-hour item; it is the named restoration candidate if **O3** (due
+2026-08-30) reopens.
+
 ### DRAFT-008 — recursive previewability · **DEFERRED**
 Not picked in Q16. Its own description enumerates five unresolved edge cases
 (single-held-preview collision, no parent body to rope to, orphaning, bridge
 timing, depth model). Genuinely not ready.
 
+**Sweep verdict 2026-07-28: live — premise verified in code.** Its specific,
+falsifiable claim holds exactly as written: `web/src/pin/recursion.ts:39`
+(`resolvePinHost`) still returns `{ kind: 'suppress' }` for a trigger inside
+`[data-peek-id]`, so a link in a held preview is inert and recursion works only
+once the parent is **pinned**. Disposition unchanged.
+
 ### DRAFT-009 — three.js inventory · **DEFERRED (a container, not a task)**
 Not picked in Q17. It is the idea inventory that already produced tasks 038–041;
 its remaining walk items (#2 lava toy, #12 VT guardrail) are unstarted. Stays the
 parking lot it is; the walk resumes post-launch from its ledger marker.
+
+**Sweep verdict 2026-07-28: partly stale (ledger only).** The draft's own "Walk
+ledger" header is stamped **2026-06-22** and reads "Walked so far (7 of ~27)" — it
+predates **task-038 shipping** (commit `d8b2a40`, 2026-07-27), so the ledger's
+outcome column understates what is now built. The *container* is live and the
+remaining walk items really are unstarted; only the ledger's currency is stale.
+Refresh the marker when the walk resumes, or a future session will re-walk #1.
 
 ---
 
@@ -275,10 +356,27 @@ alongside the other M0 checkpoint decisions. The shipping minimum is a section o
 
 ---
 
-## Nothing is KILLED
+## Two items KILLED — 2026-07-28 (superseding "Nothing is KILLED")
 
-Consistent with brief §5: nothing was explicitly killed in the interview, and this
-plan kills nothing either. The closest case is **DRAFT-006**, whose stated premise
-is provably false — but the draft is held for a verdict from WP-01 rather than
-closed, because the underlying concern (what parked cards should *feel* like under
-drift) may survive its dead premise. Chai decides kill-vs-rewrite.
+**This section formerly read "Nothing is KILLED".** That was true of the planning
+session; it is no longer true of the board. The TASK-043 sweep put two dead-premise
+drafts in front of Chai and he cut both:
+
+| Item | Why it was surfaced | Ruling |
+|---|---|---|
+| **DRAFT-006** parked-card feel | Premise provably false — ADR-0010 set engine gravity `{0,0}`, so the "live physics pendulum" it complains about cannot exist. Sweep proposed *rewrite*. | **KILLED** — archived |
+| **DRAFT-002** card fragment shaders | Premise stale — names an R3F shader-quad layer with an SVG/Houdini no-WebGL fallback, both superseded by ADR-0009 (WebGPU/TSL exclusive) and ADR-0004 (static-PNG fallback). Sweep proposed *rewrite before grill*. | **KILLED** — archived |
+
+Both were `backlog draft archive`d, not deleted — the files live under
+`backlog/archive/drafts/` and stay readable. **Drafts remaining: 7** (001, 003, 004,
+005, 007, 008, 009).
+
+The sweep recommended rewriting both; Chai ruled kill on both. The recommendations
+stay recorded in each section above so the reasoning is not lost, but the ruling is
+the board's state. Neither kill was silent — AC#4 reserved this decision to Chai and
+it was taken by him explicitly.
+
+**What each kill gives up** is written into the sections above: DRAFT-006 leaves the
+parked-card *feel* question unowned (the geometry half is TASK-035 AC#7/#8);
+DRAFT-002 puts card fragment-shader effects out of prod-v1 entirely rather than
+deferred.

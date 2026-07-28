@@ -193,6 +193,17 @@ discovered on 2026-08-30.
    only precedent). Cut: mobile pins reuse the shipped box-edge park regime, and
    the divergence is written into the spec **in the same branch**.
 
+   > **CUT-7's fallback is not free — TASK-043 sweep, 2026-07-28.** "Reuse the
+   > shipped box-edge park regime" assumes that regime works at mobile heights. It
+   > does not. Measured: a parked-bottom card's bottom edge sits at
+   > `(vh + 480)/2 + parkRest + h/2`, so it is **clipped off-screen whenever
+   > viewport height < 816** (vh 800 → clipped 8px; vh 700 → clipped 58px). A
+   > 390×844 device is only nominally above that line — real `innerHeight` after
+   > browser chrome typically lands in the 750–800 band, i.e. **below** it. So
+   > firing CUT-7 does not avoid the work, it converts it into a park-geometry fix
+   > (pinned as TASK-035 AC#8). Weigh CUT-7 with that cost attached, and re-measure
+   > at real `innerHeight` — not the nominal device height — before ruling.
+
 3. **`armPressMs` is reconciled.** `pinTuning.armPressMs = 200` vs PRD story 42's
    ~350 ms mobile long-press. One is wrong. *Verify:* the value matches the PRD, or
    the PRD is amended with the reason. Gesture tests drive **synthetic

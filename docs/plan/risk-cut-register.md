@@ -21,7 +21,7 @@ Three rules govern this document:
 
 | ID | Condition | Fires |
 |---|---|---|
-| **TRIGGER-A** | WP-01 escalates task-035 to MUST (any of its four symptoms reproduces under drift) | CUT-1 immediately, **and escalate** — never absorb |
+| **TRIGGER-A** | ~~WP-01 escalates task-035 to MUST~~ — **FIRED 2026-07-28, response OVERRULED** (see below) | CUT-1 immediately, **and escalate** — never absorb |
 | **TRIGGER-B** | Measured pace over M0+M1 is below **12 h/week** | CUT-1 + CUT-2 |
 | **TRIGGER-C** | At any checkpoint, remaining demand > remaining capacity × 1.15 | Next uncut entry, repeat until the ratio holds |
 | **TRIGGER-D** | O2 resolves as "prose time IS inside the 133 h" **and** more than 2 blog drafts remain unfinished at 2026-08-30 | CUT-4 |
@@ -33,6 +33,33 @@ Three rules govern this document:
 
 **TRIGGER-F is the important one.** It is the mechanism that keeps M3's capstone
 protected: everything optional dies before the capstone is touched.
+
+> ### TRIGGER-A fired 2026-07-28 — and CUT-1 was NOT applied
+>
+> The TASK-043 sweep reproduced task-035 symptom 1 under drift (a fast-scroll-parked
+> card never returns on-screen within ~100 s, vs 383 ms under the pre-drift gravity
+> model), which is exactly TRIGGER-A's condition. Per this register the response was
+> "CUT-1 immediately."
+>
+> **Chai ruled: do not cut. TASK-039 stays in scope.** The finding was not disputed —
+> the prescribed response was overruled, which is his call to make.
+>
+> **The arithmetic hole this leaves, stated now rather than discovered on 2026-08-02.**
+> The reconciliation budgeted CUT-5+6 (M1), CUT-7+4 (M2) and **CUT-1+2 (M4)** = 48 h
+> against a 42 h gap. Withdrawing CUT-1 drops that to **≈30 h against ≈42 h — about
+> 12 h short** — *before* counting the task-035 park-geometry fix, which the plan
+> scoped as verification-only and which the sweep turned into real work (TASK-035
+> AC#7/AC#8).
+>
+> **Where the hours must now come from:** the reserve — CUT-3 (flash depth ~10 not
+> ~40, 6 h), CUT-8 (`/lifelog` reverts to a quiet content-box, 10 h), CUT-9 (capstone
+> reduction, 8 h — an escalation, not a cut). ≈24 h combined. **No reserve cut was
+> fired by this ruling.** This note records the hole; it does not close it. Closing it
+> is a 2026-08-02 checkpoint decision.
+>
+> Note also **TRIGGER-F**: if anything outside M4's fixed contents is still open on
+> 2026-09-13, CUT-1 fires anyway "whatever their individual state". This ruling
+> protects TASK-039 through M0–M3, not past the M3 checkpoint.
 
 ---
 

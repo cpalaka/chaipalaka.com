@@ -4,7 +4,7 @@ title: Triage and close stale GitHub issues
 status: To Do
 assignee: []
 created_date: '2026-06-19 08:14'
-updated_date: '2026-07-27 01:20'
+updated_date: '2026-07-28 21:19'
 labels:
   - claude-generated
   - chore
@@ -33,6 +33,8 @@ GitHub issues are retired for new work (all forward work is on the backlog.md bo
 
 <!-- SECTION:NOTES:BEGIN -->
 PROD-V1 (2026-07-26, docs/plan/): SCHEDULED M4 (2026-09-14 to 2026-09-26), about 2.5 h. Picked MUST in brief Q14. Parked in the launch window with TASK-031 for the same reason. Recorded gotchas: every gh WRITE is human-gated (git-confirm-destructive), and gh HTTPS write calls fail TLS in the sandbox with OSStatus -26276 — run each with the sandbox disabled, per call. GitHub issues #1-150 are frozen as the historical v1 record; close obsolete ones with a pointer to the board, never reopen or create.
+
+SWEEP VERDICT 2026-07-28 (task-043): LIVE, quantified — 10 open GitHub issues (gh issue list --state open). NEW FINDING the plan did not carry: at least five of the ten DUPLICATE scheduled prod-v1 scope, so this is not purely M4 hygiene — closing them wrongly could destroy the only record of a launch requirement, and leaving them open double-books work. Overlaps: #64 'Redesign 404 page' and #50 'remove /sandbox/cards prototype' both land inside task-044; #24 'Lifelog feed view + 404 + per-page OG metadata' spans task-033 and task-044; #78 'Add remaining Flash pieces' sits under task-045 and is gated by open decision O4; #63 'Narrow-viewport layout variants' and #23 'Mobile long-press + a11y audit' are M2 mobile scope. Triage each against the owning task rather than closing as v1-archived. NOTE for whoever runs this: gh READ calls also fail TLS in the sandbox (OSStatus -26276), not just writes — the description only warns about writes. Use dangerouslyDisableSandbox per call for both.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

@@ -4,7 +4,7 @@ title: 'v2 canvas — fat-line tethers (DRAFT-009 #3, TSL)'
 status: To Do
 assignee: []
 created_date: '2026-06-21 21:50'
-updated_date: '2026-07-27 01:20'
+updated_date: '2026-07-28 21:51'
 labels:
   - claude-generated
   - threejs
@@ -45,8 +45,6 @@ DEPENDENCY (tracked by Chai, not a board task): gated on the gravity -> top-down
 - [ ] #8 CUT-1 MARKER — this task is FIRST in the prod-v1 ordered cut register (docs/plan/risk-cut-register.md) and M4 is budgeted to fire it. Rationale: L-sized; the technique fork on AC#1 is explicitly unresolved so the cost is unbounded; WebGPU-only, so about 18 percent of visitors never see it; ZERO dependents; and the delight goal it serves (brief A5) is carried by the protected TASK-030 capstone. Chai picked it in Q15, so firing CUT-1 REVERSES a stated preference and must be surfaced at the checkpoint that fires it, never applied quietly. TRIGGER-A (a task-035 symptom reproducing) or TRIGGER-B (measured pace under 12 h/week) fire it early.
 <!-- AC:END -->
 
-
-
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -55,6 +53,10 @@ Prototype: prototypes/fat-tethers.html (width+color confirmed, dash-crawl reject
 Physics-rewrite dependency is now DRAFT-010 (v2 — top-down drift graph physics, high-priority). Starts only after DRAFT-010 is grilled, promoted, and built.
 
 TetherView tension contract (pinned by task-042.03 / S3, spec §3.6): Tether.list() now returns a continuous `tension` field = max(0, dist − length) / length. Semantics: 0 at/under rest length, rising unbounded as the rope stretches (consumers normalise; no high clamp). Zero-crossing is the RAW rest length — matches applyRopeForces force threshold (d <= rec.length), NOT the 0.98 slackFactor the binary `slack` uses; so in the band length*0.98 ≤ dist < length, slack=false (drawn taut) while tension=0. length-guarded (returns 0 on a degenerate zero-length rope, no NaN). ALLOCATION NOTE (task-039 AC#4 no-per-frame-alloc): list() allocates fresh TetherView objects every call (deliberate no-cache — positions are live per-frame). Read once/frame; satisfiable GPU-buffer-side (StringLayer tolerates the churn today) OR via a snapshot-into-caller-buffer variant — 039 decides at build. Formula pinned in Tether.test.ts "Tether list()" cases + a code comment at Tether.ts list(). StringLayer already consumes it (drift stroke width/opacity).
+
+SWEEP VERDICT 2026-07-28 (task-043): LIVE — both checkable premises confirmed. web/src/canvas/StringLayer.tsx is still present (the 'may not survive the rewrite' caveat is still an open question, not a resolved one), and prototypes/fat-tethers.html exists as the description claims. CUT STATUS: this task is the named CUT-1 target, and task-043 fired TRIGGER-A on 2026-07-28 (task-035 symptom 1 reproduces under drift and is worse than pre-drift). Dropping this frees ~18h to fix it. That is Chai's decision — it reverses a preference stated in brief Q15 — and was escalated in-session rather than absorbed. Do not start build work here until CUT-1 is ruled on.
+
+CUT-1 RULING 2026-07-28 — Chai: DO NOT CUT. task-039 stays in prod-v1 scope. TRIGGER-A did fire (task-035 symptom 1 reproduces under drift), and the plan's rule was 'fire CUT-1 immediately'; Chai overruled the response, not the finding. Consequence to carry into the 2026-08-02 checkpoint: the plan budgeted CUT-1 + CUT-2 to close M4, so with CUT-1 withdrawn the budgeted cut set drops from ~48h to ~30h against a ~42h gap, i.e. ~12h short BEFORE counting the task-035 park-geometry fix, which was scoped as verification-only and is now real work. The reserve cuts (CUT-3 flash depth, CUT-8 lifelog reverts to a quiet content-box, CUT-9 capstone reduction, ~24h combined) are the remaining source. No reserve cut was fired by this ruling — this note records the hole, it does not close it.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

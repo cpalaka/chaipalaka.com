@@ -4,7 +4,7 @@ title: 'prod-v1 — per-route composed layout design (/stuff, /stuff/flash, 404)
 status: To Do
 assignee: []
 created_date: '2026-07-27 01:37'
-updated_date: '2026-07-27 01:38'
+updated_date: '2026-07-28 21:20'
 labels:
   - claude-generated
   - prod-v1
@@ -39,6 +39,12 @@ Plan: docs/plan/workstream-design.md WP-05.
 - [ ] #4 CUT-5 SCOPE MARKER: /stuff is the cuttable half of this task and M1 is budgeted to fire it (M1 loads 35 h against 30). If CUT-5 fires, /stuff wears the shared content-box shape and still reads deliberate once the capstone has run; only /stuff/flash and 404 keep bespoke layouts. Firing it is a checkpoint decision, recorded, not a silent trim.
 - [ ] #5 Verify gate green; agent-browser pass in the MAIN session (never a subagent — its screenshots never reach the orchestrator) with an explicit viewport, one screenshot per route.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+POINTER from task-043 sweep 2026-07-28: OPEN GitHub issue #78 'Add remaining Flash pieces (SWFs, thumbnails, MDX)' duplicates this task's /stuff/flash scope and predates the board — read it before designing the flash route treatment. It is gated by open decision O4 (are the ~40 items .swf or video), due 2026-09-06, already pinned on this task. Separately, task-043 did NOT re-verify the assets/ payload finding; the plan's README finding 2 (33MB of assets/ with 4 .swf plus the Ruffle nightly-2026-05-12 runtime present on this machine) stands as the planning session's observation, and whether assets-sync has ever run against the box remains answerable only by a live curl in task-044.
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
