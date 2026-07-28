@@ -117,3 +117,28 @@ the conflict is resolved explicitly rather than averaged — see
 [`work-pieces.md`](work-pieces.md) § *Where the two input roadmaps disagreed*.
 The eval branches were never merged: they carry colliding task IDs and their
 commits live on the `eval/*` tags.
+
+> ### ⚠️ The frozen brief is NOT in this repo — TASK-043, 2026-07-28
+>
+> This plan's stated input is `v1-launch-brief.md` (2026-07-26). It is **not in the
+> working tree and not in git history** — `find` finds nothing, and
+> `git log --all --diff-filter=A -- '*brief*'` is empty. It was never committed.
+>
+> **Consequence:** every `A<n>` and `Q<n>` citation across these documents — A4, A9,
+> A11, A18, A19, A21, A23, Q7, Q9, Q12–Q17, and all of §6 — **cannot be verified from
+> this repo.** They are the planning session's report of what was said, not quotable
+> source.
+>
+> Two live examples, both from the TASK-043 sweep:
+>
+> - `risk-cut-register.md` asserts *"Chai picked 039 in Q15"*, and the sweep relayed
+>   that to Chai twice as his own stated preference before discovering it was
+>   uncheckable. He did not recognise it when asked.
+> - **A11's "board staleness is systemic and unquantified"** is the premise M0 exists
+>   to test. The sweep found the board **mostly live** — 8 of 10 open tasks accurate —
+>   partly refuting it. An unverifiable premise drove a real milestone.
+>
+> **How to apply:** treat A/Q citations as secondhand. Where one is load-bearing for a
+> decision, say so explicitly rather than presenting it as established, and prefer a
+> fresh ruling from Chai over an inherited one. If the brief exists outside the repo,
+> committing it (or an extract of its numbered answers) closes this gap permanently.
