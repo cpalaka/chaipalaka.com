@@ -68,7 +68,7 @@ not from the board or the brief.**
 *Verify:*
 ```sh
 ls web/dist/404.html || ls web/dist/404/index.html
-curl -s https://www.chaipalaka.com/nope-$RANDOM | grep -q 'data-server-rendered'
+curl -s https://chaipalaka.com/nope-$RANDOM | grep -q 'data-server-rendered'
 ```
 
 **`deploy/` changes are propose-then-apply.**
@@ -113,7 +113,7 @@ the flash question ([`workstream-content.md`](workstream-content.md) WP-09):
 
 ```sh
 curl -s -o /dev/null -w '%{http_code}' \
-  https://www.chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
+  https://chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
 ```
 
 Also drafts `docs/process/launch-checklist.md`.

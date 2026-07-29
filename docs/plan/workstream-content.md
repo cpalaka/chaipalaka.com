@@ -105,7 +105,7 @@ it in one command:
 
 ```sh
 curl -s -o /dev/null -w '%{http_code}' \
-  https://www.chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
+  https://chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
 ```
 
 **The acceptance criterion survives the correction.** An AC that only checks local
@@ -114,11 +114,12 @@ check** — the guard rail was right for the wrong reason.
 
 ### Scope, in order
 
-1. **Locate and classify the remaining ~36 items — `.swf` or video?** This is
-   **O4**, unanswered (Q7). `.swf` plays through the shipped, tested `RuffleEmbed`;
-   video does not, and needs a different component and route treatment (+≈6 h). The
-   four that exist are `.swf`, which is evidence, not an answer.
-2. Convert if needed; extend `assets/`.
+1. **Locate the remaining ~36 items.** The *format* half of this step is closed:
+   **O4 was answered 2026-07-28 — the catalogue is all `.swf`**, so everything
+   plays through the shipped, tested `RuffleEmbed` and the +≈6 h video branch is
+   off the table ([`open-questions.md`](open-questions.md) §T11). What remains is
+   whether the items are locatable at all — **TRIGGER-G and R5 still stand**.
+2. Extend `assets/` (no conversion needed).
 3. `make assets-sync` — **human-gated**, it targets the server.
 4. Author ~36 content entries. The existing four show the shape: title,
    description, category, quality, tags, plus a short retrospective body.
@@ -156,8 +157,9 @@ that reads badly out of context. That review is most of the upper range.
 
 ## Content-stream risks
 
-- **R5 — the flash media may not exist in usable form**, and its format is
-  unanswered (O4). TRIGGER-G forces the question early enough to cut cleanly.
+- **R5 — the flash media may not exist in usable form.** Its *format* is no
+  longer part of the risk (O4 answered 2026-07-28: all `.swf`); existence is.
+  TRIGGER-G forces the question early enough to cut cleanly.
 - **R3 — the ±11 h authoring assumption** (O2). Answerable by Chai in one sentence;
   unresolved it is the plan's largest single unknown, and this stream is the one
   that starves when it goes wrong.

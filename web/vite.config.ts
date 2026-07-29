@@ -14,10 +14,15 @@ import { rehypePocketFootnotes } from './src/blog/rehype-pocket-footnotes'
 import { rehypeLinkTypes } from './src/blog/rehype-link-types'
 import { vitePluginFeeds } from './src/blog/vite-plugin-feeds'
 import { vitePluginAtelier } from './src/atelier/vite-plugin-atelier'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import {
+    buildSitemap,
+    prerenderRoutes,
+    sitemapRoutes,
+} from './src/site-routes'
+import { getContentSlugs } from './src/content-slugs'
+import { stat, writeFile } from 'node:fs/promises'
 import { createReadStream, existsSync } from 'node:fs'
 import { join, resolve, extname } from 'node:path'
-import matter from 'gray-matter'
 import type { Plugin } from 'vite'
 
 const MIME: Record<string, string> = {
@@ -92,27 +97,18 @@ function previewDirRedirect(): Plugin {
     }
 }
 
-async function getBlogSlugs(): Promise<string[]> {
-    try {
-        const contentDir = resolve(process.cwd(), '..', 'content', 'blog')
-        const entries = await readdir(contentDir, { withFileTypes: true })
-        const isProd = process.env.NODE_ENV === 'production'
-        const slugs = await Promise.all(
-            entries
-                .filter((e) => e.isDirectory())
-                .map(async (e) => {
-                    const mdxPath = join(contentDir, e.name, 'index.mdx')
-                    const raw = await readFile(mdxPath, 'utf-8')
-                    const { data } = matter(raw)
-                    if (isProd && data.draft) return null
-                    return e.name.replace(/^\d{4}-\d{2}-\d{2}-/, '')
-                }),
-        )
-        return slugs.filter((s): s is string => s !== null)
-    } catch {
-        return []
-    }
-}
+/** Canonical host — Caddy 301s www -> apex (ADR-0013). Feeds and sitemap agree. */
+const SITE_BASE_URL = 'https://chaipalaka.com'
+
+/**
+ * The sitemap's URL list, filled in by `includedRoutes` and consumed by
+ * `onFinished`. One derivation feeds both, which is what stops the prerender
+ * set and the sitemap from drifting apart (task-044 AC#4). It is a module
+ * variable rather than a return value because those are the only two build
+ * hooks that see the real route tree, and they cannot pass values to each
+ * other. `onFinished` runs only after `includedRoutes`, so it is never stale.
+ */
+let sitemapUrls: string[] = []
 
 export default defineConfig({
     build: {
@@ -139,7 +135,7 @@ export default defineConfig({
             }),
         },
         react(),
-        vitePluginFeeds({ baseUrl: 'https://chaipalaka.com' }),
+        vitePluginFeeds({ baseUrl: SITE_BASE_URL }),
         vitePluginAtelier(),
         serveLocalAssets(),
         previewDirRedirect(),
@@ -156,21 +152,37 @@ export default defineConfig({
         script: 'async',
         formatting: 'none',
         dirStyle: 'nested',
-        async includedRoutes(paths) {
-            const slugs = await getBlogSlugs()
-            const blogPaths = slugs.flatMap((slug) => [
-                `/blog/${slug}`,
-                `/blog/${slug}/read`,
+        // Derived wholesale from the route tree SSG hands us rather than
+        // filtered off the paths it discovered: `/test/*` and `/sandbox/*` stay
+        // reachable in `npm run dev` but never ship (decision O5), `/lab` stays
+        // public (ADR-0011), `/stuff/flash/:slug` is expanded from content so
+        // nothing public is client-only, and `/404` is prerendered so Caddy has
+        // an error page to serve (ADR-0013). See src/site-routes.ts.
+        async includedRoutes(_paths, routes) {
+            const contentRoot = resolve(process.cwd(), '..', 'content')
+            const isProd = process.env.NODE_ENV === 'production'
+            const [blogSlugs, flashSlugs] = await Promise.all([
+                getContentSlugs(join(contentRoot, 'blog'), {
+                    isProd,
+                    stripDatePrefix: true,
+                }),
+                getContentSlugs(join(contentRoot, 'stuff', 'flash'), {
+                    isProd,
+                }),
             ])
-            const { TUNABLE_SCENE_IDS } =
-                await import('./src/canvas/scenes/registry')
-            const sandboxScenePaths = TUNABLE_SCENE_IDS.map(
-                (id) => `/sandbox/scenes/${id}`,
+            sitemapUrls = sitemapRoutes(routes, blogSlugs, flashSlugs)
+            return prerenderRoutes(routes, blogSlugs, flashSlugs)
+        },
+        // The sitemap is written here, not in the feeds plugin: this is the
+        // first hook that runs after the route set is resolved.
+        async onFinished(dir) {
+            await writeFile(
+                join(dir, 'sitemap.xml'),
+                buildSitemap(sitemapUrls, SITE_BASE_URL),
+                'utf-8',
             )
-            return [...paths, ...blogPaths, ...sandboxScenePaths].filter(
-                (p) =>
-                    !p.startsWith('/sandbox/') ||
-                    p.startsWith('/sandbox/scenes/'),
+            console.log(
+                `[sitemap] ${sitemapUrls.length} URLs written to sitemap.xml`,
             )
         },
     },

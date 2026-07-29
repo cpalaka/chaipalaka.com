@@ -1,0 +1,10 @@
+# chaipalaka.com
+User-agent: *
+Allow: /
+
+# Not a page: this one document is what Caddy serves at every URL that misses
+# (ADR-0013). It is already excluded from sitemap.xml and answers 404, but a
+# crawler can reach a URL without being told about it.
+Disallow: /404/
+
+Sitemap: https://chaipalaka.com/sitemap.xml

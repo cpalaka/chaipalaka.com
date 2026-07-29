@@ -145,6 +145,14 @@ export const BACKGROUND_SCENES: readonly BackgroundScene[] = SCENE_REGISTRY.map(
     (e) => e.scene,
 )
 
+/**
+ * No production consumer since task-044: this enumerated `/sandbox/scenes/:id`
+ * for the prerender set, and those routes no longer ship (decision O5). The
+ * Tuner resolves a single entry by URL param via `getSceneEntry`, so it never
+ * needed the list. Kept because it is the iteration source for the registry's
+ * tunable-module tests and stays correct as scenes are added — if the sandbox
+ * routes are ever dropped from `App.tsx` too, delete this with them.
+ */
 export const TUNABLE_SCENE_IDS: readonly SceneId[] = SCENE_REGISTRY.filter(
     (e) => e.tunable,
 ).map((e) => e.scene.id)

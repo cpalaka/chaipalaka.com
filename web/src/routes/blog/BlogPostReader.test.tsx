@@ -33,11 +33,36 @@ function renderAt(path: string) {
     )
 }
 
+// Changed in the task-044 review. This used to assert that an unknown slug
+// rendered NOTHING — which was true, and was the bug: Caddy serves the 404
+// shell and a 404 status at /blog/<typo>, but the client router resolves it to
+// this component, so returning null left the content box empty. A mistyped
+// post URL rendered a blank page. It now says what the bespoke 404 says.
 describe('BlogPostReader — slug miss', () => {
-    test('returns null when slug does not match any post', () => {
+    test('still renders the reading surface rather than nothing', () => {
         const { container } = renderAt('/blog/does-not-exist/read')
-        // The router renders an empty wrapper around a null route element.
-        expect(container.querySelector('main.reader')).toBeNull()
+        expect(container.querySelector('main.reader')).toBeTruthy()
+    })
+
+    test('says the page does not exist', () => {
+        const { getByText, container } = renderAt('/blog/does-not-exist/read')
+        expect(container.textContent).toContain('404')
+        expect(getByText(/doesn't exist/i)).toBeTruthy()
+    })
+
+    test('offers a way out', () => {
+        const { container } = renderAt('/blog/does-not-exist/read')
+        const hrefs = [...container.querySelectorAll('a')].map((a) =>
+            a.getAttribute('href'),
+        )
+        expect(hrefs).toContain('/blog')
+        expect(hrefs).toContain('/')
+    })
+
+    test('does not render post chrome it has no post for', () => {
+        const { container } = renderAt('/blog/does-not-exist/read')
+        expect(container.querySelector('.post-meta')).toBeNull()
+        expect(container.querySelector('[data-testid="mdx-body"]')).toBeNull()
     })
 })
 

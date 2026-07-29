@@ -25,6 +25,14 @@ export function FrameBar() {
     const { pathname: rawPathname } = useLocation()
     const pathname = rawPathname.replace(/\/+$/, '') || '/'
     const [settingsOpen, setSettingsOpen] = useState(false)
+    // Second #418 source, from the other direction (task-044): Caddy serves the
+    // one prerendered `dist/404/index.html` at *whatever* URL missed, so the
+    // pathname baked into that file ("/404") can never match the hydrating
+    // client's. Unlike the trailing-slash case above there is no normalization
+    // that makes them agree, so the check is suppressed and the text is
+    // corrected after mount instead. See the `key` on the indicator below.
+    const [hydrated, setHydrated] = useState(false)
+    useEffect(() => setHydrated(true), [])
     const { active, setActive } = useGallery()
     const { theme, cycleTheme } = useTheme()
     const { edge, setEdge } = useFrameEdge()
@@ -67,7 +75,19 @@ export function FrameBar() {
                     chaipalaka
                 </Link>
                 {pathname !== '/' ? (
-                    <span className="frame-bar__current-page">{pathname}</span>
+                    // suppressHydrationWarning stops a mismatch here from making
+                    // React discard the whole hydrated root; the key flip then
+                    // remounts the span with the live pathname, which is what
+                    // actually replaces the "/404" text carried in the shell.
+                    // Real routes hydrate with matching text, so the remount is
+                    // a no-op for them.
+                    <span
+                        key={hydrated ? 'live' : 'prerendered'}
+                        className="frame-bar__current-page"
+                        suppressHydrationWarning
+                    >
+                        {pathname}
+                    </span>
                 ) : null}
             </div>
 
@@ -75,8 +95,15 @@ export function FrameBar() {
 
             <nav aria-label="Section nav" className="frame-bar__nav">
                 {SECTIONS.map((s) => (
+                    // Same hazard as the path indicator, and it needs the same
+                    // remount: the 404 shell ships data-active="false" on every
+                    // link, but served at /lifelog/nope the client computes
+                    // "true". React does not reconcile attributes against the
+                    // DOM during hydration, and the post-mount re-render sees
+                    // an unchanged value, so without the key flip the wrong
+                    // link stays highlighted for the life of the page.
                     <Link
-                        key={s.path}
+                        key={`${s.path}:${hydrated ? 'live' : 'prerendered'}`}
                         to={s.path}
                         viewTransition
                         className="frame-bar__nav-btn"

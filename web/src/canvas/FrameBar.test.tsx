@@ -204,3 +204,142 @@ describe('FrameBar', () => {
         expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 })
+
+// Regression, task-044: Caddy serves the single prerendered `dist/404/index.html`
+// at every URL that missed, so the current-page text baked into that file
+// ("/404") reaches the browser at, say, `/nope`. React 18 does not patch a
+// hydration mismatch — it throws the hydrated root away and re-renders on the
+// client, logging #418 — so the shell must hydrate cleanly AND end up showing
+// the real URL. Asserting only the first half would be satisfied by deleting
+// the indicator, so both are pinned here.
+describe('FrameBar — 404 shell hydration (task-044)', () => {
+    async function hydrateShellAt(
+        prerenderedPath: string,
+        servedPath: string,
+    ): Promise<{ container: HTMLElement; hydrationErrors: string[] }> {
+        const { renderToString } = await import('react-dom/server')
+        const { hydrateRoot } = await import('react-dom/client')
+        const { act } = await import('react')
+
+        const tree = (path: string) => (
+            <MemoryRouter initialEntries={[path]}>
+                <FrameBar />
+            </MemoryRouter>
+        )
+
+        const container = document.createElement('div')
+        container.innerHTML = renderToString(tree(prerenderedPath))
+        document.body.appendChild(container)
+
+        const hydrationErrors: string[] = []
+        const originalError = console.error
+        console.error = (...args: unknown[]) => {
+            hydrationErrors.push(args.map(String).join(' '))
+        }
+        try {
+            await act(async () => {
+                hydrateRoot(container, tree(servedPath))
+            })
+        } finally {
+            console.error = originalError
+        }
+        return { container, hydrationErrors }
+    }
+
+    test('the prerendered shell carries the /404 path', async () => {
+        const { renderToString } = await import('react-dom/server')
+        const html = renderToString(
+            <MemoryRouter initialEntries={['/404']}>
+                <FrameBar />
+            </MemoryRouter>,
+        )
+        expect(html).toContain('/404')
+    })
+
+    test('hydrating the /404 shell at another URL logs no hydration error', async () => {
+        const { hydrationErrors } = await hydrateShellAt('/404', '/nope-12345')
+        expect(
+            hydrationErrors.filter((e) => /hydrat/i.test(e)),
+        ).toEqual([])
+    })
+
+    test('and the indicator ends up showing the URL actually visited', async () => {
+        const { container } = await hydrateShellAt('/404', '/nope-12345')
+        const indicator = container.querySelector('.frame-bar__current-page')
+        expect(indicator?.textContent).toBe('/nope-12345')
+    })
+
+    test('a normally-prerendered route still hydrates clean and keeps its path', async () => {
+        const { container, hydrationErrors } = await hydrateShellAt(
+            '/blog',
+            '/blog',
+        )
+        expect(hydrationErrors.filter((e) => /hydrat/i.test(e))).toEqual([])
+        expect(
+            container.querySelector('.frame-bar__current-page')?.textContent,
+        ).toBe('/blog')
+    })
+})
+
+// Regression, task-044 review: the path indicator was fixed but the nav links
+// carry the identical hazard. The 404 shell ships data-active="false" on all
+// three; served at /lifelog/nope the client computes "true" for lifelog.
+// React does not reconcile attributes during hydration, so this needs the same
+// remount the indicator got. Asserting only the shell would be satisfied by
+// deleting the highlight, so the working case is pinned too.
+describe('FrameBar — nav highlight through the 404 shell (task-044)', () => {
+    async function hydrateShellAt(prerenderedPath: string, servedPath: string) {
+        const { renderToString } = await import('react-dom/server')
+        const { hydrateRoot } = await import('react-dom/client')
+        const { act } = await import('react')
+        const tree = (path: string) => (
+            <MemoryRouter initialEntries={[path]}>
+                <FrameBar />
+            </MemoryRouter>
+        )
+        const container = document.createElement('div')
+        container.innerHTML = renderToString(tree(prerenderedPath))
+        document.body.appendChild(container)
+        await act(async () => {
+            hydrateRoot(container, tree(servedPath))
+        })
+        return container
+    }
+
+    const activeOf = (c: HTMLElement, href: string) =>
+        c.querySelector(`a[href="${href}"]`)?.getAttribute('data-active')
+
+    test('the /404 shell ships every nav link inactive', async () => {
+        const { renderToString } = await import('react-dom/server')
+        const html = renderToString(
+            <MemoryRouter initialEntries={['/404']}>
+                <FrameBar />
+            </MemoryRouter>,
+        )
+        expect(html).not.toContain('data-active="true"')
+    })
+
+    test('highlights the section when the shell is served under it', async () => {
+        const c = await hydrateShellAt('/404', '/lifelog/nope')
+        expect(activeOf(c, '/lifelog')).toBe('true')
+    })
+
+    test('does not highlight the other sections', async () => {
+        const c = await hydrateShellAt('/404', '/lifelog/nope')
+        expect(activeOf(c, '/blog')).toBe('false')
+        expect(activeOf(c, '/stuff')).toBe('false')
+    })
+
+    test('a genuinely unmatched URL highlights nothing', async () => {
+        const c = await hydrateShellAt('/404', '/nope-12345')
+        for (const href of ['/blog', '/lifelog', '/stuff']) {
+            expect(activeOf(c, href)).toBe('false')
+        }
+    })
+
+    test('a normally-prerendered section route keeps its highlight', async () => {
+        const c = await hydrateShellAt('/blog', '/blog')
+        expect(activeOf(c, '/blog')).toBe('true')
+        expect(activeOf(c, '/lifelog')).toBe('false')
+    })
+})

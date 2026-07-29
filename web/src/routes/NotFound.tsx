@@ -1,6 +1,7 @@
 import { Page } from '../card/Page'
 import { Link } from 'react-router-dom'
 import { getPosts } from '../blog/posts'
+import { NOT_FOUND_BODY, NOT_FOUND_TITLE } from './notFoundCopy'
 import type { PageDef } from './PageDef'
 import type { CardContent } from '../card/Page'
 
@@ -43,15 +44,13 @@ export const pageDef: PageDef = {
 
 const cardContent: Record<string, CardContent> = {
     'notfound-headline': {
-        text: '404 — Page not found',
+        text: NOT_FOUND_TITLE,
         width: 320,
         height: 160,
         children: (
             <>
                 <h1 style={{ margin: 0, fontSize: '1.5rem' }}>404</h1>
-                <p style={{ margin: '0.5rem 0 0' }}>
-                    This page doesn't exist. Everything is floating away.
-                </p>
+                <p style={{ margin: '0.5rem 0 0' }}>{NOT_FOUND_BODY}</p>
             </>
         ),
     },

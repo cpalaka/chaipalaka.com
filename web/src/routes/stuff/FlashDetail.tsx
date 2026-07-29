@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { Page, type CardContent } from '../../card/Page'
 import { getPieceBySlug } from '../../stuff/flash/pieces'
+import NotFound from '../NotFound'
 import { RuffleEmbed } from '../../stuff/flash/RuffleEmbed'
 import type { PageDef } from '../PageDef'
 import type { Piece } from '../../stuff/flash/pieces'
@@ -184,8 +185,14 @@ export default function FlashDetail() {
         [piece, offsets],
     )
 
+    // An unknown slug still matches this route, so Caddy has already served a
+    // 404 status and the prerendered 404 shell. Bouncing to the gallery then
+    // landed the visitor on a 200-looking page under a 404 response, with the
+    // URL they typed silently discarded (task-044 review). This route is under
+    // CanvasLayout, the same shell NotFound renders in, so it can show the
+    // bespoke 404 in place.
     if (!piece || !built) {
-        return <Navigate to="/stuff/flash" replace />
+        return <NotFound />
     }
 
     return <Page pageDef={built.pageDef} cardContent={built.cardContent} />

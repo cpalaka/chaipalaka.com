@@ -22,11 +22,11 @@ brief §4 that bears on the plan.
 | T4 | Lifelog minimum undefined | §6.4 | DEFAULTED |
 | T5 | Board staleness unquantified | §6.5 | RESOLVED (as scheduled work) |
 | T6 | Capacity | §6.6 | RESOLVED |
-| T7 | Dev routes + `/lab` | §6.7 | DEFAULTED — **O5** |
+| T7 | Dev routes + `/lab` | §6.7 | **RESOLVED — Chai ruled O5, 2026-07-28** (default confirmed) |
 | T8 | Who ratifies an ADR amendment | §6.8 | RESOLVED (by existing process) — **O6** to override |
 | T9 | Content authoring effort | §6.9 | **OPEN — O2** |
 | T10 | `/claude` index + build-pull vs copy | Q13 | DEFAULTED |
-| T11 | Flash: `.swf` vs video; does the pipeline work | Q7 | RESOLVED (pipeline) + **OPEN — O4** (format) |
+| T11 | Flash: `.swf` vs video; does the pipeline work | Q7 | **RESOLVED — Chai ruled O4, 2026-07-28** (all `.swf`) |
 | T12 | "Simplified form" of the shader/three.js WIP | Q12 | DEFAULTED |
 | T13 | Do `/stuff` and `/` follow lifelog's composed model | Q9 | DEFAULTED |
 | T14 | TASK-035 skipped while all housekeeping was picked | §4 block 4 | RESOLVED (as scheduled work) |
@@ -297,7 +297,15 @@ TRIGGER-B watches *measured* pace from the first checkpoint.
 
 ---
 
-## T7 — Dev routes and `/lab` · §6.7 · **DEFAULTED — O5**
+## T7 — Dev routes and `/lab` · §6.7 · **RESOLVED — Chai ruled O5, 2026-07-28**
+
+> **Ruling (2026-07-28).** The default table below is confirmed unchanged and
+> executed in task-044: `/test/*` and `/sandbox/*` are dropped from the
+> prerender set and stay reachable under `npm run dev`; `/lab` stays public and
+> is now listed in the sitemap. Ratified by
+> [ADR-0013](../adr/0013-canonical-host-and-hard-404.md), which also records the
+> consequence the default did not anticipate — with no SPA fallback, a stripped
+> route returns a real 404 in production rather than silently working.
 
 **The tension.** `/test/canvas`, `/test/plain`, `/test/box`, `/test/box-b`,
 `/sandbox/cards`, `/sandbox/scenes/:id` are publicly reachable; `/lab` (ADR-0011)
@@ -416,7 +424,18 @@ this may never need answering.
 
 ---
 
-## T11 — Flash: does the pipeline work, and `.swf` vs video · Q7 · **RESOLVED + OPEN (O4)**
+## T11 — Flash: does the pipeline work, and `.swf` vs video · Q7 · **RESOLVED — Chai ruled O4, 2026-07-28**
+
+> **Ruling (2026-07-28).** The format fork is closed: **the catalogue is all
+> `.swf`.** Everything plays through the shipped, tested `RuffleEmbed` — no
+> second component, no separate route treatment, and none of the ≈6 h the video
+> branch would have cost. WP-09 keeps the size it was given.
+>
+> **This does not retire TRIGGER-G or R5.** Format was only half the question;
+> whether the ~36 unheld items are *locatable* is still open, and TRIGGER-G
+> still fires CUT-3 on **2026-09-06** if they are not in hand by then. Carry
+> this ruling onto the flash-ingest task when it is created at the M3
+> checkpoint.
 
 ### The pipeline question — **RESOLVED by inspection, and the answer is "yes, it has a payload"**
 
@@ -441,7 +460,7 @@ answerable in one command, and WP-02's dry-run runs it:
 
 ```sh
 curl -s -o /dev/null -w '%{http_code}' \
-  https://www.chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
+  https://chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js
 ```
 
 **The acceptance criterion survives the correction:** an AC that only checks local
@@ -549,8 +568,8 @@ Six items. Nothing here is resolvable by the plan.
 | ~~**O1**~~ | **ANSWERED 2026-07-26 — STRUNG short ropes, a living composition.** See T2 for the ruling and the derived-rope-length cost it accepts. On task-033 ACs #3/#4; goes into ADR-0012 | WP-03 sized 15 h, not 12 | — | **done** |
 | **O2** | **Content-authoring hours** — inside the 133 h, or outside? | **±11 h**, and whether CUT-4 fires | nothing immediately | **2026-08-02** |
 | **O3** | **Delight vs triage** — A19's rule moved every delight item except the capstone to NICE, and CUT-1 removes the last one beside it. Is that the intended outcome? If one item returns, DRAFT-007 is the cheapest | launch feel | nothing before M2 | **2026-08-30** |
-| **O4** | **Flash format** — are the ~40 items `.swf` (shipped `RuffleEmbed`) or video (different component, different route treatment, +≈6 h)? | WP-09's size and shape | WP-09 | **2026-09-06** |
-| **O5** | **Dev-route disposition** — confirm the strip list and the "keep `/lab` public" ruling (T7) | ~0 h either way | M0 exit criterion 3 | **2026-08-02** |
+| ~~**O4**~~ | **ANSWERED 2026-07-28 — all `.swf`.** Chai confirmed the whole catalogue is `.swf`, not just the four in `assets/`. WP-09 keeps its sized shape: shipped `RuffleEmbed`, no second component, no video route treatment, no +6 h | WP-09's size and shape | WP-09 | **done** |
+| ~~**O5**~~ | **ANSWERED 2026-07-28 — the plan default, as written.** Chai confirmed the strip list and "keep `/lab` public". Executed in task-044 and ratified by [ADR-0013](../adr/0013-canonical-host-and-hard-404.md) | ~0 h either way | M0 exit criterion 3 | **done** |
 | **O6** | **ADR ratification rule** (§6.8) — keep "Claude drafts, Chai ratifies via DoD #6", or switch to "the plan decides"? | process only | nothing | any time |
 
 **O1 is answered.** **O2 is now the outstanding one that moves real hours** — ±11 h,

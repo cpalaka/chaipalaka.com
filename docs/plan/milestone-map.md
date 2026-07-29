@@ -81,8 +81,8 @@ deploy dry-run (TASK-044).
    *Verify, both halves:*
    ```sh
    ls web/dist/404.html || ls web/dist/404/index.html   # SSG emits it at all
-   curl -s -o /dev/null -w '%{http_code}' https://www.chaipalaka.com/nope-$RANDOM   # 404
-   curl -s https://www.chaipalaka.com/nope-$RANDOM | grep -q 'data-server-rendered' # ours, not Caddy's
+   curl -s -o /dev/null -w '%{http_code}' https://chaipalaka.com/nope-$RANDOM   # 404
+   curl -s https://chaipalaka.com/nope-$RANDOM | grep -q 'data-server-rendered' # ours, not Caddy's
    ```
    Requires a `handle_errors` block in `deploy/Caddyfile` **and** the splat route
    added to the prerender set. `deploy/` changes are **propose-then-apply**.
@@ -110,7 +110,7 @@ deploy dry-run (TASK-044).
    *Verify:*
    ```sh
    curl -s -o /dev/null -w '%{http_code}' \
-     https://www.chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js   # 200
+     https://chaipalaka.com/assets/ruffle/nightly-2026-05-12/ruffle.js   # 200
    ```
    **Human-gated** — every server touch needs Chai's explicit go per CLAUDE.md.
 
@@ -283,7 +283,7 @@ budgeted to fire here — see the reconciliation table.)*
 
 ### Exit criterion
 
-**`https://www.chaipalaka.com` serves prod-v1, not the coming-soon page**, with
+**`https://chaipalaka.com` serves prod-v1, not the coming-soon page** (and `www` 301s to it), with
 every public route rendering authored content on mobile and desktop, and the launch
 checklist fully checked. *Verify:* the checklist document, signed off per DoD #6.
 

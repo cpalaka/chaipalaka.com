@@ -39,7 +39,7 @@ deploy-web:
 		--exclude='assets/' \
 		$(WEB_DIR)/dist/ \
 		$(SSH_HOST):$(WEB_REMOTE_DIR)/
-	@echo "deploy-web complete → https://www.chaipalaka.com"
+	@echo "deploy-web complete → https://chaipalaka.com"
 
 deploy-api:
 	@BUILD_SHA=$$(git rev-parse --short HEAD); \

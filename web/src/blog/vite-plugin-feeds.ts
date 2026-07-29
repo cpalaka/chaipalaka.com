@@ -114,21 +114,10 @@ ${items}
 </rss>`
 }
 
-export function buildSitemap(posts: PostMeta[], baseUrl: string): string {
-    const staticRoutes = ['/', '/blog']
-    const dynamicRoutes = posts.flatMap((p) => [
-        `/blog/${p.slug}`,
-        `/blog/${p.slug}/read`,
-    ])
-    const urls = [...staticRoutes, ...dynamicRoutes]
-        .map((route) => `  <url>\n    <loc>${baseUrl}${route}</loc>\n  </url>`)
-        .join('\n')
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`
-}
+// `sitemap.xml` used to be written here, from a hardcoded `['/', '/blog']`.
+// It now lives in src/site-routes.ts and is written by `ssgOptions.onFinished`,
+// which is the first point in the build where the real route tree is known
+// (task-044 AC#4).
 
 export function vitePluginFeeds(options: FeedsOptions): Plugin {
     let outDir = 'dist'
@@ -150,14 +139,8 @@ export function vitePluginFeeds(options: FeedsOptions): Plugin {
                 await buildRss(posts, options.baseUrl),
                 'utf-8',
             )
-            await writeFile(
-                join(outDir, 'sitemap.xml'),
-                buildSitemap(posts, options.baseUrl),
-                'utf-8',
-            )
-
             console.log(
-                `[feeds] rss.xml + sitemap.xml written (${posts.length} post${posts.length === 1 ? '' : 's'})`,
+                `[feeds] rss.xml written (${posts.length} post${posts.length === 1 ? '' : 's'})`,
             )
         },
     }

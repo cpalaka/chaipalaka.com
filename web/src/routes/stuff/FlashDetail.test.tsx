@@ -85,13 +85,32 @@ function renderAt(path: string) {
     return { ...utils, getLocation: () => location }
 }
 
+// Changed in the task-044 review. This used to redirect to /stuff/flash, which
+// meant a mistyped piece URL landed the visitor on a 200-looking gallery under
+// a 404 response, with the URL they typed silently discarded. The route is
+// under CanvasLayout, the same shell NotFound renders in, so it now shows the
+// bespoke 404 in place.
 describe('FlashDetail — slug miss', () => {
-    test('renders <Navigate> to /stuff/flash (router lands on the index route)', () => {
+    test('does NOT redirect away from the URL that was requested', () => {
         const { getLocation, queryByTestId } = renderAt('/stuff/flash/missing')
-        expect(getLocation()).toBe('/stuff/flash')
-        // The fallback index route was rendered.
-        expect(queryByTestId('flash-index')).toBeTruthy()
+        expect(getLocation()).toBe('/stuff/flash/missing')
+        expect(queryByTestId('flash-index')).toBeNull()
     })
+
+    test('renders the bespoke 404 in place', () => {
+        renderAt('/stuff/flash/missing')
+        const notFound = physicsPageCalls.at(-1)
+        expect(notFound).toBeDefined()
+        expect(notFound!.pageDef.cards.map((c) => c.id)).toContain(
+            'notfound-headline',
+        )
+        expect(notFound!.cardContent['notfound-headline']!.text).toContain('404')
+    })
+
+    // The complement — that a KNOWN slug still renders the piece rather than
+    // the 404 — is the "FlashDetail — slug match" describe below, which mocks
+    // getPieceBySlug to resolve. Duplicating it here would only re-assert the
+    // miss path, since this block has no piece registered.
 })
 
 describe('FlashDetail — slug match', () => {

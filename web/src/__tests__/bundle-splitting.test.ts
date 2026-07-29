@@ -9,8 +9,22 @@ import { ATELIER_ONLY_BUNDLE_MARKER } from '../atelier/atelier-only-marker'
 const here = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(here, '../..')
 const distDir = join(projectRoot, 'dist')
-const plainHtmlPath = join(distDir, 'test/plain/index.html')
-const canvasHtmlPath = join(distDir, 'test/canvas/index.html')
+
+// This guard used to read /test/plain and /test/canvas, which stopped shipping
+// in task-044 (decision O5). It now reads the real routes that use each layout:
+// the canvas sample is /404, which is always emitted and depends on no content,
+// and the plain sample is whichever published post's /read surface exists —
+// PlainLayout is only ever reached through /blog/:slug/read, so the sample has
+// to be discovered rather than hardcoded.
+const canvasHtmlPath = join(distDir, '404/index.html')
+
+function findPlainHtmlPath(): string | undefined {
+    if (!existsSync(distDir)) return undefined
+    const match = readdirSync(distDir, { recursive: true })
+        .map(String)
+        .find((p) => p.startsWith('blog/') && p.endsWith('read/index.html'))
+    return match ? join(distDir, match) : undefined
+}
 
 function extractAssetUrls(html: string): string[] {
     const urls: string[] = []
@@ -33,9 +47,19 @@ function chunkPath(url: string): string {
 }
 
 function ensureBuilt() {
-    if (!existsSync(plainHtmlPath) || !existsSync(canvasHtmlPath)) {
+    if (!existsSync(canvasHtmlPath) || !findPlainHtmlPath()) {
         execSync('npm run build', { cwd: projectRoot, stdio: 'inherit' })
     }
+}
+
+function plainHtml(): string {
+    const path = findPlainHtmlPath()
+    if (!path) {
+        throw new Error(
+            'no dist/blog/*/read/index.html to sample — plain-mode bundle guard has nothing to check',
+        )
+    }
+    return readFileSync(path, 'utf8')
 }
 
 function listDistJsFiles(): string[] {
@@ -48,14 +72,12 @@ describe('route-level bundle splitting', () => {
     beforeAll(ensureBuilt, 120_000)
 
     test('plain-mode HTML preloads at least one route chunk', () => {
-        const html = readFileSync(plainHtmlPath, 'utf8')
-        const urls = extractAssetUrls(html)
+        const urls = extractAssetUrls(plainHtml())
         expect(urls.length).toBeGreaterThan(0)
     })
 
     test('no chunk loaded by plain-mode HTML contains the canvas-only marker', () => {
-        const html = readFileSync(plainHtmlPath, 'utf8')
-        const urls = extractAssetUrls(html)
+        const urls = extractAssetUrls(plainHtml())
         for (const url of urls) {
             const content = readFileSync(chunkPath(url), 'utf8')
             expect(

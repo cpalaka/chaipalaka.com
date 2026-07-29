@@ -491,6 +491,43 @@ _Avoid_: SSR fallback (there is no SSR runtime — it is prerendered),
 noscript block (the gate is a CSS class-swap, not `<noscript>`),
 no-JS mode (it is not a mode the live app switches into).
 
+**Prerender set**:
+The list of routes `vite-react-ssg` renders to static HTML, returned by
+`ssgOptions.includedRoutes`. Derived — not hand-written — by walking the
+route tree `App.tsx` declares (`web/src/site-routes.ts`) and expanding the
+`:param` routes from `content/`. It is everything in `sitemap.xml` plus the
+**unlisted routes**. Because production ships no SPA fallback (ADR-0013),
+a route absent from this set returns a real 404 in production even though
+it still works under `npm run dev`.
+_Avoid_: "the routes" (ambiguous between declared, prerendered, and
+listed — three different sets), route manifest (nothing is manifested;
+it is computed per build).
+
+**Dev route**:
+A route that exists in `App.tsx` and is reachable under `npm run dev` but
+is deliberately excluded from the **prerender set** and the sitemap —
+today everything under `/test/` and `/sandbox/` (decision O5, ADR-0013).
+Contrast **`/lab`**, which looks like a dev surface and is not: it is an
+ADR-0011 art surface, public and listed.
+_Avoid_: sandbox route (only half of them), internal route (nothing
+enforces access — they are simply not shipped), disabled route (they are
+not disabled, just unpublished).
+
+**Unlisted route**:
+Prerendered but deliberately kept out of `sitemap.xml` — today only
+`/404`, which must exist as a static file for Caddy's `handle_errors` to
+serve but must never be advertised to a crawler.
+_Avoid_: hidden route (it is not hidden — it is served constantly, at
+every URL that misses).
+
+**Canonical host**:
+The apex `chaipalaka.com`. `www` is a declared site address that
+permanently redirects to it, and the feed/sitemap `baseUrl` names the
+apex. Before ADR-0013 both names served the same content with no redirect
+between them.
+_Avoid_: primary domain, base URL (the latter names the specific
+`vite.config.ts` constant, not the hosting decision).
+
 ### Text and measurement
 
 **Font**:

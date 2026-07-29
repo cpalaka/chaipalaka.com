@@ -3,12 +3,10 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'nod
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import {
-    escapeXml,
-    buildRss,
-    buildSitemap,
-    vitePluginFeeds,
-} from './vite-plugin-feeds'
+// buildSitemap moved to src/site-routes.ts in task-044 — the sitemap is a
+// function of the route set, not of the post list, and is now written by
+// `ssgOptions.onFinished`. Its tests moved with it.
+import { escapeXml, buildRss, vitePluginFeeds } from './vite-plugin-feeds'
 
 describe('escapeXml', () => {
     it('escapes the five core XML entities', () => {
@@ -80,35 +78,6 @@ describe('buildRss', () => {
     })
 })
 
-describe('buildSitemap', () => {
-    const base = 'https://example.com'
-
-    it('lists only the static routes when there are no posts', () => {
-        const xml = buildSitemap([], base)
-        expect(xml).toContain(`<loc>${base}/</loc>`)
-        expect(xml).toContain(`<loc>${base}/blog</loc>`)
-        const locMatches = xml.match(/<loc>/g) ?? []
-        expect(locMatches).toHaveLength(2)
-    })
-
-    it('adds /blog/<slug> and /blog/<slug>/read for each post', () => {
-        const xml = buildSitemap(
-            [
-                {
-                    slug: 'hello',
-                    title: 't',
-                    description: 'd',
-                    date: '2026-01-15',
-                    body: '',
-                },
-            ],
-            base,
-        )
-        expect(xml).toContain(`<loc>${base}/blog/hello</loc>`)
-        expect(xml).toContain(`<loc>${base}/blog/hello/read</loc>`)
-    })
-})
-
 describe('vitePluginFeeds (lifecycle)', () => {
     let root: string
     let webDir: string
@@ -155,7 +124,7 @@ describe('vitePluginFeeds (lifecycle)', () => {
         await plugin.closeBundle()
     }
 
-    it('writes rss.xml and sitemap.xml with the post slug stripped of the date prefix', async () => {
+    it('writes rss.xml with the post slug stripped of the date prefix', async () => {
         writePost('2026-01-15-hello', {
             title: 'Hello',
             description: 'desc',
@@ -164,18 +133,21 @@ describe('vitePluginFeeds (lifecycle)', () => {
         await runClose('production')
 
         const rssPath = join(outDir, 'rss.xml')
-        const sitemapPath = join(outDir, 'sitemap.xml')
         expect(existsSync(rssPath)).toBe(true)
-        expect(existsSync(sitemapPath)).toBe(true)
 
         const rss = readFileSync(rssPath, 'utf-8')
-        const sitemap = readFileSync(sitemapPath, 'utf-8')
         expect(rss).toContain('<title>Hello</title>')
         expect(rss).toContain('<link>https://example.com/blog/hello</link>')
-        expect(sitemap).toContain('<loc>https://example.com/blog/hello</loc>')
-        expect(sitemap).toContain(
-            '<loc>https://example.com/blog/hello/read</loc>',
-        )
+    })
+
+    it('no longer writes sitemap.xml — ssgOptions.onFinished owns it (task-044)', async () => {
+        writePost('2026-01-15-hello', {
+            title: 'Hello',
+            description: 'desc',
+            date: '2026-01-15',
+        })
+        await runClose('production')
+        expect(existsSync(join(outDir, 'sitemap.xml'))).toBe(false)
     })
 
     it('orders rss items by date descending', async () => {
@@ -214,11 +186,10 @@ describe('vitePluginFeeds (lifecycle)', () => {
         await runClose('production')
 
         const rss = readFileSync(join(outDir, 'rss.xml'), 'utf-8')
-        const sitemap = readFileSync(join(outDir, 'sitemap.xml'), 'utf-8')
         expect(rss).toContain('<title>Published</title>')
         expect(rss).not.toContain('<title>Wip</title>')
-        expect(sitemap).toContain('/blog/pub')
-        expect(sitemap).not.toContain('/blog/wip')
+        // The sitemap half of this assertion moved to content-slugs.test.ts —
+        // drafts are now filtered where the slug list is built (task-044).
     })
 
     it('includes draft posts when mode is not production', async () => {

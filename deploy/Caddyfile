@@ -9,17 +9,55 @@
 # Caddy handles automatic TLS via Let's Encrypt — no certificate config
 # in this file by design.
 
-chaipalaka.com, www.chaipalaka.com {
+# Canonical host is the apex (ADR-0013). Both names used to be served from one
+# site block with no redirect between them, so every page existed at two URLs
+# while the feed and sitemap only ever named the apex. www now 301s; automatic
+# TLS still covers it because it is still a declared site address.
+www.chaipalaka.com {
+	redir https://chaipalaka.com{uri} permanent
+}
+
+chaipalaka.com {
 	encode zstd gzip
+
+	# Hoisted out of `handle` so `handle_errors` can serve from it too.
+	root * /var/www/chaipalaka
 
 	# Bun API backend (see deploy/chaipalaka-api.service).
 	handle /api/* {
 		reverse_proxy localhost:3000
 	}
 
+	# `/404` is a document, not a page: it exists so `handle_errors` has
+	# something to serve. Reached directly it would otherwise answer 200 —
+	# a soft 404, which a crawler is free to index as a real page even though
+	# it is kept out of sitemap.xml. Force the status here too.
+	@notfound_doc path /404 /404/ /404/*
+	handle @notfound_doc {
+		rewrite * /404/index.html
+		file_server {
+			status 404
+		}
+	}
+
 	# Static site (vite-react-ssg output rsync'd by `make deploy-web`).
+	# Deliberately no SPA `try_files` fallback (ADR-0013): every public route
+	# is prerendered, so a URL that misses is genuinely absent and should say
+	# so with a 404 rather than answer 200 with a client-rendered error page.
 	handle {
-		root * /var/www/chaipalaka
 		file_server
+	}
+
+	# Serve the prerendered bespoke 404 (dist/404/index.html) on a miss, and
+	# keep the 404 status — `file_server` alone would answer 200.
+	handle_errors {
+		@404 expression {err.status_code} == 404
+		handle @404 {
+			rewrite * /404/index.html
+			file_server {
+				status 404
+			}
+		}
+		respond "{err.status_code} {err.status_text}"
 	}
 }

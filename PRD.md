@@ -339,8 +339,10 @@ The aesthetic is **Swiss-grid restrained brutalism**: high-contrast, fixed three
 ### Domain extras
 
 - **RSS** at `/rss.xml`, build-time generated, full post bodies, blog only (not portfolio / lifelog / notes).
-- **Sitemap** at `/sitemap.xml`, build-time generated, all canonical routes included with appropriate priority (plain-mode reader URLs included alongside their canvas counterparts).
-- **404 page** in `CanvasLayout` declares `gravity: 'up'` in its `PageDef` — cards float upward and pile against the ceiling, making the failure state physically legible. Surfaces a headline card, 3–4 recent blog post cards, 1 featured portfolio card, and a "did you mean ___" link card.
+- **Sitemap** at `/sitemap.xml`, build-time generated (plain-mode reader URLs included alongside their canvas counterparts). No `priority` is emitted — it never was, and Google has stated it ignores the element.
+  > **Note (2026-07-28 — task-044 / [ADR-0013](docs/adr/0013-canonical-host-and-hard-404.md)).** The route list is no longer hand-maintained: both the sitemap and the prerender set are derived from the route tree `App.tsx` declares, via `web/src/site-routes.ts`. Dev routes (`/test/*`, `/sandbox/*`) stay reachable under `npm run dev` and ship nowhere; `/lab` is public and listed. The canonical host is the apex `chaipalaka.com`, with `www` permanently redirected.
+- **404 page** in `CanvasLayout` — surfaces a headline card, recent blog post cards, a featured portfolio card, and a "did you mean ___" link card.
+  > **Note (2026-07-28 — task-044 / [ADR-0013](docs/adr/0013-canonical-host-and-hard-404.md)).** The `gravity: 'up'` joke retired with the drift conversion (see the ADR-0010 note above). The page is now **prerendered to `dist/404/index.html`** and served by Caddy `handle_errors` **with the 404 status preserved**; there is deliberately no SPA `try_files` fallback, so a URL that misses is genuinely absent rather than a 200 carrying a client-rendered error.
 - **OpenGraph metadata** populated per page from MDX frontmatter (`title`, `description`, `og_image`). For v1, `og_image` is manually authored. Auto-generation (Satori or similar) deferred.
 - **Analytics** deferred. Will revisit (likely self-hosted GoatCounter or Umami on the same Hetzner box).
 - **Comments** explicitly skipped. Footer link to email/Bluesky for feedback.
