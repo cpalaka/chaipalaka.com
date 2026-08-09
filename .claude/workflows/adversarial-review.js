@@ -1,14 +1,21 @@
 export const meta = {
   name: 'adversarial-review',
   description: 'Adversarial pre-merge review of a task branch (modest|full modes)',
-  whenToUse: 'After the verify gate is green on a task branch, BEFORE diff review/merge. args: {mode: "modest"|"full", task: "task-NNN[.NN]", diffRange: "main...HEAD", specSections: "…", focus: "…", docs: ["path", …]}. Full mode projects >20 agents — state the estimate in chat before launching. Relay ALL confirmed findings to the user verbatim; the session that wrote the code never self-dismisses one. Model policy (2026-07-13, Chai): all-Opus — finder/critic/synthesis stages run Opus (Fable retired from this workflow to conserve the weekly budget); verify panels Opus xhigh as before.',
+  whenToUse: 'After the verify gate is green on a task branch, BEFORE diff review/merge. args: {mode: "modest"|"full", task: "task-NNN[.NN]", diffRange: "main...HEAD", specSections: "…", focus: "…", docs: ["path", …]}. AGENT COUNT: full mode projects >20 agents, ABOVE the harness\'s default "medium" dynamic-workflow-size guideline of <15 — the harness guideline binds first, so state the projected count in chat and confirm the size setting before launching a full run. Relay ALL confirmed findings to the user verbatim; the session that wrote the code never self-dismisses one. MODEL POLICY: this fork is deliberately all-workhorse at every stage. Its original rationale (2026-07-13) was "conserve the weekly Fable budget" — a RATIONING argument that no longer holds on its own terms; the fork stays all-workhorse because nothing here has been measured to need the scarce tier, not because the tier is unaffordable. To buy scarce capability, port the args.scarce posture ladder from the space-miner copy (the reference shape named by the multi-agent-policy skill) rather than reintroducing a fable boolean.',
   phases: [
-    { title: 'Find', detail: 'independent Opus lenses over the branch diff', model: 'opus' },
-    { title: 'Critic', detail: 'full mode only: Opus completeness pass', model: 'opus' },
-    { title: 'Verify', detail: 'severity-tiered Opus xhigh skeptic panels', model: 'opus' },
-    { title: 'Synthesize', detail: 'full mode only: Opus cross-finding synthesis', model: 'opus' },
+    { title: 'Find', detail: 'independent finder lenses over the branch diff', model: 'claude-opus-5' },
+    { title: 'Critic', detail: 'full mode only: completeness pass', model: 'claude-opus-5' },
+    { title: 'Verify', detail: 'severity-tiered xhigh skeptic panels', model: 'claude-opus-5' },
+    { title: 'Synthesize', detail: 'full mode only: cross-finding synthesis', model: 'claude-opus-5' },
   ],
 }
+
+// MODEL IDS ARE CONCRETE, NEVER ALIASES. multi-agent-policy requires resolving the ID by probe at
+// authoring time: a short tier alias can lag a release and keep serving the prior generation while
+// every rule still reads correct (2026-07-24). Probed 2026-08-08 via `claude -p --output-format
+// json`: alias `opus` -> canonicalModel claude-opus-5. Re-probe when a generation ships.
+// (meta above must stay a pure literal, so the ID is spelled out there rather than interpolated.)
+const WORKHORSE = 'claude-opus-5'
 
 // ---------------------------------------------------------------------------
 // args + mode config
@@ -180,7 +187,7 @@ log(`adversarial-review ${mode} on ${task} (${diffRange}) — ${LENSES.length} O
 
 const finderResults = await parallel(
   LENSES.map((l) => () =>
-    agent(l.prompt, { label: `find:${l.key}`, phase: 'Find', model: 'opus', effort: FINDER_EFFORT, schema: FINDINGS_SCHEMA })),
+    agent(l.prompt, { label: `find:${l.key}`, phase: 'Find', model: WORKHORSE, effort: FINDER_EFFORT, schema: FINDINGS_SCHEMA })),
 )
 const finderDropped = LENSES.filter((_, i) => !finderResults[i]).map((l) => l.key)
 let raw = finderResults.filter(Boolean).flatMap((r) => r.findings)
@@ -201,7 +208,7 @@ ${summary || '(nothing)'}
 Your job is what they MISSED. Do not re-argue their findings. Look for: files in the diff no
 finding touches, spec sections (${specSections}) no finding checks, interaction between changed
 systems, and the second-order effects of the listed findings. Report only NEW defects, same rules.`,
-    { label: 'critic:missed', phase: 'Critic', model: 'opus', effort: 'xhigh', schema: FINDINGS_SCHEMA },
+    { label: 'critic:missed', phase: 'Critic', model: WORKHORSE, effort: 'xhigh', schema: FINDINGS_SCHEMA },
   )
   if (critic) {
     raw = raw.concat(critic.findings)
@@ -257,7 +264,7 @@ Failure scenario: ${f.failure_scenario}
 
 ${SKEPTIC_ANGLES[angle]} If the evidence is genuinely ambiguous, return UNCERTAIN — never guess.
 If confirmed but mis-rated, set severity_correction.`,
-    { label: `verify:${angle}:${f.file.split('/').pop()}`, phase: 'Verify', model: 'opus', effort: 'xhigh', schema: VERDICT_SCHEMA },
+    { label: `verify:${angle}:${f.file.split('/').pop()}`, phase: 'Verify', model: WORKHORSE, effort: 'xhigh', schema: VERDICT_SCHEMA },
   )
 }
 
@@ -317,7 +324,7 @@ Produce: (1) a severity-ranked list with one-line consequences; (2) shared root 
 findings trace to one wrong assumption?; (3) interactions — does fixing one change another?; (4) the
 minimal fix ORDER that avoids rework. Read code only where needed to settle an interaction question.
 Return the report as plain text.`,
-    { label: 'synthesize', phase: 'Synthesize', model: 'opus', effort: 'xhigh' },
+    { label: 'synthesize', phase: 'Synthesize', model: WORKHORSE, effort: 'xhigh' },
   )
 }
 
