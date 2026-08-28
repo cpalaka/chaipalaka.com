@@ -5,7 +5,7 @@ design context. Dev-process rules are imported from the shared chunk library;
 project-specific rules are inline below (Zone 3).
 
 <!-- Dev-process rules live in the shared chunk library (single-source in
-     cpalaka-claude-skills/chunks, delivered via ~/.claude/chunks). Edit a rule
+     skills/chunks, delivered via ~/.claude/chunks). Edit a rule
      THERE, not here — the edit propagates to every project. dev-base.md bundles
      the 8 base chunks (git-sync-branch-start, git-commit-format,
      git-confirm-destructive, sandbox-auto, parallel-work, verify-gate,
