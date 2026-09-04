@@ -1,0 +1,21 @@
+# claude-only-scan.sh allow file — HISTORICAL records and HOST ADAPTERS only.
+# Format: <repo-relative path><TAB><reason>.  '#' comments and blank lines ignored.
+# A line with no TAB-separated reason is a hard error (exit 2): an entry that does not
+# say why a file is exempt cannot be reviewed later.
+#
+# Two categories, and nothing else:
+#
+#   HISTORICAL — a dated record of what happened. Anything a future session reads as
+#   instruction (the shared contract, guides, OPEN tickets, specs and plan docs without
+#   a STATUS banner) stays out; its hits are the baseline this campaign removes, and
+#   they must show as un-allowlisted hits today.
+#
+#   ADAPTER — a host adapter, whose entire job is the mechanics of ONE host. An adapter
+#   naming its own host's paths is the design working, not the drift this scan hunts:
+#   the parity rule is that project rules live once in the shared contract, not that no
+#   file may say `.claude/`. The exemption holds only while the adapter stays thin — a
+#   project rule that migrates back into one is caught by reading the contract against
+#   it, never by this scanner, so an adapter entry is not a licence to grow the file.
+#
+CLAUDE.md	HOST ADAPTER — Claude Code mechanics; project prose moved into docs/agents/project-workflow.md.
+backlog/tasks/task-048 - Parity-rollout-B6-migrate-to-the-shared-Codex-Claude-contract.md	HISTORICAL — the B6 migration's own record (Done 2026-09-04): its notes hold the dated migration ledger, both hosts' readings and the review, which quote this scan's patterns verbatim; dated records are never rewritten, so the file is exempted whole. Its description, AC and DoD were hand-read on 2026-09-04 after the last notes edit and carry no unqualified Claude-only name.

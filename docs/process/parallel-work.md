@@ -63,8 +63,8 @@ Setup:
 
 **Footgun (also pinned in `CLAUDE.md`):** unlike a subagent (which inherits the
 parent's mode), a fresh interactive worktree session does **not** get
-sandbox+auto — `.claude/settings.local.json` is gitignored, so copy it in first
-(`cp .claude/settings.local.json ../cp-task-NNN-<slug>/.claude/`) or the
+sandbox+auto — Claude Code's `.claude/settings.local.json` is gitignored, so copy it in first
+(Claude Code: `cp .claude/settings.local.json ../cp-task-NNN-<slug>/.claude/`) or the
 session silently runs without the defaults.
 
 Decision rule: **one task → Standing process; Chai driving 2+ hands-on → solo
